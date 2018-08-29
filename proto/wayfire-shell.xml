@@ -1,0 +1,125 @@
+<protocol name="wayfire_shell">
+    <interface name="zwf_shell_manager_v1" version="1">
+        <description summary="DE integration">
+            The purpose of this protocol is to enable the creation of different
+            desktop-interface windows like panels, backgrounds, docks, lockscreens, etc.
+            It also aims to allow the creation of full-blown DEs using Wayfire.
+
+            Note that in contrast to some other efforts to create a similar protocol,
+            such as wlr-layer-shell, this isn't a new "shell" for giving a role to wl_surfaces.
+            This protocol can be used with any type of wl_surface (xdg_surface, layer_surface)
+            to give them to the corresponding WM role.
+        </description>
+
+        <request name="get_wf_output">
+            <description summary="Create a wf_output from the given output"/>
+            <arg name="output" type="object" interface="wl_output"/>
+            <arg name="id" type="new_id" interface="zwf_output_v1"/>
+        </request>
+    </interface>
+
+    <interface name="zwf_wm_surface_v1" version="1">
+        <description summary="Surface with a WM role">
+            Represents a surface with a specific WM role.
+            It belongs to the output which it was created for.
+        </description>
+
+        <request name="configure">
+            <description summary="Move the surface to the given output-local coordinates."/>
+
+            <arg name="x" type="int"/>
+            <arg name="y" type="int"/>
+        </request>
+
+        <enum name="anchor_edge">
+            <entry name="top" value="0"/>
+            <entry name="bottom" value="1"/>
+            <entry name="left" value="2"/>
+            <entry name="right" value="3"/>
+        </enum>
+
+        <request name="set_exclusive_zone">
+            <description summary="Reserve pixels">
+                Request the compositor to reserve the given
+                amount of pixels from the given edge, so that
+                other surfaces won't occlude it
+            </description>
+
+            <arg name="anchor_edge" type="uint" enum="anchor_edge"/>
+            <arg name="size" type="uint"/>
+        </request>
+
+        <request name="request_focus">
+            <description summary="Request that the compositor focus the surface."/>
+        </request>
+
+        <request name="return_focus">
+            <description summary="Indicate that the surface no longer needs focus."/>
+        </request>
+    </interface>
+
+    <interface name="zwf_output_v1" version="1">
+        <description summary="A wrapper for wl_output">
+            Represents a single output.
+            Each output is managed independently from the others.
+        </description>
+
+        <enum name="wm_role">
+            <entry name="background" value="1"/>
+            <entry name="bottom" value="2"/>
+            <entry name="panel" value="3"/>
+            <entry name="overlay" value="4"/>
+        </enum>
+
+        <request name="get_wm_surface">
+            <description summary="Assign a role">
+                Assign the given role to the given surface
+                and add it to the current output.
+
+                The role cannot be changed later, and neither
+                can it be moved to a different output.
+            </description>
+
+            <arg name="surface" type="object" interface="wl_surface"/>
+            <arg name="role" type="uint" enum="wm_role"/>
+            <arg name="id" type="new_id" interface="zwf_wm_surface_v1"/>
+        </request>
+
+
+        <event name="output_hide_panels">
+            <description summary="Autohide/Show signal">
+                Panels are always rendered on top, even above fullscreen windows.
+                If autohide is 1, the event indicates that the panels should hide
+                itself, by for example unmapping or sliding outside of the output.
+                If autohide is 0, this means that the reason for the last request
+                with autohide == 1 is no longer valid, i.e the panels can show
+                themselves.
+
+                The output_hide_panels can be called multiple times with
+                autohide = 1, and the panel should show itself only when
+                it has received a matching number of events with autohide = 0
+            </description>
+
+            <arg name="autohide" type="uint"/>
+        </event>
+
+        <request name="inhibit_output">
+            <description summary="Don't render the output">
+                Request the compositor to not render the output, so
+                the output usually is cleared to black color.
+                To enable output rendering again, call inhibit_output_done
+            </description>
+        </request>
+
+        <request name="inhibit_output_done">
+            <description summary="Render the output">
+                Stop inhibiting the output. This must be called as many times
+                as inhibit_output was called to actually uninhibit rendering.
+
+                The inhibit/inhibit_done requests can be called multiple times,
+                even from different apps, so don't assume that a call to
+                inhibit_done would always mean actually starting the rendering process.
+            </description>
+        </request>
+    </interface>
+</protocol>
