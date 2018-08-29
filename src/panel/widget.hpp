@@ -1,14 +1,13 @@
 #ifndef WIDGET_HPP
 #define WIDGET_HPP
 
-#include <gtkmm/container.h>
+#include <gtkmm/hvbox.h>
 
+class wayfire_config;
 class WayfireWidget
 {
     public:
-        virtual void init(Gtk::Container *container) = 0;
-        virtual int get_width() = 0;
-
+        virtual void init(Gtk::HBox *container, wayfire_config *config) = 0;
         virtual ~WayfireWidget() {};
 };
 

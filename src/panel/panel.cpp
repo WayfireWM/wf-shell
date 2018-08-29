@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "widgets/clock.hpp"
+#include "widgets/launchers.hpp"
 #include "display.hpp"
 
 namespace
@@ -22,7 +23,7 @@ class WayfirePanel
     Gtk::HBox content_box;
     Gtk::HBox left_box, center_box, right_box;
 
-    WayfireWidget *widget, *widget1, *widget2, *widget3, *widget4;
+    WayfireWidget *widget, *widget1;
     WayfireOutput *output;
     zwf_wm_surface_v1 *wm_surface = NULL;
 
@@ -71,17 +72,10 @@ class WayfirePanel
     void init_widgets()
     {
         widget = new WayfireClock();
-        widget->init(&center_box);
+        widget->init(&center_box, panel_config);
 
-        widget1 = new WayfireClock();
-        widget2 = new WayfireClock();
-        widget3 = new WayfireClock();
-        widget4 = new WayfireClock();
-
-        widget1->init(&left_box);
-        widget2->init(&right_box);
-        widget3->init(&center_box);
-        widget4->init(&right_box);
+        widget1 = new WayfireLaunchers();
+        widget1->init(&left_box, panel_config);
     }
 
     public:
@@ -114,6 +108,12 @@ void on_activate(Glib::RefPtr<Gtk::Application> app)
         std::cout << "new output" << std::endl;
         new WayfirePanel(output);
     };
+
+    std::string home_dir = secure_getenv("HOME");
+    std::string config_file = home_dir + "/.config/wf-shell.ini";
+
+    panel_config = new wayfire_config(config_file);
+    panel_config->reload_config(); // initial loading of config file
 
     display = new WayfireDisplay(handle_new_output);
 }

@@ -1,10 +1,13 @@
 #include <glibmm.h>
 #include "clock.hpp"
 
-void WayfireClock::init(Gtk::Container *container)
+void WayfireClock::init(Gtk::HBox *container, wayfire_config *config)
 {
+    format = config->get_section("shell")
+        ->get_option("clock_format", "%e %A %H:%M");
+
     update_label();
-    container->add(label);
+    container->pack_end(label, false, false);
 
     timeout = Glib::signal_timeout().connect_seconds(
         sigc::bind(sigc::mem_fun(&WayfireClock::update_label), this), 1);
@@ -13,7 +16,7 @@ void WayfireClock::init(Gtk::Container *container)
 bool WayfireClock::update_label()
 {
     auto time = Glib::DateTime::create_now_local();
-    label.set_text(time.format("%e %A %H:%M:%S"));
+    label.set_text(time.format(format->as_string()));
 
     return 1;
 }
