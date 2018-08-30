@@ -32,7 +32,7 @@ struct DesktopLauncherInfo : public LauncherInfo
     {
         auto icon = app_info->get_icon()->to_string();
         auto theme = Gtk::IconTheme::get_default();
-        return theme->load_icon(icon, size);
+        return theme->load_icon(icon, size)->scale_simple(size, size, Gdk::INTERP_BILINEAR);
     }
 
     std::string get_text()
@@ -87,15 +87,30 @@ struct FileLauncherInfo : public LauncherInfo
     virtual ~FileLauncherInfo() {}
 };
 
+void WfLauncherButton::set_size(int size)
+{
+    std::cout << "set size " << size << std::endl;
+    this->current_size = size;
+
+    /* set button spacing */
+    evbox.set_margin_top((panel_size - size) / 2);
+    evbox.set_margin_bottom((panel_size - size) / 2);
+    evbox.set_margin_left((panel_size - size) / 2);
+    evbox.set_margin_right((panel_size - size + 1) / 2);
+
+    // initial scale
+    on_scale_update();
+}
+
 bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
                                   std::string icon)
 {
     launcher_name = name;
 
-    int panel_size = *config->get_section("panel")->get_option("panel_thickness", "48");
-    int default_size = panel_size * 0.8;
-    size = *config->get_section("panel")->get_option("launcher_size", std::to_string(default_size));
-    size = std::min(size, default_size);
+    panel_size = *config->get_section("panel")->get_option("panel_thickness", "48");
+    int default_size = panel_size * 0.7;
+    base_size = *config->get_section("panel")->get_option("launcher_size", std::to_string(default_size));
+    base_size = std::min(base_size, panel_size);
 
     if (icon == "none")
     {
@@ -117,26 +132,68 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
         info = fl;
     }
 
-    button.add(image);
-    button.signal_clicked().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
+    evbox.add(image);
+    evbox.signal_button_press_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
+    evbox.signal_enter_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_enter));
+    evbox.signal_leave_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_leave));
 
-    /* set button spacing */
-    button.set_margin_top((panel_size - size) / 2);
-    button.set_margin_bottom((panel_size - size) / 2);
+    evbox.signal_draw().connect(sigc::mem_fun(this, &WfLauncherButton::on_draw));
 
-    // initial scale
-    on_scale_update();
+    set_size(base_size);
 
-    button.property_scale_factor().signal_changed()
+    hover_animation = wf_duration(new_static_option("300"));
+    hover_animation.start(base_size, base_size);
+
+    evbox.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(this, &WfLauncherButton::on_scale_update));
+
 
     return true;
 }
 
-void WfLauncherButton::on_click()
+bool WfLauncherButton::on_click(GdkEventButton *ev)
 {
     assert(info);
-    info->execute();
+
+    if (ev->button == 1 && ev->type == GDK_BUTTON_PRESS)
+        info->execute();
+
+    return true;
+}
+
+bool WfLauncherButton::on_enter(GdkEventCrossing* ev)
+{
+    int current_size = hover_animation.progress();
+    int target_size = std::min((double)panel_size, base_size * 1.2);
+
+    evbox.queue_draw();
+    std::cout << "start animation from " << current_size << " to " << target_size << std::endl;
+    hover_animation.start(current_size, target_size);
+    animation_running = true;
+
+    return false;
+}
+
+bool WfLauncherButton::on_leave(GdkEventCrossing *ev)
+{
+    int current_size = hover_animation.progress();
+    evbox.queue_draw();
+    hover_animation.start(current_size, base_size);
+    std::cout << "start animation from " << current_size << " to " << base_size << std::endl;
+    animation_running = true;
+
+    return false;
+}
+
+bool WfLauncherButton::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
+{
+    if (animation_running)
+    {
+        set_size(hover_animation.progress());
+        animation_running = hover_animation.running();
+    }
+
+    return false;
 }
 
 /* Because icons can have different sizes, we need to use a Gdk::Pixbuf
@@ -151,7 +208,11 @@ void WfLauncherButton::on_scale_update()
     int scale = image.get_scale_factor();
 
     // hold a reference to the RefPtr
-    auto ptr_pbuff = info->get_pixbuf(size * image.get_scale_factor());
+    auto ptr_pbuff = info->get_pixbuf(current_size * image.get_scale_factor());
+
+    std::cout << "got pbuff with " << ptr_pbuff->get_width() << "x" << ptr_pbuff->get_height() << std::endl;
+
+
     auto pbuff = ptr_pbuff->gobj();
     auto cairo_surface = gdk_cairo_surface_create_from_pixbuf(pbuff, scale, NULL);
 
@@ -228,9 +289,10 @@ launcher_container WayfireLaunchers::get_launchers_from_config(wayfire_config *c
 void WayfireLaunchers::init(Gtk::HBox *container, wayfire_config *config)
 {
     container->pack_start(box, false, false);
-    box.set_spacing(12);
+    box.set_margin_left(12);
+    box.set_spacing(6);
 
     this->launchers = get_launchers_from_config(config);
     for (auto launcher : launchers)
-        box.pack_start(launcher->button, false, false);
+        box.pack_start(launcher->evbox, false, false);
 }

@@ -3,11 +3,12 @@
 
 #include "../widget.hpp"
 #include <vector>
+#include <animation.hpp>
 #include <giomm/desktopappinfo.h>
 #include <gdkmm/pixbuf.h>
 #include <gtkmm/image.h>
 #include <gtkmm/hvbox.h>
-#include <gtkmm/button.h>
+#include <gtkmm/eventbox.h>
 
 struct LauncherInfo
 {
@@ -20,11 +21,16 @@ struct LauncherInfo
 struct WfLauncherButton
 {
     std::string launcher_name;
-    int32_t size;
+    int32_t panel_size;
+    int32_t base_size;
+    int32_t current_size;
 
     Gtk::Image image;
-    Gtk::Button button;
+    Gtk::EventBox evbox;
     LauncherInfo *info = NULL;
+
+    wf_duration hover_animation;
+    bool animation_running = false;
 
     WfLauncherButton() {}
     WfLauncherButton(const WfLauncherButton& other) = delete;
@@ -36,9 +42,14 @@ struct WfLauncherButton
 
     bool initialize(wayfire_config *config, std::string name,
                     std::string icon = "none");
-    void on_click();
 
+    bool on_click(GdkEventButton *ev);
+    bool on_enter(GdkEventCrossing *ev);
+    bool on_leave(GdkEventCrossing *ev);
+    bool on_draw(const Cairo::RefPtr<Cairo::Context>& ctx);
     void on_scale_update();
+
+    void set_size(int size);
 };
 
 using launcher_container = std::vector<WfLauncherButton*>;
