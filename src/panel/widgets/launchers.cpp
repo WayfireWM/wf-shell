@@ -92,9 +92,10 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
 {
     launcher_name = name;
 
-    int32_t default_size = *config->get_section("panel")->get_option("panel_thickness", "48");
-    default_size = default_size * 0.8;
+    int panel_size = *config->get_section("panel")->get_option("panel_thickness", "48");
+    int default_size = panel_size * 0.8;
     size = *config->get_section("panel")->get_option("launcher_size", std::to_string(default_size));
+    size = std::min(size, default_size);
 
     if (icon == "none")
     {
@@ -118,6 +119,10 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
 
     button.add(image);
     button.signal_clicked().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
+
+    /* set button spacing */
+    button.set_margin_top((panel_size - size) / 2);
+    button.set_margin_bottom((panel_size - size) / 2);
 
     // initial scale
     on_scale_update();
