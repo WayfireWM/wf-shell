@@ -149,7 +149,7 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
     evbox.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(this, &WfLauncherButton::on_scale_update));
 
-
+    evbox.set_tooltip_text(info->get_text());
     return true;
 }
 
@@ -223,10 +223,6 @@ void WfLauncherButton::on_scale_update()
 
     // hold a reference to the RefPtr
     auto ptr_pbuff = info->get_pixbuf(current_size * image.get_scale_factor());
-
-    std::cout << "got pbuff with " << ptr_pbuff->get_width() << "x" << ptr_pbuff->get_height() << std::endl;
-
-
     auto pbuff = ptr_pbuff->gobj();
     auto cairo_surface = gdk_cairo_surface_create_from_pixbuf(pbuff, scale, NULL);
 

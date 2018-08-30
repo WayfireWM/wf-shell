@@ -1,4 +1,4 @@
-util = static_library('util', ['display.cpp'],
+util = static_library('util', ['display.cpp', 'gtk-utils.cpp'],
     dependencies: [wf_protos, wayland_client, gtkmm])
 
 util_includes = include_directories('.')

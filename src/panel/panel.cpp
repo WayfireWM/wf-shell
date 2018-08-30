@@ -6,6 +6,7 @@
 
 #include <iostream>
 
+#include "widgets/battery.hpp"
 #include "widgets/clock.hpp"
 #include "widgets/launchers.hpp"
 #include "display.hpp"
@@ -23,7 +24,7 @@ class WayfirePanel
     Gtk::HBox content_box;
     Gtk::HBox left_box, center_box, right_box;
 
-    WayfireWidget *widget, *widget1;
+    WayfireWidget *widget, *widget1, *widget2;
     WayfireOutput *output;
     zwf_wm_surface_v1 *wm_surface = NULL;
 
@@ -99,6 +100,9 @@ class WayfirePanel
 
         widget1 = new WayfireLaunchers();
         widget1->init(&left_box, panel_config);
+
+        widget2 = new WayfireBatteryInfo();
+        widget2->init(&right_box, panel_config);
     }
 
     public:
