@@ -21,11 +21,6 @@ bool WayfireClock::update_label()
     return 1;
 }
 
-int WayfireClock::get_width()
-{
-    return 100;
-}
-
 WayfireClock::~WayfireClock()
 {
     timeout.disconnect();

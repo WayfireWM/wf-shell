@@ -1,6 +1,9 @@
 #include "launchers.hpp"
 #include <giomm/file.h>
 #include <glibmm/spawn.h>
+#include <gdkmm/pixbuf.h>
+#include <gtkmm/icontheme.h>
+#include <gdk/gdkcairo.h>
 #include <cassert>
 #include <iostream>
 #include <config.hpp>
@@ -9,8 +12,6 @@
 struct DesktopLauncherInfo : public LauncherInfo
 {
     Glib::RefPtr<Gio::DesktopAppInfo> app_info;
-    Gtk::Image image;
-
     bool load(std::string name)
     {
         // attempt from App-ID
@@ -24,15 +25,14 @@ struct DesktopLauncherInfo : public LauncherInfo
         // neither interpretation succeeded
         if (!app_info)
             return false;
-
-        Glib::RefPtr<const Gio::Icon> icon = app_info->get_icon();
-        image.set(icon, Gtk::ICON_SIZE_INVALID);
         return true;
     }
 
-    Gtk::Image& get_image()
+    Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size)
     {
-        return image;
+        auto icon = app_info->get_icon()->to_string();
+        auto theme = Gtk::IconTheme::get_default();
+        return theme->load_icon(icon, size);
     }
 
     std::string get_text()
@@ -51,19 +51,27 @@ struct DesktopLauncherInfo : public LauncherInfo
 // create a launcher from a command + icon
 struct FileLauncherInfo : public LauncherInfo
 {
-    Gtk::Image image;
     std::string command;
+    std::string icon;
 
     bool load(std::string name, std::string icon)
     {
         command = name;
-        image = Gtk::Image(icon);
+        this->icon = icon;
+
+        try {
+            // check if file is loadable
+            Gdk::Pixbuf::create_from_file(icon, 24, 24);
+        } catch(...) {
+            return false;
+        }
+
         return true;
     }
 
-    Gtk::Image& get_image()
+    Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size)
     {
-        return image;
+        return Gdk::Pixbuf::create_from_file(icon, size, size);
     }
 
     std::string get_text()
@@ -79,9 +87,14 @@ struct FileLauncherInfo : public LauncherInfo
     virtual ~FileLauncherInfo() {}
 };
 
-bool WfLauncherButton::initialize(std::string name, std::string icon)
+bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
+                                  std::string icon)
 {
     launcher_name = name;
+
+    int32_t default_size = *config->get_section("panel")->get_option("panel_thickness", "48");
+    default_size = default_size * 0.8;
+    size = *config->get_section("panel")->get_option("launcher_size", std::to_string(default_size));
 
     if (icon == "none")
     {
@@ -103,8 +116,14 @@ bool WfLauncherButton::initialize(std::string name, std::string icon)
         info = fl;
     }
 
-    button.set_image(info->get_image());
+    button.add(image);
     button.signal_clicked().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
+
+    // initial scale
+    on_scale_update();
+
+    button.property_scale_factor().signal_changed()
+        .connect(sigc::mem_fun(this, &WfLauncherButton::on_scale_update));
 
     return true;
 }
@@ -113,6 +132,26 @@ void WfLauncherButton::on_click()
 {
     assert(info);
     info->execute();
+}
+
+/* Because icons can have different sizes, we need to use a Gdk::Pixbuf
+ * to convert them to the appropriate size. However, Gdk::Pixbuf operates
+ * in absolute pixel size, so this doesn't work nicely with scaled outputs.
+ *
+ * To get around the problem, we first create the Pixbuf with a scaled size,
+ * then convert it to a cairo_surface with the appropriate scale, and use this
+ * cairo surface as the source for the Gtk::Image */
+void WfLauncherButton::on_scale_update()
+{
+    int scale = image.get_scale_factor();
+
+    // hold a reference to the RefPtr
+    auto ptr_pbuff = info->get_pixbuf(size * image.get_scale_factor());
+    auto pbuff = ptr_pbuff->gobj();
+    auto cairo_surface = gdk_cairo_surface_create_from_pixbuf(pbuff, scale, NULL);
+
+    gtk_image_set_from_surface(image.gobj(), cairo_surface);
+    cairo_surface_destroy(cairo_surface);
 }
 
 WfLauncherButton::~WfLauncherButton()
@@ -135,11 +174,11 @@ launcher_container WayfireLaunchers::get_launchers_from_config(wayfire_config *c
     const std::string file_cmd_prefix = "launcher_cmd_";
 
     launcher_container launchers;
-    auto try_push_launcher = [&launchers] (const std::string cmd,
-                                           const std::string icon)
+    auto try_push_launcher = [&launchers, config] (const std::string cmd,
+                                                   const std::string icon)
     {
         auto launcher = new WfLauncherButton();
-        if (launcher->initialize(cmd, icon))
+        if (launcher->initialize(config, cmd, icon))
         {
             launchers.push_back(launcher);
         } else
@@ -183,7 +222,8 @@ launcher_container WayfireLaunchers::get_launchers_from_config(wayfire_config *c
 
 void WayfireLaunchers::init(Gtk::HBox *container, wayfire_config *config)
 {
-    container->pack_end(box, false, false);
+    container->pack_start(box, false, false);
+    box.set_spacing(12);
 
     this->launchers = get_launchers_from_config(config);
     for (auto launcher : launchers)

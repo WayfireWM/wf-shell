@@ -14,7 +14,6 @@ class WayfireClock : public WayfireWidget
     public:
     void init(Gtk::HBox *container, wayfire_config *config);
     bool update_label();
-    int get_width();
     ~WayfireClock();
 };
 
