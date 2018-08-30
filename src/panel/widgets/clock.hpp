@@ -10,6 +10,10 @@ class WayfireClock : public WayfireWidget
     Gtk::Label label;
     sigc::connection timeout;
     wf_option format;
+    wf_option font;
+    wf_option_callback font_changed;
+
+    void set_font();
 
     public:
     void init(Gtk::HBox *container, wayfire_config *config);
