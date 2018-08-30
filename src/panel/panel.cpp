@@ -59,6 +59,29 @@ class WayfirePanel
     {
         window.set_resizable(false);
         window.set_decorated(false);
+        auto bg_color = panel_config->get_section("panel")
+            ->get_option("background_color", "gtk_default");
+
+        if (bg_color->as_string() != "gtk_default")
+        {
+            Gdk::RGBA rgba;
+            auto color_string = bg_color->as_string();
+
+            /* see if it is in #XXXXXX format */
+            if (color_string.size() && color_string[0] == '#')
+            {
+                rgba.set(color_string);
+            } else {
+                /* otherwise, simply a list of double values, parse by default */
+                auto color = bg_color->as_color();
+                rgba.set_red(color.r);
+                rgba.set_green(color.g);
+                rgba.set_blue(color.b);
+                rgba.set_alpha(color.a);
+            }
+
+            window.override_background_color(rgba);
+        }
     }
 
     void init_layout()
