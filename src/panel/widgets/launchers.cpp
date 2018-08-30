@@ -95,6 +95,7 @@ void WfLauncherButton::set_size(int size)
     /* set button spacing */
     evbox.set_margin_top((panel_size - size) / 2);
     evbox.set_margin_bottom((panel_size - size) / 2);
+
     evbox.set_margin_left((panel_size - size) / 2);
     evbox.set_margin_right((panel_size - size + 1) / 2);
 
@@ -134,6 +135,7 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
 
     evbox.add(image);
     evbox.signal_button_press_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
+    evbox.signal_button_release_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
     evbox.signal_enter_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_enter));
     evbox.signal_leave_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_leave));
 
@@ -155,8 +157,20 @@ bool WfLauncherButton::on_click(GdkEventButton *ev)
 {
     assert(info);
 
-    if (ev->button == 1 && ev->type == GDK_BUTTON_PRESS)
+    std::cout << "on click" << std::endl;
+    if (ev->button == 1 && ev->type == GDK_BUTTON_RELEASE)
+    {
         info->execute();
+        if (!hover_animation.running())
+            on_leave(NULL);
+    }
+
+    if (ev->button == 1 && ev->type == GDK_BUTTON_PRESS)
+    {
+        /* touch will generate button_press, but not enter notify */
+        if (!hover_animation.running())
+            on_enter(NULL);
+    }
 
     return true;
 }
@@ -289,8 +303,10 @@ launcher_container WayfireLaunchers::get_launchers_from_config(wayfire_config *c
 void WayfireLaunchers::init(Gtk::HBox *container, wayfire_config *config)
 {
     container->pack_start(box, false, false);
-    box.set_margin_left(12);
-    box.set_spacing(6);
+
+    box.set_margin_left(*config->get_section("panel")->get_option("launchers_margin_left", "12"));
+    box.set_margin_right(*config->get_section("panel")->get_option("launchers_margin_right", "0"));
+    box.set_spacing(*config->get_section("panel")->get_option("launchers_spacing", "6"));
 
     this->launchers = get_launchers_from_config(config);
     for (auto launcher : launchers)
