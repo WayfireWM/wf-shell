@@ -42,6 +42,9 @@ class WayfirePanel
         wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface,
                                                   ZWF_OUTPUT_V1_WM_ROLE_PANEL);
         zwf_wm_surface_v1_configure(wm_surface, 0, 0);
+        zwf_wm_surface_v1_set_exclusive_zone(
+            wm_surface, ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP,
+            window.get_height());
     }
 
     void handle_resize(uint32_t width, uint32_t height)
