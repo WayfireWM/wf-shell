@@ -55,15 +55,20 @@ void WayfireBatteryInfo::on_properties_changed(
         update_state();
 }
 
+int WayfireBatteryInfo::calculate_icon_size()
+{
+    return std::min(panel_size_opt->as_int(), size_opt->as_int());
+}
+
 void WayfireBatteryInfo::update_icon()
 {
     Glib::Variant<Glib::ustring> icon_name;
     display_device->get_cached_property(icon_name, ICON);
 
     WfIconLoadOptions options;
-    options.invert = icon_invert;
+    options.invert = invert_opt->as_int();
     options.user_scale = button.get_scale_factor();
-    set_image_icon(icon, icon_name.get(), icon_size, options);
+    set_image_icon(icon, icon_name.get(), calculate_icon_size(), options);
 }
 
 static std::string state_descriptions[] = {
@@ -98,6 +103,17 @@ static std::string uint_to_time(int64_t time)
     int min = (time / 60) % 60;
 
     return format_digit(hrs) + ":" + format_digit(min);
+}
+
+void WayfireBatteryInfo::update_font()
+{
+    if (font_opt->as_string() == "default")
+    {
+        label.unset_font();
+    } else
+    {
+        label.override_font(Pango::FontDescription(font_opt->as_string()));
+    }
 }
 
 void WayfireBatteryInfo::update_details()
@@ -191,23 +207,42 @@ void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
     if (!setup_dbus())
         return;
 
-    auto section = config->get_section("panel");
-
-    auto battery_status = section->get_option("battery_status", "1")->as_int();
-    battery_status = std::min(battery_status, 2);
-    battery_status = std::max(battery_status, 0);
-    status = (WfBatteryStatusDescription) battery_status;
-
-    int panel_size = *section->get_option("panel_thickness", "48");
-    int default_size = panel_size * 0.7;
-    icon_size = *section->get_option("battery_icon_size", std::to_string(default_size));
-    icon_size = std::min(icon_size, panel_size);
-
-    icon_invert = section->get_option("battery_icon_invert", "0")->as_int();
-
     button_box.add(icon);
     button.get_style_context()->add_class("flat");
 
+    auto section = config->get_section("panel");
+
+    status_opt = section->get_option("battery_status", "1");
+    status_updated = [=] () {
+        status = (WfBatteryStatusDescription) std::min(2, std::max(status_opt->as_int(), 0));
+        update_details();
+    };
+    status_opt->add_updated_handler(&status_updated);
+
+    font_opt = section->get_option("battery_font", "default");
+    font_updated = [=] () {
+        update_font();
+    };
+    font_opt->add_updated_handler(&font_updated);
+
+    panel_size_opt = section->get_option("panel_thickness", DEFAULT_PANEL_HEIGHT);
+    panel_size_updated = [=] () {
+        int default_size = panel_size_opt->as_int() * 0.7;
+        size_opt->default_value = std::to_string(default_size);
+        update_icon();
+    };
+    panel_size_opt->add_updated_handler(&panel_size_updated);
+
+    int default_size = panel_size_opt->as_int() * 0.7;
+    size_opt = section->get_option("battery_icon_size", std::to_string(default_size));
+    invert_opt = section->get_option("battery_icon_invert", "0");
+    icon_attr_updated = [=] () {
+        update_icon();
+    };
+    size_opt->add_updated_handler(&icon_attr_updated);
+    invert_opt->add_updated_handler(&icon_attr_updated);
+
+    update_font();
     update_icon();
     update_details();
 
@@ -223,5 +258,10 @@ void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
 
 WayfireBatteryInfo::~WayfireBatteryInfo()
 {
+    status_opt->rem_updated_handler(&status_updated);
+    font_opt->rem_updated_handler(&font_updated);
+    panel_size_opt->rem_updated_handler(&panel_size_updated);
+    size_opt->rem_updated_handler(&icon_attr_updated);
+    invert_opt->rem_updated_handler(&icon_attr_updated);
 }
 

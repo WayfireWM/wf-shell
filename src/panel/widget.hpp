@@ -3,6 +3,8 @@
 
 #include <gtkmm/hvbox.h>
 
+#define DEFAULT_PANEL_HEIGHT "48"
+
 class wayfire_config;
 class WayfireWidget
 {

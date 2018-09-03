@@ -9,6 +9,8 @@
 #include <giomm/dbusproxy.h>
 #include <giomm/dbusconnection.h>
 
+#include <config.hpp>
+
 #include "../widget.hpp"
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
@@ -24,12 +26,14 @@ enum WfBatteryStatusDescription
 class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
+    wf_option_callback status_updated, font_updated, icon_attr_updated,
+                       panel_size_updated;
+    wf_option status_opt, font_opt, invert_opt, size_opt, panel_size_opt;
+
     Gtk::Button button;
     Gtk::Label label;
     Gtk::HBox button_box;
 
-    bool icon_invert = false;
-    int icon_size;
     Gtk::Image icon;
 
     WfBatteryStatusDescription status;
@@ -39,6 +43,8 @@ class WayfireBatteryInfo : public WayfireWidget
 
     bool setup_dbus();
 
+    int calculate_icon_size();
+    void update_font();
     void update_icon();
     void update_details();
     void update_state();
