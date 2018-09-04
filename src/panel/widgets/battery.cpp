@@ -151,8 +151,13 @@ void WayfireBatteryInfo::update_details()
     if (status == BATTERY_STATUS_PERCENT)
     {
         label.set_text(percentage_string);
-    } else {
+    }
+    else if (status == BATTERY_STATUS_FULL)
+    {
         label.set_text(description);
+    } else
+    {
+        label.set_text("");
     }
 }
 
@@ -218,6 +223,7 @@ void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
         update_details();
     };
     status_opt->add_updated_handler(&status_updated);
+    status_updated();
 
     font_opt = section->get_option("battery_font", "default");
     font_updated = [=] () {
@@ -247,8 +253,7 @@ void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
     update_details();
 
     container->pack_start(button, Gtk::PACK_SHRINK);
-    if (status >= BATTERY_STATUS_PERCENT)
-        button_box.add(label);
+    button_box.add(label);
 
     button.add(button_box);
 
