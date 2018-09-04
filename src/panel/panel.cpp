@@ -93,14 +93,14 @@ class WayfirePanel
     void schedule_show(int delay)
     {
         pending_hide.disconnect();
-        if (!pending_show.connected() && transition.progress() != 0)
+        if (!pending_show.connected())
             pending_show = Glib::signal_timeout().connect(sigc::mem_fun(this, &WayfirePanel::show), delay);
     }
 
     void schedule_hide(int delay)
     {
         pending_show.disconnect();
-        if (!pending_hide.connected() && transition.progress() != get_hidden_y())
+        if (!pending_hide.connected())
             pending_hide = Glib::signal_timeout().connect(sigc::mem_fun(this, &WayfirePanel::hide), delay);
     }
 
@@ -169,7 +169,7 @@ class WayfirePanel
         zwf_output_v1_add_listener(output->zwf, &zwf_output_impl, &update_autohide_request);
     }
 
-    void handle_resize(uint32_t width, uint32_t height)
+    void handle_output_resize(uint32_t width, uint32_t height)
     {
         window.set_size_request(width, height * 0.05);
         window.show_all();
@@ -192,12 +192,22 @@ class WayfirePanel
     int input_entered = 0;
     void on_enter(GdkEventCrossing *cross)
     {
+        // ignore events between the window and widgets
+        if (cross->detail != GDK_NOTIFY_NONLINEAR &&
+            cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
+            return;
+
         schedule_show(300); // TODO: maybe configurable?
         ++input_entered;
     }
 
     void on_leave(GdkEventCrossing *cross)
     {
+        // ignore events between the window and widgets
+        if (cross->detail != GDK_NOTIFY_NONLINEAR &&
+            cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
+            return;
+
         if (autohide_enabled())
             schedule_hide(500);
         --input_entered;
@@ -279,7 +289,7 @@ class WayfirePanel
 
         output->resized_callback = [=] (WayfireOutput*, uint32_t w, uint32_t h)
         {
-            handle_resize(w, h);
+            handle_output_resize(w, h);
         };
 
         output->destroyed_callback = [=] (WayfireOutput *output)
