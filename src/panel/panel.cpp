@@ -1,5 +1,6 @@
 #include <glibmm/main.h>
 #include <gtkmm/window.h>
+#include <gtkmm/headerbar.h>
 #include <gtkmm/hvbox.h>
 #include <gtkmm/application.h>
 #include <gdk/gdkwayland.h>
@@ -218,21 +219,24 @@ class WayfirePanel
         update_reserved_area();
     }
 
-    void setup_window()
+    wf_option bg_color;
+    void set_window_color()
     {
-        window.set_resizable(false);
-        window.set_decorated(false);
-        auto bg_color = panel_config->get_section("panel")
-            ->get_option("background_color", "gtk_default");
+        if (bg_color->as_string() == "gtk_default")
+            return window.unset_background_color();
 
-        if (bg_color->as_string() != "gtk_default")
+        Gdk::RGBA rgba;
+        if (bg_color->as_string() == "gtk_headerbar")
         {
-            Gdk::RGBA rgba;
+            Gtk::HeaderBar headerbar;
+            rgba = headerbar.get_style_context()->get_background_color();
+        } else {
             auto color_string = bg_color->as_string();
 
             /* see if it is in #XXXXXX format */
-            if (color_string.size() && color_string[0] == '#')
+            if (color_string.size() && color_string[0] == '$')
             {
+                color_string[0] = '#';
                 rgba.set(color_string);
             } else {
                 /* otherwise, simply a list of double values, parse by default */
@@ -242,9 +246,24 @@ class WayfirePanel
                 rgba.set_blue(color.b);
                 rgba.set_alpha(color.a);
             }
-
-            window.override_background_color(rgba);
         }
+
+        window.override_background_color(rgba);
+    }
+    wf_option_callback background_callback;
+    void setup_window()
+    {
+        window.set_resizable(false);
+        window.set_decorated(false);
+
+        bg_color = panel_config->get_section("panel")
+            ->get_option("background_color", "gtk_headerbar");
+
+        background_callback = [=] () {
+            set_window_color();
+        };
+        bg_color->add_updated_handler(&background_callback);
+        set_window_color();
 
         window.signal_draw().connect_notify(
             sigc::mem_fun(this, &WayfirePanel::on_draw));
@@ -301,6 +320,7 @@ class WayfirePanel
     ~WayfirePanel()
     {
         autohide_opt->rem_updated_handler(&update_autohide);
+        bg_color->rem_updated_handler(&background_callback);
     }
 
     void handle_config_reload()
