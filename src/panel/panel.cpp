@@ -1,20 +1,29 @@
+#include <glibmm/main.h>
+#include <glibmm/iochannel.h>
 #include <gtkmm/window.h>
 #include <gtkmm/hvbox.h>
 #include <gtkmm/application.h>
 #include <gdk/gdkwayland.h>
 #include <config.hpp>
 
+#include <stdio.h>
 #include <iostream>
+#include <sys/inotify.h>
 
 #include "widgets/battery.hpp"
 #include "widgets/clock.hpp"
 #include "widgets/launchers.hpp"
 #include "display.hpp"
 
+class WayfirePanel;
 namespace
 {
+    int inotify_fd;
+
     WayfireDisplay *display = NULL;
     wayfire_config *panel_config;
+
+    std::vector<std::unique_ptr<WayfirePanel>> panels;
 }
 
 class WayfirePanel
@@ -41,7 +50,7 @@ class WayfirePanel
 
         wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface,
                                                   ZWF_OUTPUT_V1_WM_ROLE_PANEL);
-        zwf_wm_surface_v1_configure(wm_surface, 0, 0);
+        zwf_wm_surface_v1_configure(wm_surface, 0, 40);
         zwf_wm_surface_v1_set_exclusive_zone(
             wm_surface, ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP,
             window.get_height());
@@ -127,7 +136,43 @@ class WayfirePanel
             delete this;
         };
     }
+
+    void handle_config_reload()
+    {
+        widget->handle_config_reload(panel_config);
+        widget1->handle_config_reload(panel_config);
+        widget2->handle_config_reload(panel_config);
+    }
 };
+
+std::string get_config_file()
+{
+    std::string home_dir = secure_getenv("HOME");
+    std::string config_file = home_dir + "/.config/wf-shell.ini";
+    return config_file;
+}
+
+#define INOT_BUF_SIZE (1024 * sizeof(inotify_event))
+char buf[INOT_BUF_SIZE];
+
+static void reload_config(int fd)
+{
+    panel_config->reload_config();
+
+    for (auto& panel : panels)
+        panel->handle_config_reload();
+
+    inotify_add_watch(fd, get_config_file().c_str(), IN_MODIFY);
+}
+
+static bool on_config_reload(Glib::IOCondition)
+{
+    /* read, but don't use */
+    read(inotify_fd, buf, INOT_BUF_SIZE);
+    reload_config(inotify_fd);
+
+    return true;
+}
 
 void on_activate(Glib::RefPtr<Gtk::Application> app)
 {
@@ -135,15 +180,16 @@ void on_activate(Glib::RefPtr<Gtk::Application> app)
 
     auto handle_new_output = [] (WayfireOutput *output)
     {
-        std::cout << "new output" << std::endl;
-        new WayfirePanel(output);
+        panels.push_back(std::unique_ptr<WayfirePanel> (new WayfirePanel(output)));
     };
 
-    std::string home_dir = secure_getenv("HOME");
-    std::string config_file = home_dir + "/.config/wf-shell.ini";
+    panel_config = new wayfire_config(get_config_file());
 
-    panel_config = new wayfire_config(config_file);
-    panel_config->reload_config(); // initial loading of config file
+    inotify_fd = inotify_init();
+    reload_config(inotify_fd);
+
+    Glib::signal_io().connect(sigc::ptr_fun(&on_config_reload),
+                              inotify_fd, Glib::IO_IN | Glib::IO_HUP);
 
     display = new WayfireDisplay(handle_new_output);
 }

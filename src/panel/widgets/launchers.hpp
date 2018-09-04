@@ -32,12 +32,9 @@ struct WfLauncherButton
     wf_duration hover_animation;
     bool animation_running = false;
 
-    WfLauncherButton() {}
+    WfLauncherButton();
     WfLauncherButton(const WfLauncherButton& other) = delete;
-    WfLauncherButton(const WfLauncherButton&& other) = delete;
     WfLauncherButton& operator = (const WfLauncherButton&) = delete;
-    WfLauncherButton& operator = (const WfLauncherButton&&) = delete;
-
     ~WfLauncherButton();
 
     bool initialize(wayfire_config *config, std::string name,
@@ -52,7 +49,7 @@ struct WfLauncherButton
     void set_size(int size);
 };
 
-using launcher_container = std::vector<WfLauncherButton*>;
+using launcher_container = std::vector<std::unique_ptr<WfLauncherButton>>;
 class WayfireLaunchers : public WayfireWidget
 {
     Gtk::HBox box;
@@ -61,6 +58,7 @@ class WayfireLaunchers : public WayfireWidget
 
     public:
         virtual void init(Gtk::HBox *container, wayfire_config *config);
+        virtual void handle_config_reload(wayfire_config *config);
         virtual ~WayfireLaunchers() {};
 };
 

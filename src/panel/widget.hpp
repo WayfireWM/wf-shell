@@ -10,6 +10,7 @@ class WayfireWidget
 {
     public:
         virtual void init(Gtk::HBox *container, wayfire_config *config) = 0;
+        virtual void handle_config_reload(wayfire_config *config) {}
         virtual ~WayfireWidget() {};
 };
 
