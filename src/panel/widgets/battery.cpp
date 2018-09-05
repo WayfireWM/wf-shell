@@ -263,10 +263,13 @@ void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
 
 WayfireBatteryInfo::~WayfireBatteryInfo()
 {
-    status_opt->rem_updated_handler(&status_updated);
-    font_opt->rem_updated_handler(&font_updated);
-    panel_size_opt->rem_updated_handler(&panel_size_updated);
-    size_opt->rem_updated_handler(&icon_attr_updated);
-    invert_opt->rem_updated_handler(&icon_attr_updated);
+    if (status_opt) // otherwise DBus connection failed altogether
+    {
+        status_opt->rem_updated_handler(&status_updated);
+        font_opt->rem_updated_handler(&font_updated);
+        panel_size_opt->rem_updated_handler(&panel_size_updated);
+        size_opt->rem_updated_handler(&icon_attr_updated);
+        invert_opt->rem_updated_handler(&icon_attr_updated);
+    }
 }
 
