@@ -93,7 +93,7 @@ void WfLauncherButton::set_size(int size)
 
     /* set button spacing */
     evbox.set_margin_top((panel_size - size) / 2);
-    evbox.set_margin_bottom((panel_size - size) / 2);
+    evbox.set_margin_bottom((panel_size - size + 1) / 2);
 
     evbox.set_margin_left((panel_size - size) / 2);
     evbox.set_margin_right((panel_size - size + 1) / 2);
@@ -142,7 +142,7 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
 
     set_size(base_size);
 
-    hover_animation = wf_duration(new_static_option("300"));
+    hover_animation = wf_duration(new_static_option("1000"), wf_animation::linear);
     hover_animation.start(base_size, base_size);
 
     evbox.property_scale_factor().signal_changed()
@@ -172,12 +172,28 @@ bool WfLauncherButton::on_click(GdkEventButton *ev)
     return true;
 }
 
+// calculate the animation duration based on the difference in the icons' sizes
+// this is needed because for small differences the animation looks jittery if it is
+// too slow
+static int get_animation_duration(int start, int end, int scale)
+{
+    start *= scale;
+    end *= scale;
+
+    int diff = std::abs(start - end);
+    return std::min(diff * 16 / scale, 300); // TODO: what if the screen isn't 60FPS??
+}
+
 bool WfLauncherButton::on_enter(GdkEventCrossing* ev)
 {
     int current_size = hover_animation.progress();
-    int target_size = std::min((double)panel_size, base_size * 1.2);
+    int target_size = std::min((double)panel_size, base_size * 1.40);
+
+    int duration = get_animation_duration(
+        current_size, target_size, image.get_scale_factor());
 
     evbox.queue_draw();
+    hover_animation = wf_duration(new_static_option(std::to_string(duration)));
     hover_animation.start(current_size, target_size);
     animation_running = true;
 
@@ -188,6 +204,11 @@ bool WfLauncherButton::on_leave(GdkEventCrossing *ev)
 {
     int current_size = hover_animation.progress();
     evbox.queue_draw();
+
+    int duration = get_animation_duration(
+        current_size, base_size, image.get_scale_factor());
+
+    hover_animation = wf_duration(new_static_option(std::to_string(duration)));
     hover_animation.start(current_size, base_size);
     animation_running = true;
 
