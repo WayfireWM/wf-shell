@@ -206,6 +206,8 @@ bool WayfireBatteryInfo::setup_dbus()
     return false;
 }
 
+// TODO: simplify config loading
+
 static const std::string default_font = "default";
 void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
 {
