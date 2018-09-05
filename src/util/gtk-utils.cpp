@@ -1,6 +1,7 @@
 #include <gtk-utils.hpp>
 #include <gtkmm/icontheme.h>
 #include <gdk/gdkcairo.h>
+#include <iostream>
 
 void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff)
 {
@@ -30,6 +31,12 @@ void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
     int scale = ((options.user_scale == -1) ?
                  image.get_scale_factor() : options.user_scale);
     int scaled_size = size * scale;
+
+    if (!icon_theme->lookup_icon(icon_name, scaled_size))
+    {
+        std::cerr << "Failed to load icon \"" << icon_name << "\"" << std::endl;
+        return;
+    }
 
     auto pbuff = icon_theme->load_icon(icon_name, scaled_size)
         ->scale_simple(scaled_size, scaled_size, Gdk::INTERP_BILINEAR);
