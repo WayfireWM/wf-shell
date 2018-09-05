@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
 #include <sys/inotify.h>
 
 #include "widgets/battery.hpp"
@@ -47,10 +48,12 @@ class WayfirePanel
     Gtk::HBox content_box;
     Gtk::HBox left_box, center_box, right_box;
 
-    WayfireWidget *widget, *widget1, *widget2, *widget3;
+    using Widget = std::unique_ptr<WayfireWidget>;
+    using WidgetContainer = std::vector<Widget>;
+    WidgetContainer left_widgets, center_widgets, right_widgets;
+
     WayfireOutput *output;
     zwf_wm_surface_v1 *wm_surface = NULL;
-
 
     int hidden_height = 1;
     int get_hidden_y()
@@ -284,20 +287,85 @@ class WayfirePanel
         window.add(content_box);
     }
 
+    Widget widget_from_name(std::string name)
+    {
+        if (name == "launchers")
+            return Widget(new WayfireLaunchers());
+        if (name == "clock")
+            return Widget(new WayfireClock());
+        if (name == "network")
+            return Widget(new WayfireNetworkInfo());
+        if (name == "battery")
+            return Widget(new WayfireBatteryInfo());
+
+        std::cerr << "Invalid widget: " << name << std::endl;
+        return nullptr;
+    }
+
+    static std::vector<std::string> tokenize(std::string list)
+    {
+        std::string token;
+        std::istringstream stream(list);
+        std::vector<std::string> result;
+
+        while(stream >> token)
+        {
+            if (token.size())
+                result.push_back(token);
+        }
+
+        return result;
+    }
+
+    void reload_widgets(std::string list, WidgetContainer& container,
+                        Gtk::HBox& box)
+    {
+        container.clear();
+        auto widgets = tokenize(list);
+        for (auto widget_name : widgets)
+        {
+            auto widget = widget_from_name(widget_name);
+            if (!widget)
+                return;
+
+            widget->widget_name = widget_name;
+            widget->init(&box, panel_config);
+            container.push_back(std::move(widget));
+        }
+
+        box.show_all();
+    }
+
+    wf_option left_widgets_opt, right_widgets_opt, center_widgets_opt;
+    wf_option_callback left_widgets_updated, right_widgets_updated,
+                       center_widgets_updated;
+
     void init_widgets()
     {
-        widget = new WayfireClock();
-        widget->init(&center_box, panel_config);
+        auto section = panel_config->get_section("panel");
+        left_widgets_opt = section->get_option("widgets_left", "launchers");
+        right_widgets_opt = section->get_option("widgets_right", "network battery");
+        center_widgets_opt = section->get_option("widgets_center", "clock");
 
-        widget1 = new WayfireLaunchers();
-        widget1->init(&left_box, panel_config);
+        left_widgets_updated = [=] () {
+            reload_widgets(left_widgets_opt->as_string(), left_widgets, left_box);
+        };
+        right_widgets_updated = [=] () {
+            reload_widgets(right_widgets_opt->as_string(), right_widgets, right_box);
+        };
+        center_widgets_updated = [=] () {
+            reload_widgets(center_widgets_opt->as_string(), center_widgets, center_box);
+        };
 
-        widget2 = new WayfireBatteryInfo();
-        widget2->init(&right_box, panel_config);
+        left_widgets_opt->add_updated_handler(&left_widgets_updated);
+        right_widgets_opt->add_updated_handler(&right_widgets_updated);
+        center_widgets_opt->add_updated_handler(&center_widgets_updated);
 
-        widget3 = new WayfireNetworkInfo();
-        widget3->init(&right_box, panel_config);
+        left_widgets_updated();
+        right_widgets_updated();
+        center_widgets_updated();
     }
+
 
     public:
     WayfirePanel(WayfireOutput *output)
@@ -325,14 +393,20 @@ class WayfirePanel
     {
         autohide_opt->rem_updated_handler(&update_autohide);
         bg_color->rem_updated_handler(&background_callback);
+
+        left_widgets_opt->rem_updated_handler(&left_widgets_updated);
+        right_widgets_opt->rem_updated_handler(&right_widgets_updated);
+        center_widgets_opt->rem_updated_handler(&center_widgets_updated);
     }
 
     void handle_config_reload()
     {
-        widget->handle_config_reload(panel_config);
-        widget1->handle_config_reload(panel_config);
-        widget2->handle_config_reload(panel_config);
-        widget3->handle_config_reload(panel_config);
+        for (auto& w : left_widgets)
+            w->handle_config_reload(panel_config);
+        for (auto& w : right_widgets)
+            w->handle_config_reload(panel_config);
+        for (auto& w : center_widgets)
+            w->handle_config_reload(panel_config);
     }
 };
 
