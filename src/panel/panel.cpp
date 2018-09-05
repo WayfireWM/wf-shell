@@ -15,6 +15,7 @@
 #include "widgets/clock.hpp"
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
+#include "widgets/spacing.hpp"
 #include "display.hpp"
 
 class WayfirePanel;
@@ -298,6 +299,21 @@ class WayfirePanel
         if (name == "battery")
             return Widget(new WayfireBatteryInfo());
 
+        std::string spacing = "spacing";
+        if (name.find(spacing) == 0)
+        {
+            auto pixel_str = name.substr(spacing.size());
+            int pixel = std::atoi(pixel_str.c_str());
+
+            if (pixel <= 0)
+            {
+                std::cerr << "Invalid spacing, " << pixel << std::endl;
+                return nullptr;
+            }
+
+            return Widget(new WayfireSpacing(pixel));
+        }
+
         std::cerr << "Invalid widget: " << name << std::endl;
         return nullptr;
     }
@@ -326,7 +342,7 @@ class WayfirePanel
         {
             auto widget = widget_from_name(widget_name);
             if (!widget)
-                return;
+                continue;
 
             widget->widget_name = widget_name;
             widget->init(&box, panel_config);

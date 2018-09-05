@@ -319,8 +319,6 @@ void WayfireLaunchers::init(Gtk::HBox *container, wayfire_config *config)
 
 void WayfireLaunchers::handle_config_reload(wayfire_config *config)
 {
-    box.set_margin_left(*config->get_section("panel")->get_option("launchers_margin_left", "12"));
-    box.set_margin_right(*config->get_section("panel")->get_option("launchers_margin_right", "0"));
     box.set_spacing(*config->get_section("panel")->get_option("launchers_spacing", "6"));
 
     launchers = get_launchers_from_config(config);
