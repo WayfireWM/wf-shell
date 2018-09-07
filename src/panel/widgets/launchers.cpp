@@ -32,7 +32,15 @@ struct DesktopLauncherInfo : public LauncherInfo
     {
         auto icon = app_info->get_icon()->to_string();
         auto theme = Gtk::IconTheme::get_default();
-        return theme->load_icon(icon, size)->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+
+        if (!theme->lookup_icon(icon, size))
+        {
+            std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
+            return Glib::RefPtr<Gdk::Pixbuf>();
+        }
+
+        return theme->load_icon(icon, size)
+            ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
     }
 
     std::string get_text()
@@ -239,6 +247,9 @@ void WfLauncherButton::on_scale_update()
 
     // hold a reference to the RefPtr
     auto ptr_pbuff = info->get_pixbuf(current_size * image.get_scale_factor());
+    if (!ptr_pbuff)
+        return;
+
     auto pbuff = ptr_pbuff->gobj();
     auto cairo_surface = gdk_cairo_surface_create_from_pixbuf(pbuff, scale, NULL);
 
