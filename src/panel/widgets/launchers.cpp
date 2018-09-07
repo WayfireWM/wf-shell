@@ -7,6 +7,7 @@
 #include <cassert>
 #include <iostream>
 #include <config.hpp>
+#include <gtk-utils.hpp>
 
 // create launcher from a .desktop file or app-id
 struct DesktopLauncherInfo : public LauncherInfo
@@ -250,11 +251,7 @@ void WfLauncherButton::on_scale_update()
     if (!ptr_pbuff)
         return;
 
-    auto pbuff = ptr_pbuff->gobj();
-    auto cairo_surface = gdk_cairo_surface_create_from_pixbuf(pbuff, scale, NULL);
-
-    gtk_image_set_from_surface(image.gobj(), cairo_surface);
-    cairo_surface_destroy(cairo_surface);
+    set_image_pixbuf(image, ptr_pbuff, scale);
 }
 
 WfLauncherButton::WfLauncherButton() { }

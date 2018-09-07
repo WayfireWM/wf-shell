@@ -24,6 +24,15 @@ void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff)
     }
 }
 
+void set_image_pixbuf(Gtk::Image &image, Glib::RefPtr<Gdk::Pixbuf> pixbuf, int scale)
+{
+    auto pbuff = pixbuf->gobj();
+    auto cairo_surface = gdk_cairo_surface_create_from_pixbuf(pbuff, scale, NULL);
+
+    gtk_image_set_from_surface(image.gobj(), cairo_surface);
+    cairo_surface_destroy(cairo_surface);
+}
+
 void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
                     const WfIconLoadOptions& options)
 {
@@ -44,7 +53,5 @@ void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
     if (options.invert)
         invert_pixbuf(pbuff);
 
-    auto cairo_surface =
-        gdk_cairo_surface_create_from_pixbuf(pbuff->gobj(), scale, NULL);
-    gtk_image_set_from_surface(image.gobj(), cairo_surface);
+    set_image_pixbuf(image, pbuff, scale);
 }
