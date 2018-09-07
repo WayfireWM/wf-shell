@@ -1,5 +1,5 @@
-util = static_library('util', ['display.cpp', 'gtk-utils.cpp'],
-    dependencies: [wf_protos, wayland_client, gtkmm])
+util = static_library('util', ['display.cpp', 'gtk-utils.cpp', 'wf-shell-app.cpp'],
+    dependencies: [wf_protos, wayland_client, gtkmm, wfconfig])
 
 util_includes = include_directories('.')
 libutil = declare_dependency(

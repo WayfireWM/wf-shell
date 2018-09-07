@@ -9,25 +9,16 @@
 #include <stdio.h>
 #include <iostream>
 #include <sstream>
-#include <sys/inotify.h>
+
+#include <map>
 
 #include "widgets/battery.hpp"
 #include "widgets/clock.hpp"
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
-#include "display.hpp"
 
-class WayfirePanel;
-namespace
-{
-    int inotify_fd;
-
-    WayfireDisplay *display = NULL;
-    wayfire_config *panel_config;
-
-    std::vector<std::unique_ptr<WayfirePanel>> panels;
-}
+#include "wf-shell-app.hpp"
 
 static void zwf_output_hide_panels(void *data,
                                    struct zwf_output_v1 *zwf_output_v1,
@@ -44,6 +35,7 @@ const struct zwf_output_v1_listener zwf_output_impl =
 
 class WayfirePanel
 {
+    WayfireShellApp *app;
     Gtk::Window window;
 
     Gtk::HBox content_box;
@@ -261,7 +253,7 @@ class WayfirePanel
         window.set_resizable(false);
         window.set_decorated(false);
 
-        bg_color = panel_config->get_section("panel")
+        bg_color = app->config->get_section("panel")
             ->get_option("background_color", "gtk_headerbar");
 
         background_callback = [=] () {
@@ -345,7 +337,7 @@ class WayfirePanel
                 continue;
 
             widget->widget_name = widget_name;
-            widget->init(&box, panel_config);
+            widget->init(&box, app->config.get());
             container.push_back(std::move(widget));
         }
 
@@ -358,7 +350,7 @@ class WayfirePanel
 
     void init_widgets()
     {
-        auto section = panel_config->get_section("panel");
+        auto section = app->config->get_section("panel");
         left_widgets_opt = section->get_option("widgets_left", "launchers");
         right_widgets_opt = section->get_option("widgets_right", "network battery");
         center_widgets_opt = section->get_option("widgets_center", "clock");
@@ -384,10 +376,11 @@ class WayfirePanel
 
 
     public:
-    WayfirePanel(WayfireOutput *output)
+    WayfirePanel(WayfireShellApp *app, WayfireOutput *output)
     {
+        this->app = app;
         this->output = output;
-        autohide_opt = panel_config->get_section("panel")->get_option("autohide", "1");
+        autohide_opt = app->config->get_section("panel")->get_option("autohide", "1");
         autohide_opt->add_updated_handler(&update_autohide);
 
         setup_window();
@@ -397,11 +390,6 @@ class WayfirePanel
         output->resized_callback = [=] (WayfireOutput*, uint32_t w, uint32_t h)
         {
             handle_output_resize(w, h);
-        };
-
-        output->destroyed_callback = [=] (WayfireOutput *output)
-        {
-            delete this;
         };
     }
 
@@ -418,71 +406,45 @@ class WayfirePanel
     void handle_config_reload()
     {
         for (auto& w : left_widgets)
-            w->handle_config_reload(panel_config);
+            w->handle_config_reload(app->config.get());
         for (auto& w : right_widgets)
-            w->handle_config_reload(panel_config);
+            w->handle_config_reload(app->config.get());
         for (auto& w : center_widgets)
-            w->handle_config_reload(panel_config);
+            w->handle_config_reload(app->config.get());
     }
 };
 
-std::string get_config_file()
+class WayfirePanelApp : public WayfireShellApp
 {
-    std::string home_dir = secure_getenv("HOME");
-    std::string config_file = home_dir + "/.config/wf-shell.ini";
-    return config_file;
-}
+    std::map<WayfireOutput*, std::unique_ptr<WayfirePanel> > panels;
 
-#define INOT_BUF_SIZE (1024 * sizeof(inotify_event))
-char buf[INOT_BUF_SIZE];
-
-static void reload_config(int fd)
-{
-    panel_config->reload_config();
-
-    for (auto& panel : panels)
-        panel->handle_config_reload();
-
-    inotify_add_watch(fd, get_config_file().c_str(), IN_MODIFY);
-}
-
-static bool on_config_reload(Glib::IOCondition)
-{
-    /* read, but don't use */
-    read(inotify_fd, buf, INOT_BUF_SIZE);
-    reload_config(inotify_fd);
-
-    return true;
-}
-
-void on_activate(Glib::RefPtr<Gtk::Application> app)
-{
-    app->hold();
-
-    auto handle_new_output = [] (WayfireOutput *output)
+    public:
+    WayfirePanelApp(int argc, char **argv)
+        : WayfireShellApp(argc, argv)
     {
-        panels.push_back(std::unique_ptr<WayfirePanel> (new WayfirePanel(output)));
-    };
+    }
 
-    panel_config = new wayfire_config(get_config_file());
+    void on_config_reload()
+    {
+        for (auto& p : panels)
+            p.second->handle_config_reload();
+    }
 
-    inotify_fd = inotify_init();
-    reload_config(inotify_fd);
+    void on_new_output(WayfireOutput *output)
+    {
+        panels[output] = std::unique_ptr<WayfirePanel> (
+            new WayfirePanel(this, output));
+    }
 
-    Glib::signal_io().connect(sigc::ptr_fun(&on_config_reload),
-                              inotify_fd, Glib::IO_IN | Glib::IO_HUP);
-
-    display = new WayfireDisplay(handle_new_output);
-}
+    void on_output_removed(WayfireOutput *output)
+    {
+        panels.erase(output);
+    }
+};
 
 int main(int argc, char **argv)
 {
-    auto app = Gtk::Application::create(argc, argv);
-    app->signal_activate().connect(sigc::bind(&on_activate, app));
-    app->run();
-
-    if (display)
-        delete display;
-
+    WayfirePanelApp panel_app(argc, argv);
+    panel_app.run();
     return 0;
 }
