@@ -35,8 +35,8 @@ void WayfireBatteryInfo::on_properties_changed(
         if (prop.first == ICON)
             invalid_icon = true;
 
-        if (prop.first == TYPE || prop.first == STATE || prop.second == PERCENTAGE ||
-            prop.first == TIMETOFULL || prop.second == TIMETOEMPTY)
+        if (prop.first == TYPE || prop.first == STATE || prop.first == PERCENTAGE ||
+            prop.first == TIMETOFULL || prop.first == TIMETOEMPTY)
         {
             invalid_details = true;
         }
