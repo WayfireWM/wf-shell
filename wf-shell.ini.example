@@ -1,0 +1,93 @@
+# configuration section for the background, supports just the image option
+
+[background]
+image = /home/ilex/Desktop/sea-tree.jpeg
+
+
+
+
+
+# configuration for the panel
+[panel]
+
+# widgets_* is a space-separated list of widgets to be displayed
+# at the corresponding part of the panel
+# Supported widgets are: launchers clock network battery
+# A special widgets is spacing widgets, it can be used to add padding everywhere on the panel
+# To use it, just append the amount of pixels you want as a padding
+# to the word "spacing" and use it as a plugin
+widgets_left = spacing18 launchers
+widgets_center = clock
+widgets_right = network spacing6 battery spacing12
+
+# base panel size, adapts to the size of text/icons
+panel_thickness = 48
+
+# automatically hide when pointer isn't over the panel
+autohide = 1
+
+# set the background color.
+#background_color = gtk_headerbar # match the color of a GtkHeaderbar
+#background_color = $555555 # Hex color, for example $FFFFFF for white
+#background_color = 0.033 0.041 0.047 0.9 # RGBA color, 1.0 0.0 0.0 0.5 for semi-transparent red
+
+
+
+
+
+# Configuration for the launchers widget
+
+# can be a desktop file
+launcher_chrome = google-chrome.desktop
+launcher_tilix = com.gexperts.Tilix.desktop
+
+# or a combination of bash command + icon
+launcher_cmd_1 = env XDG_CURRENT_DESKTOP=GNOME gnome-control-center
+launcher_icon_1 = /usr/share/icons/gnome/48x48/categories/preferences-system.png
+
+launcher_nau = org.gnome.Nautilus.desktop
+
+# spacing between widgets, can be negative
+launchers_spacing = 4
+
+# size of the launcher icon
+launcher_size = 36
+
+
+
+
+
+# Configuration for the clock widget
+# clock format, uses the Glib Time formatting
+clock_format = %e %a %H:%M
+# clock font
+clock_font = DejaVu Sans:style=Book 20
+
+
+
+
+
+# Configuration for the battery widget
+# How much info to display:
+# 0 -> only icon, 1 -> icon + percentage, 2 -> full info
+battery_status = 1
+battery_icon_size = 32
+
+# invert the colors of the icon, needs to be adjusted according to the size of the icons,
+# because some icon sizes are white, and others are black
+battery_icon_invert = 1
+
+
+
+
+
+# Configuration for the network widget
+# Whether to display connection details, for ex. Wifi AP name
+network_status = 1
+
+network_status_font = DejaVu Sans:style=Book 14
+# network_icon_size = 30
+network_icon_invert_color = 0
+
+# whether to colour the wifi signal strength
+network_status_use_color = yes
