@@ -282,6 +282,27 @@ class WayfirePanel
             sigc::mem_fun(this, &WayfirePanel::on_leave));
         window.signal_size_allocate().connect_notify(
             sigc::mem_fun(this, &WayfirePanel::on_resized));
+
+        window.signal_focus_out_event().connect_notify(
+            sigc::mem_fun(this, &WayfirePanel::on_focus_out));
+    }
+
+    void on_focus_out(const GdkEventFocus *ev)
+    {
+        for (auto& w : left_widgets)
+            w->focus_lost();
+        for (auto& w : right_widgets)
+            w->focus_lost();
+        for (auto& w : center_widgets)
+            w->focus_lost();
+
+        /* We want to hide much faster, because this will have any effect
+         * only in the case when there was an opened popup and the user wants
+         * to hide the panel, so no use delaying it */
+        if (autohide_enabled())
+            schedule_hide(100);
+
+        input_entered = 0; // also reset all inputs we might have missed
     }
 
     void init_layout()
