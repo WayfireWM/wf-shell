@@ -48,7 +48,12 @@ class WayfirePanel
     WayfireOutput *output;
     zwf_wm_surface_v1 *wm_surface = NULL;
 
+    int current_output_width = 0, current_output_height = 0;
     int hidden_height = 1;
+
+    wf_option panel_position;
+    const std::string panel_position_bottom = "bottom";
+
     int get_hidden_y()
     {
         return hidden_height - window.get_allocated_height();
@@ -62,7 +67,14 @@ class WayfirePanel
     {
         if (animation_running || transition.running())
         {
-            zwf_wm_surface_v1_configure(wm_surface, 0, std::round(transition.progress()));
+            int target_y = std::round(transition.progress());
+            if (panel_position->as_string() == panel_position_bottom)
+            {
+                target_y = current_output_height -
+                    (window.get_allocated_height() + target_y);
+            }
+
+            zwf_wm_surface_v1_configure(wm_surface, 0, target_y);
             window.queue_draw();
 
             return (animation_running = transition.running());
@@ -102,24 +114,19 @@ class WayfirePanel
             pending_hide = Glib::signal_timeout().connect(sigc::mem_fun(this, &WayfirePanel::hide), delay);
     }
 
-    int reserved_area = -1;
     void update_reserved_area()
     {
         if (!wm_surface)
             return;
 
-        if (autohide_enabled() && reserved_area != 0)
-        {
-            zwf_wm_surface_v1_set_exclusive_zone(
-                wm_surface, ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP, 0);
-            reserved_area = 0;
-        }
-        else if (!autohide_enabled() && reserved_area != window.get_height())
-        {
-            zwf_wm_surface_v1_set_exclusive_zone(
-                wm_surface, ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP,
-                window.get_height());
-            reserved_area = window.get_height();
+        uint32_t zone = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP;
+        if (panel_position->as_string() == panel_position_bottom)
+            zone = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_BOTTOM;
+
+        if (autohide_enabled()) {
+            zwf_wm_surface_v1_set_exclusive_zone(wm_surface, zone, 0);
+        } else if (!autohide_enabled()) {
+            zwf_wm_surface_v1_set_exclusive_zone(wm_surface, zone, window.get_height());
         }
     }
 
@@ -160,15 +167,15 @@ class WayfirePanel
 
         wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface,
                                                   ZWF_OUTPUT_V1_WM_ROLE_OVERLAY);
-        zwf_wm_surface_v1_set_exclusive_zone(
-            wm_surface, ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP,
-            window.get_height());
-
+        update_reserved_area();
         zwf_output_v1_add_listener(output->zwf, &zwf_output_impl, &update_autohide_request);
     }
 
     void handle_output_resize(uint32_t width, uint32_t height)
     {
+        this->current_output_width = width;
+        this->current_output_height = height;
+
         window.set_size_request(width, height * 0.05);
         window.show_all();
 
@@ -211,9 +218,14 @@ class WayfirePanel
         --input_entered;
     }
 
+    int old_allocated_height = 0;
     void on_resized(Gtk::Allocation& alloc)
     {
-        update_reserved_area();
+        if (old_allocated_height != alloc.get_height())
+        {
+            update_reserved_area();
+            old_allocated_height = alloc.get_height();
+        }
     }
 
     wf_option bg_color;
@@ -383,6 +395,8 @@ class WayfirePanel
         autohide_opt = app->config->get_section("panel")->get_option("autohide", "1");
         autohide_opt->add_updated_handler(&update_autohide);
 
+        panel_position = app->config->get_section("panel")->get_option("position", "top");
+
         setup_window();
         init_layout();
         init_widgets();
@@ -411,6 +425,9 @@ class WayfirePanel
             w->handle_config_reload(app->config.get());
         for (auto& w : center_widgets)
             w->handle_config_reload(app->config.get());
+
+        /* Possibly trigger panel position change */
+        handle_output_resize(current_output_width, current_output_height);
     }
 };
 

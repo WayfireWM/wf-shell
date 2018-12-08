@@ -26,6 +26,10 @@ panel_thickness = 48
 # automatically hide when pointer isn't over the panel
 autohide = 1
 
+# where to position panel
+# Possible values are only "top" and "bottom"
+position = top
+
 # set the background color.
 #background_color = gtk_headerbar # match the color of a GtkHeaderbar
 #background_color = $555555 # Hex color, for example $FFFFFF for white
