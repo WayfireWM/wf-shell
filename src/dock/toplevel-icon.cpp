@@ -23,6 +23,15 @@ namespace IconProvider
                 c = std::tolower(c);
             return str;
         }
+
+        std::string format_gnome_app(std::string str)
+        {
+            str = tolower(str);
+            if (str.size())
+                str[0] = std::toupper(str[0]);
+
+            return str;
+        }
     }
 
     /* First method: Gio::DesktopAppInfo
@@ -37,21 +46,31 @@ namespace IconProvider
             "",
             "/usr/share/applications/",
             "/usr/share/applications/kde/",
+            "/usr/share/applications/org.gnome.",
         };
 
         std::vector<std::string> app_id_variations = {
-            app_id + ".desktop",
-            tolower(app_id) + ".desktop",
+            app_id,
+            tolower(app_id),
+            format_gnome_app(app_id),
+        };
+
+        std::vector<std::string> suffixes = {
+            "",
+            ".desktop"
         };
 
         for (auto& prefix : prefixes)
         {
             for (auto& id : app_id_variations)
             {
-                if (!app_info)
+                for (auto& suffix : suffixes)
                 {
-                    app_info = Gio::DesktopAppInfo
-                        ::create_from_filename(prefix + id);
+                    if (!app_info)
+                    {
+                        app_info = Gio::DesktopAppInfo
+                            ::create_from_filename(prefix + id + suffix);
+                    }
                 }
             }
         }
@@ -65,28 +84,12 @@ namespace IconProvider
 
     /* Second method: Just look up the built-in icon theme,
      * perhaps some icon can be found there */
-    bool has_icon_in_icon_theme(std::string app_id)
-    {
-        auto icon_theme = Gtk::IconTheme::get_default();
-        return icon_theme->has_icon(app_id) ||
-            icon_theme->has_icon(tolower(app_id));
-    }
-
-    bool has_icon(std::string app_id)
-    {
-        return get_from_desktop_app_info(app_id)
-            || has_icon_in_icon_theme(app_id);
-    }
 
     void set_image_from_icon(Gtk::Image& image, std::string app_id)
     {
-        if (!has_icon(app_id))
-        {
-            std::cout << "couldn't find icon for " << app_id << std::endl;
-            return;
-        }
-
+        std::cout << "app id is " << app_id << std::endl;
         auto icon = get_from_desktop_app_info(app_id);
+
         if (icon)
         {
             gtk_image_set_from_gicon(image.gobj(), icon->gobj(),
@@ -115,8 +118,8 @@ class WfToplevelIcon
 
     void set_app_id(std::string app_id)
     {
-     //   IconProvider::set_image_from_icon(image, app_id);
-        set_image_icon(image, "nautilus", 100, {});
+        IconProvider::set_image_from_icon(image, app_id);
+     //   set_image_icon(image, "nautilus", 100, {});
     }
 
     void set_title(std::string title)
