@@ -5,7 +5,7 @@
 #include <cstring>
 
 // listeners
-void registry_add_object(void *data, struct wl_registry *registry, uint32_t name,
+static void registry_add_object(void *data, struct wl_registry *registry, uint32_t name,
         const char *interface, uint32_t version)
 {
     auto display = static_cast<WayfireDisplay*> (data);
@@ -28,12 +28,11 @@ void registry_add_object(void *data, struct wl_registry *registry, uint32_t name
     {
         auto output = (wl_output*) wl_registry_bind(registry, name, &wl_output_interface,
                                                     std::min(version, 1u));
-        // XXX: are we sure that the zwf_shell_manager will be created before the wl_output?
         display->name_to_wayfire_output[name] = new WayfireOutput(display, output);
     }
 }
 
-void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
+static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
 {
     auto display = (WayfireDisplay*) data;
     if (display->name_to_wayfire_output.count(name))
