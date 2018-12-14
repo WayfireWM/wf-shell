@@ -8,6 +8,7 @@
 #include "toplevel-icon.hpp"
 #include "gtk-utils.hpp"
 #include <iostream>
+#include <cassert>
 
 /* TODO: split : we have 2 classes toplevel-icon and toplevel */
 
@@ -101,30 +102,57 @@ namespace IconProvider
     }
 };
 
+enum WfToplevelState
+{
+    WF_TOPLEVEL_STATE_ACTIVATED = (1 << 0),
+    WF_TOPLEVEL_STATE_MAXIMIZED = (1 << 1),
+    WF_TOPLEVEL_STATE_MINIMIZED = (1 << 2),
+};
+
 class WfToplevelIcon
 {
+    zwlr_foreign_toplevel_handle_v1 *handle;
+    uint32_t state;
+
     Gtk::Button button;
     Gtk::Image image;
 
     public:
-    WfToplevelIcon(WfDock& dock)
+    WfToplevelIcon(zwlr_foreign_toplevel_handle_v1 *handle, WfDock& dock)
     {
+        this->handle = handle;
+
         button.add(image);
         button.set_tooltip_text("none");
         button.show_all();
 
+        button.signal_clicked().connect_notify(
+            sigc::mem_fun(this, &WfToplevelIcon::on_clicked));
+
         dock.get_container().pack_end(button);
+    }
+
+    void on_clicked()
+    {
+        if (state & WF_TOPLEVEL_STATE_MINIMIZED)
+            zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
+        else
+            zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
     }
 
     void set_app_id(std::string app_id)
     {
         IconProvider::set_image_from_icon(image, app_id);
-     //   set_image_icon(image, "nautilus", 100, {});
     }
 
     void set_title(std::string title)
     {
         button.set_tooltip_text(title);
+    }
+
+    void set_state(uint32_t state)
+    {
+        this->state = state;
     }
 };
 
@@ -135,12 +163,15 @@ namespace
 
 class WfToplevel::impl
 {
+    zwlr_foreign_toplevel_handle_v1 *handle;
     std::map<wl_output*, std::unique_ptr<WfToplevelIcon>> icons;
     std::string _title, _app_id;
+    uint32_t _state = 0;
 
     public:
     impl(zwlr_foreign_toplevel_handle_v1* handle)
     {
+        this->handle = handle;
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
             &toplevel_handle_v1_impl, this);
     }
@@ -163,9 +194,12 @@ class WfToplevel::impl
         if (!dock)
             return;
 
-        auto icon = std::unique_ptr<WfToplevelIcon>(new WfToplevelIcon(*dock));
+        auto icon = std::unique_ptr<WfToplevelIcon>(
+            new WfToplevelIcon(handle, *dock));
+
         icon->set_title(_title);
         icon->set_app_id(_app_id);
+        icon->set_state(_state);
 
         icons[output] = std::move(icon);
     }
@@ -187,6 +221,13 @@ class WfToplevel::impl
         _app_id = app_id;
         for (auto& icon : icons)
             icon.second->set_app_id(app_id);
+    }
+
+    void set_state(uint32_t state)
+    {
+        _state = state;
+        for (auto& icon : icons)
+            icon.second->set_state(state);
     }
 };
 
@@ -224,9 +265,36 @@ static void handle_toplevel_output_leave(void *data, toplevel_t, wl_output *outp
     impl->handle_output_leave(output);
 }
 
+/* wl_array_for_each isn't supported in C++, so we have to manually
+ * get the data from wl_array, see:
+ *
+ * https://gitlab.freedesktop.org/wayland/wayland/issues/34 */
+template<class T>
+static void array_for_each(wl_array *array, std::function<void(T)> func)
+{
+    assert(array->size % sizeof(T) == 0); // do not use malformed arrays
+    for (T* entry = (T*)array->data; entry < (T*)array->data + array->size;
+        entry += sizeof(T))
+    {
+        func(*entry);
+    }
+}
+
 static void handle_toplevel_state(void *data, toplevel_t, wl_array *state)
 {
-//    auto impl = static_cast<WfToplevel::impl*> (data);
+    uint32_t flags = 0;
+    array_for_each<uint32_t> (state, [&flags] (uint32_t st)
+    {
+        if (st & ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED)
+            flags |= WF_TOPLEVEL_STATE_ACTIVATED;
+        if (st & ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MAXIMIZED)
+            flags |= WF_TOPLEVEL_STATE_MAXIMIZED;
+        if (st & ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MINIMIZED)
+            flags |= WF_TOPLEVEL_STATE_MINIMIZED;
+    });
+
+    auto impl = static_cast<WfToplevel::impl*> (data);
+    impl->set_state(flags);
 }
 
 static void handle_toplevel_done(void *data, toplevel_t)
