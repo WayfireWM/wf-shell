@@ -79,7 +79,6 @@ namespace IconProvider
         if (app_info) // success
             return app_info->get_icon();
 
-        std::cout << "but not found" << std::endl;
         return Icon{};
     }
 
@@ -88,7 +87,6 @@ namespace IconProvider
 
     void set_image_from_icon(Gtk::Image& image, std::string app_id)
     {
-        std::cout << "app id is " << app_id << std::endl;
         auto icon = get_from_desktop_app_info(app_id);
 
         if (icon)
@@ -273,8 +271,7 @@ template<class T>
 static void array_for_each(wl_array *array, std::function<void(T)> func)
 {
     assert(array->size % sizeof(T) == 0); // do not use malformed arrays
-    for (T* entry = (T*)array->data; entry < (T*)array->data + array->size;
-        entry += sizeof(T))
+    for (T* entry = (T*)array->data; (char*)entry < ((char*)array->data + array->size); entry++)
     {
         func(*entry);
     }
@@ -285,11 +282,11 @@ static void handle_toplevel_state(void *data, toplevel_t, wl_array *state)
     uint32_t flags = 0;
     array_for_each<uint32_t> (state, [&flags] (uint32_t st)
     {
-        if (st & ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED)
+        if (st == ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED)
             flags |= WF_TOPLEVEL_STATE_ACTIVATED;
-        if (st & ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MAXIMIZED)
+        if (st == ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MAXIMIZED)
             flags |= WF_TOPLEVEL_STATE_MAXIMIZED;
-        if (st & ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MINIMIZED)
+        if (st == ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MINIMIZED)
             flags |= WF_TOPLEVEL_STATE_MINIMIZED;
     });
 
