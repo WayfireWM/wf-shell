@@ -50,6 +50,11 @@ class WfDock::impl
         wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface,
             ZWF_OUTPUT_V1_WM_ROLE_PANEL);
     }
+
+    void return_focus()
+    {
+        zwf_wm_surface_v1_return_focus(wm_surface);
+    }
 };
 
 WfDock::WfDock(WayfireOutput *output)
@@ -59,6 +64,11 @@ WfDock::~WfDock() = default;
 Gtk::HBox& WfDock::get_container()
 {
     return pimpl->get_container();
+}
+
+void WfDock::return_focus()
+{
+    return pimpl->return_focus();
 }
 
 /* WfDockApp */

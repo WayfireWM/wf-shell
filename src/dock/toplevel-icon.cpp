@@ -110,15 +110,18 @@ enum WfToplevelState
 class WfToplevelIcon
 {
     zwlr_foreign_toplevel_handle_v1 *handle;
+    wl_output *output;
+
     uint32_t state;
 
     Gtk::Button button;
     Gtk::Image image;
 
     public:
-    WfToplevelIcon(zwlr_foreign_toplevel_handle_v1 *handle, WfDock& dock)
+    WfToplevelIcon(zwlr_foreign_toplevel_handle_v1 *handle, wl_output *output)
     {
         this->handle = handle;
+        this->output = output;
 
         button.add(image);
         button.set_tooltip_text("none");
@@ -127,7 +130,9 @@ class WfToplevelIcon
         button.signal_clicked().connect_notify(
             sigc::mem_fun(this, &WfToplevelIcon::on_clicked));
 
-        dock.get_container().pack_end(button);
+        auto dock = WfDockApp::get().dock_for_wl_output(output);
+        assert(dock); // ToplevelIcon is created only for existing outputs
+        dock->get_container().pack_end(button);
     }
 
     void on_clicked()
@@ -136,6 +141,13 @@ class WfToplevelIcon
             zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
         else
             zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
+
+        /* Dock might have been destroyed, and so we'll be destroyed shortly,
+         * but we still don't want to crash */
+        auto dock = WfDockApp::get().dock_for_wl_output(output);
+        if (dock)
+            dock->return_focus();
+
     }
 
     void set_app_id(std::string app_id)
@@ -193,7 +205,7 @@ class WfToplevel::impl
             return;
 
         auto icon = std::unique_ptr<WfToplevelIcon>(
-            new WfToplevelIcon(handle, *dock));
+            new WfToplevelIcon(handle, output));
 
         icon->set_title(_title);
         icon->set_app_id(_app_id);

@@ -16,6 +16,9 @@ class WfDock
 
     Gtk::HBox& get_container();
 
+    /* Calls zwf_wm_surface_v1_return_focus */
+    void return_focus();
+
     private:
     class impl;
     std::unique_ptr<impl> pimpl;
