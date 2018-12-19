@@ -8,6 +8,7 @@
 #include "toplevel-icon.hpp"
 #include "gtk-utils.hpp"
 #include <iostream>
+#include <sstream>
 #include <cassert>
 
 /* TODO: split : we have 2 classes toplevel-icon and toplevel */
@@ -24,18 +25,9 @@ namespace IconProvider
                 c = std::tolower(c);
             return str;
         }
-
-        std::string format_gnome_app(std::string str)
-        {
-            str = tolower(str);
-            if (str.size())
-                str[0] = std::toupper(str[0]);
-
-            return str;
-        }
     }
 
-    /* First method: Gio::DesktopAppInfo
+    /* Gio::DesktopAppInfo
      *
      * Usually knowing the app_id, we can get a desktop app info from Gio
      * The filename is either the app_id + ".desktop" or lower_app_id + ".desktop" */
@@ -47,13 +39,14 @@ namespace IconProvider
             "",
             "/usr/share/applications/",
             "/usr/share/applications/kde/",
-            "/usr/share/applications/org.gnome.",
+            "/usr/share/applications/org.kde.",
+            "/usr/local/share/applications/",
+            "/usr/local/share/applications/org.kde.",
         };
 
         std::vector<std::string> app_id_variations = {
             app_id,
             tolower(app_id),
-            format_gnome_app(app_id),
         };
 
         std::vector<std::string> suffixes = {
@@ -85,18 +78,23 @@ namespace IconProvider
     /* Second method: Just look up the built-in icon theme,
      * perhaps some icon can be found there */
 
-    void set_image_from_icon(Gtk::Image& image, std::string app_id)
+    void set_image_from_icon(Gtk::Image& image, std::string app_id_list)
     {
-        auto icon = get_from_desktop_app_info(app_id);
+        std::string app_id;
+        std::istringstream stream(app_id_list);
 
-        if (icon)
+        /* Wayfire sends a list of app-id's in space separated format, other compositors
+         * send a single app-id, but in any case this works fine */
+        while (stream >> app_id)
         {
-            gtk_image_set_from_gicon(image.gobj(), icon->gobj(),
-                GTK_ICON_SIZE_DIALOG);
-            return;
+            auto icon = get_from_desktop_app_info(app_id);
+            if (icon)
+            {
+                gtk_image_set_from_gicon(image.gobj(), icon->gobj(),
+                    GTK_ICON_SIZE_DIALOG);
+                return;
+            }
         }
-
-        image.set_from_icon_name(app_id, Gtk::ICON_SIZE_DIALOG);
     }
 };
 
