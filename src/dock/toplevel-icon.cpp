@@ -153,10 +153,20 @@ class WfToplevelIcon
 
     void on_clicked()
     {
-        if (state & WF_TOPLEVEL_STATE_MINIMIZED)
-            zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
-        else
-            zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
+        if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
+        {
+            zwlr_foreign_toplevel_handle_v1_activate(handle,
+                WfDockApp::get().get_display()->default_seat);
+        } else
+        {
+            if (state & WF_TOPLEVEL_STATE_MINIMIZED)
+            {
+                zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
+            } else
+            {
+                zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
+            }
+        }
 
         /* Dock might have been destroyed, and so we'll be destroyed shortly,
          * but we still don't want to crash */
@@ -184,6 +194,7 @@ class WfToplevelIcon
 
     void set_state(uint32_t state)
     {
+        std::cout << "set state for %" << app_id << "% to " << state << std::endl;
         this->state = state;
     }
 };

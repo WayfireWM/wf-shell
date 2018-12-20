@@ -185,6 +185,11 @@ WfDock* WfDockApp::dock_for_wl_output(wl_output *output)
     return pimpl->dock_for_wl_output(output);
 }
 
+WayfireDisplay* WfDockApp::get_display()
+{
+    return pimpl->display.get();
+}
+
 void WfDockApp::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager)
 {
     return pimpl->handle_toplevel_manager(manager);

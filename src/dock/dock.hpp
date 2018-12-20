@@ -28,6 +28,7 @@ class WfDockApp
 {
     public:
     WfDock* dock_for_wl_output(wl_output *output);
+    WayfireDisplay *get_display();
 
     void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
     void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1* handle);

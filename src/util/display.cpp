@@ -30,6 +30,12 @@ static void registry_add_object(void *data, struct wl_registry *registry, uint32
                                                     std::min(version, 1u));
         display->name_to_wayfire_output[name] = new WayfireOutput(display, output);
     }
+
+    if (strcmp(interface, wl_seat_interface.name) == 0 && !display->default_seat)
+    {
+        display->default_seat = (wl_seat*) wl_registry_bind(registry, name,
+            &wl_seat_interface, std::min(version, 1u));
+    }
 }
 
 static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)

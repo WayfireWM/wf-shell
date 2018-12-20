@@ -13,6 +13,7 @@ using output_callback = std::function<void(WayfireOutput*)>;
 struct WayfireDisplay
 {
     wl_display    *display = nullptr;
+    wl_seat       *default_seat = nullptr;
 
     zwf_shell_manager_v1   *zwf_shell_manager = nullptr;
     zxdg_output_manager_v1 *zxdg_output_manager = nullptr;
