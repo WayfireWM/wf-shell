@@ -78,7 +78,8 @@ namespace IconProvider
     /* Second method: Just look up the built-in icon theme,
      * perhaps some icon can be found there */
 
-    void set_image_from_icon(Gtk::Image& image, std::string app_id_list)
+    void set_image_from_icon(Gtk::Image& image,
+        std::string app_id_list, int size, int scale)
     {
         std::string app_id;
         std::istringstream stream(app_id_list);
@@ -88,12 +89,26 @@ namespace IconProvider
         while (stream >> app_id)
         {
             auto icon = get_from_desktop_app_info(app_id);
-            if (icon)
+            std::string icon_name = "unknown";
+
+            if (!icon)
             {
-                gtk_image_set_from_gicon(image.gobj(), icon->gobj(),
-                    GTK_ICON_SIZE_DIALOG);
-                return;
+                /* Perhaps no desktop app info, but we might still be able to
+                 * get an icon directly from the icon theme */
+                if (Gtk::IconTheme::get_default()->lookup_icon(app_id, 24))
+                    icon_name = app_id;
+            } else
+            {
+                icon_name = icon->to_string();
             }
+
+            WfIconLoadOptions options;
+            options.user_scale = scale;
+            set_image_icon(image, icon_name, size, options);
+
+            /* finally found some icon */
+            if (icon_name != "unknown")
+                break;
         }
     }
 };
@@ -114,6 +129,7 @@ class WfToplevelIcon
 
     Gtk::Button button;
     Gtk::Image image;
+    std::string app_id;
 
     public:
     WfToplevelIcon(zwlr_foreign_toplevel_handle_v1 *handle, wl_output *output)
@@ -127,6 +143,8 @@ class WfToplevelIcon
 
         button.signal_clicked().connect_notify(
             sigc::mem_fun(this, &WfToplevelIcon::on_clicked));
+        button.property_scale_factor().signal_changed()
+            .connect(sigc::mem_fun(this, &WfToplevelIcon::on_scale_update));
 
         auto dock = WfDockApp::get().dock_for_wl_output(output);
         assert(dock); // ToplevelIcon is created only for existing outputs
@@ -145,12 +163,18 @@ class WfToplevelIcon
         auto dock = WfDockApp::get().dock_for_wl_output(output);
         if (dock)
             dock->return_focus();
+    }
 
+    void on_scale_update()
+    {
+        set_app_id(app_id);
     }
 
     void set_app_id(std::string app_id)
     {
-        IconProvider::set_image_from_icon(image, app_id);
+        this->app_id = app_id;
+        IconProvider::set_image_from_icon(image, app_id,
+            72, button.get_scale_factor());
     }
 
     void set_title(std::string title)
