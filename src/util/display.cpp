@@ -36,6 +36,12 @@ static void registry_add_object(void *data, struct wl_registry *registry, uint32
         display->default_seat = (wl_seat*) wl_registry_bind(registry, name,
             &wl_seat_interface, std::min(version, 1u));
     }
+
+    if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0)
+    {
+        display->zwlr_layer_shell = (zwlr_layer_shell_v1*) wl_registry_bind(
+            registry, name, &zwlr_layer_shell_v1_interface, std::min(version, 1u));
+    }
 }
 
 static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
@@ -79,9 +85,9 @@ WayfireDisplay::WayfireDisplay(std::function<void(WayfireOutput*)> new_output_cb
         std::exit(-1);
     }
 
-    if (!this->zwf_shell_manager)
+    if (!this->zwf_shell_manager && !this->zwlr_layer_shell)
     {
-        std::cerr << "wf_shell not available" << std::endl;
+        std::cerr << "Neither wayfire-shell nor layer-shell available" << std::endl;
         std::exit(-1);
     }
 }
@@ -130,7 +136,8 @@ WayfireOutput::WayfireOutput(WayfireDisplay *display, wl_output *output)
     zxdg_output = zxdg_output_manager_v1_get_xdg_output(display->zxdg_output_manager, handle);
     zxdg_output_v1_add_listener(zxdg_output, &zxdg_output_v1_impl, this);
 
-    zwf = zwf_shell_manager_v1_get_wf_output(display->zwf_shell_manager, output);
+    if (display->zwf_shell_manager)
+        zwf = zwf_shell_manager_v1_get_wf_output(display->zwf_shell_manager, output);
 
     if (display->new_output_callback)
         display->new_output_callback(this);

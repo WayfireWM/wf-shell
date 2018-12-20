@@ -19,8 +19,8 @@ class WfDock
     /* Calls zwf_wm_surface_v1_return_focus */
     void return_focus();
 
-    private:
     class impl;
+    private:
     std::unique_ptr<impl> pimpl;
 };
 

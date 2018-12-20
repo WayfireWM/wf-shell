@@ -194,7 +194,6 @@ class WfToplevelIcon
 
     void set_state(uint32_t state)
     {
-        std::cout << "set state for %" << app_id << "% to " << state << std::endl;
         this->state = state;
     }
 };
