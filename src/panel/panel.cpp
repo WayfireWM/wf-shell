@@ -13,6 +13,7 @@
 #include <map>
 
 #include "widgets/battery.hpp"
+#include "widgets/menu.hpp"
 #include "widgets/clock.hpp"
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
@@ -330,6 +331,8 @@ class WayfirePanel
 
     Widget widget_from_name(std::string name)
     {
+        if (name == "menu")
+            return Widget(new WayfireMenu());
         if (name == "launchers")
             return Widget(new WayfireLaunchers());
         if (name == "clock")

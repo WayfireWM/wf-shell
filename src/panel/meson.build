@@ -1,4 +1,5 @@
 widget_sources = ['widgets/battery.cpp',
+                  'widgets/menu.cpp',
                   'widgets/clock.cpp',
                   'widgets/launchers.cpp',
                   'widgets/network.cpp',
