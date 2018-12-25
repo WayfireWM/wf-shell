@@ -40,14 +40,6 @@ void WfMenuMenuItem::on_click()
     Glib::spawn_command_line_async("/bin/bash -c \'" + command + "\'");
 }
 
-static std::string tolower(std::string str)
-{
-    for (auto& c : str)
-        c = std::tolower(c);
-
-    return str;
-}
-
 bool WfMenuMenuItem::matches(Glib::ustring pattern)
 {
     Glib::ustring text = m_app_info->get_name();
@@ -85,7 +77,8 @@ bool WfMenuMenuItem::matches(Glib::ustring pattern)
 
 bool WfMenuMenuItem::operator < (const WfMenuMenuItem& other)
 {
-    return tolower(m_app_info->get_name()) < tolower(other.m_app_info->get_name());
+    return Glib::ustring(m_app_info->get_name()).lowercase()
+        < Glib::ustring(other.m_app_info->get_name()).lowercase();
 }
 
 void WayfireMenu::load_menu_item(std::string file)
