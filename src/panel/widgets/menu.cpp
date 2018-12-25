@@ -103,7 +103,7 @@ void WayfireMenu::load_menu_item(std::string file)
     loaded_apps.insert({name, exec});
 
     items.push_back(std::unique_ptr<WfMenuMenuItem>(
-            new WfMenuMenuItem(this, app_info)));
+                        new WfMenuMenuItem(this, app_info)));
     flowbox.add(*items.back());
 }
 
