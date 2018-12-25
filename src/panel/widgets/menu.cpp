@@ -12,7 +12,8 @@
 
 #define MAX_LAUNCHER_NAME_LENGTH 11
 
-WfMenuMenuItem::WfMenuMenuItem(AppInfo app) : Gtk::Button(), m_app_info(app)
+WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
+    : Gtk::Button(), menu(_menu), m_app_info(app)
 {
     m_image.set((const Glib::RefPtr<const Gio::Icon>&) app->get_icon(),
         (Gtk::IconSize)Gtk::ICON_SIZE_LARGE_TOOLBAR);
@@ -38,6 +39,8 @@ void WfMenuMenuItem::on_click()
 {
     std::string command = m_app_info->get_commandline();
     Glib::spawn_command_line_async("/bin/bash -c \'" + command + "\'");
+
+    menu->focus_lost();
 }
 
 bool WfMenuMenuItem::matches(Glib::ustring pattern)
@@ -99,7 +102,8 @@ void WayfireMenu::load_menu_item(std::string file)
         return;
     loaded_apps.insert({name, exec});
 
-    items.push_back(std::unique_ptr<WfMenuMenuItem>(new WfMenuMenuItem(app_info)));
+    items.push_back(std::unique_ptr<WfMenuMenuItem>(
+            new WfMenuMenuItem(this, app_info)));
     flowbox.add(*items.back());
 }
 

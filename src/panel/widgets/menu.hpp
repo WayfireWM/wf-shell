@@ -11,16 +11,18 @@
 #include <gtkmm/scrolledwindow.h>
 #include <set>
 
+class WayfireMenu;
 class WfMenuMenuItem : public Gtk::Button
 {
     public:
     using AppInfo = Glib::RefPtr<Gio::DesktopAppInfo>;
-    WfMenuMenuItem(AppInfo app);
+    WfMenuMenuItem(WayfireMenu* menu, AppInfo app);
 
     bool matches(Glib::ustring text);
     bool operator < (const WfMenuMenuItem& other);
 
     private:
+    WayfireMenu* menu;
     Gtk::VBox m_button_box;
     Gtk::Image m_image;
     Gtk::Label m_label;
@@ -45,8 +47,6 @@ class WayfireMenu : public WayfireWidget
     void load_menu_item(std::string file);
     void load_menu_items(std::string directory);
 
-    void focus_lost() override;
-
     bool on_sort(Gtk::FlowBoxChild*, Gtk::FlowBoxChild*);
     bool on_filter(Gtk::FlowBoxChild* child);
     void on_search_changed();
@@ -59,6 +59,7 @@ class WayfireMenu : public WayfireWidget
 
     public:
     void init(Gtk::HBox *container, wayfire_config *config) override;
+    void focus_lost() override;
 };
 
 #endif /* end of include guard: WIDGETS_MENU_HPP */
