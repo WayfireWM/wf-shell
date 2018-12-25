@@ -18,7 +18,7 @@ WfMenuMenuItem::WfMenuMenuItem(AppInfo app) : Gtk::Button(), m_app_info(app)
         (Gtk::IconSize)Gtk::ICON_SIZE_LARGE_TOOLBAR);
     m_image.set_pixel_size(48);
 
-    std::string name = app->get_name();
+    Glib::ustring name = app->get_name();
     set_tooltip_text(app->get_name());
 
     if (name.length() > MAX_LAUNCHER_NAME_LENGTH)
@@ -48,10 +48,39 @@ static std::string tolower(std::string str)
     return str;
 }
 
-bool WfMenuMenuItem::matches(std::string text)
+bool WfMenuMenuItem::matches(Glib::ustring pattern)
 {
-    auto name = m_app_info->get_name();
-    return tolower(text) == tolower(name).substr(0, text.length());
+    Glib::ustring text = m_app_info->get_name();
+    text = text.lowercase();
+    pattern = pattern.lowercase();
+
+    /* Fuzzy search for pattern in text. We use a greedy algorithm as follows:
+     * As long as the pattern isn't matched, try to match the leftmost unmatched
+     * character in pattern with the first occurence of this character after the
+     * partial match. In the end, we just check if we successfully matched all
+     * characters */
+
+    size_t i = 0, // next character in pattern to match
+           j = 0; // the first unmatched character in text
+
+    while (i < pattern.length() && j < text.length())
+    {
+        /* Found a match, advance both pointers */
+        if (pattern[i] == text[j])
+        {
+            ++i;
+            ++j;
+        }
+        else
+        {
+            /* Try to match current unmatched character in pattern with the next
+             * character in text */
+            ++j;
+        }
+    }
+
+    /* If this happens, then we have already matched all characters */
+    return i == pattern.length();
 }
 
 bool WfMenuMenuItem::operator < (const WfMenuMenuItem& other)

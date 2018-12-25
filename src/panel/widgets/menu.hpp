@@ -17,7 +17,7 @@ class WfMenuMenuItem : public Gtk::Button
     using AppInfo = Glib::RefPtr<Gio::DesktopAppInfo>;
     WfMenuMenuItem(AppInfo app);
 
-    bool matches(std::string text);
+    bool matches(Glib::ustring text);
     bool operator < (const WfMenuMenuItem& other);
 
     private:
