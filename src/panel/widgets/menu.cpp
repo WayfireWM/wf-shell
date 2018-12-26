@@ -191,7 +191,10 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
     container->pack_start(hbox, Gtk::PACK_SHRINK, 0);
     hbox.pack_start(menu_button, Gtk::PACK_SHRINK, 0);
 
-    load_menu_items(getenv("HOME") + std::string("/.local/share/applications"));
+    std::string home_dir = getenv("HOME");
+
+    load_menu_items(home_dir + "/.local/share/applications");
+    load_menu_items(home_dir + "/Desktop/");
     load_menu_items("/usr/share/applications");
 
     flowbox.set_valign(Gtk::ALIGN_START);
