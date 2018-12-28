@@ -120,6 +120,11 @@ class WfDock::impl
         return box;
     }
 
+    wl_surface* get_wl_surface()
+    {
+        return this->surface;
+    }
+
     int32_t last_width = 100, last_height = 100;
     void on_allocation(Gtk::Allocation& alloc)
     {
@@ -200,7 +205,5 @@ WfDock::WfDock(WayfireOutput *output)
     : pimpl(new impl(output)) { }
 WfDock::~WfDock() = default;
 
-Gtk::HBox& WfDock::get_container()
-{
-    return pimpl->get_container();
-}
+Gtk::HBox& WfDock::get_container() { return pimpl->get_container(); }
+wl_surface* WfDock::get_wl_surface() { return pimpl->get_wl_surface(); }

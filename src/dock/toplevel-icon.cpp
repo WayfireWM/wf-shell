@@ -57,6 +57,7 @@ class WfToplevelIcon::impl
                 WfDockApp::get().get_display()->default_seat);
         } else
         {
+            send_rectangle_hint();
             if (state & WF_TOPLEVEL_STATE_MINIMIZED)
             {
                 zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
@@ -77,6 +78,30 @@ class WfToplevelIcon::impl
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image, app_id,
             72, button.get_scale_factor());
+
+    }
+
+    void send_rectangle_hint()
+    {
+        Gtk::Widget *widget = &this->image;
+
+        int x = 0, y = 0;
+        int width = image.get_allocated_width();
+        int height = image.get_allocated_height();
+
+        while (widget)
+        {
+            x += widget->get_allocation().get_x();
+            y += widget->get_allocation().get_y();
+            widget = widget->get_parent();
+        }
+
+        auto dock = WfDockApp::get().dock_for_wl_output(output);
+        if (!dock)
+            return;
+
+        zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
+            dock->get_wl_surface(), x, y, width, height);
     }
 
     void set_title(std::string title)

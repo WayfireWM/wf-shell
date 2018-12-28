@@ -15,6 +15,7 @@ class WfDock
     ~WfDock();
 
     Gtk::HBox& get_container();
+    wl_surface *get_wl_surface();
 
     class impl;
     private:
