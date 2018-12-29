@@ -83,7 +83,7 @@ class WfToplevelIcon::impl
 
     void send_rectangle_hint()
     {
-        Gtk::Widget *widget = &this->image;
+        Gtk::Widget *widget = &this->button;
 
         int x = 0, y = 0;
         int width = image.get_allocated_width();
