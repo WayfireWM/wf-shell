@@ -41,6 +41,8 @@ class WfToplevelIcon::impl
 
         button.signal_clicked().connect_notify(
             sigc::mem_fun(this, &WfToplevelIcon::impl::on_clicked));
+        button.signal_size_allocate().connect_notify(
+            sigc::mem_fun(this, &WfToplevelIcon::impl::on_allocation_changed));
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(this, &WfToplevelIcon::impl::on_scale_update));
 
@@ -66,6 +68,11 @@ class WfToplevelIcon::impl
                 zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
             }
         }
+    }
+
+    void on_allocation_changed(Gtk::Allocation& alloc)
+    {
+        send_rectangle_hint();
     }
 
     void on_scale_update()
