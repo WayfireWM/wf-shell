@@ -14,9 +14,10 @@ class WfDock
     WfDock(WayfireOutput *output);
     ~WfDock();
 
-    Gtk::HBox& get_container();
-    wl_surface *get_wl_surface();
+    void add_child(Gtk::Widget& widget);
+    void rem_child(Gtk::Widget& widget);
 
+    wl_surface *get_wl_surface();
     class impl;
     private:
     std::unique_ptr<impl> pimpl;

@@ -48,7 +48,7 @@ class WfToplevelIcon::impl
 
         auto dock = WfDockApp::get().dock_for_wl_output(output);
         assert(dock); // ToplevelIcon is created only for existing outputs
-        dock->get_container().pack_end(button);
+        dock->add_child(button);
     }
 
     void on_clicked()
@@ -119,6 +119,13 @@ class WfToplevelIcon::impl
     void set_state(uint32_t state)
     {
         this->state = state;
+    }
+
+    ~impl()
+    {
+        auto dock = WfDockApp::get().dock_for_wl_output(output);
+        if (dock)
+            dock->rem_child(button);
     }
 };
 

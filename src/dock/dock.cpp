@@ -115,9 +115,30 @@ class WfDock::impl
             sigc::mem_fun(this, &WfDock::impl::on_draw));
     }
 
-    Gtk::HBox& get_container()
+    void add_child(Gtk::Widget& widget)
     {
-        return box;
+        box.pack_end(widget);
+    }
+
+    void rem_child(Gtk::Widget& widget)
+    {
+        this->box.remove(widget);
+
+        /* We now need to resize the dock so it fits the remaining widgets. */
+        int total_width = 0;
+        int total_height = last_height;
+        box.foreach([&] (Gtk::Widget& child)
+        {
+            Gtk::Requisition min_req, pref_req;
+            child.get_preferred_size(min_req, pref_req);
+
+            total_width += min_req.width;
+            total_height = std::max(total_height, min_req.height);
+        });
+
+        total_width = std::min(total_height, 100);
+        this->window.resize(total_width, total_height);
+        this->window.set_size_request(total_width, total_height);
     }
 
     wl_surface* get_wl_surface()
@@ -205,5 +226,7 @@ WfDock::WfDock(WayfireOutput *output)
     : pimpl(new impl(output)) { }
 WfDock::~WfDock() = default;
 
-Gtk::HBox& WfDock::get_container() { return pimpl->get_container(); }
+void WfDock::add_child(Gtk::Widget& w) { return pimpl->add_child(w); }
+void WfDock::rem_child(Gtk::Widget& w) { return pimpl->rem_child(w); }
+
 wl_surface* WfDock::get_wl_surface() { return pimpl->get_wl_surface(); }
