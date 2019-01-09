@@ -10,7 +10,6 @@ void WayfireClock::init(Gtk::HBox *container, wayfire_config *config)
     font = config->get_section("panel")
         ->get_option("clock_font", default_font);
 
-    popover = Gtk::Popover(menu_button);
     menu_button.add(label);
     menu_button.set_direction(Gtk::ARROW_DOWN);
     menu_button.set_popover(popover);
@@ -20,7 +19,6 @@ void WayfireClock::init(Gtk::HBox *container, wayfire_config *config)
 
     update_label();
 
-    //popover.set_position(Gtk::POS_BOTTOM);
     calendar.show();
     popover.add(calendar);
     popover.signal_show().connect_notify(sigc::mem_fun(this, &WayfireClock::on_calendar_shown));
