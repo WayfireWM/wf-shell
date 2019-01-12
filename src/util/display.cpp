@@ -36,12 +36,6 @@ static void registry_add_object(void *data, struct wl_registry *registry, uint32
         display->default_seat = (wl_seat*) wl_registry_bind(registry, name,
             &wl_seat_interface, std::min(version, 1u));
     }
-
-    if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0)
-    {
-        display->zwlr_layer_shell = (zwlr_layer_shell_v1*) wl_registry_bind(
-            registry, name, &zwlr_layer_shell_v1_interface, std::min(version, 1u));
-    }
 }
 
 static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
@@ -85,9 +79,9 @@ WayfireDisplay::WayfireDisplay(std::function<void(WayfireOutput*)> new_output_cb
         std::exit(-1);
     }
 
-    if (!this->zwf_shell_manager && !this->zwlr_layer_shell)
+    if (!this->zwf_shell_manager)
     {
-        std::cerr << "Neither wayfire-shell nor layer-shell available" << std::endl;
+        std::cerr << "wayfire-shell not available" << std::endl;
         std::exit(-1);
     }
 }

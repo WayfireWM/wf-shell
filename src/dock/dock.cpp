@@ -11,15 +11,11 @@
 #include <wf-shell-app.hpp>
 #include "dock.hpp"
 
-namespace {
-    extern zwlr_layer_surface_v1_listener layer_surface_v1_impl;
-}
-
 class WfDock::impl
 {
     WayfireOutput *output;
-    zwlr_layer_surface_v1 *layer_surface;
-    wl_surface *surface;
+    zwf_wm_surface_v1 *wm_surface;
+    wl_surface *_wl_surface;
 
     Gtk::Window window;
     Gtk::HBox box;
@@ -37,9 +33,7 @@ class WfDock::impl
             return;
 
         int margin = std::round(autohide_duration.progress());
-        zwlr_layer_surface_v1_set_margin(layer_surface,
-            margin, margin, margin, margin);
-        wl_surface_commit(surface);
+        zwf_wm_surface_v1_set_margin(wm_surface, margin, margin, margin, margin);
         window.queue_draw();
     }
 
@@ -97,13 +91,14 @@ class WfDock::impl
     {
         this->output = output;
         window.set_decorated(false);
-        create_layer_surface();
+        window.add(box);
+        window.set_size_request(100, 100);
+
+        create_wm_surface();
 
         autohide_duration.start(get_hidden_margin(), get_hidden_margin());
         do_show();
         schedule_hide(500);
-
-        window.add(box);
 
         window.signal_size_allocate().connect_notify(
             sigc::mem_fun(this, &WfDock::impl::on_allocation));
@@ -143,7 +138,7 @@ class WfDock::impl
 
     wl_surface* get_wl_surface()
     {
-        return this->surface;
+        return this->_wl_surface;
     }
 
     int32_t last_width = 100, last_height = 100;
@@ -153,74 +148,29 @@ class WfDock::impl
         {
             last_width = alloc.get_width();
             last_height = alloc.get_height();
-            send_layer_surface_configure(last_width, last_height);
         }
     }
 
-    void create_layer_surface()
+    void create_wm_surface()
     {
-        auto gtk_window = window.gobj();
-        auto gtk_widget = GTK_WIDGET(gtk_window);
-        gtk_widget_realize(gtk_widget);
-
-        auto gdk_window = window.get_window()->gobj();
-        gdk_wayland_window_set_use_custom_surface(gdk_window);
-        this->surface = gdk_wayland_window_get_wl_surface(gdk_window);
-
-        layer_surface = zwlr_layer_shell_v1_get_layer_surface(
-            output->display->zwlr_layer_shell, surface, output->handle,
-            ZWLR_LAYER_SHELL_V1_LAYER_TOP, "wf-dock");
-
-        zwlr_layer_surface_v1_add_listener(layer_surface,
-            &layer_surface_v1_impl, this);
-
-        zwlr_layer_surface_v1_set_anchor(layer_surface,
-            ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM);
-
-        zwlr_layer_surface_v1_set_exclusive_zone(layer_surface, -1);
-        zwlr_layer_surface_v1_set_keyboard_interactivity(layer_surface, 0);
-        send_layer_surface_configure(last_width, last_height);
-    }
-
-    void send_layer_surface_configure(int width, int height)
-    {
-        zwlr_layer_surface_v1_set_size(layer_surface, width, height);
-        wl_surface_commit(surface);
-    }
-
-    void handle_resized(int width, int height)
-    {
-        window.set_size_request(width, height);
-        window.resize(width, height);
         window.show_all();
 
-        zwlr_layer_surface_v1_set_size(layer_surface, width, height);
+        auto gdk_window = window.get_window()->gobj();
+        _wl_surface = gdk_wayland_window_get_wl_surface(gdk_window);
+
+        wm_surface = zwf_output_v1_get_wm_surface(output->zwf,
+            _wl_surface, ZWF_OUTPUT_V1_WM_ROLE_PANEL);
+
+        zwf_wm_surface_v1_set_anchor(wm_surface,
+            ZWF_WM_SURFACE_V1_ANCHOR_EDGE_BOTTOM);
+        update_margin();
+
+        zwf_wm_surface_v1_set_keyboard_mode(wm_surface,
+            ZWF_WM_SURFACE_V1_KEYBOARD_FOCUS_MODE_NO_FOCUS);
     }
 
     void return_focus() { }
 };
-
-static void handle_layer_surface_configure(void *data,
-    zwlr_layer_surface_v1 *layer_surface, uint32_t serial,
-    uint32_t width, uint32_t height)
-{
-    auto impl = static_cast<WfDock::impl*> (data);
-
-    zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
-    impl->handle_resized(width, height);
-}
-
-static void handle_layer_surface_closed(void *data, zwlr_layer_surface_v1 *)
-{
-    // TODO
-}
-
-namespace {
-    struct zwlr_layer_surface_v1_listener layer_surface_v1_impl = {
-        .configure = handle_layer_surface_configure,
-        .closed = handle_layer_surface_closed,
-    };
-}
 
 WfDock::WfDock(WayfireOutput *output)
     : pimpl(new impl(output)) { }

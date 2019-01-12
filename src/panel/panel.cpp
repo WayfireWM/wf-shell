@@ -63,31 +63,39 @@ class WayfirePanel
     wf_duration transition{duration};
 
     bool animation_running = false;
-    bool update_position()
+    bool update_margin()
     {
         if (animation_running || transition.running())
         {
             int target_y = std::round(transition.progress());
-            if (panel_position->as_string() == panel_position_bottom)
-            {
-                target_y = current_output_height -
-                    (window.get_allocated_height() + target_y);
-            }
 
-            zwf_wm_surface_v1_configure(wm_surface, 0, target_y);
+            // takes effect only for anchored edges
+            zwf_wm_surface_v1_set_margin(wm_surface,
+                target_y, target_y, target_y, target_y);
+
             window.queue_draw();
-
             return (animation_running = transition.running());
         }
 
         return false;
     }
 
+    void update_position()
+    {
+        uint32_t anchor = 0;
+        if (panel_position->as_string() == "top")
+            anchor = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP;
+        else
+            anchor = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_BOTTOM;
+
+        zwf_wm_surface_v1_set_anchor(wm_surface, anchor);
+    }
+
     bool show()
     {
         int start = transition.progress();
         transition.start(start, 0);
-        update_position();
+        update_margin();
         return false; // disconnect
     }
 
@@ -95,7 +103,7 @@ class WayfirePanel
     {
         int start = transition.progress();
         transition.start(start, get_hidden_y());
-        update_position();
+        update_margin();
         return false; // disconnect
     }
 
@@ -119,14 +127,10 @@ class WayfirePanel
         if (!wm_surface)
             return;
 
-        uint32_t zone = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP;
-        if (panel_position->as_string() == panel_position_bottom)
-            zone = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_BOTTOM;
-
         if (autohide_enabled()) {
-            zwf_wm_surface_v1_set_exclusive_zone(wm_surface, zone, 0);
+            zwf_wm_surface_v1_set_exclusive_zone(wm_surface, 0);
         } else if (!autohide_enabled()) {
-            zwf_wm_surface_v1_set_exclusive_zone(wm_surface, zone, window.get_height());
+            zwf_wm_surface_v1_set_exclusive_zone(wm_surface, window.get_height());
         }
     }
 
@@ -168,6 +172,7 @@ class WayfirePanel
         wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface,
                                                   ZWF_OUTPUT_V1_WM_ROLE_OVERLAY);
         update_reserved_area();
+        update_position();
         zwf_output_v1_add_listener(output->zwf, &zwf_output_impl, &update_autohide_request);
     }
 
@@ -191,7 +196,7 @@ class WayfirePanel
 
     void on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
     {
-        update_position();
+        update_margin();
     }
 
     int input_entered = 0;
@@ -285,6 +290,16 @@ class WayfirePanel
 
         window.signal_focus_out_event().connect_notify(
             sigc::mem_fun(this, &WayfirePanel::on_focus_out));
+
+        window.signal_delete_event().connect(
+            sigc::mem_fun(this, &WayfirePanel::on_delete));
+    }
+
+    bool on_delete(GdkEventAny *ev)
+    {
+        /* We ignore close events, because the panel's lifetime is bound to
+         * the lifetime of the output */
+        return true;
     }
 
     void on_focus_out(const GdkEventFocus *ev)
@@ -407,7 +422,6 @@ class WayfirePanel
         center_widgets_updated();
     }
 
-
     public:
     WayfirePanel(WayfireShellApp *app, WayfireOutput *output)
     {
@@ -447,8 +461,7 @@ class WayfirePanel
         for (auto& w : center_widgets)
             w->handle_config_reload(app->config.get());
 
-        /* Possibly trigger panel position change */
-        handle_output_resize(current_output_width, current_output_height);
+        update_position();
     }
 };
 

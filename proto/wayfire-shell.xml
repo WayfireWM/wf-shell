@@ -2,12 +2,14 @@
     <interface name="zwf_shell_manager_v1" version="1">
         <description summary="DE integration">
             The purpose of this protocol is to enable the creation of different
-            desktop-interface windows like panels, backgrounds, docks, lockscreens, etc.
-            It also aims to allow the creation of full-blown DEs using Wayfire.
+            desktop-interface windows like panels, backgrounds, docks,
+            lockscreens, etc. It also aims to allow the creation of full-blown
+            DEs using Wayfire.
 
-            Note that in contrast to some other efforts to create a similar protocol,
-            such as wlr-layer-shell, this isn't a new "shell" for giving a role to wl_surfaces.
-            This protocol can be used with any type of wl_surface (xdg_surface, layer_surface)
+            Note that in contrast to some other efforts to create a similar
+            protocol, such as wlr-layer-shell, this isn't a new "shell" for
+            giving a role to wl_surfaces. This protocol can be used with any
+            type of toplevel surface (xdg_toplevel, xdg_toplevel_v6, etc.)
             to give them to the corresponding WM role.
         </description>
 
@@ -32,29 +34,69 @@
         </request>
 
         <enum name="anchor_edge">
-            <entry name="top" value="0"/>
-            <entry name="bottom" value="1"/>
-            <entry name="left" value="2"/>
-            <entry name="right" value="3"/>
+            <entry name="top" value="1"/>
+            <entry name="bottom" value="2"/>
+            <entry name="left" value="4"/>
+            <entry name="right" value="8"/>
         </enum>
+
+        <request name="set_anchor">
+            <description summary="set anchor position">
+                Sets the position on the screen where the compositor should
+                position the view. Can be reset by specifying anchor 0. If not
+                set, the compositor will assume manual positioning via the
+                configure request.
+
+                If one anchor edge is provided, the wm surface is "stuck" to
+                that edge.
+                If two anchor edges are provided, the wm surface is considered
+                anchored to the corner of the screen between them.
+
+                Any other anchor edge configuration is considered invalid.
+            </description>
+            <arg name="anchors" type="uint"/>
+        </request>
+
+        <request name="set_margin">
+            <description summary="set margin respective to anchored edges">
+                Set the offset from the anchored edges to the wm surface. This
+                is an alternative to the configure request. Using both will
+                result in undefined results.
+
+                Margin has effect only for edges the wm surface is anchored to.
+            </description>
+
+            <arg name="top" type="int"/>
+            <arg name="bottom" type="int"/>
+            <arg name="left" type="int"/>
+            <arg name="right" type="int"/>
+        </request>
+
+        <enum name="keyboard_focus_mode">
+            <entry name="no_focus" value="0"/>
+            <entry name="click_to_focus" value="1"/>
+            <entry name="exclusive_focus" value="2"/>
+        </enum>
+
+        <request name="set_keyboard_mode">
+            <description summary="Set keyboard focus mode">
+                Sets how the wm surface will interact with keyboard focus.
+                Setting no_focus means that the surface will never receive
+                keyboard focus, click_to_focus means normal focus semantics (i.e
+                what you expect from "normal" windows), and exclusive focus means
+                that no other window can get keyboard focus.
+            </description>
+            <arg name="mode" type="uint" enum="keyboard_focus_mode"/>
+        </request>
 
         <request name="set_exclusive_zone">
             <description summary="Reserve pixels">
-                Request the compositor to reserve the given
-                amount of pixels from the given edge, so that
-                other surfaces won't occlude it
+                Request the compositor to reserve the given amount of pixels
+                for the wm surface(like STRUTS in X11). This has effect only
+                if the surface is anchored to a single edge. Margin doesn't
+                affect exclusive zone in any way.
             </description>
-
-            <arg name="anchor_edge" type="uint" enum="anchor_edge"/>
             <arg name="size" type="uint"/>
-        </request>
-
-        <request name="request_focus">
-            <description summary="Request that the compositor focus the surface."/>
-        </request>
-
-        <request name="return_focus">
-            <description summary="Indicate that the surface no longer needs focus."/>
         </request>
     </interface>
 
@@ -84,7 +126,6 @@
             <arg name="role" type="uint" enum="wm_role"/>
             <arg name="id" type="new_id" interface="zwf_wm_surface_v1"/>
         </request>
-
 
         <event name="output_hide_panels">
             <description summary="Autohide/Show signal">

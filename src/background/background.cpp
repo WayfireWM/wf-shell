@@ -33,9 +33,9 @@ class WayfireBackground
         }
 
         wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface,
-                                                  ZWF_OUTPUT_V1_WM_ROLE_BACKGROUND);
+            ZWF_OUTPUT_V1_WM_ROLE_BACKGROUND);
         zwf_wm_surface_v1_configure(wm_surface, 0, 0);
-        }
+    }
 
     int output_width, output_height;
     void handle_output_resize(uint32_t width, uint32_t height)

@@ -7,7 +7,6 @@
 
 #include "xdg-output-unstable-v1-client-protocol.h"
 #include "wayfire-shell-client-protocol.h"
-#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 struct WayfireOutput;
 using output_callback = std::function<void(WayfireOutput*)>;
@@ -18,7 +17,6 @@ struct WayfireDisplay
 
     zwf_shell_manager_v1   *zwf_shell_manager = nullptr;
     zxdg_output_manager_v1 *zxdg_output_manager = nullptr;
-    zwlr_layer_shell_v1    *zwlr_layer_shell = nullptr;
 
     WayfireDisplay(output_callback new_output_cb);
     ~WayfireDisplay();
