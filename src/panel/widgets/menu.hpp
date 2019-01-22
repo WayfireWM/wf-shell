@@ -14,7 +14,7 @@
 class WayfireMenu;
 using AppInfo = Glib::RefPtr<Gio::AppInfo>;
 
-class WfMenuMenuItem : public Gtk::Button
+class WfMenuMenuItem : public Gtk::HBox
 {
     public:
     WfMenuMenuItem(WayfireMenu* menu, AppInfo app);
@@ -24,6 +24,8 @@ class WfMenuMenuItem : public Gtk::Button
 
     private:
     WayfireMenu* menu;
+    Gtk::Box m_left_pad, m_right_pad;
+    Gtk::Button m_button;
     Gtk::VBox m_button_box;
     Gtk::Image m_image;
     Gtk::Label m_label;

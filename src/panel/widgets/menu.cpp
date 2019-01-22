@@ -12,7 +12,7 @@
 #define MAX_LAUNCHER_NAME_LENGTH 11
 
 WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
-    : Gtk::Button(), menu(_menu), m_app_info(app)
+    : Gtk::HBox(), menu(_menu), m_app_info(app)
 {
     m_image.set((const Glib::RefPtr<const Gio::Icon>&) app->get_icon(),
         (Gtk::IconSize)Gtk::ICON_SIZE_LARGE_TOOLBAR);
@@ -28,9 +28,18 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
     m_button_box.pack_start(m_image, false, false);
     m_button_box.pack_end(m_label, false, false);
 
-    add(m_button_box);
+    m_button.add(m_button_box);
+    m_button.get_style_context()->add_class("flat");
+
+    /* Wrap the button box into a HBox, with left/right padding.
+     * This way, the button doesn't fill the whole area allocated for an entry
+     * in the flowbox */
+    this->pack_start(m_left_pad);
+    this->pack_start(m_button);
+    this->pack_start(m_right_pad);
+
     get_style_context()->add_class("flat");
-    signal_clicked().connect_notify(
+    m_button.signal_clicked().connect_notify(
         sigc::mem_fun(this, &WfMenuMenuItem::on_click));
 }
 
