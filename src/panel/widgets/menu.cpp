@@ -1,5 +1,4 @@
 #include <dirent.h>
-#include <sys/stat.h>
 
 #include <cassert>
 #include <glibmm.h>
@@ -84,9 +83,8 @@ bool WfMenuMenuItem::operator < (const WfMenuMenuItem& other)
         < Glib::ustring(other.m_app_info->get_name()).lowercase();
 }
 
-void WayfireMenu::load_menu_item(std::string file)
+void WayfireMenu::load_menu_item(AppInfo app_info)
 {
-    auto app_info = Gio::DesktopAppInfo::create_from_filename(file);
     if (!app_info)
         return;
 
@@ -107,7 +105,15 @@ void WayfireMenu::load_menu_item(std::string file)
     flowbox.add(*items.back());
 }
 
-void WayfireMenu::load_menu_items(std::string path)
+static bool ends_with(std::string text, std::string pattern)
+{
+    if (text.length() < pattern.length())
+        return false;
+
+    return text.substr(text.length() - pattern.length()) == pattern;
+}
+
+void WayfireMenu::load_menu_items_from_dir(std::string path)
 {
     /* Expand path */
     auto dir = opendir(path.c_str());
@@ -124,16 +130,20 @@ void WayfireMenu::load_menu_items(std::string path)
 
         auto fullpath = path + "/" + file->d_name;
 
-        struct stat next;
-        if (stat(fullpath.c_str(), &next) != 0)
-            continue;
-
-        if (S_ISDIR(next.st_mode)) {
-            load_menu_items(fullpath);
-        } else {
-            load_menu_item(std::string(fullpath));
-        }
+        if (ends_with(fullpath, ".desktop"))
+            load_menu_item(Gio::DesktopAppInfo::create_from_filename(fullpath));
     }
+}
+
+void WayfireMenu::load_menu_items_all()
+{
+    std::string home_dir = secure_getenv("HOME");
+
+    auto app_list = Gio::AppInfo::get_all();
+    for (auto app : app_list)
+        load_menu_item(app);
+
+    load_menu_items_from_dir(home_dir + "/Desktop");
 }
 
 void WayfireMenu::on_search_changed()
@@ -191,11 +201,7 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
     container->pack_start(hbox, Gtk::PACK_SHRINK, 0);
     hbox.pack_start(menu_button, Gtk::PACK_SHRINK, 0);
 
-    std::string home_dir = getenv("HOME");
-
-    load_menu_items(home_dir + "/.local/share/applications");
-    load_menu_items(home_dir + "/Desktop/");
-    load_menu_items("/usr/share/applications");
+    load_menu_items_all();
 
     flowbox.set_valign(Gtk::ALIGN_START);
     flowbox.set_homogeneous(true);

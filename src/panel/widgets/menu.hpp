@@ -12,10 +12,11 @@
 #include <set>
 
 class WayfireMenu;
+using AppInfo = Glib::RefPtr<Gio::AppInfo>;
+
 class WfMenuMenuItem : public Gtk::Button
 {
     public:
-    using AppInfo = Glib::RefPtr<Gio::DesktopAppInfo>;
     WfMenuMenuItem(WayfireMenu* menu, AppInfo app);
 
     bool matches(Glib::ustring text);
@@ -44,8 +45,9 @@ class WayfireMenu : public WayfireWidget
     Gtk::MenuButton menu_button;
     Gtk::ScrolledWindow scrolled_window;
 
-    void load_menu_item(std::string file);
-    void load_menu_items(std::string directory);
+    void load_menu_item(AppInfo app_info);
+    void load_menu_items_from_dir(std::string directory);
+    void load_menu_items_all();
 
     bool on_sort(Gtk::FlowBoxChild*, Gtk::FlowBoxChild*);
     bool on_filter(Gtk::FlowBoxChild* child);
