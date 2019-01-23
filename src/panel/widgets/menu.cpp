@@ -186,14 +186,12 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
     int32_t base_size = *config->get_section("panel")->get_option("launcher_size",
         std::to_string(DEFAULT_ICON_SIZE));
 
-    menu_button.add(main_image);
-    menu_button.set_direction(Gtk::ARROW_DOWN);
-    menu_button.set_popover(popover);
-    menu_button.get_style_context()->add_class("flat");
-    menu_button.set_size_request(base_size, 0);
+    button = std::unique_ptr<WayfireMenuButton> (new WayfireMenuButton(config));
+    button->add(main_image);
+    button->set_size_request(base_size, 0);
 
-    popover.set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
-    popover.signal_show().connect_notify(
+    button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
+    button->get_popover()->signal_show().connect_notify(
         sigc::mem_fun(this, &WayfireMenu::on_popover_shown));
 
     auto ptr_pbuff = Gdk::Pixbuf::create_from_file(ICONDIR "/wayfire.png",
@@ -205,7 +203,7 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
     set_image_pixbuf(main_image, ptr_pbuff, main_image.get_scale_factor());
 
     container->pack_start(hbox, Gtk::PACK_SHRINK, 0);
-    hbox.pack_start(menu_button, Gtk::PACK_SHRINK, 0);
+    hbox.pack_start(*button, Gtk::PACK_SHRINK, 0);
 
     load_menu_items_all();
 
@@ -230,11 +228,11 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
     box.pack_start(scrolled_window);
     box.show_all();
 
-    popover.add(box);
-    popover.show_all();
+    button->get_popover()->add(box);
+    button->get_popover()->show_all();
 }
 
 void WayfireMenu::focus_lost()
 {
-    menu_button.set_active(false);
+    button->set_active(false);
 }

@@ -7,6 +7,11 @@
 #define DEFAULT_PANEL_HEIGHT "48"
 #define DEFAULT_ICON_SIZE 32
 
+#define PANEL_POSITION_OPT "position"
+#define PANEL_POSITION_BOTTOM "bottom"
+#define PANEL_POSITION_TOP "top"
+#define PANEL_POSITION_DEFAULT PANEL_POSITION_TOP
+
 class wayfire_config;
 class WayfireWidget
 {

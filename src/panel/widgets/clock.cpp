@@ -10,20 +10,17 @@ void WayfireClock::init(Gtk::HBox *container, wayfire_config *config)
     font = config->get_section("panel")
         ->get_option("clock_font", default_font);
 
-    menu_button.add(label);
-    menu_button.set_direction(Gtk::ARROW_DOWN);
-    menu_button.set_popover(popover);
-    menu_button.get_style_context()->add_class("flat");
-
-    popover.set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
+    button = std::unique_ptr<WayfireMenuButton> (new WayfireMenuButton(config));
+    button->add(label);
 
     update_label();
 
     calendar.show();
-    popover.add(calendar);
-    popover.signal_show().connect_notify(sigc::mem_fun(this, &WayfireClock::on_calendar_shown));
+    button->get_popover()->add(calendar);
+    button->get_popover()->signal_show().connect_notify(
+        sigc::mem_fun(this, &WayfireClock::on_calendar_shown));
 
-    container->pack_end(menu_button, false, false);
+    container->pack_end(*button, false, false);
 
     timeout = Glib::signal_timeout().connect_seconds(
         sigc::mem_fun(this, &WayfireClock::update_label), 1);
@@ -47,7 +44,7 @@ void WayfireClock::on_calendar_shown()
 
 void WayfireClock::focus_lost()
 {
-    menu_button.set_active(false);
+    button->set_active(false);
 }
 
 bool WayfireClock::update_label()

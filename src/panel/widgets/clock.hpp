@@ -2,18 +2,16 @@
 #define WIDGETS_CLOCK_HPP
 
 #include "../widget.hpp"
+#include "wf-popover.hpp"
 #include <gtkmm/calendar.h>
 #include <gtkmm/label.h>
-#include <gtkmm/popover.h>
-#include <gtkmm/menubutton.h>
 #include <config.hpp>
 
 class WayfireClock : public WayfireWidget
 {
     Gtk::Label label;
-    Gtk::Popover popover;
-    Gtk::MenuButton menu_button;
     Gtk::Calendar calendar;
+    std::unique_ptr<WayfireMenuButton> button;
 
     sigc::connection timeout;
     wf_option format;

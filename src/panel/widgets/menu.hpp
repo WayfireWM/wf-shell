@@ -2,12 +2,11 @@
 #define WIDGETS_MENU_HPP
 
 #include "../widget.hpp"
+#include "wf-popover.hpp"
 #include <giomm/desktopappinfo.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/image.h>
-#include <gtkmm/popover.h>
 #include <gtkmm/flowbox.h>
-#include <gtkmm/menubutton.h>
 #include <gtkmm/scrolledwindow.h>
 #include <set>
 
@@ -43,9 +42,8 @@ class WayfireMenu : public WayfireWidget
     Gtk::Image main_image;
     Gtk::Entry search_box;
     Gtk::FlowBox flowbox;
-    Gtk::Popover popover;
-    Gtk::MenuButton menu_button;
     Gtk::ScrolledWindow scrolled_window;
+    std::unique_ptr<WayfireMenuButton> button;
 
     void load_menu_item(AppInfo app_info);
     void load_menu_items_from_dir(std::string directory);
@@ -60,6 +58,9 @@ class WayfireMenu : public WayfireWidget
     /* loaded_apps is a list of the already-opened applications + their execs,
      * so that we don't show duplicate entries */
     std::set<std::pair<std::string, std::string>> loaded_apps;
+
+    wf_option panel_position;
+    wf_option_callback panel_position_changed;
 
     public:
     void init(Gtk::HBox *container, wayfire_config *config) override;
