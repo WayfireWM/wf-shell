@@ -177,12 +177,14 @@ class WayfirePanel
         zwf_output_v1_add_listener(output->zwf, &zwf_output_impl, &update_autohide_request);
     }
 
+    wf_option minimal_panel_height;
     void handle_output_resize(uint32_t width, uint32_t height)
     {
         this->current_output_width = width;
         this->current_output_height = height;
 
-        window.set_size_request(width, height * 0.05);
+        this->window.set_size_request(current_output_width,
+            minimal_panel_height->as_int());
         window.show_all();
 
         if (!wm_surface)
@@ -279,6 +281,7 @@ class WayfirePanel
         };
         bg_color->add_updated_handler(&background_callback);
         set_window_color();
+        this->window.set_size_request(-1, minimal_panel_height->as_int());
 
         window.signal_draw().connect_notify(
             sigc::mem_fun(this, &WayfirePanel::on_draw));
@@ -434,6 +437,8 @@ class WayfirePanel
         autohide_opt->add_updated_handler(&update_autohide);
 
         panel_position = app->config->get_section("panel")->get_option("position", "top");
+        minimal_panel_height = app->config->get_section("panel")->get_option("minimal_height",
+            DEFAULT_PANEL_HEIGHT);
 
         setup_window();
         init_layout();

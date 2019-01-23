@@ -26,9 +26,8 @@ enum WfBatteryStatusDescription
 class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
-    wf_option_callback status_updated, font_updated, icon_attr_updated,
-                       panel_size_updated;
-    wf_option status_opt, font_opt, invert_opt, size_opt, panel_size_opt;
+    wf_option_callback status_updated, font_updated, icon_attr_updated;
+    wf_option status_opt, font_opt, invert_opt, size_opt;
 
     Gtk::Button button;
     Gtk::Label label;
@@ -43,7 +42,6 @@ class WayfireBatteryInfo : public WayfireWidget
 
     bool setup_dbus();
 
-    int calculate_icon_size();
     void update_font();
     void update_icon();
     void update_details();

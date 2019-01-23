@@ -2,8 +2,10 @@
 #define WIDGET_HPP
 
 #include <gtkmm/hvbox.h>
+#include <config.hpp>
 
 #define DEFAULT_PANEL_HEIGHT "48"
+#define DEFAULT_ICON_SIZE 32
 
 class wayfire_config;
 class WayfireWidget

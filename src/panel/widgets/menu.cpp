@@ -183,11 +183,8 @@ void WayfireMenu::on_popover_shown()
 
 void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
 {
-    int32_t panel_size = *config->get_section("panel")->get_option("panel_thickness", "48");
-    int32_t default_size = panel_size * 0.7;
-    int32_t base_size = *config->get_section("panel")->get_option("launcher_size", std::to_string(default_size));
-
-    base_size = std::min(base_size, panel_size);
+    int32_t base_size = *config->get_section("panel")->get_option("launcher_size",
+        std::to_string(DEFAULT_ICON_SIZE));
 
     menu_button.add(main_image);
     menu_button.set_direction(Gtk::ARROW_DOWN);
