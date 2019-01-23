@@ -387,19 +387,15 @@ void WayfireNetworkInfo::handle_config_reload(wayfire_config *config)
     bool first_reload = !(bool)status_opt;
 
     auto section = config->get_section("panel");
-    auto panel_size_opt = section->get_option("panel_thickness", DEFAULT_PANEL_HEIGHT);
-    auto default_size = std::to_string(int(panel_size_opt->as_int() * 0.7));
-
     if (first_reload)
     {
         status_opt = section->get_option("network_status", "1");
-        icon_size_opt = section->get_option("network_icon_size", default_size);
+        icon_size_opt = section->get_option("network_icon_size",
+            std::to_string(DEFAULT_ICON_SIZE));
         icon_invert_opt = section->get_option("network_icon_invert_color", "0");
         status_font_opt = section->get_option("network_status_font", "default");
         status_color_opt = section->get_option("network_status_use_color", "no");
     }
-
-    icon_size_opt->default_value = default_size;
 
     if (status_font_opt->as_string() == "default")
     {

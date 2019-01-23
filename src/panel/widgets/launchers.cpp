@@ -99,6 +99,7 @@ struct FileLauncherInfo : public LauncherInfo
 void WfLauncherButton::set_size(int size)
 {
     this->current_size = size;
+    int panel_size = calculate_panel_height();
 
     /* set button spacing */
     evbox.set_margin_top((panel_size - size) / 2);
@@ -111,15 +112,22 @@ void WfLauncherButton::set_size(int size)
     on_scale_update();
 }
 
+int WfLauncherButton::calculate_panel_height()
+{
+    Gtk::Container* widget = &evbox;
+    while (widget->get_parent())
+        widget = widget->get_parent();
+
+    return widget->get_allocated_height();
+}
+
 bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
                                   std::string icon)
 {
     launcher_name = name;
 
-    panel_size = *config->get_section("panel")->get_option("panel_thickness", "48");
-    int default_size = panel_size * 0.7;
-    base_size = *config->get_section("panel")->get_option("launcher_size", std::to_string(default_size));
-    base_size = std::min(base_size, panel_size);
+    base_size = *config->get_section("panel")->get_option("launcher_size",
+        std::to_string(DEFAULT_ICON_SIZE));
 
     if (icon == "none")
     {
@@ -148,8 +156,9 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
     evbox.signal_leave_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_leave));
 
     evbox.signal_draw().connect(sigc::mem_fun(this, &WfLauncherButton::on_draw));
-
-    set_size(base_size);
+    evbox.signal_map().connect_notify([=] () {
+        set_size(base_size);
+    });
 
     hover_animation = wf_duration(new_static_option("1000"), wf_animation::linear);
     hover_animation.start(base_size, base_size);
@@ -196,7 +205,8 @@ static int get_animation_duration(int start, int end, int scale)
 bool WfLauncherButton::on_enter(GdkEventCrossing* ev)
 {
     int current_size = hover_animation.progress();
-    int target_size = std::min((double)panel_size, base_size * 1.40);
+    int target_size =
+        std::min(calculate_panel_height() * 1.0, base_size * 1.40);
 
     int duration = get_animation_duration(
         current_size, target_size, image.get_scale_factor());

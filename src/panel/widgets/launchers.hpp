@@ -21,7 +21,6 @@ struct LauncherInfo
 struct WfLauncherButton
 {
     std::string launcher_name;
-    int32_t panel_size;
     int32_t base_size;
     int32_t current_size;
 
@@ -46,6 +45,7 @@ struct WfLauncherButton
     bool on_draw(const Cairo::RefPtr<Cairo::Context>& ctx);
     void on_scale_update();
 
+    int calculate_panel_height();
     void set_size(int size);
 };
 

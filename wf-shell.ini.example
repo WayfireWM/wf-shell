@@ -20,8 +20,10 @@ widgets_left = spacing18 launchers
 widgets_center = clock
 widgets_right = network spacing6 battery spacing12
 
-# base panel size, adapts to the size of text/icons
-panel_thickness = 48
+# The minimal size of the panel. Note that some widgets might force panel bigger than this size.
+# All widgets also have individual settings for size
+# Changing this requires a panel restart
+minimal_height = 48
 
 # automatically hide when pointer isn't over the panel
 autohide = 1
