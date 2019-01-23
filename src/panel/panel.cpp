@@ -405,7 +405,7 @@ class WayfirePanel
     void init_widgets()
     {
         auto section = app->config->get_section("panel");
-        left_widgets_opt = section->get_option("widgets_left", "launchers");
+        left_widgets_opt = section->get_option("widgets_left", "menu spacing18 launchers");
         right_widgets_opt = section->get_option("widgets_right", "network battery");
         center_widgets_opt = section->get_option("widgets_center", "clock");
 

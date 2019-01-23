@@ -16,7 +16,7 @@ image = /home/ilex/Desktop/sea-tree.jpeg
 # A special widgets is spacing widgets, it can be used to add padding everywhere on the panel
 # To use it, just append the amount of pixels you want as a padding
 # to the word "spacing" and use it as a plugin
-widgets_left = spacing18 launchers
+widgets_left = spacing4 menu spacing18 launchers
 widgets_center = clock
 widgets_right = network spacing6 battery spacing12
 
