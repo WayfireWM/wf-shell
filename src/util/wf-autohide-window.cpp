@@ -54,7 +54,11 @@ void WayfireAutohidingWindow::update_position()
     }
 
     zwf_wm_surface_v1_set_anchor(wm_surface, anchor);
+    /* When the position changes, show the window. We mustn't forget to hide it then */
+
     schedule_show(0);
+    if (is_autohide())
+        schedule_hide(600);
 }
 
 void WayfireAutohidingWindow::set_position(wf_option position)
@@ -138,6 +142,12 @@ bool WayfireAutohidingWindow::m_do_hide()
 void WayfireAutohidingWindow::schedule_hide(int delay)
 {
     pending_show.disconnect();
+    if (delay == 0)
+    {
+        m_do_hide();
+        return;
+    }
+
     if (!pending_hide.connected())
     {
         pending_hide = Glib::signal_timeout().connect(
@@ -156,6 +166,12 @@ bool WayfireAutohidingWindow::m_do_show()
 void WayfireAutohidingWindow::schedule_show(int delay)
 {
     pending_hide.disconnect();
+    if (delay == 0)
+    {
+        m_do_show();
+        return;
+    }
+
     if (!pending_show.connected())
     {
         pending_show = Glib::signal_timeout().connect(

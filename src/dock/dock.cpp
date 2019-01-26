@@ -29,9 +29,11 @@ class WfDock::impl
             new WayfireAutohidingWindow(100, 100, output,
                 ZWF_OUTPUT_V1_WM_ROLE_PANEL));
         window->set_keyboard_mode(ZWF_WM_SURFACE_V1_KEYBOARD_FOCUS_MODE_NO_FOCUS);
-        window->set_position(new_static_option(WF_WINDOW_POSITION_BOTTOM));
         window->set_animation_duration(new_static_option("300"));
         window->increase_autohide();
+
+        window->set_position(WfDockApp::get().get_config()->get_section("dock")
+            ->get_option("position", WF_WINDOW_POSITION_BOTTOM));
 
         _wl_surface = gdk_wayland_window_get_wl_surface(
             window->get_window()->gobj());

@@ -97,3 +97,6 @@ network_icon_invert_color = 0
 
 # whether to colour the wifi signal strength
 network_status_use_color = yes
+
+[dock]
+position = bottom # or top
