@@ -41,7 +41,8 @@ class WayfireAutohidingWindow : public Gtk::Window
     void on_leave(GdkEventCrossing *cross);
 
     public:
-        WayfireAutohidingWindow(int width, int height, WayfireOutput *output);
+        WayfireAutohidingWindow(int width, int height,
+            WayfireOutput *output, zwf_output_v1_wm_role role);
         zwf_wm_surface_v1* get_wm_surface() const;
 
         /* Sets the edge of the screen where the window is */
@@ -66,6 +67,9 @@ class WayfireAutohidingWindow : public Gtk::Window
          * in the meantime */
         void schedule_hide(int delay);
         void schedule_show(int delay);
+
+        /* Set keyboard mode */
+        void set_keyboard_mode(zwf_wm_surface_v1_keyboard_focus_mode mode);
 };
 
 

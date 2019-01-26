@@ -128,8 +128,11 @@ class WayfirePanel
             DEFAULT_PANEL_HEIGHT);
 
         window = std::unique_ptr<WayfireAutohidingWindow> (
-            new WayfireAutohidingWindow(this->current_output_width,
-                minimal_panel_height->as_int(), this->output));
+            new WayfireAutohidingWindow(
+                this->current_output_width,
+                minimal_panel_height->as_int(),
+                this->output,
+                ZWF_OUTPUT_V1_WM_ROLE_OVERLAY));
 
         bg_color = config_section->get_option("background_color", "gtk_headerbar");
         bg_color->add_updated_handler(&on_window_color_updated);

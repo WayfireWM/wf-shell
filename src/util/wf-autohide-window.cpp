@@ -4,7 +4,8 @@
 #include <iostream>
 #include <assert.h>
 
-WayfireAutohidingWindow::WayfireAutohidingWindow(int width, int height, WayfireOutput *output)
+WayfireAutohidingWindow::WayfireAutohidingWindow(int width, int height,
+    WayfireOutput *output, zwf_output_v1_wm_role role)
 {
     this->set_size_request(width, height);
     this->set_decorated(false);
@@ -21,9 +22,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(int width, int height, WayfireO
         std::exit(-1);
     }
 
-    wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface,
-        ZWF_OUTPUT_V1_WM_ROLE_OVERLAY);
-
+    wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface, role);
     this->m_position_changed = [=] () {this->update_position();};
 
     this->signal_draw().connect_notify(
@@ -205,4 +204,10 @@ void WayfireAutohidingWindow::on_leave(GdkEventCrossing *cross)
 
     if (autohide_counter)
         schedule_hide(500);
+}
+
+void WayfireAutohidingWindow::set_keyboard_mode(
+    zwf_wm_surface_v1_keyboard_focus_mode mode)
+{
+    zwf_wm_surface_v1_set_keyboard_mode(wm_surface, mode);
 }
