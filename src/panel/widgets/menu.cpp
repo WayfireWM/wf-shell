@@ -8,6 +8,8 @@
 #include "menu.hpp"
 #include "config.hpp"
 #include "gtk-utils.hpp"
+#include "launchers.hpp"
+#include "wf-autohide-window.hpp"
 
 #define MAX_LAUNCHER_NAME_LENGTH 11
 
@@ -181,55 +183,104 @@ void WayfireMenu::on_popover_shown()
     flowbox.unselect_all();
 }
 
+bool WayfireMenu::update_icon()
+{
+    int size = menu_size->as_int() / LAUNCHERS_ICON_SCALE;
+
+    button->set_size_request(size, 0);
+    auto ptr_pbuff = Gdk::Pixbuf::create_from_file(ICONDIR "/wayfire.png",
+        size * main_image.get_scale_factor(),
+        size * main_image.get_scale_factor());
+
+    if (!ptr_pbuff)
+        return false;
+
+    set_image_pixbuf(main_image, ptr_pbuff, main_image.get_scale_factor());
+    return true;
+}
+
+void WayfireMenu::update_popover_layout()
+{
+    /* First time updating layout, need to setup everything */
+    if (popover_layout_box.get_parent() == nullptr)
+    {
+        button->get_popover()->add(popover_layout_box);
+
+        flowbox.set_valign(Gtk::ALIGN_START);
+        flowbox.set_homogeneous(true);
+        flowbox.set_sort_func(sigc::mem_fun(this, &WayfireMenu::on_sort));
+        flowbox.set_filter_func(sigc::mem_fun(this, &WayfireMenu::on_filter));
+
+        scrolled_window.set_min_content_width(500);
+        scrolled_window.set_min_content_height(500);
+        scrolled_window.add(flowbox_container);
+
+        search_box.property_margin().set_value(20);
+        search_box.set_icon_from_icon_name("search", Gtk::ENTRY_ICON_SECONDARY);
+        search_box.signal_changed().connect_notify(
+            sigc::mem_fun(this, &WayfireMenu::on_search_changed));
+    } else
+    {
+        /* Layout was already initialized, make sure to remove widgets before
+         * adding them again */
+        popover_layout_box.remove(search_box);
+        popover_layout_box.remove(scrolled_window);
+
+        flowbox_container.remove(flowbox);
+        flowbox_container.remove(bottom_pad);
+    }
+
+    if (panel_position->as_string() == WF_WINDOW_POSITION_TOP)
+    {
+        popover_layout_box.pack_start(search_box);
+        popover_layout_box.pack_start(scrolled_window);
+
+        flowbox_container.add(bottom_pad);
+        flowbox_container.add(flowbox);
+    } else
+    {
+        popover_layout_box.pack_start(scrolled_window);
+        popover_layout_box.pack_start(search_box);
+
+        flowbox_container.add(bottom_pad);
+        flowbox_container.add(flowbox);
+    }
+
+    popover_layout_box.set_focus_chain({&search_box});
+    popover_layout_box.show_all();
+}
+
 void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
 {
-    int32_t base_size = *config->get_section("panel")->get_option("launcher_size",
+    auto config_section = config->get_section("panel");
+
+    menu_size = config_section->get_option("launcher_size",
         std::to_string(DEFAULT_ICON_SIZE));
+    menu_size_changed = [=] () { update_icon(); };
+    menu_size->add_updated_handler(&menu_size_changed);
+
+    panel_position = config_section->get_option("position", PANEL_POSITION_DEFAULT);
+    panel_position_changed = [=] () { update_popover_layout(); };
+    panel_position->add_updated_handler(&panel_position_changed);
 
     button = std::unique_ptr<WayfireMenuButton> (new WayfireMenuButton(config));
     button->add(main_image);
-    button->set_size_request(base_size, 0);
 
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     button->get_popover()->signal_show().connect_notify(
         sigc::mem_fun(this, &WayfireMenu::on_popover_shown));
 
-    auto ptr_pbuff = Gdk::Pixbuf::create_from_file(ICONDIR "/wayfire.png",
-        base_size * main_image.get_scale_factor(),
-        base_size * main_image.get_scale_factor());
-    if (!ptr_pbuff)
+    if (!update_icon())
         return;
 
-    set_image_pixbuf(main_image, ptr_pbuff, main_image.get_scale_factor());
+    button->property_scale_factor().signal_changed().connect(
+        [=] () {update_icon(); });
 
     container->pack_start(hbox, Gtk::PACK_SHRINK, 0);
     hbox.pack_start(*button, Gtk::PACK_SHRINK, 0);
 
     load_menu_items_all();
-
-    flowbox.set_valign(Gtk::ALIGN_START);
-    flowbox.set_homogeneous(true);
-    flowbox.set_sort_func(sigc::mem_fun(this, &WayfireMenu::on_sort));
-    flowbox.set_filter_func(sigc::mem_fun(this, &WayfireMenu::on_filter));
-
-    flowbox_container.add(flowbox);
-    flowbox_container.add(bottom_pad);
-
-    scrolled_window.add(flowbox_container);
-    scrolled_window.set_min_content_width(500);
-    scrolled_window.set_min_content_height(500);
-
-    search_box.property_margin().set_value(20);
-    search_box.set_icon_from_icon_name("search", Gtk::ENTRY_ICON_SECONDARY);
-    search_box.signal_changed().connect_notify(
-        sigc::mem_fun(this, &WayfireMenu::on_search_changed));
-
-    box.pack_start(search_box);
-    box.pack_start(scrolled_window);
-    box.show_all();
-
-    button->get_popover()->add(box);
-  //  button->get_popover()->show_all();
+    update_popover_layout();
 
     hbox.show();
     main_image.show();
@@ -239,4 +290,10 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
 void WayfireMenu::focus_lost()
 {
     button->set_active(false);
+}
+
+WayfireMenu::~WayfireMenu()
+{
+    menu_size->rem_updated_handler(&menu_size_changed);
+    panel_position->rem_updated_handler(&panel_position_changed);
 }
