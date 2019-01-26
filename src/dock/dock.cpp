@@ -29,7 +29,6 @@ class WfDock::impl
             new WayfireAutohidingWindow(100, 100, output,
                 ZWF_OUTPUT_V1_WM_ROLE_PANEL));
         window->set_keyboard_mode(ZWF_WM_SURFACE_V1_KEYBOARD_FOCUS_MODE_NO_FOCUS);
-        window->set_animation_duration(new_static_option("300"));
         window->increase_autohide();
 
         window->set_position(WfDockApp::get().get_config()->get_section("dock")

@@ -34,6 +34,8 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(int width, int height,
         sigc::mem_fun(this, &WayfireAutohidingWindow::on_enter));
     this->signal_leave_notify_event().connect_notify(
         sigc::mem_fun(this, &WayfireAutohidingWindow::on_leave));
+
+    set_animation_duration(new_static_option("300"));
 }
 
 zwf_wm_surface_v1* WayfireAutohidingWindow::get_wm_surface() const
