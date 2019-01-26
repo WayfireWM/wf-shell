@@ -10,6 +10,8 @@
 #include <gtkmm/hvbox.h>
 #include <gtkmm/eventbox.h>
 
+#define LAUNCHERS_ICON_SCALE 1.42
+
 struct LauncherInfo
 {
     virtual Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size) = 0;
@@ -45,7 +47,6 @@ struct WfLauncherButton
     bool on_draw(const Cairo::RefPtr<Cairo::Context>& ctx);
     void on_scale_update();
 
-    int calculate_panel_height();
     void set_size(int size);
 };
 

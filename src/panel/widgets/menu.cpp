@@ -229,7 +229,11 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
     box.show_all();
 
     button->get_popover()->add(box);
-    button->get_popover()->show_all();
+  //  button->get_popover()->show_all();
+
+    hbox.show();
+    main_image.show();
+    button->show();
 }
 
 void WayfireMenu::focus_lost()
