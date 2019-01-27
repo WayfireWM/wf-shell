@@ -56,9 +56,11 @@ void WayfireAutohidingWindow::update_position()
     }
 
     zwf_wm_surface_v1_set_anchor(wm_surface, anchor);
-    /* When the position changes, show the window. We mustn't forget to hide it then */
 
+    /* When the position changes, show an animation from the new edge. */
+    transition.start_value = transition.end_value = get_hidden_y();
     schedule_show(0);
+    /* And don't forget to hide the window afterwards, if autohide is enabled */
     if (is_autohide())
         schedule_hide(600);
 }
@@ -155,6 +157,11 @@ void WayfireAutohidingWindow::schedule_hide(int delay)
         pending_hide = Glib::signal_timeout().connect(
             sigc::mem_fun(this, &WayfireAutohidingWindow::m_do_hide), delay);
     }
+
+    /* Reset count_inputs. Even if we still have active inputs, we want to reset
+     * them because then this is a forced hide, and we don't want the count_inputs
+     * to get wrong count later. */
+    count_inputs = 0;
 }
 
 bool WayfireAutohidingWindow::m_do_show()
