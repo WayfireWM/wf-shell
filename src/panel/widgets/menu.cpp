@@ -96,7 +96,7 @@ bool WfMenuMenuItem::operator < (const WfMenuMenuItem& other)
 
 void WayfireMenu::load_menu_item(AppInfo app_info)
 {
-    if (!app_info)
+    if (!app_info || !app_info->should_show())
         return;
 
     auto name = app_info->get_name();
