@@ -211,6 +211,9 @@ void WayfireMenu::update_popover_layout()
         flowbox.set_sort_func(sigc::mem_fun(this, &WayfireMenu::on_sort));
         flowbox.set_filter_func(sigc::mem_fun(this, &WayfireMenu::on_filter));
 
+        flowbox_container.add(bottom_pad);
+        flowbox_container.add(flowbox);
+
         scrolled_window.set_min_content_width(500);
         scrolled_window.set_min_content_height(500);
         scrolled_window.add(flowbox_container);
@@ -225,25 +228,16 @@ void WayfireMenu::update_popover_layout()
          * adding them again */
         popover_layout_box.remove(search_box);
         popover_layout_box.remove(scrolled_window);
-
-        flowbox_container.remove(flowbox);
-        flowbox_container.remove(bottom_pad);
     }
 
     if (panel_position->as_string() == WF_WINDOW_POSITION_TOP)
     {
         popover_layout_box.pack_start(search_box);
         popover_layout_box.pack_start(scrolled_window);
-
-        flowbox_container.add(bottom_pad);
-        flowbox_container.add(flowbox);
     } else
     {
         popover_layout_box.pack_start(scrolled_window);
         popover_layout_box.pack_start(search_box);
-
-        flowbox_container.add(bottom_pad);
-        flowbox_container.add(flowbox);
     }
 
     popover_layout_box.set_focus_chain({&search_box});
