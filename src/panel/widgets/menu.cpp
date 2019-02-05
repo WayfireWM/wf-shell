@@ -53,18 +53,13 @@ void WfMenuMenuItem::on_click()
     menu->focus_lost();
 }
 
-bool WfMenuMenuItem::matches(Glib::ustring pattern)
+/* Fuzzy search for pattern in text. We use a greedy algorithm as follows:
+ * As long as the pattern isn't matched, try to match the leftmost unmatched
+ * character in pattern with the first occurence of this character after the
+ * partial match. In the end, we just check if we successfully matched all
+ * characters */
+static bool fuzzy_match(Glib::ustring text, Glib::ustring pattern)
 {
-    Glib::ustring text = m_app_info->get_name();
-    text = text.lowercase();
-    pattern = pattern.lowercase();
-
-    /* Fuzzy search for pattern in text. We use a greedy algorithm as follows:
-     * As long as the pattern isn't matched, try to match the leftmost unmatched
-     * character in pattern with the first occurence of this character after the
-     * partial match. In the end, we just check if we successfully matched all
-     * characters */
-
     size_t i = 0, // next character in pattern to match
            j = 0; // the first unmatched character in text
 
@@ -86,6 +81,19 @@ bool WfMenuMenuItem::matches(Glib::ustring pattern)
 
     /* If this happens, then we have already matched all characters */
     return i == pattern.length();
+}
+
+bool WfMenuMenuItem::matches(Glib::ustring pattern)
+{
+    Glib::ustring id = m_app_info->get_id();
+    Glib::ustring name = m_app_info->get_name();
+    Glib::ustring descr = m_app_info->get_description();
+
+    pattern = pattern.lowercase();
+
+    return fuzzy_match(id.lowercase(), pattern)
+        || fuzzy_match(name.lowercase(), pattern)
+        || fuzzy_match(descr.lowercase(), pattern);
 }
 
 bool WfMenuMenuItem::operator < (const WfMenuMenuItem& other)
