@@ -96,7 +96,11 @@ bool WfMenuMenuItem::operator < (const WfMenuMenuItem& other)
 
 void WayfireMenu::load_menu_item(AppInfo app_info)
 {
-    if (!app_info || !app_info->should_show())
+    if (!app_info)
+        return;
+
+    auto desktop_app_info = Glib::RefPtr<Gio::DesktopAppInfo>::cast_dynamic(app_info);
+    if (desktop_app_info && desktop_app_info->get_nodisplay())
         return;
 
     auto name = app_info->get_name();
