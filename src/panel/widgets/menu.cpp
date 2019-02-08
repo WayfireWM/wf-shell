@@ -47,8 +47,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
 
 void WfMenuMenuItem::on_click()
 {
-    std::string command = m_app_info->get_commandline();
-    Glib::spawn_command_line_async("/bin/bash -c \'" + command + "\'");
+    m_app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
 
     menu->focus_lost();
 }
