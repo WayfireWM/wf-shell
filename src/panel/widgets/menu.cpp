@@ -4,6 +4,7 @@
 #include <glibmm.h>
 #include <giomm/icon.h>
 #include <glibmm/spawn.h>
+#include <iostream>
 
 #include "menu.hpp"
 #include "config.hpp"
@@ -82,17 +83,29 @@ static bool fuzzy_match(Glib::ustring text, Glib::ustring pattern)
     return i == pattern.length();
 }
 
-bool WfMenuMenuItem::matches(Glib::ustring pattern)
+bool WfMenuMenuItem::fuzzy_match(Glib::ustring pattern)
 {
-    Glib::ustring id = m_app_info->get_id();
     Glib::ustring name = m_app_info->get_name();
-    Glib::ustring descr = m_app_info->get_description();
+    Glib::ustring long_name = m_app_info->get_display_name();
+    Glib::ustring progr = m_app_info->get_executable();
 
     pattern = pattern.lowercase();
 
-    return fuzzy_match(id.lowercase(), pattern)
-        || fuzzy_match(name.lowercase(), pattern)
-        || fuzzy_match(descr.lowercase(), pattern);
+    return ::fuzzy_match(progr.lowercase(), pattern)
+        || ::fuzzy_match(name.lowercase(), pattern)
+        || ::fuzzy_match(long_name.lowercase(), pattern);
+}
+
+bool WfMenuMenuItem::matches(Glib::ustring pattern)
+{
+    Glib::ustring name = m_app_info->get_name();
+    Glib::ustring long_name = m_app_info->get_display_name();
+    Glib::ustring progr = m_app_info->get_executable();
+
+    Glib::ustring text = name.lowercase() + "$"
+        + long_name.lowercase() + "$" + progr.lowercase();
+
+    return text.find(pattern.lowercase()) != text.npos;
 }
 
 bool WfMenuMenuItem::operator < (const WfMenuMenuItem& other)
@@ -170,14 +183,34 @@ void WayfireMenu::load_menu_items_all()
 
 void WayfireMenu::on_search_changed()
 {
+    fuzzy_filter = false;
+    count_matches = 0;
     flowbox.invalidate_filter();
+
+    /* We got no matches, try to fuzzy-match */
+    if (count_matches <= 0 && fuzzy_search_enabled->as_int())
+    {
+        fuzzy_filter = true;
+        flowbox.invalidate_filter();
+    }
 }
 
 bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
 {
     auto button = dynamic_cast<WfMenuMenuItem*> (child->get_child());
     assert(button);
-    return button->matches(search_box.get_text());
+
+    auto text = search_box.get_text();
+    bool does_match = this->fuzzy_filter ?
+        button->fuzzy_match(text) : button->matches(text);
+
+    if (does_match)
+    {
+        this->count_matches++;
+        return true;
+    }
+
+    return false;
 }
 
 bool WayfireMenu::on_sort(Gtk::FlowBoxChild* a, Gtk::FlowBoxChild* b)
@@ -263,6 +296,8 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
         std::to_string(DEFAULT_ICON_SIZE));
     menu_size_changed = [=] () { update_icon(); };
     menu_size->add_updated_handler(&menu_size_changed);
+
+    fuzzy_search_enabled = config_section->get_option("menu_fuzzy_search", "1");
 
     panel_position = config_section->get_option("position", PANEL_POSITION_DEFAULT);
     panel_position_changed = [=] () { update_popover_layout(); };

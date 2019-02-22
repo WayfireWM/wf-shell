@@ -19,6 +19,7 @@ class WfMenuMenuItem : public Gtk::HBox
     WfMenuMenuItem(WayfireMenu* menu, AppInfo app);
 
     bool matches(Glib::ustring text);
+    bool fuzzy_match(Glib::ustring text);
     bool operator < (const WfMenuMenuItem& other);
 
     private:
@@ -51,6 +52,9 @@ class WayfireMenu : public WayfireWidget
 
     bool update_icon();
 
+    bool fuzzy_filter = false;
+    int32_t count_matches = 0;
+
     bool on_sort(Gtk::FlowBoxChild*, Gtk::FlowBoxChild*);
     bool on_filter(Gtk::FlowBoxChild* child);
     void on_search_changed();
@@ -65,6 +69,7 @@ class WayfireMenu : public WayfireWidget
     wf_option_callback panel_position_changed;
     void update_popover_layout();
 
+    wf_option fuzzy_search_enabled;
     wf_option menu_size;
     wf_option_callback menu_size_changed;
 
