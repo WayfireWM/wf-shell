@@ -4,7 +4,7 @@
 #include <memory>
 #include <wayland-client.h>
 
-#include <config.hpp>
+#include "config.hpp"
 #include "display.hpp"
 
 class WayfirePanel

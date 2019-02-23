@@ -20,6 +20,7 @@
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
+#include "widgets/window-list.hpp"
 
 #include "wf-shell-app.hpp"
 #include "wf-autohide-window.hpp"
@@ -203,6 +204,8 @@ class WayfirePanel::impl
             return Widget(new WayfireNetworkInfo());
         if (name == "battery")
             return Widget(new WayfireBatteryInfo());
+        if (name == "window-list")
+            return Widget(new WayfireWindowList());
 
         std::string spacing = "spacing";
         if (name.find(spacing) == 0)
