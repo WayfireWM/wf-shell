@@ -7,7 +7,22 @@
 #include "panel.hpp"
 #include "config.hpp"
 
-static zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl;
+static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager,
+    zwlr_foreign_toplevel_handle_v1 *toplevel)
+{
+    WayfireWindowList *window_list = (WayfireWindowList *) data;
+    window_list->handle_new_toplevel(toplevel);
+}
+
+static void handle_manager_finished(void *data, zwlr_foreign_toplevel_manager_v1 *manager)
+{
+    /* TODO: maybe exit? */
+}
+
+zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
+    .toplevel = handle_manager_toplevel,
+    .finished = handle_manager_finished,
+};
 
 static void registry_add_object(void *data, wl_registry *registry, uint32_t name,
         const char *interface, uint32_t version)
