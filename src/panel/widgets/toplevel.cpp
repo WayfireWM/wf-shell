@@ -4,6 +4,7 @@
 #include <giomm/desktopappinfo.h>
 
 #include "toplevel.hpp"
+#include "gtk-utils.hpp"
 #include "panel.hpp"
 #include <cassert>
 
@@ -148,9 +149,6 @@ class WayfireToplevel::impl
 WayfireToplevel::WayfireToplevel(zwlr_foreign_toplevel_handle_v1 *handle, Gtk::Box& container)
     :pimpl(new WayfireToplevel::impl(handle, container)) { }
 WayfireToplevel::~WayfireToplevel() = default;
-
-void WayfireToplevel::handle_output_enter(wl_output *output) { return pimpl->handle_output_enter(output); }
-void WayfireToplevel::handle_output_leave(wl_output *output) { return pimpl->handle_output_leave(output); }
 
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;
 static void handle_toplevel_title(void *data, toplevel_t, const char *title)
