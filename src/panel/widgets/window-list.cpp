@@ -82,7 +82,7 @@ void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1
 
 void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
 {
-    toplevels[handle] = std::unique_ptr<WayfireToplevel> (new WayfireToplevel(handle));
+    toplevels[handle] = std::unique_ptr<WayfireToplevel> (new WayfireToplevel(handle, box));
 }
 
 void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
@@ -92,17 +92,6 @@ void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *
 
 WayfireWindowList::WayfireWindowList()
 {
-}
-
-void WayfireWindowList::add_child(Gtk::Widget& widget)
-{
-    box.pack_end(widget);
-    box.show_all();
-}
-
-void WayfireWindowList::rem_child(Gtk::Widget& widget)
-{
-    this->box.remove(widget);
 }
 
 WayfireWindowList::~WayfireWindowList()

@@ -5,7 +5,6 @@
 #include "../../util/display.hpp"
 #include "panel.hpp"
 #include "toplevel.hpp"
-#include "toplevel-icon.hpp"
 
 #include <gtkmm/button.h>
 
@@ -33,9 +32,6 @@ class WayfireWindowList : public WayfireWidget
     WayfirePanel* panel_for_wl_output(wl_output *output);
     void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
     void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
-
-    void add_child(Gtk::Widget& widget);
-    void rem_child(Gtk::Widget& widget);
 
     WayfireWindowList* window_list_for_wl_output(wl_output *output);
     WayfireDisplay *get_display();

@@ -2,6 +2,7 @@
 #define WF_DOCK_TOPLEVEL_HPP
 
 #include <memory>
+#include <gtkmm/box.h>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
 enum WayfireToplevelState
@@ -16,10 +17,9 @@ enum WayfireToplevelState
 class WayfireToplevel
 {
     public:
-    WayfireToplevel(zwlr_foreign_toplevel_handle_v1 *handle);
+    WayfireToplevel(zwlr_foreign_toplevel_handle_v1 *handle,
+        Gtk::Box& container);
     ~WayfireToplevel();
-
-    void handle_output_leave(wl_output *output);
 
     class impl;
     private:
