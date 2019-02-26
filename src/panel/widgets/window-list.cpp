@@ -82,7 +82,7 @@ void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1
 
 void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
 {
-    toplevels[handle] = std::unique_ptr<WayfireToplevel> (new WayfireToplevel(handle, box));
+    toplevels[handle] = std::unique_ptr<WayfireToplevel> (new WayfireToplevel(this, handle, box));
 }
 
 void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)

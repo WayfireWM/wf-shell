@@ -1,9 +1,13 @@
-#ifndef WF_DOCK_TOPLEVEL_HPP
-#define WF_DOCK_TOPLEVEL_HPP
+#ifndef WAYFIRE_PANEL_TOPLEVEL_HPP
+#define WAYFIRE_PANEL_TOPLEVEL_HPP
 
 #include <memory>
 #include <gtkmm/box.h>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
+
+#include "window-list.hpp"
+
+class WayfireWindowList;
 
 enum WayfireToplevelState
 {
@@ -17,13 +21,15 @@ enum WayfireToplevelState
 class WayfireToplevel
 {
     public:
-    WayfireToplevel(zwlr_foreign_toplevel_handle_v1 *handle,
+    WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle,
         Gtk::Box& container);
     ~WayfireToplevel();
+
+    Gtk::Box container;
 
     class impl;
     private:
     std::unique_ptr<impl> pimpl;
 };
 
-#endif /* end of include guard: WF_DOCK_TOPLEVEL_HPP */
+#endif /* end of include guard: WAYFIRE_PANEL_TOPLEVEL_HPP */

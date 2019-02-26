@@ -26,10 +26,12 @@ class WayfireToplevel::impl
 
     Gtk::Button button;
     Gtk::Image image;
+    Gtk::Box *container;
     std::string app_id;
-
     public:
-    impl(zwlr_foreign_toplevel_handle_v1 *handle, Gtk::Box& container)
+    WayfireWindowList *window_list;
+
+    impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::Box& container)
     {
         this->handle = handle;
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
@@ -49,6 +51,8 @@ class WayfireToplevel::impl
             .connect(sigc::mem_fun(this, &WayfireToplevel::impl::on_scale_update));
 
         container.pack_end(button);
+
+        this->window_list = window_list;
     }
 
     void on_clicked()
@@ -84,7 +88,7 @@ class WayfireToplevel::impl
     {
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image, app_id,
-            72, button.get_scale_factor());
+            24, button.get_scale_factor());
 
     }
 
@@ -131,6 +135,7 @@ class WayfireToplevel::impl
         //auto panel = WayfirePanelApp::get().panel_for_wl_output(output);
         //if (panel)
         //    panel->rem_child(button);
+        printf("~impl\n");
     }
 
 
@@ -146,8 +151,8 @@ class WayfireToplevel::impl
 };
 
 
-WayfireToplevel::WayfireToplevel(zwlr_foreign_toplevel_handle_v1 *handle, Gtk::Box& container)
-    :pimpl(new WayfireToplevel::impl(handle, container)) { }
+WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::Box& container)
+    :pimpl(new WayfireToplevel::impl(window_list, handle, container)) { }
 WayfireToplevel::~WayfireToplevel() = default;
 
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;
@@ -214,6 +219,8 @@ static void handle_toplevel_done(void *data, toplevel_t)
 static void handle_toplevel_closed(void *data, toplevel_t handle)
 {
     //WayfirePanelApp::get().handle_toplevel_closed(handle);
+    auto impl = static_cast<WayfireToplevel::impl*> (data);
+    impl->window_list->handle_toplevel_closed(handle);
     zwlr_foreign_toplevel_handle_v1_destroy(handle);
 }
 

@@ -8,16 +8,13 @@
 
 #include <gtkmm/button.h>
 
-class WayfireWindowListItem : public Gtk::Button
-{
-};
+class WayfireToplevel;
 
 class WayfireWindowList : public WayfireWidget
 {
     public:
     std::map<zwlr_foreign_toplevel_handle_v1*,
         std::unique_ptr<WayfireToplevel>> toplevels;
-    std::vector<std::unique_ptr<WayfireWindowListItem>> items;
 
     zwlr_foreign_toplevel_manager_v1 *manager;
     WayfireOutput *output;
