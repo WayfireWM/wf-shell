@@ -97,8 +97,6 @@ class WayfireToplevel::impl
         Gtk::Widget *widget = &this->button;
 
         int x = 0, y = 0;
-        int width = image.get_allocated_width();
-        int height = image.get_allocated_height();
 
         while (widget)
         {
