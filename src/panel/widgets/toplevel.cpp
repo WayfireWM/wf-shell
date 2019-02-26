@@ -1,4 +1,5 @@
 #include <gtkmm/image.h>
+#include <gtkmm/label.h>
 #include <gtkmm/button.h>
 #include <gtkmm/icontheme.h>
 #include <giomm/desktopappinfo.h>
@@ -25,7 +26,9 @@ class WayfireToplevel::impl
     uint32_t state;
 
     Gtk::Button button;
+    Gtk::HBox button_contents;
     Gtk::Image image;
+    Gtk::Label label;
     Gtk::Box *container;
     std::string app_id;
     public:
@@ -37,10 +40,10 @@ class WayfireToplevel::impl
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
             &toplevel_handle_v1_impl, this);
 
-
-        button.add(image);
+        button_contents.pack_start(image);
+        button_contents.pack_start(label);
+        button.add(button_contents);
         button.set_tooltip_text("none");
-        button.get_style_context()->add_class("flat");
         button.show_all();
 
         button.signal_clicked().connect_notify(
@@ -50,7 +53,7 @@ class WayfireToplevel::impl
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(this, &WayfireToplevel::impl::on_scale_update));
 
-        container.pack_end(button);
+        container.pack_start(button);
 
         this->window_list = window_list;
     }
@@ -89,7 +92,6 @@ class WayfireToplevel::impl
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image, app_id,
             24, button.get_scale_factor());
-
     }
 
     void send_rectangle_hint()
@@ -121,19 +123,21 @@ class WayfireToplevel::impl
     void set_title(std::string title)
     {
         button.set_tooltip_text(title);
+        label.set_text(title);
     }
 
     void set_state(uint32_t state)
     {
         this->state = state;
+        if (state & WF_TOPLEVEL_STATE_ACTIVATED)
+            button.get_style_context()->remove_class("flat");
+        else
+            button.get_style_context()->add_class("flat");
     }
 
     ~impl()
     {
-        //auto panel = WayfirePanelApp::get().panel_for_wl_output(output);
-        //if (panel)
-        //    panel->rem_child(button);
-        printf("~impl\n");
+        /* Nothing for now */
     }
 
 
