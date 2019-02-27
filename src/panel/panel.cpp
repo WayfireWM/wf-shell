@@ -2,6 +2,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/headerbar.h>
 #include <gtkmm/hvbox.h>
+#include <gtkmm/scrolledwindow.h>
 #include <gtkmm/application.h>
 #include <gdk/gdkwayland.h>
 #include <config.hpp>
@@ -43,6 +44,7 @@ class WayfirePanel::impl
     std::unique_ptr<WayfireAutohidingWindow> window;
 
     Gtk::HBox content_box;
+    Gtk::ScrolledWindow scrolled_window;
     Gtk::HBox left_box, center_box, right_box;
 
     using Widget = std::unique_ptr<WayfireWidget>;
@@ -188,8 +190,10 @@ class WayfirePanel::impl
         content_box.pack_start(left_box, false, false);
         content_box.set_center_widget(center_box);
         content_box.pack_end(right_box, false, false);
-        window->add(content_box);
-        content_box.show_all();
+        //scrolled_window.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_NEVER);
+        scrolled_window.add(content_box);
+        window->add(scrolled_window);
+        scrolled_window.show_all();
     }
 
     Widget widget_from_name(std::string name)

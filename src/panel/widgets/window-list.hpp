@@ -7,6 +7,7 @@
 #include "toplevel.hpp"
 
 #include <gtkmm/button.h>
+#include <gtkmm/scrolledwindow.h>
 
 class WayfireToplevel;
 
@@ -19,6 +20,7 @@ class WayfireWindowList : public WayfireWidget
     zwlr_foreign_toplevel_manager_v1 *manager;
     WayfireOutput *output;
     Gtk::HBox box;
+    Gtk::ScrolledWindow scrolled_window;
 
     WayfireWindowList();
     virtual ~WayfireWindowList();

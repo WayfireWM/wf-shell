@@ -66,8 +66,12 @@ void WayfireWindowList::init(Gtk::HBox *container, wayfire_config *config)
     zwlr_foreign_toplevel_manager_v1_add_listener(manager,
         &toplevel_manager_v1_impl, this);
 
-    container->pack_start(box, Gtk::PACK_SHRINK, 0);
-    box.show_all();
+    scrolled_window.add(box);
+    scrolled_window.set_hexpand(true);
+    scrolled_window.set_halign(Gtk::ALIGN_FILL);
+    //scrolled_window.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_NEVER);
+    container->pack_start(scrolled_window, Gtk::PACK_EXPAND_WIDGET, 0);
+    scrolled_window.show_all();
 }
 
 void WayfireWindowList::add_output(WayfireOutput *output)

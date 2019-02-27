@@ -44,7 +44,6 @@ class WayfireToplevel::impl
         button_contents.pack_start(label);
         button.add(button_contents);
         button.set_tooltip_text("none");
-        button.show_all();
 
         button.signal_clicked().connect_notify(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_clicked));
@@ -54,6 +53,7 @@ class WayfireToplevel::impl
             .connect(sigc::mem_fun(this, &WayfireToplevel::impl::on_scale_update));
 
         container.pack_start(button);
+        container.show_all();
 
         this->window_list = window_list;
     }
