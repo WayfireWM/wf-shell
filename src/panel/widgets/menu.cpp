@@ -172,8 +172,7 @@ void WayfireMenu::load_menu_items_from_dir(std::string path)
 
 void WayfireMenu::load_menu_items_all()
 {
-    std::string home_dir = secure_getenv("HOME");
-
+    std::string home_dir = getenv("HOME");
     auto app_list = Gio::AppInfo::get_all();
     for (auto app : app_list)
         load_menu_item(app);
