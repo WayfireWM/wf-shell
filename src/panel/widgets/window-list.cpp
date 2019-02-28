@@ -67,10 +67,8 @@ void WayfireWindowList::init(Gtk::HBox *container, wayfire_config *config)
         &toplevel_manager_v1_impl, this);
 
     scrolled_window.add(box);
-    scrolled_window.set_hexpand(true);
-    scrolled_window.set_halign(Gtk::ALIGN_FILL);
-    //scrolled_window.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_NEVER);
-    container->pack_start(scrolled_window, Gtk::PACK_EXPAND_WIDGET, 0);
+    scrolled_window.set_propagate_natural_width(true);
+    container->pack_start(scrolled_window, true, true);
     scrolled_window.show_all();
 }
 
