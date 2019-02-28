@@ -101,9 +101,11 @@ bool WfMenuMenuItem::matches(Glib::ustring pattern)
     Glib::ustring name = m_app_info->get_name();
     Glib::ustring long_name = m_app_info->get_display_name();
     Glib::ustring progr = m_app_info->get_executable();
+    Glib::ustring descr = m_app_info->get_description();
 
     Glib::ustring text = name.lowercase() + "$"
-        + long_name.lowercase() + "$" + progr.lowercase();
+        + long_name.lowercase() + "$" + progr.lowercase() + "$"
+        + descr.lowercase();
 
     return text.find(pattern.lowercase()) != text.npos;
 }
