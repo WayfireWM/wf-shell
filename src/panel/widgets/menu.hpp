@@ -19,6 +19,7 @@ class WfMenuMenuItem : public Gtk::HBox
     WfMenuMenuItem(WayfireMenu* menu, AppInfo app);
 
     bool matches(Glib::ustring text);
+    bool fuzzy_match(Glib::ustring text);
     bool operator < (const WfMenuMenuItem& other);
 
     private:
@@ -38,7 +39,7 @@ class WayfireMenu : public WayfireWidget
     Gtk::Box flowbox_container;
     Gtk::HBox hbox;
     Gtk::VBox bottom_pad;
-    Gtk::VBox box;
+    Gtk::VBox popover_layout_box;
     Gtk::Image main_image;
     Gtk::Entry search_box;
     Gtk::FlowBox flowbox;
@@ -48,6 +49,11 @@ class WayfireMenu : public WayfireWidget
     void load_menu_item(AppInfo app_info);
     void load_menu_items_from_dir(std::string directory);
     void load_menu_items_all();
+
+    bool update_icon();
+
+    bool fuzzy_filter = false;
+    int32_t count_matches = 0;
 
     bool on_sort(Gtk::FlowBoxChild*, Gtk::FlowBoxChild*);
     bool on_filter(Gtk::FlowBoxChild* child);
@@ -61,9 +67,15 @@ class WayfireMenu : public WayfireWidget
 
     wf_option panel_position;
     wf_option_callback panel_position_changed;
+    void update_popover_layout();
+
+    wf_option fuzzy_search_enabled;
+    wf_option menu_size;
+    wf_option_callback menu_size_changed;
 
     public:
     void init(Gtk::HBox *container, wayfire_config *config) override;
+    virtual ~WayfireMenu();
     void focus_lost() override;
 };
 

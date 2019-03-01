@@ -121,6 +121,11 @@ WayfireDisplay* WfDockApp::get_display()
     return pimpl->display.get();
 }
 
+wayfire_config* WfDockApp::get_config()
+{
+    return pimpl->config.get();
+}
+
 void WfDockApp::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager)
 {
     return pimpl->handle_toplevel_manager(manager);

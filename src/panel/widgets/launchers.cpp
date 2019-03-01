@@ -99,26 +99,17 @@ struct FileLauncherInfo : public LauncherInfo
 void WfLauncherButton::set_size(int size)
 {
     this->current_size = size;
-    int panel_size = calculate_panel_height();
+    int full_size = base_size * LAUNCHERS_ICON_SCALE;
 
     /* set button spacing */
-    evbox.set_margin_top((panel_size - size) / 2);
-    evbox.set_margin_bottom((panel_size - size + 1) / 2);
+    evbox.set_margin_top((full_size - size) / 2);
+    evbox.set_margin_bottom((full_size - size + 1) / 2);
 
-    evbox.set_margin_left((panel_size - size) / 2);
-    evbox.set_margin_right((panel_size - size + 1) / 2);
+    evbox.set_margin_left((full_size - size) / 2);
+    evbox.set_margin_right((full_size - size + 1) / 2);
 
     // initial scale
     on_scale_update();
-}
-
-int WfLauncherButton::calculate_panel_height()
-{
-    Gtk::Container* widget = &evbox;
-    while (widget->get_parent())
-        widget = widget->get_parent();
-
-    return widget->get_allocated_height();
 }
 
 bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
@@ -128,6 +119,7 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
 
     base_size = *config->get_section("panel")->get_option("launcher_size",
         std::to_string(DEFAULT_ICON_SIZE));
+    base_size = base_size / LAUNCHERS_ICON_SCALE;
 
     if (icon == "none")
     {
@@ -156,7 +148,7 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
     evbox.signal_leave_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_leave));
 
     evbox.signal_draw().connect(sigc::mem_fun(this, &WfLauncherButton::on_draw));
-    evbox.signal_map().connect_notify([=] () {
+    evbox.signal_map().connect([=] () {
         set_size(base_size);
     });
 
@@ -205,8 +197,7 @@ static int get_animation_duration(int start, int end, int scale)
 bool WfLauncherButton::on_enter(GdkEventCrossing* ev)
 {
     int current_size = hover_animation.progress();
-    int target_size =
-        std::min(calculate_panel_height() * 1.0, base_size * 1.40);
+    int target_size = base_size * LAUNCHERS_ICON_SCALE;
 
     int duration = get_animation_duration(
         current_size, target_size, image.get_scale_factor());

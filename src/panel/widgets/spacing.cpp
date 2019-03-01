@@ -8,4 +8,5 @@ WayfireSpacing::WayfireSpacing(int pixels)
 void WayfireSpacing::init(Gtk::HBox *container, wayfire_config *config)
 {
     container->pack_start(box);
+    box.show_all();
 }

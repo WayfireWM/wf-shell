@@ -20,6 +20,7 @@
 #include "widgets/spacing.hpp"
 
 #include "wf-shell-app.hpp"
+#include "wf-autohide-window.hpp"
 
 static void zwf_output_hide_panels(void *data,
                                    struct zwf_output_v1 *zwf_output_v1,
@@ -37,7 +38,7 @@ const struct zwf_output_v1_listener zwf_output_impl =
 class WayfirePanel
 {
     WayfireShellApp *app;
-    Gtk::Window window;
+    std::unique_ptr<WayfireAutohidingWindow> window;
 
     Gtk::HBox content_box;
     Gtk::HBox left_box, center_box, right_box;
@@ -47,135 +48,33 @@ class WayfirePanel
     WidgetContainer left_widgets, center_widgets, right_widgets;
 
     WayfireOutput *output;
-    zwf_wm_surface_v1 *wm_surface = NULL;
-
     int current_output_width = 0, current_output_height = 0;
-    int hidden_height = 1;
 
-    wf_option panel_position;
-    const std::string panel_position_bottom = "bottom";
-
-    int get_hidden_y()
+    bool was_autohide_enabled = false;
+    wf_option autohide_opt;
+    wf_option_callback autohide_opt_updated = [=] ()
     {
-        return hidden_height - window.get_allocated_height();
-    }
-
-    wf_option duration = new_static_option("300");
-    wf_duration transition{duration};
-
-    bool animation_running = false;
-    bool update_margin()
-    {
-        if (animation_running || transition.running())
-        {
-            int target_y = std::round(transition.progress());
-
-            // takes effect only for anchored edges
-            zwf_wm_surface_v1_set_margin(wm_surface,
-                target_y, target_y, target_y, target_y);
-
-            window.queue_draw();
-            return (animation_running = transition.running());
-        }
-
-        return false;
-    }
-
-    void update_position()
-    {
-        uint32_t anchor = 0;
-        if (panel_position->as_string() == "top")
-            anchor = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP;
-        else
-            anchor = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_BOTTOM;
-
-        zwf_wm_surface_v1_set_anchor(wm_surface, anchor);
-    }
-
-    bool show()
-    {
-        int start = transition.progress();
-        transition.start(start, 0);
-        update_margin();
-        return false; // disconnect
-    }
-
-    bool hide()
-    {
-        int start = transition.progress();
-        transition.start(start, get_hidden_y());
-        update_margin();
-        return false; // disconnect
-    }
-
-    sigc::connection pending_show, pending_hide;
-    void schedule_show(int delay)
-    {
-        pending_hide.disconnect();
-        if (!pending_show.connected())
-            pending_show = Glib::signal_timeout().connect(sigc::mem_fun(this, &WayfirePanel::show), delay);
-    }
-
-    void schedule_hide(int delay)
-    {
-        pending_show.disconnect();
-        if (!pending_hide.connected())
-            pending_hide = Glib::signal_timeout().connect(sigc::mem_fun(this, &WayfirePanel::hide), delay);
-    }
-
-    void update_reserved_area()
-    {
-        if (!wm_surface)
+        bool is_autohide = autohide_opt->as_int();
+        if (is_autohide == was_autohide_enabled)
             return;
 
-        if (autohide_enabled()) {
-            zwf_wm_surface_v1_set_exclusive_zone(wm_surface, 0);
-        } else if (!autohide_enabled()) {
-            zwf_wm_surface_v1_set_exclusive_zone(wm_surface, window.get_height());
-        }
-    }
-
-    int autohide_count = 0;
-    wf_option autohide_opt;
-    wf_option_callback update_autohide = [=] ()
-    {
-        if (autohide_enabled() && !input_entered)
-            schedule_hide(0);
-
-        if (!autohide_enabled())
-            schedule_show(0);
-
-        update_reserved_area();
+        was_autohide_enabled = is_autohide;
+        update_autohide_request(is_autohide);
+        window->set_exclusive_zone(!is_autohide);
     };
-
-    bool autohide_enabled()
-    {
-        return autohide_count + (bool)autohide_opt->as_int();
-    }
 
     std::function<void(bool)> update_autohide_request = [=] (bool autohide)
     {
-        autohide_count += autohide ? 1 : -1;
-        update_autohide();
-    };
+        /* FIXME: will break if panel is created while there are fullscreen windows */
+        if (!this->window)
+            return;
 
-    void create_wm_surface()
-    {
-        auto gdk_window = window.get_window()->gobj();
-        auto surface = gdk_wayland_window_get_wl_surface(gdk_window);
-
-        if (!surface)
-        {
-            std::cerr << "Error: created window was not a wayland surface" << std::endl;
-            std::exit(-1);
+        if (autohide) {
+            this->window->increase_autohide();
+        } else {
+            this->window->decrease_autohide();
         }
-
-        wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface,
-                                                  ZWF_OUTPUT_V1_WM_ROLE_OVERLAY);
-        update_reserved_area();
-        update_position();
-        zwf_output_v1_add_listener(output->zwf, &zwf_output_impl, &update_autohide_request);
-    }
+    };
 
     wf_option minimal_panel_height;
     void handle_output_resize(uint32_t width, uint32_t height)
@@ -183,64 +82,18 @@ class WayfirePanel
         this->current_output_width = width;
         this->current_output_height = height;
 
-        this->window.set_size_request(current_output_width,
+        if (!this->window)
+            create_window();
+
+        this->window->set_size_request(current_output_width,
             minimal_panel_height->as_int());
-        window.show_all();
-
-        if (!wm_surface)
-            create_wm_surface();
-
-        transition.start(get_hidden_y(), get_hidden_y());
-        show();
-        update_reserved_area();
-        if (autohide_enabled())
-            schedule_hide(1000);
-    }
-
-    void on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
-    {
-        update_margin();
-    }
-
-    int input_entered = 0;
-    void on_enter(GdkEventCrossing *cross)
-    {
-        // ignore events between the window and widgets
-        if (cross->detail != GDK_NOTIFY_NONLINEAR &&
-            cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
-            return;
-
-        schedule_show(300); // TODO: maybe configurable?
-        ++input_entered;
-    }
-
-    void on_leave(GdkEventCrossing *cross)
-    {
-        // ignore events between the window and widgets
-        if (cross->detail != GDK_NOTIFY_NONLINEAR &&
-            cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
-            return;
-
-        if (autohide_enabled())
-            schedule_hide(500);
-        --input_entered;
-    }
-
-    int old_allocated_height = 0;
-    void on_resized(Gtk::Allocation& alloc)
-    {
-        if (old_allocated_height != alloc.get_height())
-        {
-            update_reserved_area();
-            old_allocated_height = alloc.get_height();
-        }
     }
 
     wf_option bg_color;
-    void set_window_color()
+    wf_option_callback on_window_color_updated = [=] ()
     {
         if (bg_color->as_string() == "gtk_default")
-            return window.unset_background_color();
+            return window->unset_background_color();
 
         Gdk::RGBA rgba;
         if (bg_color->as_string() == "gtk_headerbar")
@@ -265,38 +118,43 @@ class WayfirePanel
             }
         }
 
-        window.override_background_color(rgba);
-    }
-    wf_option_callback background_callback;
-    void setup_window()
+        window->override_background_color(rgba);
+    };
+
+    void create_window()
     {
-        window.set_resizable(false);
-        window.set_decorated(false);
+        auto config_section = app->config->get_section("panel");
+        minimal_panel_height = config_section->get_option("minimal_height",
+            DEFAULT_PANEL_HEIGHT);
 
-        bg_color = app->config->get_section("panel")
-            ->get_option("background_color", "gtk_headerbar");
+        window = std::unique_ptr<WayfireAutohidingWindow> (
+            new WayfireAutohidingWindow(
+                this->current_output_width,
+                minimal_panel_height->as_int(),
+                this->output,
+                ZWF_OUTPUT_V1_WM_ROLE_OVERLAY));
 
-        background_callback = [=] () {
-            set_window_color();
-        };
-        bg_color->add_updated_handler(&background_callback);
-        set_window_color();
-        this->window.set_size_request(-1, minimal_panel_height->as_int());
+        bg_color = config_section->get_option("background_color", "gtk_headerbar");
+        bg_color->add_updated_handler(&on_window_color_updated);
+        on_window_color_updated(); // set initial color
 
-        window.signal_draw().connect_notify(
-            sigc::mem_fun(this, &WayfirePanel::on_draw));
-        window.signal_enter_notify_event().connect_notify(
-            sigc::mem_fun(this, &WayfirePanel::on_enter));
-        window.signal_leave_notify_event().connect_notify(
-            sigc::mem_fun(this, &WayfirePanel::on_leave));
-        window.signal_size_allocate().connect_notify(
-            sigc::mem_fun(this, &WayfirePanel::on_resized));
+        autohide_opt = config_section->get_option("autohide", "1");
+        autohide_opt->add_updated_handler(&autohide_opt_updated);
+        /* Make sure that we trigger an autohide opt update. We haven't set any
+         * autohide state up to now, so this won't corrupt the autohide counters */
+        was_autohide_enabled = !autohide_opt->as_int();
+        autohide_opt_updated(); // set initial autohide status
 
-        window.signal_focus_out_event().connect_notify(
-            sigc::mem_fun(this, &WayfirePanel::on_focus_out));
+        window->set_position(
+            config_section->get_option("position", PANEL_POSITION_TOP));
 
-        window.signal_delete_event().connect(
+        init_layout();
+        init_widgets();
+
+        window->signal_delete_event().connect(
             sigc::mem_fun(this, &WayfirePanel::on_delete));
+        window->signal_focus_out_event().connect_notify(
+            sigc::mem_fun(this, &WayfirePanel::on_focus_out));
     }
 
     bool on_delete(GdkEventAny *ev)
@@ -318,10 +176,8 @@ class WayfirePanel
         /* We want to hide much faster, because this will have any effect
          * only in the case when there was an opened popup and the user wants
          * to hide the panel, so no use delaying it */
-        if (autohide_enabled())
-            schedule_hide(100);
-
-        input_entered = 0; // also reset all inputs we might have missed
+        if (window->is_autohide())
+            window->schedule_hide(100);
     }
 
     void init_layout()
@@ -329,7 +185,8 @@ class WayfirePanel
         content_box.pack_start(left_box, false, false);
         content_box.set_center_widget(center_box);
         content_box.pack_end(right_box, false, false);
-        window.add(content_box);
+        window->add(content_box);
+        content_box.show_all();
     }
 
     Widget widget_from_name(std::string name)
@@ -360,7 +217,8 @@ class WayfirePanel
             return Widget(new WayfireSpacing(pixel));
         }
 
-        std::cerr << "Invalid widget: " << name << std::endl;
+        if (name != "none")
+            std::cerr << "Invalid widget: " << name << std::endl;
         return nullptr;
     }
 
@@ -394,8 +252,6 @@ class WayfirePanel
             widget->init(&box, app->config.get());
             container.push_back(std::move(widget));
         }
-
-        box.show_all();
     }
 
     wf_option left_widgets_opt, right_widgets_opt, center_widgets_opt;
@@ -433,16 +289,7 @@ class WayfirePanel
     {
         this->app = app;
         this->output = output;
-        autohide_opt = app->config->get_section("panel")->get_option("autohide", "1");
-        autohide_opt->add_updated_handler(&update_autohide);
-
-        panel_position = app->config->get_section("panel")->get_option("position", "top");
-        minimal_panel_height = app->config->get_section("panel")->get_option("minimal_height",
-            DEFAULT_PANEL_HEIGHT);
-
-        setup_window();
-        init_layout();
-        init_widgets();
+        zwf_output_v1_add_listener(output->zwf, &zwf_output_impl, &update_autohide_request);
 
         output->resized_callback = [=] (WayfireOutput*, uint32_t w, uint32_t h)
         {
@@ -452,8 +299,8 @@ class WayfirePanel
 
     ~WayfirePanel()
     {
-        autohide_opt->rem_updated_handler(&update_autohide);
-        bg_color->rem_updated_handler(&background_callback);
+        autohide_opt->rem_updated_handler(&autohide_opt_updated);
+        bg_color->rem_updated_handler(&on_window_color_updated);
 
         left_widgets_opt->rem_updated_handler(&left_widgets_updated);
         right_widgets_opt->rem_updated_handler(&right_widgets_updated);
@@ -468,8 +315,6 @@ class WayfirePanel
             w->handle_config_reload(app->config.get());
         for (auto& w : center_widgets)
             w->handle_config_reload(app->config.get());
-
-        update_position();
     }
 };
 

@@ -37,6 +37,7 @@ class WfToplevelIcon::impl
 
         button.add(image);
         button.set_tooltip_text("none");
+        button.get_style_context()->add_class("flat");
         button.show_all();
 
         button.signal_clicked().connect_notify(

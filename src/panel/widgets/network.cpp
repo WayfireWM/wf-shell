@@ -419,6 +419,8 @@ void WayfireNetworkInfo::handle_config_reload(wayfire_config *config)
         update_icon();
         update_status();
     }
+
+    button.show_all();
 }
 
 WayfireNetworkInfo::~WayfireNetworkInfo()

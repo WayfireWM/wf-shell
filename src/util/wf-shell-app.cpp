@@ -6,7 +6,7 @@
 
 std::string WayfireShellApp::get_config_file()
 {
-    std::string home_dir = secure_getenv("HOME");
+    std::string home_dir = getenv("HOME");
     std::string config_file = home_dir + "/.config/wf-shell.ini";
     return config_file;
 }

@@ -245,9 +245,10 @@ void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
     button_box.add(label);
 
     button.add(button_box);
-
     button.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(this, &WayfireBatteryInfo::update_icon));
+
+    button.show_all();
 }
 
 WayfireBatteryInfo::~WayfireBatteryInfo()

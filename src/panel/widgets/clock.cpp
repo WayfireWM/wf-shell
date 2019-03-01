@@ -12,6 +12,8 @@ void WayfireClock::init(Gtk::HBox *container, wayfire_config *config)
 
     button = std::unique_ptr<WayfireMenuButton> (new WayfireMenuButton(config));
     button->add(label);
+    button->show();
+    label.show();
 
     update_label();
 
