@@ -27,7 +27,7 @@ class WfDock::impl
         this->output = output;
         window = std::unique_ptr<WayfireAutohidingWindow> (
             new WayfireAutohidingWindow(100, 100, output,
-                ZWF_OUTPUT_V1_WM_ROLE_PANEL));
+                ZWF_WM_SURFACE_V1_ROLE_PANEL));
         window->set_keyboard_mode(ZWF_WM_SURFACE_V1_KEYBOARD_FOCUS_MODE_NO_FOCUS);
         window->increase_autohide();
 

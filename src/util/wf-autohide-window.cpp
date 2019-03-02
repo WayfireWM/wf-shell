@@ -5,7 +5,7 @@
 #include <assert.h>
 
 WayfireAutohidingWindow::WayfireAutohidingWindow(int width, int height,
-    WayfireOutput *output, zwf_output_v1_wm_role role)
+    WayfireOutput *output, zwf_wm_surface_v1_role role)
 {
     this->set_size_request(width, height);
     this->set_decorated(false);
@@ -22,7 +22,8 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(int width, int height,
         std::exit(-1);
     }
 
-    wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface, role);
+    wm_surface = zwf_shell_manager_v1_get_wm_surface(
+        output->display->zwf_shell_manager, surface, role, output->handle);
     this->m_position_changed = [=] () {this->update_position();};
 
     this->signal_draw().connect_notify(

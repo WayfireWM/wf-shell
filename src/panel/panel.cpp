@@ -132,7 +132,7 @@ class WayfirePanel
                 this->current_output_width,
                 minimal_panel_height->as_int(),
                 this->output,
-                ZWF_OUTPUT_V1_WM_ROLE_OVERLAY));
+                ZWF_WM_SURFACE_V1_ROLE_OVERLAY));
 
         bg_color = config_section->get_option("background_color", "gtk_headerbar");
         bg_color->add_updated_handler(&on_window_color_updated);

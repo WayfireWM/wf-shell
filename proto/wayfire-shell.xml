@@ -18,6 +18,65 @@
             <arg name="output" type="object" interface="wl_output"/>
             <arg name="id" type="new_id" interface="zwf_output_v1"/>
         </request>
+
+        <request name="get_wm_surface">
+            <description summary="Assign a role">
+                Assign the given role to the given surface and add it to the
+                given output. A client can specify a null output, in which case
+                the compositor will assign the surface to the focused output,
+                if any such output.
+
+                The role cannot be changed later, and neither can the surface be
+                moved to a different output, except by the compositor.
+            </description>
+
+            <arg name="surface" type="object" interface="wl_surface"/>
+            <arg name="role" type="uint" enum="zwf_wm_surface_v1.role"/>
+            <arg name="output" type="object" interface="wl_output" allow-null="true"/>
+            <arg name="id" type="new_id" interface="zwf_wm_surface_v1"/>
+        </request>
+    </interface>
+
+    <interface name="zwf_output_v1" version="1">
+        <description summary="A wrapper for wl_output">
+            Represents a single output.
+            Each output is managed independently from the others.
+        </description>
+        <event name="output_hide_panels">
+            <description summary="Autohide/Show signal">
+                Panels are always rendered on top, even above fullscreen windows.
+                If autohide is 1, the event indicates that the panels should hide
+                itself, by for example unmapping or sliding outside of the output.
+                If autohide is 0, this means that the reason for the last request
+                with autohide == 1 is no longer valid, i.e the panels can show
+                themselves.
+
+                The output_hide_panels can be called multiple times with
+                autohide = 1, and the panel should show itself only when
+                it has received a matching number of events with autohide = 0
+            </description>
+
+            <arg name="autohide" type="uint"/>
+        </event>
+
+        <request name="inhibit_output">
+            <description summary="Don't render the output">
+                Request the compositor to not render the output, so
+                the output usually is cleared to black color.
+                To enable output rendering again, call inhibit_output_done
+            </description>
+        </request>
+
+        <request name="inhibit_output_done">
+            <description summary="Render the output">
+                Stop inhibiting the output. This must be called as many times
+                as inhibit_output was called to actually uninhibit rendering.
+
+                The inhibit/inhibit_done requests can be called multiple times,
+                even from different apps, so don't assume that a call to
+                inhibit_done would always mean actually starting the rendering process.
+            </description>
+        </request>
     </interface>
 
     <interface name="zwf_wm_surface_v1" version="1">
@@ -25,6 +84,13 @@
             Represents a surface with a specific WM role.
             It belongs to the output which it was created for.
         </description>
+
+        <enum name="role">
+            <entry name="background" value="1"/>
+            <entry name="bottom" value="2"/>
+            <entry name="panel" value="3"/>
+            <entry name="overlay" value="4"/>
+        </enum>
 
         <request name="configure">
             <description summary="Move the surface to the given output-local coordinates."/>
@@ -97,70 +163,6 @@
                 affect exclusive zone in any way.
             </description>
             <arg name="size" type="uint"/>
-        </request>
-    </interface>
-
-    <interface name="zwf_output_v1" version="1">
-        <description summary="A wrapper for wl_output">
-            Represents a single output.
-            Each output is managed independently from the others.
-        </description>
-
-        <enum name="wm_role">
-            <entry name="background" value="1"/>
-            <entry name="bottom" value="2"/>
-            <entry name="panel" value="3"/>
-            <entry name="overlay" value="4"/>
-        </enum>
-
-        <request name="get_wm_surface">
-            <description summary="Assign a role">
-                Assign the given role to the given surface
-                and add it to the current output.
-
-                The role cannot be changed later, and neither
-                can it be moved to a different output.
-            </description>
-
-            <arg name="surface" type="object" interface="wl_surface"/>
-            <arg name="role" type="uint" enum="wm_role"/>
-            <arg name="id" type="new_id" interface="zwf_wm_surface_v1"/>
-        </request>
-
-        <event name="output_hide_panels">
-            <description summary="Autohide/Show signal">
-                Panels are always rendered on top, even above fullscreen windows.
-                If autohide is 1, the event indicates that the panels should hide
-                itself, by for example unmapping or sliding outside of the output.
-                If autohide is 0, this means that the reason for the last request
-                with autohide == 1 is no longer valid, i.e the panels can show
-                themselves.
-
-                The output_hide_panels can be called multiple times with
-                autohide = 1, and the panel should show itself only when
-                it has received a matching number of events with autohide = 0
-            </description>
-
-            <arg name="autohide" type="uint"/>
-        </event>
-
-        <request name="inhibit_output">
-            <description summary="Don't render the output">
-                Request the compositor to not render the output, so
-                the output usually is cleared to black color.
-                To enable output rendering again, call inhibit_output_done
-            </description>
-        </request>
-
-        <request name="inhibit_output_done">
-            <description summary="Render the output">
-                Stop inhibiting the output. This must be called as many times
-                as inhibit_output was called to actually uninhibit rendering.
-
-                The inhibit/inhibit_done requests can be called multiple times,
-                even from different apps, so don't assume that a call to
-                inhibit_done would always mean actually starting the rendering process.
-            </description>
         </request>
     </interface>
 </protocol>

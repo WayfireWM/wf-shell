@@ -32,8 +32,9 @@ class WayfireBackground
             std::exit(-1);
         }
 
-        wm_surface = zwf_output_v1_get_wm_surface(output->zwf, surface,
-            ZWF_OUTPUT_V1_WM_ROLE_BACKGROUND);
+        wm_surface = zwf_shell_manager_v1_get_wm_surface(
+            output->display->zwf_shell_manager, surface,
+            ZWF_WM_SURFACE_V1_ROLE_BACKGROUND, output->handle);
         zwf_wm_surface_v1_configure(wm_surface, 0, 0);
     }
 

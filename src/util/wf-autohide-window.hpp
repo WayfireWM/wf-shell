@@ -42,7 +42,7 @@ class WayfireAutohidingWindow : public Gtk::Window
 
     public:
         WayfireAutohidingWindow(int width, int height,
-            WayfireOutput *output, zwf_output_v1_wm_role role);
+            WayfireOutput *output, zwf_wm_surface_v1_role role);
         zwf_wm_surface_v1* get_wm_surface() const;
 
         /* Sets the edge of the screen where the window is */
