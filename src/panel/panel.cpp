@@ -207,7 +207,7 @@ class WayfirePanel::impl
         if (name == "battery")
             return Widget(new WayfireBatteryInfo());
         if (name == "window-list")
-            return Widget(new WayfireWindowList());
+            return Widget(new WayfireWindowList(output));
 
         std::string spacing = "spacing";
         if (name.find(spacing) == 0)
@@ -318,6 +318,11 @@ class WayfirePanel::impl
         return window->get_wl_surface();
     }
 
+    Gtk::Window& get_window()
+    {
+        return *window;
+    }
+
     void handle_config_reload()
     {
         auto config = WayfirePanelApp::get().get_config();
@@ -332,6 +337,7 @@ class WayfirePanel::impl
 
 WayfirePanel::WayfirePanel(WayfireOutput *output) : pimpl(new impl(output)) { }
 wl_surface *WayfirePanel::get_wl_surface() { return pimpl->get_wl_surface(); }
+Gtk::Window& WayfirePanel::get_window() { return pimpl->get_window(); }
 void WayfirePanel::handle_config_reload() { return pimpl->handle_config_reload(); }
 
 class WayfirePanelApp::impl : public WayfireShellApp

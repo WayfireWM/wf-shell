@@ -9,6 +9,8 @@
 #include <gtkmm/button.h>
 #include <gtkmm/scrolledwindow.h>
 
+#define MAX_TITLE_TEXT_LENGTH 15
+
 class WayfireToplevel;
 
 class WayfireWindowList : public WayfireWidget
@@ -22,25 +24,27 @@ class WayfireWindowList : public WayfireWidget
     Gtk::HBox box;
     Gtk::ScrolledWindow scrolled_window;
 
-    WayfireWindowList();
+    WayfireWindowList(WayfireOutput *output);
     virtual ~WayfireWindowList();
 
-    static WayfireWindowList& get();
-
     void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
-    WayfirePanel* panel_for_wl_output(wl_output *output);
-    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
     void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
+    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
 
-    WayfireWindowList* window_list_for_wl_output(wl_output *output);
     WayfireDisplay *get_display();
     wayfire_config *get_config();
 
     void init(Gtk::HBox *container, wayfire_config *config);
     void add_output(WayfireOutput *output);
 
+    uint button_text_length;
+
     private:
-    static std::unique_ptr<WayfireWindowList> instance;
+    std::pair<int32_t, int32_t> last_layout {0, 0};
+    void on_draw(const Cairo::RefPtr<Cairo::Context>&);
+
+    void set_button_width(int width);
+    int get_default_button_width();
 };
 
 #endif /* end of include guard: WIDGETS_WINDOW_LIST_HPP */

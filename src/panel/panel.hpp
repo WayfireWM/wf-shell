@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <wayland-client.h>
+#include <gtkmm/window.h>
 
 #include "config.hpp"
 #include "display.hpp"
@@ -13,6 +14,7 @@ class WayfirePanel
     WayfirePanel(WayfireOutput *output);
 
     wl_surface *get_wl_surface();
+    Gtk::Window& get_window();
     void handle_config_reload();
 
     private:

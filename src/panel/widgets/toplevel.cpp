@@ -3,6 +3,7 @@
 #include <gtkmm/button.h>
 #include <gtkmm/icontheme.h>
 #include <giomm/desktopappinfo.h>
+#include <iostream>
 
 #include "toplevel.hpp"
 #include "gtk-utils.hpp"
@@ -30,7 +31,8 @@ class WayfireToplevel::impl
     Gtk::Image image;
     Gtk::Label label;
     Gtk::Box *container;
-    std::string app_id;
+
+    Glib::ustring app_id, title;
     public:
     WayfireWindowList *window_list;
 
@@ -52,7 +54,7 @@ class WayfireToplevel::impl
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(this, &WayfireToplevel::impl::on_scale_update));
 
-        container.pack_start(button);
+        container.add(button);
         container.show_all();
 
         this->window_list = window_list;
@@ -80,6 +82,7 @@ class WayfireToplevel::impl
     void on_allocation_changed(Gtk::Allocation& alloc)
     {
         send_rectangle_hint();
+        window_list->scrolled_window.queue_allocate();
     }
 
     void on_scale_update()
@@ -116,14 +119,66 @@ class WayfireToplevel::impl
             return;
 
         zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
-            panel->get_wl_surface(), x, y, width, height);
-            */
+        panel->get_wl_surface(), x, y, width, height);
+        */
     }
 
+    int32_t max_width = 0;
     void set_title(std::string title)
     {
+        this->title = title;
         button.set_tooltip_text(title);
-        label.set_text(title);
+
+        set_max_width(max_width);
+    }
+
+    Glib::ustring shorten_title(int show_chars)
+    {
+        if (show_chars == 0)
+            return "";
+
+        int title_len = title.length();
+        Glib::ustring short_title = title.substr(0, show_chars);
+        if (title_len - show_chars >= 2) {
+            short_title += "..";
+        } else if (title_len != show_chars) {
+            short_title += ".";
+        }
+
+        return short_title;
+    }
+
+    int get_button_preferred_width()
+    {
+        int min_width, preferred_width;
+        button.get_preferred_width(min_width, preferred_width);
+
+        return preferred_width;
+    }
+
+    void set_max_width(int width)
+    {
+        std::cout << "set max width " << width << std::endl;
+        this->max_width = width;
+        if (max_width == 0)
+        {
+            this->button.set_size_request(-1, -1);
+            this->label.set_label(title);
+            return;
+        }
+
+        this->button.set_size_request(width, -1);
+
+        int show_chars = 0;
+        for (show_chars = title.length(); show_chars > 0; show_chars--)
+        {
+            this->label.set_text(shorten_title(show_chars));
+            if (get_button_preferred_width() <= max_width)
+                break;
+        }
+
+        std::cout << "shor ttiel " << shorten_title(show_chars) << " len: " << show_chars << std::endl;
+        label.set_text(shorten_title(show_chars));
     }
 
     void set_state(uint32_t state)
@@ -155,6 +210,8 @@ class WayfireToplevel::impl
 
 WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::Box& container)
     :pimpl(new WayfireToplevel::impl(window_list, handle, container)) { }
+
+void WayfireToplevel::set_width(int pixels) { return pimpl->set_max_width(pixels); }
 WayfireToplevel::~WayfireToplevel() = default;
 
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;
