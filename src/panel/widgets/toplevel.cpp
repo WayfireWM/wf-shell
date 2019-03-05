@@ -42,8 +42,9 @@ class WayfireToplevel::impl
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
             &toplevel_handle_v1_impl, this);
 
-        button_contents.pack_start(image);
-        button_contents.pack_start(label);
+        button_contents.add(image);
+        button_contents.add(label);
+        button_contents.set_halign(Gtk::ALIGN_START);
         button.add(button_contents);
         button.set_tooltip_text("none");
 
