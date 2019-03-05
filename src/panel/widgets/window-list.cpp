@@ -7,7 +7,7 @@
 #include "panel.hpp"
 #include "config.hpp"
 
-#define DEFAULT_SIZE_PC 0.12
+#define DEFAULT_SIZE_PC 0.1
 
 static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager,
     zwlr_foreign_toplevel_handle_v1 *toplevel)
