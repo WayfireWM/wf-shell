@@ -9,8 +9,6 @@
 #include <gtkmm/button.h>
 #include <gtkmm/scrolledwindow.h>
 
-#define MAX_TITLE_TEXT_LENGTH 15
-
 class WayfireToplevel;
 
 class WayfireWindowList : public WayfireWidget
@@ -40,7 +38,7 @@ class WayfireWindowList : public WayfireWidget
     uint button_text_length;
 
     private:
-    std::pair<int32_t, int32_t> last_layout {0, 0};
+    int32_t last_button_width = 100;
     void on_draw(const Cairo::RefPtr<Cairo::Context>&);
 
     void set_button_width(int width);

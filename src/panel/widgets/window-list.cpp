@@ -7,7 +7,7 @@
 #include "panel.hpp"
 #include "config.hpp"
 
-#define DEFAULT_SIZE_PC 0.07
+#define DEFAULT_SIZE_PC 0.12
 
 static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager,
     zwlr_foreign_toplevel_handle_v1 *toplevel)
@@ -75,12 +75,17 @@ void WayfireWindowList::init(Gtk::HBox *container, wayfire_config *config)
     scrolled_window.set_propagate_natural_width(true);
     container->pack_start(scrolled_window, true, true);
     scrolled_window.show_all();
+
+    /* Make sure new windows get added with the proper size */
+    last_button_width = get_default_button_width();
 }
 
 void WayfireWindowList::set_button_width(int width)
 {
     for (auto& toplevel : toplevels)
         toplevel.second->set_width(width);
+
+    last_button_width = width;
 }
 
 int WayfireWindowList::get_default_button_width()
@@ -103,10 +108,11 @@ void WayfireWindowList::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
 
     /* We have changed the size/number of toplevels. On top of that, our list
      * is longer that the max size, so we need to re-layout the buttons */
-    if (new_layout != last_layout && preferred_width > allocated_width)
-        set_button_width(allocated_width / toplevels.size());
-
-    last_layout = new_layout;
+    if (preferred_width > allocated_width && toplevels.size() > 0)
+    {
+        int new_width = allocated_width / toplevels.size();
+        set_button_width(new_width);
+    }
 }
 
 void WayfireWindowList::add_output(WayfireOutput *output)
@@ -123,16 +129,21 @@ void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *han
 {
     toplevels[handle] = std::unique_ptr<WayfireToplevel> (new WayfireToplevel(this, handle, box));
     /* The size will be updated in the next on_draw() if needed */
-    toplevels[handle]->set_width(get_default_button_width());
+    toplevels[handle]->set_width(last_button_width);
 }
 
 void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
 {
     toplevels.erase(handle);
 
+    /* No size adjustments necessary in this case */
+    if (toplevels.size() == 0)
+        return;
+
     /* We can remove any special size requirements if the buttons all fit with
      * the default width, otherwise we still need to limit them to the allocation */
-    int allowed_width = std::min(int(last_layout.first / toplevels.size()),
+    int allowed_width = std::min(
+        int(scrolled_window.get_allocated_width() / toplevels.size()),
         get_default_button_width());
 
     set_button_width(allowed_width);
