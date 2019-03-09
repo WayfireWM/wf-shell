@@ -119,7 +119,15 @@ class WfToplevelIcon::impl
 
     void set_state(uint32_t state)
     {
+        bool was_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
         this->state = state;
+        bool is_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
+
+        if (!was_activated && is_activated) {
+            this->button.get_style_context()->remove_class("flat");
+        } else if (was_activated && !is_activated) {
+            this->button.get_style_context()->add_class("flat");
+        }
     }
 
     ~impl()
