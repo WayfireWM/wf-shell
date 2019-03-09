@@ -151,6 +151,34 @@ namespace IconProvider
                 c = std::tolower(c);
             return str;
         }
+
+        std::map<std::string, std::string> custom_icons;
+    }
+
+    void load_custom_icons(wayfire_config_section *section)
+    {
+        static const std::string prefix = "icon_mapping_";
+        for (auto option : section->options)
+        {
+            if (option->name.compare(0, prefix.length(), prefix) != 0)
+                continue;
+
+            auto app_id = option->name.substr(prefix.length());
+            custom_icons[app_id] = option->as_string();
+        }
+    }
+
+    bool set_custom_icon(Gtk::Image& image, std::string app_id, int size, int scale)
+    {
+        if (!custom_icons.count(app_id))
+            return false;
+
+        auto pb = load_icon_pixbuf_safe(custom_icons[app_id], size * scale);
+        if (!pb.get())
+            return false;
+
+        set_image_pixbuf(image, pb, scale);
+        return true;
     }
 
     /* Gio::DesktopAppInfo
@@ -201,26 +229,32 @@ namespace IconProvider
         return Icon{};
     }
 
-    /* Second method: Just look up the built-in icon theme,
-     * perhaps some icon can be found there */
-
     void set_image_from_icon(Gtk::Image& image,
         std::string app_id_list, int size, int scale)
     {
         std::string app_id;
         std::istringstream stream(app_id_list);
 
+        bool found_icon = false;
+
         /* Wayfire sends a list of app-id's in space separated format, other compositors
          * send a single app-id, but in any case this works fine */
         while (stream >> app_id)
         {
+            /* Try first method: custom icon file provided by the user */
+            if (set_custom_icon(image, app_id, size, scale))
+            {
+                found_icon = true;
+                break;
+            }
+
+            /* Then try to load the DesktopAppInfo */
             auto icon = get_from_desktop_app_info(app_id);
             std::string icon_name = "unknown";
 
             if (!icon)
             {
-                /* Perhaps no desktop app info, but we might still be able to
-                 * get an icon directly from the icon theme */
+                /* Finally try directly looking up the icon, if it exists */
                 if (Gtk::IconTheme::get_default()->lookup_icon(app_id, 24))
                     icon_name = app_id;
             } else
@@ -234,7 +268,13 @@ namespace IconProvider
 
             /* finally found some icon */
             if (icon_name != "unknown")
+            {
+                found_icon = true;
                 break;
+            }
         }
+
+        if (!found_icon)
+            std::cout << "Failed to load icon for any of " << app_id_list << std::endl;
     }
 };

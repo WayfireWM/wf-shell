@@ -1,5 +1,6 @@
 #include "dock.hpp"
 #include "toplevel.hpp"
+#include "toplevel-icon.hpp"
 #include <iostream>
 #include <gdk/gdkwayland.h>
 
@@ -46,6 +47,7 @@ class WfDockApp::impl : public WayfireShellApp
     void on_activate() override
     {
         WayfireShellApp::on_activate();
+        IconProvider::load_custom_icons(this->config->get_section("dock"));
 
         /* At this point, wayland connection has been initialized,
          * and hopefully outputs have been created */

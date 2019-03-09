@@ -3,6 +3,18 @@
 #include <gdk/gdkcairo.h>
 #include <iostream>
 
+Glib::RefPtr<Gdk::Pixbuf> load_icon_pixbuf_safe(std::string icon_path, int size)
+{
+    try
+    {
+        auto pb = Gdk::Pixbuf::create_from_file(icon_path, size, size);
+        return pb;
+    } catch(...)
+    {
+        return {};
+    }
+}
+
 void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff)
 {
     int channels = pbuff->get_n_channels();

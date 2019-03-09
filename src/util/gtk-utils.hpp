@@ -4,6 +4,9 @@
 #include <gtkmm/image.h>
 #include <string>
 
+/* Loads a pixbuf with the given size from the given file, returns null if unsuccessful */
+Glib::RefPtr<Gdk::Pixbuf> load_icon_pixbuf_safe(std::string icon_path, int size);
+
 struct WfIconLoadOptions
 {
     int user_scale = -1;

@@ -103,3 +103,7 @@ menu_fuzzy_search = 1
 
 [dock]
 position = bottom # or top
+
+# For applications that aren't installed/configured properly, you can manually
+# set icons for given app_id's. Below is an example for IntelliJ IDEA
+icon_mapping_jetbrains-idea-ce = /<path to intellij>/idea.png

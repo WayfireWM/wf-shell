@@ -68,14 +68,7 @@ struct FileLauncherInfo : public LauncherInfo
         command = name;
         this->icon = icon;
 
-        try {
-            // check if file is loadable
-            Gdk::Pixbuf::create_from_file(icon, 24, 24);
-        } catch(...) {
-            return false;
-        }
-
-        return true;
+        return load_icon_pixbuf_safe(icon, 24).get() != nullptr;
     }
 
     Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size)
