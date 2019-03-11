@@ -39,7 +39,7 @@ class WayfireToplevel::impl
     public:
     WayfireWindowList *window_list;
 
-    impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::Box& container)
+    impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::HBox& container)
     {
         this->handle = handle;
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
@@ -74,10 +74,8 @@ class WayfireToplevel::impl
         menu->attach(maximize, 0, 1, 1, 2);
         menu->attach(close, 0, 1, 2, 3);
 
-        container.add(button);
-        container.show_all();
-
         this->window_list = window_list;
+        this->container = &container;
     }
 
     bool on_button_press_event(GdkEventButton* event)
@@ -333,12 +331,17 @@ class WayfireToplevel::impl
 
     void handle_output_enter(wl_output *output)
     {
-        /* Nothing for now */
+        if (window_list->output->handle == output)
+        {
+            container->add(button);
+            container->show_all();
+        }
     }
 
     void handle_output_leave(wl_output *output)
     {
-        /* Nothing for now */
+        if (window_list->output->handle == output)
+            container->remove(button);
     }
 
     void handle_toplevel_closed()
@@ -348,7 +351,7 @@ class WayfireToplevel::impl
 };
 
 
-WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::Box& container)
+WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::HBox& container)
     :pimpl(new WayfireToplevel::impl(window_list, handle, container)) { }
 
 void WayfireToplevel::set_width(int pixels) { return pimpl->set_max_width(pixels); }
