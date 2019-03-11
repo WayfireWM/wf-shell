@@ -340,6 +340,11 @@ class WayfireToplevel::impl
     {
         /* Nothing for now */
     }
+
+    void delete_menu()
+    {
+        delete menu;
+    }
 };
 
 
@@ -415,6 +420,7 @@ static void handle_toplevel_closed(void *data, toplevel_t handle)
     //WayfirePanelApp::get().handle_toplevel_closed(handle);
     auto impl = static_cast<WayfireToplevel::impl*> (data);
     impl->window_list->handle_toplevel_closed(handle);
+    impl->delete_menu();
     zwlr_foreign_toplevel_handle_v1_destroy(handle);
 }
 
