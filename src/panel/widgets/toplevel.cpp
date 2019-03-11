@@ -325,7 +325,7 @@ class WayfireToplevel::impl
 
     ~impl()
     {
-        /* Nothing for now */
+        zwlr_foreign_toplevel_handle_v1_destroy(handle);
     }
 
 

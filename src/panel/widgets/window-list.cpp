@@ -156,4 +156,5 @@ WayfireWindowList::WayfireWindowList(WayfireOutput *output)
 
 WayfireWindowList::~WayfireWindowList()
 {
+    zwlr_foreign_toplevel_manager_v1_destroy(manager);
 }
