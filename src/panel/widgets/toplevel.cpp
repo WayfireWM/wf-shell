@@ -187,13 +187,6 @@ class WayfireToplevel::impl
         if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
         {
             zwlr_foreign_toplevel_handle_v1_close(handle);
-
-            if (menu)
-            {
-                delete menu;
-                menu = nullptr;
-            }
-
             return true;
         }
         else
@@ -350,11 +343,7 @@ class WayfireToplevel::impl
 
     void handle_toplevel_closed()
     {
-        if (menu)
-        {
-            delete menu;
-            menu = nullptr;
-        }
+        delete menu;
     }
 };
 
