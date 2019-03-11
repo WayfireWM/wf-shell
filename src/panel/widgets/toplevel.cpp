@@ -287,7 +287,8 @@ class WayfireToplevel::impl
 
     ~impl()
     {
-        zwlr_foreign_toplevel_handle_v1_destroy(handle);
+        /* This causes panel crash when closing toplevel */
+        //zwlr_foreign_toplevel_handle_v1_destroy(handle);
     }
 
 
