@@ -60,9 +60,9 @@ class WayfireToplevel::impl
         button.signal_button_press_event().connect(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_button_press_event));
 
-        minimize.add_label("Minimize", false, 0, 0);
-        maximize.add_label("Maximize", false, 0, 0);
-        close.add_label("Close", false, 0, 0);
+        minimize.set_label("Minimize");
+        maximize.set_label("Maximize");
+        close.set_label("Close");
         minimize.signal_button_press_event().connect(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_minimize));
         maximize.signal_button_press_event().connect(
@@ -99,35 +99,9 @@ class WayfireToplevel::impl
         if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
         {
             if (state & WF_TOPLEVEL_STATE_MINIMIZED)
-            {
                 zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
-                for (auto& i : menu->get_children())
-                {
-                    Gtk::MenuItem *item = (Gtk::MenuItem *) i;
-                    if (item->get_label() == "Unminimize")
-                    {
-                        menu->remove(*item);
-                        minimize.remove();
-                        minimize.add_label("Minimize", false, 0, 0);
-                        menu->attach(minimize, 0, 1, 0, 1);
-                    }
-                }
-            }
             else
-            {
                 zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
-                for (auto& i : menu->get_children())
-                {
-                    Gtk::MenuItem *item = (Gtk::MenuItem *) i;
-                    if (item->get_label() == "Minimize")
-                    {
-                        menu->remove(*item);
-                        minimize.remove();
-                        minimize.add_label("Unminimize", false, 0, 0);
-                        menu->attach(minimize, 0, 1, 0, 1);
-                    }
-                }
-            }
             return true;
         }
         else
@@ -142,35 +116,9 @@ class WayfireToplevel::impl
         if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
         {
             if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
-            {
                 zwlr_foreign_toplevel_handle_v1_unset_maximized(handle);
-                for (auto& i : menu->get_children())
-                {
-                    Gtk::MenuItem *item = (Gtk::MenuItem *) i;
-                    if (item->get_label() == "Unmaximize")
-                    {
-                        menu->remove(*item);
-                        maximize.remove();
-                        maximize.add_label("Maximize", false, 0, 0);
-                        menu->attach(maximize, 0, 1, 1, 2);
-                    }
-                }
-            }
             else
-            {
                 zwlr_foreign_toplevel_handle_v1_set_maximized(handle);
-                for (auto& i : menu->get_children())
-                {
-                    Gtk::MenuItem *item = (Gtk::MenuItem *) i;
-                    if (item->get_label() == "Maximize")
-                    {
-                        menu->remove(*item);
-                        maximize.remove();
-                        maximize.add_label("Unmaximize", false, 0, 0);
-                        menu->attach(maximize, 0, 1, 1, 2);
-                    }
-                }
-            }
             return true;
         }
         else
@@ -199,16 +147,14 @@ class WayfireToplevel::impl
         {
             zwlr_foreign_toplevel_handle_v1_activate(handle,
                 WayfirePanelApp::get().get_display()->default_seat);
-        } else
+        }
+        else
         {
             send_rectangle_hint();
             if (state & WF_TOPLEVEL_STATE_MINIMIZED)
-            {
                 zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
-            } else
-            {
+            else
                 zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
-            }
         }
     }
 
@@ -314,13 +260,29 @@ class WayfireToplevel::impl
         label.set_text(shorten_title(show_chars));
     }
 
+    void update_menu_item_text()
+    {
+        if (state & WF_TOPLEVEL_STATE_MINIMIZED)
+            minimize.set_label("Unminimize");
+        else
+            minimize.set_label("Minimize");
+
+        if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
+            maximize.set_label("Unmaximize");
+        else
+            maximize.set_label("Maximize");
+    }
+
     void set_state(uint32_t state)
     {
         this->state = state;
+
         if (state & WF_TOPLEVEL_STATE_ACTIVATED)
             button.get_style_context()->remove_class("flat");
         else
             button.get_style_context()->add_class("flat");
+
+        update_menu_item_text();
     }
 
     ~impl()
@@ -336,6 +298,8 @@ class WayfireToplevel::impl
             container->add(button);
             container->show_all();
         }
+
+        update_menu_item_text();
     }
 
     void handle_output_leave(wl_output *output)
