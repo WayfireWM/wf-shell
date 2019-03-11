@@ -1,3 +1,4 @@
+#include <gtkmm/menu.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
 #include <gtkmm/button.h>
@@ -31,6 +32,8 @@ class WayfireToplevel::impl
     Gtk::Image image;
     Gtk::Label label;
     Gtk::Box *container;
+    Gtk::Menu *menu;
+    Gtk::MenuItem minimize, maximize, close;
 
     Glib::ustring app_id, title;
     public:
@@ -54,11 +57,142 @@ class WayfireToplevel::impl
             sigc::mem_fun(this, &WayfireToplevel::impl::on_allocation_changed));
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(this, &WayfireToplevel::impl::on_scale_update));
+        button.signal_button_press_event().connect(
+            sigc::mem_fun(this, &WayfireToplevel::impl::on_button_press_event));
+
+        minimize.add_label("Minimize", false, 0, 0);
+        maximize.add_label("Maximize", false, 0, 0);
+        close.add_label("Close", false, 0, 0);
+        minimize.signal_button_press_event().connect(
+            sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_minimize));
+        maximize.signal_button_press_event().connect(
+            sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_maximize));
+        close.signal_button_press_event().connect(
+            sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_close));
+        menu = new Gtk::Menu();
+        menu->attach(minimize, 0, 1, 0, 1);
+        menu->attach(maximize, 0, 1, 1, 2);
+        menu->attach(close, 0, 1, 2, 3);
 
         container.add(button);
         container.show_all();
 
         this->window_list = window_list;
+    }
+
+    bool on_button_press_event(GdkEventButton* event)
+    {
+        if ((event->type == GDK_BUTTON_PRESS) && (event->button == 3))
+        {
+            if(!menu->get_attach_widget())
+                menu->attach_to_widget(button);
+
+            menu->popup(event->button, event->time);
+            menu->show_all();
+            return true; //It has been handled.
+        }
+        else
+            return false;
+    }
+
+    bool on_menu_minimize(GdkEventButton* event)
+    {
+        menu->popdown();
+        if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
+        {
+            if (state & WF_TOPLEVEL_STATE_MINIMIZED)
+            {
+                zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
+                for (auto& i : menu->get_children())
+                {
+                    Gtk::MenuItem *item = (Gtk::MenuItem *) i;
+                    if (item->get_label() == "Unminimize")
+                    {
+                        menu->remove(*item);
+                        minimize.remove();
+                        minimize.add_label("Minimize", false, 0, 0);
+                        menu->attach(minimize, 0, 1, 0, 1);
+                    }
+                }
+            }
+            else
+            {
+                zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
+                for (auto& i : menu->get_children())
+                {
+                    Gtk::MenuItem *item = (Gtk::MenuItem *) i;
+                    if (item->get_label() == "Minimize")
+                    {
+                        menu->remove(*item);
+                        minimize.remove();
+                        minimize.add_label("Unminimize", false, 0, 0);
+                        menu->attach(minimize, 0, 1, 0, 1);
+                    }
+                }
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool on_menu_maximize(GdkEventButton* event)
+    {
+        menu->popdown();
+        if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
+        {
+            if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
+            {
+                zwlr_foreign_toplevel_handle_v1_unset_maximized(handle);
+                for (auto& i : menu->get_children())
+                {
+                    Gtk::MenuItem *item = (Gtk::MenuItem *) i;
+                    if (item->get_label() == "Unmaximize")
+                    {
+                        menu->remove(*item);
+                        maximize.remove();
+                        maximize.add_label("Maximize", false, 0, 0);
+                        menu->attach(maximize, 0, 1, 1, 2);
+                    }
+                }
+            }
+            else
+            {
+                zwlr_foreign_toplevel_handle_v1_set_maximized(handle);
+                for (auto& i : menu->get_children())
+                {
+                    Gtk::MenuItem *item = (Gtk::MenuItem *) i;
+                    if (item->get_label() == "Maximize")
+                    {
+                        menu->remove(*item);
+                        maximize.remove();
+                        maximize.add_label("Unmaximize", false, 0, 0);
+                        menu->attach(maximize, 0, 1, 1, 2);
+                    }
+                }
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool on_menu_close(GdkEventButton* event)
+    {
+        menu->popdown();
+        if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
+        {
+            zwlr_foreign_toplevel_handle_v1_close(handle);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     void on_clicked()
