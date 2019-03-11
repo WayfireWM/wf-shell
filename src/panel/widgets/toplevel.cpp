@@ -187,6 +187,13 @@ class WayfireToplevel::impl
         if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
         {
             zwlr_foreign_toplevel_handle_v1_close(handle);
+
+            if (menu)
+            {
+                delete menu;
+                menu = nullptr;
+            }
+
             return true;
         }
         else
@@ -341,9 +348,13 @@ class WayfireToplevel::impl
         /* Nothing for now */
     }
 
-    void delete_menu()
+    void handle_toplevel_closed()
     {
-        delete menu;
+        if (menu)
+        {
+            delete menu;
+            menu = nullptr;
+        }
     }
 };
 
@@ -420,7 +431,7 @@ static void handle_toplevel_closed(void *data, toplevel_t handle)
     //WayfirePanelApp::get().handle_toplevel_closed(handle);
     auto impl = static_cast<WayfireToplevel::impl*> (data);
     impl->window_list->handle_toplevel_closed(handle);
-    impl->delete_menu();
+    impl->handle_toplevel_closed();
     zwlr_foreign_toplevel_handle_v1_destroy(handle);
 }
 
