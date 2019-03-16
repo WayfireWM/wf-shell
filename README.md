@@ -11,7 +11,7 @@ wf-shell needs the core wayland libraries and protocols (`wayland-devel` and `wa
 
 Just like any meson project:
 ```
-git clone https://github.com/WayfireWM/wf-config && cd wf-config
+git clone https://github.com/WayfireWM/wf-shell && cd wf-shell
 meson build --prefix=/usr --buildtype=release
 ninja -C build && sudo ninja -C build install
 ```
