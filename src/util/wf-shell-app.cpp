@@ -6,8 +6,17 @@
 
 std::string WayfireShellApp::get_config_file()
 {
-    std::string home_dir = getenv("HOME");
-    std::string config_file = home_dir + "/.config/wf-shell.ini";
+    const char *config_basename = "wf-shell.ini";
+
+    std::string config_dir = getenv("XDG_CONFIG_DIR") ? :
+        (std::string(getenv("HOME") ? : "") + "./config");
+    std::string config_file = config_dir + "/" + config_basename;
+
+    /* use system-wide config file if local is not accessible */
+    /* FIXME: there can be a race */
+    if (access(config_file.c_str(), F_OK) == -1)
+        std::string(SYSCONFDIR "/wf-shell/") + config_basename;
+
     return config_file;
 }
 
