@@ -208,13 +208,12 @@ bool WayfireAutohidingWindow::update_margin()
 
 void WayfireAutohidingWindow::on_enter(GdkEventCrossing *cross)
 {
-        // ignore events between the window and widgets
-        if (cross->detail != GDK_NOTIFY_NONLINEAR &&
-            cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
-            return;
+    // ignore events between the window and widgets
+    if (cross->detail != GDK_NOTIFY_NONLINEAR &&
+        cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
+        return;
 
-        schedule_show(300); // TODO: maybe configurable?
-        ++count_inputs;
+    schedule_show(300); // TODO: maybe configurable?
 }
 
 void WayfireAutohidingWindow::on_leave(GdkEventCrossing *cross)
@@ -222,10 +221,6 @@ void WayfireAutohidingWindow::on_leave(GdkEventCrossing *cross)
     // ignore events between the window and widgets
     if (cross->detail != GDK_NOTIFY_NONLINEAR &&
         cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
-        return;
-
-    count_inputs = std::max(0, count_inputs - 1);
-    if (count_inputs)
         return;
 
     if (autohide_counter)
