@@ -120,7 +120,7 @@ void WayfireAutohidingWindow::set_exclusive_zone(bool exclusive)
 void WayfireAutohidingWindow::increase_autohide()
 {
     ++autohide_counter;
-    if (autohide_counter == 1 && count_inputs == 0)
+    if (autohide_counter == 1)
         schedule_hide(0);
 }
 
@@ -158,11 +158,6 @@ void WayfireAutohidingWindow::schedule_hide(int delay)
         pending_hide = Glib::signal_timeout().connect(
             sigc::mem_fun(this, &WayfireAutohidingWindow::m_do_hide), delay);
     }
-
-    /* Reset count_inputs. Even if we still have active inputs, we want to reset
-     * them because then this is a forced hide, and we don't want the count_inputs
-     * to get wrong count later. */
-    count_inputs = 0;
 }
 
 bool WayfireAutohidingWindow::m_do_show()

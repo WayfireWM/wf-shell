@@ -36,7 +36,6 @@ class WayfireAutohidingWindow : public Gtk::Window
     bool m_do_hide();
     int autohide_counter = 0;
 
-    int count_inputs = 0;
     void on_enter(GdkEventCrossing *cross);
     void on_leave(GdkEventCrossing *cross);
 
