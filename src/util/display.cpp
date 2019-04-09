@@ -104,7 +104,7 @@ static void zxdg_output_logical_size(void *data, struct zxdg_output_v1 *zxdg_out
                                      int32_t width, int32_t height)
 {
     auto wo = (WayfireOutput*) data;
-    if (wo->resized_callback)
+    if (width > 0 && height > 0 && wo->resized_callback)
         wo->resized_callback(wo, width, height);
 }
 
