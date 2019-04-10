@@ -109,26 +109,6 @@ class WayfireToplevel::impl
     void drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context,
         int, int, const Gtk::SelectionData& selection_data, guint, guint time)
     {
-        const int length = selection_data.get_length();
-        const int format = selection_data.get_format();
-        Gtk::Button *dnd_button;
-        int i = 0;
-
-        if (length == 0 || format != DND_BIT_FORMAT)
-            goto finish;
-
-        dnd_button = *(Gtk::Button **) selection_data.get_data();
-
-        for (auto c : container->get_children())
-        {
-            if (GTK_BUTTON(c->gobj()) == button.gobj())
-                break;
-            i++;
-        }
-
-        container->reorder_child(*dnd_button, i);
-
-        finish:
         context->drag_finish(false, false, time);
     }
 
@@ -137,6 +117,21 @@ class WayfireToplevel::impl
         gint            y,
         guint           time)
     {
+        int i = 0;
+
+        if (window_list->grabbed_button == &button)
+            goto finish;
+
+        for (auto c : container->get_children())
+        {
+            if (GTK_BUTTON(c->gobj()) == button.gobj())
+                break;
+            i++;
+        }
+
+        container->reorder_child(*window_list->grabbed_button, i);
+
+        finish:
         return false;
     }
 
@@ -153,6 +148,8 @@ class WayfireToplevel::impl
         gtk_widget_draw(GTK_WIDGET(button.gobj()), cr->cobj());
 
         context->set_icon(surface);
+
+        window_list->grabbed_button = &button;
     }
 
     void dnd_end(const Glib::RefPtr<Gdk::DragContext>& context)

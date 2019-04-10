@@ -38,6 +38,7 @@ class WayfireWindowList : public WayfireWidget
     uint button_text_length;
 
     Gtk::Button **dnd_button_ptr;
+    Gtk::Button *grabbed_button;
 
     private:
     int32_t last_button_width = 100;
