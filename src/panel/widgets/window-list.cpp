@@ -71,6 +71,7 @@ void WayfireWindowList::init(Gtk::HBox *container, wayfire_config *config)
     scrolled_window.signal_draw().connect_notify(
         sigc::mem_fun(this, &WayfireWindowList::on_draw));
 
+    box.set_homogeneous(true);
     scrolled_window.add(box);
     scrolled_window.set_propagate_natural_width(true);
     container->pack_start(scrolled_window, true, true);

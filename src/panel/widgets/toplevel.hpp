@@ -24,7 +24,6 @@ class WayfireToplevel
     WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle,
         Gtk::HBox& container);
     void set_width(int pixels);
-    Gtk::Button *get_button();
     ~WayfireToplevel();
 
     Gtk::Box container;

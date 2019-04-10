@@ -11,6 +11,8 @@
 #include "panel.hpp"
 #include <cassert>
 
+#define DND_BIT_FORMAT 8
+
 namespace
 {
     extern zwlr_foreign_toplevel_handle_v1_listener toplevel_handle_v1_impl;
@@ -27,6 +29,7 @@ class WayfireToplevel::impl
     zwlr_foreign_toplevel_handle_v1 *handle;
     uint32_t state;
 
+    Gtk::Button button;
     Gtk::HBox button_contents;
     Gtk::Image image;
     Gtk::Label label;
@@ -36,7 +39,6 @@ class WayfireToplevel::impl
 
     Glib::ustring app_id, title;
     public:
-    Gtk::Button button;
     WayfireWindowList *window_list;
 
     impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::HBox& container)
@@ -99,44 +101,32 @@ class WayfireToplevel::impl
         Gtk::SelectionData& selection_data, guint, guint)
     {
         window_list->dnd_button_ptr = new (Gtk::Button *) (&button);
-        selection_data.set(selection_data.get_target(), 32,
+        selection_data.set(selection_data.get_target(), DND_BIT_FORMAT,
             (const guchar *) window_list->dnd_button_ptr,
-            sizeof (Gtk::Button **));
+            sizeof (Gtk::Button *));
     }
 
     void drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context,
         int, int, const Gtk::SelectionData& selection_data, guint, guint time)
     {
-        std::unique_ptr<WayfireToplevel> *dnd_toplevel = nullptr, *toplevel = nullptr;
         const int length = selection_data.get_length();
         const int format = selection_data.get_format();
         Gtk::Button *dnd_button;
+        int i = 0;
 
-        if (length == 0 || format != 32)
+        if (length == 0 || format != DND_BIT_FORMAT)
             goto finish;
 
         dnd_button = *(Gtk::Button **) selection_data.get_data();
 
-        for (auto &t : window_list->toplevels)
+        for (auto c : container->get_children())
         {
-            if (t.second->get_button()->gobj() == dnd_button->gobj())
-                dnd_toplevel = &t.second;
-            if (t.second->get_button()->gobj() == button.gobj())
-                toplevel = &t.second;
+            if (GTK_BUTTON(c->gobj()) == button.gobj())
+                break;
+            i++;
         }
 
-        if (!dnd_toplevel || !toplevel)
-            goto finish;
-
-        std::swap(*dnd_toplevel, *toplevel);
-
-        for (auto c : container->get_children())
-            container->remove(*c);
-
-        for (auto &t : window_list->toplevels)
-            container->add(*t.second->get_button());
-
-        container->show_all();
+        container->reorder_child(*dnd_button, i);
 
         finish:
         context->drag_finish(false, false, time);
@@ -168,7 +158,7 @@ class WayfireToplevel::impl
     void dnd_end(const Glib::RefPtr<Gdk::DragContext>& context)
     {
         if (window_list->dnd_button_ptr)
-            delete window_list->dnd_button_ptr;
+            delete(window_list->dnd_button_ptr);
 
         window_list->dnd_button_ptr = nullptr;
     }
@@ -415,7 +405,6 @@ WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_to
     :pimpl(new WayfireToplevel::impl(window_list, handle, container)) { }
 
 void WayfireToplevel::set_width(int pixels) { return pimpl->set_max_width(pixels); }
-Gtk::Button *WayfireToplevel::get_button() { return &pimpl->button; }
 WayfireToplevel::~WayfireToplevel() = default;
 
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;
