@@ -37,6 +37,8 @@ class WayfireWindowList : public WayfireWidget
 
     uint button_text_length;
 
+    Gtk::Button **dnd_button_ptr;
+
     private:
     int32_t last_button_width = 100;
     void on_draw(const Cairo::RefPtr<Cairo::Context>&);

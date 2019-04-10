@@ -152,6 +152,7 @@ void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *
 WayfireWindowList::WayfireWindowList(WayfireOutput *output)
 {
     this->output = output;
+    this->dnd_button_ptr = nullptr;
 }
 
 WayfireWindowList::~WayfireWindowList()

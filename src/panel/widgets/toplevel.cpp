@@ -27,7 +27,6 @@ class WayfireToplevel::impl
     zwlr_foreign_toplevel_handle_v1 *handle;
     uint32_t state;
 
-    Gtk::Button button;
     Gtk::HBox button_contents;
     Gtk::Image image;
     Gtk::Label label;
@@ -37,6 +36,7 @@ class WayfireToplevel::impl
 
     Glib::ustring app_id, title;
     public:
+    Gtk::Button button;
     WayfireWindowList *window_list;
 
     impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::HBox& container)
@@ -74,8 +74,103 @@ class WayfireToplevel::impl
         menu->attach(maximize, 0, 1, 1, 2);
         menu->attach(close, 0, 1, 2, 3);
 
+        std::vector<Gtk::TargetEntry> listTargets;
+        listTargets.push_back(Gtk::TargetEntry("STRING"));
+        listTargets.push_back(Gtk::TargetEntry("text/plain"));
+
+        button.drag_source_set(listTargets);
+        button.drag_dest_set(listTargets);
+        button.signal_drag_data_get().connect(
+            sigc::mem_fun(this, &WayfireToplevel::impl::drag_data_get));
+        button.signal_drag_data_received().connect(
+            sigc::mem_fun(this, &WayfireToplevel::impl::drag_data_received));
+        button.signal_drag_motion().connect(
+            sigc::mem_fun(this, &WayfireToplevel::impl::dnd_motion));
+        button.signal_drag_begin().connect(
+            sigc::mem_fun(this, &WayfireToplevel::impl::dnd_begin));
+        button.signal_drag_end().connect(
+            sigc::mem_fun(this, &WayfireToplevel::impl::dnd_end));
+
         this->window_list = window_list;
         this->container = &container;
+    }
+
+    void drag_data_get(const Glib::RefPtr<Gdk::DragContext>&,
+        Gtk::SelectionData& selection_data, guint, guint)
+    {
+        window_list->dnd_button_ptr = new (Gtk::Button *) (&button);
+        selection_data.set(selection_data.get_target(), 32,
+            (const guchar *) window_list->dnd_button_ptr,
+            sizeof (Gtk::Button **));
+    }
+
+    void drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context,
+        int, int, const Gtk::SelectionData& selection_data, guint, guint time)
+    {
+        std::unique_ptr<WayfireToplevel> *dnd_toplevel = nullptr, *toplevel = nullptr;
+        const int length = selection_data.get_length();
+        const int format = selection_data.get_format();
+        Gtk::Button *dnd_button;
+
+        if (length == 0 || format != 32)
+            goto finish;
+
+        dnd_button = *(Gtk::Button **) selection_data.get_data();
+
+        for (auto &t : window_list->toplevels)
+        {
+            if (t.second->get_button()->gobj() == dnd_button->gobj())
+                dnd_toplevel = &t.second;
+            if (t.second->get_button()->gobj() == button.gobj())
+                toplevel = &t.second;
+        }
+
+        if (!dnd_toplevel || !toplevel)
+            goto finish;
+
+        std::swap(*dnd_toplevel, *toplevel);
+
+        for (auto c : container->get_children())
+            container->remove(*c);
+
+        for (auto &t : window_list->toplevels)
+            container->add(*t.second->get_button());
+
+        container->show_all();
+
+        finish:
+        context->drag_finish(false, false, time);
+    }
+
+    gboolean dnd_motion(const Glib::RefPtr<Gdk::DragContext>&,
+        gint            x,
+        gint            y,
+        guint           time)
+    {
+        return false;
+    }
+
+    void dnd_begin(const Glib::RefPtr<Gdk::DragContext>& context)
+    {
+        int w = button.get_allocated_width();
+        int h = button.get_allocated_height();
+        auto surface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, w, h);
+        auto cr = Cairo::Context::create(surface);
+
+        /* Protected in gtkmm */
+        //button.draw(cr);
+        /* so use C version */
+        gtk_widget_draw(GTK_WIDGET(button.gobj()), cr->cobj());
+
+        context->set_icon(surface);
+    }
+
+    void dnd_end(const Glib::RefPtr<Gdk::DragContext>& context)
+    {
+        if (window_list->dnd_button_ptr)
+            delete window_list->dnd_button_ptr;
+
+        window_list->dnd_button_ptr = nullptr;
     }
 
     bool on_button_press_event(GdkEventButton* event)
@@ -320,6 +415,7 @@ WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_to
     :pimpl(new WayfireToplevel::impl(window_list, handle, container)) { }
 
 void WayfireToplevel::set_width(int pixels) { return pimpl->set_max_width(pixels); }
+Gtk::Button *WayfireToplevel::get_button() { return &pimpl->button; }
 WayfireToplevel::~WayfireToplevel() = default;
 
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;
