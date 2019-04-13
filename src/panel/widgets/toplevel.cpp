@@ -1,3 +1,4 @@
+#include <gdkmm/seat.h>
 #include <gtkmm/menu.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
@@ -28,12 +29,12 @@ class WayfireToplevel::impl
 {
     zwlr_foreign_toplevel_handle_v1 *handle;
     uint32_t state;
+    WayfireWindowListBox& container;
 
     Gtk::Button button;
     Gtk::HBox button_contents;
     Gtk::Image image;
     Gtk::Label label;
-    Gtk::Box *container;
     Gtk::Menu *menu;
     Gtk::MenuItem minimize, maximize, close;
 
@@ -41,7 +42,8 @@ class WayfireToplevel::impl
     public:
     WayfireWindowList *window_list;
 
-    impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::HBox& container)
+    impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, WayfireWindowListBox& _container)
+        : container(_container)
     {
         this->handle = handle;
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
@@ -94,7 +96,6 @@ class WayfireToplevel::impl
             sigc::mem_fun(this, &WayfireToplevel::impl::dnd_end));
 
         this->window_list = window_list;
-        this->container = &container;
     }
 
     void drag_data_get(const Glib::RefPtr<Gdk::DragContext>&,
@@ -112,52 +113,65 @@ class WayfireToplevel::impl
         context->drag_finish(false, false, time);
     }
 
+    int grab_off_x;
     gboolean dnd_motion(const Glib::RefPtr<Gdk::DragContext>&,
         gint            x,
         gint            y,
         guint           time)
     {
-        int i = 0;
+        //std::cout << "dnd motion on " << this << " " << " button: " << &button <<" "<< x << " " << y << std::endl;
 
-        if (window_list->grabbed_button == &button)
-            goto finish;
+        this->container.get_absolute_coordinates(x, y, this->button);
+        //std::cout << "absolute coordinates are " << x << " " << y << std::endl;
+        auto hovered_button = this->container.get_widget_at(x, y);
 
-        for (auto c : container->get_children())
+        //std::cout << "hovered: " << hovered_button << std::endl;
+        if (hovered_button != &this->button)
         {
-            if (GTK_BUTTON(c->gobj()) == button.gobj())
-                break;
-            i++;
+            auto children = this->container.get_unsorted_widgets();
+            auto it = std::find(children.begin(), children.end(), hovered_button);
+            container.reorder_child(*window_list->grabbed_button, it - children.begin());
         }
 
-        container->reorder_child(*window_list->grabbed_button, i);
+        if (grab_off_x < 0)
+        {
+            /* Find button corner in window-relative coords */
+            int loc_x = 0, dummy;
+            container.get_absolute_coordinates(loc_x, dummy, button);
 
-        finish:
+            grab_off_x = x - loc_x;
+
+         //   std::cout << "starting grab!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << grab_off_x << std::endl;
+        }
+
+        /* Make sure the grabbed button always stays at the same relative position
+         * to the DnD position */
+        int target_x = x - grab_off_x;
+        window_list->box.set_top_x(target_x);
+
         return false;
     }
 
     void dnd_begin(const Glib::RefPtr<Gdk::DragContext>& context)
     {
-        int w = button.get_allocated_width();
-        int h = button.get_allocated_height();
-        auto surface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, w, h);
-        auto cr = Cairo::Context::create(surface);
+        std::cout << "dnd begin on " << this << std::endl;
 
-        /* Protected in gtkmm */
-        //button.draw(cr);
-        /* so use C version */
-        gtk_widget_draw(GTK_WIDGET(button.gobj()), cr->cobj());
-
-        context->set_icon(surface);
-
+        grab_off_x = -1;
+        set_flat_class(false);
         window_list->grabbed_button = &button;
+        window_list->box.set_top_widget(&button);
+
     }
 
     void dnd_end(const Glib::RefPtr<Gdk::DragContext>& context)
     {
+        std::cout << "dnd end on " << this << std::endl;
         if (window_list->dnd_button_ptr)
             delete(window_list->dnd_button_ptr);
 
         window_list->dnd_button_ptr = nullptr;
+        window_list->box.set_top_widget(nullptr);
+        set_flat_class(!(this->state & WF_TOPLEVEL_STATE_ACTIVATED));
     }
 
     bool on_button_press_event(GdkEventButton* event)
@@ -355,15 +369,19 @@ class WayfireToplevel::impl
             maximize.set_label("Maximize");
     }
 
+    void set_flat_class(bool on)
+    {
+        if (on) {
+            button.get_style_context()->add_class("flat");
+        } else {
+            button.get_style_context()->remove_class("flat");
+        }
+    }
+
     void set_state(uint32_t state)
     {
         this->state = state;
-
-        if (state & WF_TOPLEVEL_STATE_ACTIVATED)
-            button.get_style_context()->remove_class("flat");
-        else
-            button.get_style_context()->add_class("flat");
-
+        set_flat_class(!(state & WF_TOPLEVEL_STATE_ACTIVATED));
         update_menu_item_text();
     }
 
@@ -378,8 +396,8 @@ class WayfireToplevel::impl
     {
         if (window_list->output->handle == output)
         {
-            container->add(button);
-            container->show_all();
+            container.add(button);
+            container.show_all();
         }
 
         update_menu_item_text();
@@ -388,7 +406,7 @@ class WayfireToplevel::impl
     void handle_output_leave(wl_output *output)
     {
         if (window_list->output->handle == output)
-            container->remove(button);
+            container.remove(button);
     }
 
     void handle_toplevel_closed()
@@ -398,8 +416,9 @@ class WayfireToplevel::impl
 };
 
 
-WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, Gtk::HBox& container)
-    :pimpl(new WayfireToplevel::impl(window_list, handle, container)) { }
+WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list,
+    zwlr_foreign_toplevel_handle_v1 *handle, WayfireWindowListBox* container)
+    :pimpl(new WayfireToplevel::impl(window_list, handle, *container)) { }
 
 void WayfireToplevel::set_width(int pixels) { return pimpl->set_max_width(pixels); }
 WayfireToplevel::~WayfireToplevel() = default;
