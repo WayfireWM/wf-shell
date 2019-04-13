@@ -4,6 +4,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/button.h>
 #include <gtkmm/icontheme.h>
+#include <gtkmm/gesturedrag.h>
 #include <giomm/desktopappinfo.h>
 #include <iostream>
 
@@ -37,6 +38,7 @@ class WayfireToplevel::impl
     Gtk::Label label;
     Gtk::Menu *menu;
     Gtk::MenuItem minimize, maximize, close;
+    Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
 
     Glib::ustring app_id, title;
     public:
@@ -78,48 +80,38 @@ class WayfireToplevel::impl
         menu->attach(maximize, 0, 1, 1, 2);
         menu->attach(close, 0, 1, 2, 3);
 
-        std::vector<Gtk::TargetEntry> listTargets;
-        listTargets.push_back(Gtk::TargetEntry("STRING"));
-        listTargets.push_back(Gtk::TargetEntry("text/plain"));
-
-        button.drag_source_set(listTargets);
-        button.drag_dest_set(listTargets);
-        button.signal_drag_data_get().connect(
-            sigc::mem_fun(this, &WayfireToplevel::impl::drag_data_get));
-        button.signal_drag_data_received().connect(
-            sigc::mem_fun(this, &WayfireToplevel::impl::drag_data_received));
-        button.signal_drag_motion().connect(
-            sigc::mem_fun(this, &WayfireToplevel::impl::dnd_motion));
-        button.signal_drag_begin().connect(
-            sigc::mem_fun(this, &WayfireToplevel::impl::dnd_begin));
-        button.signal_drag_end().connect(
-            sigc::mem_fun(this, &WayfireToplevel::impl::dnd_end));
+        drag_gesture = Gtk::GestureDrag::create(button);
+        drag_gesture->signal_drag_begin().connect_notify(
+            sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_begin));
+        drag_gesture->signal_drag_update().connect_notify(
+            sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_update));
+        drag_gesture->signal_drag_end().connect_notify(
+            sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_end));
 
         this->window_list = window_list;
     }
 
-    void drag_data_get(const Glib::RefPtr<Gdk::DragContext>&,
-        Gtk::SelectionData& selection_data, guint, guint)
-    {
-        window_list->dnd_button_ptr = new (Gtk::Button *) (&button);
-        selection_data.set(selection_data.get_target(), DND_BIT_FORMAT,
-            (const guchar *) window_list->dnd_button_ptr,
-            sizeof (Gtk::Button *));
-    }
-
-    void drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context,
-        int, int, const Gtk::SelectionData& selection_data, guint, guint time)
-    {
-        context->drag_finish(false, false, time);
-    }
-
     int grab_off_x;
-    gboolean dnd_motion(const Glib::RefPtr<Gdk::DragContext>&,
-        gint            x,
-        gint            y,
-        guint           time)
+    void on_drag_begin(double _x, double _y)
     {
-        //std::cout << "dnd motion on " << this << " " << " button: " << &button <<" "<< x << " " << y << std::endl;
+        set_flat_class(false);
+        window_list->grabbed_button = &button;
+        window_list->box.set_top_widget(&button);
+
+        /* Find the distance between pointer X and button origin */
+        int x = _x, y = _y;
+        container.get_absolute_coordinates(x, y, button);
+
+        /* Find button corner in window-relative coords */
+        int loc_x = 0;
+        container.get_absolute_coordinates(loc_x, y, button);
+
+        grab_off_x = x - loc_x;
+    }
+
+    void on_drag_update(double _x, double _y)
+    {
+        int x = _x, y = _y;
 
         this->container.get_absolute_coordinates(x, y, this->button);
         //std::cout << "absolute coordinates are " << x << " " << y << std::endl;
@@ -133,43 +125,14 @@ class WayfireToplevel::impl
             container.reorder_child(*window_list->grabbed_button, it - children.begin());
         }
 
-        if (grab_off_x < 0)
-        {
-            /* Find button corner in window-relative coords */
-            int loc_x = 0, dummy;
-            container.get_absolute_coordinates(loc_x, dummy, button);
-
-            grab_off_x = x - loc_x;
-
-         //   std::cout << "starting grab!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << grab_off_x << std::endl;
-        }
-
         /* Make sure the grabbed button always stays at the same relative position
          * to the DnD position */
         int target_x = x - grab_off_x;
         window_list->box.set_top_x(target_x);
-
-        return false;
     }
 
-    void dnd_begin(const Glib::RefPtr<Gdk::DragContext>& context)
+    void on_drag_end(double _x, double _y)
     {
-        std::cout << "dnd begin on " << this << std::endl;
-
-        grab_off_x = -1;
-        set_flat_class(false);
-        window_list->grabbed_button = &button;
-        window_list->box.set_top_widget(&button);
-
-    }
-
-    void dnd_end(const Glib::RefPtr<Gdk::DragContext>& context)
-    {
-        std::cout << "dnd end on " << this << std::endl;
-        if (window_list->dnd_button_ptr)
-            delete(window_list->dnd_button_ptr);
-
-        window_list->dnd_button_ptr = nullptr;
         window_list->box.set_top_widget(nullptr);
         set_flat_class(!(this->state & WF_TOPLEVEL_STATE_ACTIVATED));
     }
