@@ -34,11 +34,12 @@ class WayfireWindowListBox : public Gtk::HBox
     void on_size_allocate(Gtk::Allocation& alloc) override;
 
     /**
-     * Calculate the position of (x,y) relative to the box
-     * @param ref The widget that (x, y) are initially relative to. ref must
-     * be a child widget of this box
+     * @param x the x-axis position, relative to ref
+     * @param ref The widget that x is relative to. ref must be a child
+     * widget of this box
+     * @return the position x, but relative to the box
      */
-    void get_absolute_coordinates(int& x, int&y, Gtk::Widget& ref);
+    int get_absolute_position(int x, Gtk::Widget& ref);
 
     /** Find the direct child widget at the given box-relative coordinates,
      * ignoring the top widget if possible, i.e if the top widget and some
@@ -47,7 +48,7 @@ class WayfireWindowListBox : public Gtk::HBox
      *
      * @return The direct child widget or none if it doesn't exist
      */
-    Gtk::Widget* get_widget_at(int x, int y);
+    Gtk::Widget* get_widget_at(int x);
 
     /**
      * Get the list of widgets sorted from left to right, i.e ignoring the top

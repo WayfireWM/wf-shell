@@ -17,13 +17,9 @@ void WayfireWindowListBox::set_top_widget(Gtk::Widget *top)
 
     if (top_widget)
     {
-        this->top_x = 0;
-
-        int dummy;
         /* Set original top_x to where the widget currently is, so that we don't
          * mess with it before the real position is set */
-        get_absolute_coordinates(top_x, dummy, *top);
-        std::cout << "abs coord: " << top_x << std::endl;
+        this->top_x = get_absolute_position(0, *top);
     }
 
     set_top_x(top_x);
@@ -90,22 +86,22 @@ void WayfireWindowListBox::on_size_allocate(Gtk::Allocation& alloc)
     }
 }
 
-void WayfireWindowListBox::get_absolute_coordinates(int& x, int& y, Gtk::Widget& ref)
+int WayfireWindowListBox::get_absolute_position(int x, Gtk::Widget& ref)
 {
     auto w = &ref;
     while (w && w != this)
     {
         auto allocation = w->get_allocation();
         x += allocation.get_x();
-        y += allocation.get_y();
-
         w = w->get_parent();
     }
+
+    return x;
 }
 
-Gtk::Widget* WayfireWindowListBox::get_widget_at(int x, int y)
+Gtk::Widget* WayfireWindowListBox::get_widget_at(int x)
 {
-    Gtk::Allocation given_point{x, y, 1, 1};
+    Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
 
     /* Widgets are stored bottom to top, so we will return the bottom-most
      * widget at the given position */

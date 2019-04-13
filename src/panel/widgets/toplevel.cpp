@@ -92,30 +92,37 @@ class WayfireToplevel::impl
     }
 
     int grab_off_x;
-    void on_drag_begin(double _x, double _y)
+    double grab_start_x;
+    void on_drag_begin(double _x, double)
     {
+        /* Set grab start, before transforming it to absolute position */
+        grab_start_x = _x;
+
         set_flat_class(false);
         window_list->grabbed_button = &button;
         window_list->box.set_top_widget(&button);
 
+        std::cout << "drag begin " << (int)_x << std::endl;
         /* Find the distance between pointer X and button origin */
-        int x = _x, y = _y;
-        container.get_absolute_coordinates(x, y, button);
+        int x = container.get_absolute_position(_x, button);
+        std::cout << "transformed " << x << std::endl;
 
         /* Find button corner in window-relative coords */
-        int loc_x = 0;
-        container.get_absolute_coordinates(loc_x, y, button);
+        int loc_x = container.get_absolute_position(0, button);
 
+        std::cout << "loc is " << loc_x << std::endl;
         grab_off_x = x - loc_x;
     }
 
-    void on_drag_update(double _x, double _y)
+    void on_drag_update(double _x, double)
     {
-        int x = _x, y = _y;
+        std::cout << "drag update" << std::endl;
+        int x = _x + grab_start_x;
 
-        this->container.get_absolute_coordinates(x, y, this->button);
-        //std::cout << "absolute coordinates are " << x << " " << y << std::endl;
-        auto hovered_button = this->container.get_widget_at(x, y);
+        std::cout << x << std::endl;
+        x = this->container.get_absolute_position(x, button);
+        std::cout << "absolute coordinates are " << x << std::endl;
+        auto hovered_button = this->container.get_widget_at(x);
 
         //std::cout << "hovered: " << hovered_button << std::endl;
         if (hovered_button != &this->button)
@@ -128,6 +135,7 @@ class WayfireToplevel::impl
         /* Make sure the grabbed button always stays at the same relative position
          * to the DnD position */
         int target_x = x - grab_off_x;
+        std::cout << "target x " << target_x << std::endl;
         window_list->box.set_top_x(target_x);
     }
 
