@@ -209,8 +209,6 @@ int WayfireWindowList::get_target_button_width()
     int num_children = box.get_children().size();
     int target_width = get_default_button_width();
 
-    return target_width;
-
     if (num_children > 0)
     {
         target_width = std::min(target_width,
