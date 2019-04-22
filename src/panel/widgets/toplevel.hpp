@@ -25,7 +25,7 @@ class WayfireToplevel
 {
     public:
     WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle,
-        WayfireWindowListBox* container);
+        wl_output *output, WayfireWindowListBox* container);
 
     void set_width(int pixels);
     ~WayfireToplevel();

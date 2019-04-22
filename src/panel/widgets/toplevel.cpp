@@ -32,6 +32,7 @@ class WayfireToplevel::impl
     uint32_t state;
     WayfireWindowListBox& container;
 
+    wl_output *output;
     Gtk::Button button;
     Gtk::HBox button_contents;
     Gtk::Image image;
@@ -44,7 +45,7 @@ class WayfireToplevel::impl
     public:
     WayfireWindowList *window_list;
 
-    impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, WayfireWindowListBox& _container)
+    impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle, wl_output *output, WayfireWindowListBox& _container)
         : container(_container)
     {
         this->handle = handle;
@@ -89,14 +90,16 @@ class WayfireToplevel::impl
             sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_end));
 
         this->window_list = window_list;
+        this->output = output;
     }
 
     int grab_off_x;
-    double grab_start_x;
-    void on_drag_begin(double _x, double)
+    double grab_start_x, grab_start_y;
+    void on_drag_begin(double _x, double _y)
     {
         /* Set grab start, before transforming it to absolute position */
         grab_start_x = _x;
+        grab_start_y = _y;
 
         set_flat_class(false);
         window_list->box.set_top_widget(&button);
@@ -135,10 +138,16 @@ class WayfireToplevel::impl
 
     void on_drag_end(double _x, double _y)
     {
+        int x = _x + grab_start_x;
+        int y = _y + grab_start_y;
+        int width = this->button.get_allocated_width();
+        int height = this->button.get_allocated_height();
+
         window_list->box.set_top_widget(nullptr);
         set_flat_class(!(this->state & WF_TOPLEVEL_STATE_ACTIVATED));
-        button.unset_state_flags(Gtk::STATE_FLAG_SELECTED |
-            Gtk::STATE_FLAG_DROP_ACTIVE | Gtk::STATE_FLAG_PRELIGHT);
+
+        if (x < 0 || x > width || y < 0 || y > height)
+            unset_ignore_next_click();
     }
 
     bool on_button_press_event(GdkEventButton* event)
@@ -218,6 +227,8 @@ class WayfireToplevel::impl
     void unset_ignore_next_click()
     {
         ignore_next_click = false;
+        button.unset_state_flags(Gtk::STATE_FLAG_SELECTED |
+            Gtk::STATE_FLAG_DROP_ACTIVE | Gtk::STATE_FLAG_PRELIGHT);
     }
 
     void on_clicked()
@@ -268,6 +279,8 @@ class WayfireToplevel::impl
         Gtk::Widget *widget = &this->button;
 
         int x = 0, y = 0;
+        int width = button.get_allocated_width();
+        int height = button.get_allocated_height();
 
         while (widget)
         {
@@ -276,17 +289,12 @@ class WayfireToplevel::impl
             widget = widget->get_parent();
         }
 
-        /* TODO: Bad: we'll need to figure out how to get the panel we're on,
-         * perhaps we need also panel_for_window because we can find out our toplevel window
-         * the same as the loop above (going to widget parent)
-         *
         auto panel = WayfirePanelApp::get().panel_for_wl_output(output);
         if (!panel)
             return;
 
         zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
-        panel->get_wl_surface(), x, y, width, height);
-        */
+            panel->get_wl_surface(), x, y, width, height);
     }
 
     int32_t max_width = 0;
@@ -407,8 +415,8 @@ class WayfireToplevel::impl
 
 
 WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list,
-    zwlr_foreign_toplevel_handle_v1 *handle, WayfireWindowListBox* container)
-    :pimpl(new WayfireToplevel::impl(window_list, handle, *container)) { }
+    zwlr_foreign_toplevel_handle_v1 *handle, wl_output *output, WayfireWindowListBox* container)
+    :pimpl(new WayfireToplevel::impl(window_list, handle, output, *container)) { }
 
 void WayfireToplevel::set_width(int pixels) { return pimpl->set_max_width(pixels); }
 WayfireToplevel::~WayfireToplevel() = default;
