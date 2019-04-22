@@ -210,6 +210,11 @@ class WayfireToplevel::impl
 
     void on_clicked()
     {
+        if (window_list->grabbed_button)
+        {
+            window_list->grabbed_button = nullptr;
+            return;
+        }
         if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
         {
             zwlr_foreign_toplevel_handle_v1_activate(handle,
