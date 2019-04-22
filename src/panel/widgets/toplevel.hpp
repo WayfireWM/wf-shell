@@ -24,8 +24,7 @@ enum WayfireToplevelState
 class WayfireToplevel
 {
     public:
-    WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle,
-        wl_output *output, WayfireWindowListBox* container);
+    WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle);
 
     void set_width(int pixels);
     ~WayfireToplevel();
