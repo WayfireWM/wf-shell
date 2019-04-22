@@ -358,8 +358,7 @@ class WayfireToplevel::impl
 
     ~impl()
     {
-        /* This causes panel crash when closing toplevel */
-        //zwlr_foreign_toplevel_handle_v1_destroy(handle);
+        zwlr_foreign_toplevel_handle_v1_destroy(handle);
     }
 
 
@@ -461,7 +460,6 @@ static void handle_toplevel_closed(void *data, toplevel_t handle)
     auto impl = static_cast<WayfireToplevel::impl*> (data);
     impl->window_list->handle_toplevel_closed(handle);
     impl->handle_toplevel_closed();
-    zwlr_foreign_toplevel_handle_v1_destroy(handle);
 }
 
 namespace
