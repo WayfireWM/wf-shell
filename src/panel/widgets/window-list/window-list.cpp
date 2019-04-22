@@ -128,7 +128,6 @@ static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1
 
 static void handle_manager_finished(void *data, zwlr_foreign_toplevel_manager_v1 *manager)
 {
-    /* TODO: maybe exit? */
 }
 
 zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
@@ -170,8 +169,10 @@ void WayfireWindowList::init(Gtk::HBox *container, wayfire_config *config)
     if (!this->manager)
     {
         std::cerr << "Compositor doesn't support" <<
-            " wlr-foreign-toplevel-management, exiting." << std::endl;
-        std::exit(-1);
+            " wlr-foreign-toplevel-management." <<
+            "The window-list widget will not be initialized." << std::endl;
+        wl_registry_destroy(registry);
+        return;
     }
 
     wl_registry_destroy(registry);

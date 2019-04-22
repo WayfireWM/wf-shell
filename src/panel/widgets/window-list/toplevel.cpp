@@ -1,4 +1,3 @@
-#include <gdkmm/seat.h>
 #include <gtkmm/menu.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
@@ -12,8 +11,6 @@
 #include "gtk-utils.hpp"
 #include "panel.hpp"
 #include <cassert>
-
-#define DND_BIT_FORMAT 8
 
 namespace
 {
@@ -35,7 +32,7 @@ class WayfireToplevel::impl
     Gtk::HBox button_contents;
     Gtk::Image image;
     Gtk::Label label;
-    Gtk::Menu *menu;
+    std::unique_ptr<Gtk::Menu> menu = std::unique_ptr<Gtk::Menu> (new Gtk::Menu());
     Gtk::MenuItem minimize, maximize, close;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
 
@@ -67,13 +64,12 @@ class WayfireToplevel::impl
         minimize.set_label("Minimize");
         maximize.set_label("Maximize");
         close.set_label("Close");
-        minimize.signal_button_press_event().connect(
+        minimize.signal_activate().connect(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_minimize));
-        maximize.signal_button_press_event().connect(
+        maximize.signal_activate().connect(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_maximize));
-        close.signal_button_press_event().connect(
+        close.signal_activate().connect(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_close));
-        menu = new Gtk::Menu();
         menu->attach(minimize, 0, 1, 0, 1);
         menu->attach(maximize, 0, 1, 1, 2);
         menu->attach(close, 0, 1, 2, 3);
@@ -93,7 +89,7 @@ class WayfireToplevel::impl
     double grab_start_x, grab_start_y;
     void on_drag_begin(double _x, double _y)
     {
-	auto container = &window_list->box;
+	auto& container = window_list->box;
         /* Set grab start, before transforming it to absolute position */
         grab_start_x = _x;
         grab_start_y = _y;
@@ -102,30 +98,30 @@ class WayfireToplevel::impl
         window_list->box.set_top_widget(&button);
 
         /* Find the distance between pointer X and button origin */
-        int x = container->get_absolute_position(_x, button);
+        int x = container.get_absolute_position(_x, button);
 
         /* Find button corner in window-relative coords */
-        int loc_x = container->get_absolute_position(0, button);
+        int loc_x = container.get_absolute_position(0, button);
         grab_off_x = x - loc_x;
     }
 
     void on_drag_update(double _x, double)
     {
-	auto container = &window_list->box;
+	auto& container = window_list->box;
         /* Window was not just clicked, but also dragged. Ignore the next click,
          * which is the one that happens when the drag gesture ends. */
         set_ignore_next_click();
 
         int x = _x + grab_start_x;
 
-        x = container->get_absolute_position(x, button);
-        auto hovered_button = container->get_widget_at(x);
+        x = container.get_absolute_position(x, button);
+        auto hovered_button = container.get_widget_at(x);
 
         if (hovered_button != &button && hovered_button)
         {
-            auto children = container->get_unsorted_widgets();
+            auto children = container.get_unsorted_widgets();
             auto it = std::find(children.begin(), children.end(), hovered_button);
-            container->reorder_child(button, it - children.begin());
+            container.reorder_child(button, it - children.begin());
         }
 
         /* Make sure the grabbed button always stays at the same relative position
@@ -144,6 +140,11 @@ class WayfireToplevel::impl
         window_list->box.set_top_widget(nullptr);
         set_flat_class(!(state & WF_TOPLEVEL_STATE_ACTIVATED));
 
+        /* When a button is dropped after dnd, we ignore the unclick
+         * event so action doesn't happen in addition to dropping.
+         * If the drag ends and the unclick event happens outside
+         * the button, unset ignore_next_click or else the next
+         * click on the button won't cause action. */
         if (x < 0 || x > width || y < 0 || y > height)
             unset_ignore_next_click();
     }
@@ -163,52 +164,28 @@ class WayfireToplevel::impl
             return false;
     }
 
-    bool on_menu_minimize(GdkEventButton* event)
+    void on_menu_minimize()
     {
         menu->popdown();
-        if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
-        {
-            if (state & WF_TOPLEVEL_STATE_MINIMIZED)
-                zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
-            else
-                zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
-            return true;
-        }
+        if (state & WF_TOPLEVEL_STATE_MINIMIZED)
+            zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
         else
-        {
-            return false;
-        }
+            zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
     }
 
-    bool on_menu_maximize(GdkEventButton* event)
+    void on_menu_maximize()
     {
         menu->popdown();
-        if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
-        {
-            if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
-                zwlr_foreign_toplevel_handle_v1_unset_maximized(handle);
-            else
-                zwlr_foreign_toplevel_handle_v1_set_maximized(handle);
-            return true;
-        }
+        if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
+            zwlr_foreign_toplevel_handle_v1_unset_maximized(handle);
         else
-        {
-            return false;
-        }
+            zwlr_foreign_toplevel_handle_v1_set_maximized(handle);
     }
 
-    bool on_menu_close(GdkEventButton* event)
+    void on_menu_close()
     {
         menu->popdown();
-        if ((event->type == GDK_BUTTON_PRESS) && (event->button == 1))
-        {
-            zwlr_foreign_toplevel_handle_v1_close(handle);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        zwlr_foreign_toplevel_handle_v1_close(handle);
     }
 
     bool ignore_next_click = false;
@@ -388,11 +365,11 @@ class WayfireToplevel::impl
 
     void handle_output_enter(wl_output *output)
     {
-        auto container = &window_list->box;
+        auto& container = window_list->box;
         if (window_list->output->handle == output)
         {
-            container->add(button);
-            container->show_all();
+            container.add(button);
+            container.show_all();
         }
 
         update_menu_item_text();
@@ -400,14 +377,9 @@ class WayfireToplevel::impl
 
     void handle_output_leave(wl_output *output)
     {
-        auto container = &window_list->box;
+        auto& container = window_list->box;
         if (window_list->output->handle == output)
-            container->remove(button);
-    }
-
-    void handle_toplevel_closed()
-    {
-        delete menu;
+            container.remove(button);
     }
 };
 
@@ -485,7 +457,6 @@ static void handle_toplevel_closed(void *data, toplevel_t handle)
     //WayfirePanelApp::get().handle_toplevel_closed(handle);
     auto impl = static_cast<WayfireToplevel::impl*> (data);
     impl->window_list->handle_toplevel_closed(handle);
-    impl->handle_toplevel_closed();
 }
 
 namespace

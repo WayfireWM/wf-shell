@@ -5,8 +5,8 @@ widget_sources = ['widgets/battery.cpp',
                   'widgets/network.cpp',
                   'widgets/spacing.cpp',
                   'widgets/wf-popover.cpp',
-                  'widgets/window-list.cpp',
-                  'widgets/toplevel.cpp']
+                  'widgets/window-list/window-list.cpp',
+                  'widgets/window-list/toplevel.cpp']
 
 executable('wf-panel', ['panel.cpp'] + widget_sources,
         dependencies: [gtkmm, wayland_client, libutil, wf_protos, wfconfig],

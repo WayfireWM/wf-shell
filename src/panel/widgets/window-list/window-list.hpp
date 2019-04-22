@@ -1,8 +1,8 @@
 #ifndef WIDGETS_WINDOW_LIST_HPP
 #define WIDGETS_WINDOW_LIST_HPP
 
-#include "../widget.hpp"
-#include "../../util/display.hpp"
+#include "../../widget.hpp"
+#include "../../../util/display.hpp"
 #include "panel.hpp"
 #include "toplevel.hpp"
 

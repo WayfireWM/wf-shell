@@ -20,7 +20,7 @@
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
-#include "widgets/window-list.hpp"
+#include "widgets/window-list/window-list.hpp"
 
 #include "wf-shell-app.hpp"
 #include "wf-autohide-window.hpp"
