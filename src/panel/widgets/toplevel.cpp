@@ -332,7 +332,6 @@ class WayfireToplevel::impl
 
     void set_max_width(int width)
     {
-        std::cout << "set max width " << width << std::endl;
         this->max_width = width;
         if (max_width == 0)
         {
@@ -351,7 +350,6 @@ class WayfireToplevel::impl
                 break;
         }
 
-        std::cout << "shor ttiel " << shorten_title(show_chars) << " len: " << show_chars << std::endl;
         label.set_text(shorten_title(show_chars));
     }
 
