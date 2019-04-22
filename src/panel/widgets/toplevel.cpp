@@ -99,43 +99,37 @@ class WayfireToplevel::impl
         grab_start_x = _x;
 
         set_flat_class(false);
-        window_list->grabbed_button = &button;
         window_list->box.set_top_widget(&button);
 
-        std::cout << "drag begin " << (int)_x << std::endl;
         /* Find the distance between pointer X and button origin */
         int x = container.get_absolute_position(_x, button);
-        std::cout << "transformed " << x << std::endl;
 
         /* Find button corner in window-relative coords */
         int loc_x = container.get_absolute_position(0, button);
-
-        std::cout << "loc is " << loc_x << std::endl;
         grab_off_x = x - loc_x;
     }
 
     void on_drag_update(double _x, double)
     {
-        std::cout << "drag update" << std::endl;
+        /* Window was not just clicked, but also dragged. Ignore the next click,
+         * which is the one that happens when the drag gesture ends. */
+        set_ignore_next_click();
+
         int x = _x + grab_start_x;
 
-        std::cout << x << std::endl;
         x = this->container.get_absolute_position(x, button);
-        std::cout << "absolute coordinates are " << x << std::endl;
         auto hovered_button = this->container.get_widget_at(x);
 
-        //std::cout << "hovered: " << hovered_button << std::endl;
-        if (hovered_button != &this->button)
+        if (hovered_button != &this->button && hovered_button)
         {
             auto children = this->container.get_unsorted_widgets();
             auto it = std::find(children.begin(), children.end(), hovered_button);
-            container.reorder_child(*window_list->grabbed_button, it - children.begin());
+            container.reorder_child(this->button, it - children.begin());
         }
 
         /* Make sure the grabbed button always stays at the same relative position
          * to the DnD position */
         int target_x = x - grab_off_x;
-        std::cout << "target x " << target_x << std::endl;
         window_list->box.set_top_x(target_x);
     }
 
@@ -143,6 +137,8 @@ class WayfireToplevel::impl
     {
         window_list->box.set_top_widget(nullptr);
         set_flat_class(!(this->state & WF_TOPLEVEL_STATE_ACTIVATED));
+        button.unset_state_flags(Gtk::STATE_FLAG_SELECTED |
+            Gtk::STATE_FLAG_DROP_ACTIVE | Gtk::STATE_FLAG_PRELIGHT);
     }
 
     bool on_button_press_event(GdkEventButton* event)
@@ -208,13 +204,32 @@ class WayfireToplevel::impl
         }
     }
 
+    bool ignore_next_click = false;
+    void set_ignore_next_click()
+    {
+        ignore_next_click = true;
+
+        /* Make sure that the view doesn't show clicked on animations while
+         * dragging (this happens only on some themes) */
+        button.set_state_flags(Gtk::STATE_FLAG_SELECTED |
+            Gtk::STATE_FLAG_DROP_ACTIVE | Gtk::STATE_FLAG_PRELIGHT);
+    }
+
+    void unset_ignore_next_click()
+    {
+        ignore_next_click = false;
+    }
+
     void on_clicked()
     {
-        if (window_list->grabbed_button)
+        /* If the button was dragged, we don't want to register the click.
+         * Subsequent clicks should be handled though. */
+        if (ignore_next_click)
         {
-            window_list->grabbed_button = nullptr;
+            unset_ignore_next_click();
             return;
         }
+
         if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
         {
             zwlr_foreign_toplevel_handle_v1_activate(handle,

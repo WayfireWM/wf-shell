@@ -30,6 +30,8 @@ void WayfireWindowListBox::set_top_x(int x)
     /* Make sure that the widget doesn't go outside of the box */
     if (this->top_widget)
         x = std::min(x, get_allocated_width() - top_widget->get_allocated_width());
+    if (this->top_widget)
+        x = std::max(x, 0);
 
     this->top_x = x;
 
@@ -184,17 +186,12 @@ void WayfireWindowList::init(Gtk::HBox *container, wayfire_config *config)
     scrolled_window.set_propagate_natural_width(true);
     container->pack_start(scrolled_window, true, true);
     scrolled_window.show_all();
-
-    /* Make sure new windows get added with the proper size */
-    last_button_width = get_default_button_width();
 }
 
 void WayfireWindowList::set_button_width(int width)
 {
     for (auto& toplevel : toplevels)
         toplevel.second->set_width(width);
-
-    last_button_width = width;
 }
 
 int WayfireWindowList::get_default_button_width()
@@ -207,10 +204,25 @@ int WayfireWindowList::get_default_button_width()
     return panel_width * DEFAULT_SIZE_PC;
 }
 
+int WayfireWindowList::get_target_button_width()
+{
+    int num_children = box.get_children().size();
+    int target_width = get_default_button_width();
+
+    return target_width;
+
+    if (num_children > 0)
+    {
+        target_width = std::min(target_width,
+            scrolled_window.get_allocated_width() / num_children);
+    }
+
+    return target_width;
+}
+
 void WayfireWindowList::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
 {
     int allocated_width = scrolled_window.get_allocated_width();
-    std::pair<int32_t, int32_t> new_layout {allocated_width, toplevels.size()};
 
     int minimal_width, preferred_width;
     scrolled_window.get_preferred_width(minimal_width, preferred_width);
@@ -218,10 +230,7 @@ void WayfireWindowList::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
     /* We have changed the size/number of toplevels. On top of that, our list
      * is longer that the max size, so we need to re-layout the buttons */
     if (preferred_width > allocated_width && toplevels.size() > 0)
-    {
-        int new_width = allocated_width / toplevels.size();
-        set_button_width(new_width);
-    }
+        set_button_width(get_target_button_width());
 }
 
 void WayfireWindowList::add_output(WayfireOutput *output)
@@ -238,7 +247,7 @@ void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *han
 {
     toplevels[handle] = std::unique_ptr<WayfireToplevel> (new WayfireToplevel(this, handle, &box));
     /* The size will be updated in the next on_draw() if needed */
-    toplevels[handle]->set_width(last_button_width);
+    toplevels[handle]->set_width(get_default_button_width());
 }
 
 void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
@@ -249,13 +258,8 @@ void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *
     if (toplevels.size() == 0)
         return;
 
-    /* We can remove any special size requirements if the buttons all fit with
-     * the default width, otherwise we still need to limit them to the allocation */
-    int allowed_width = std::min(
-        int(scrolled_window.get_allocated_width() / toplevels.size()),
-        get_default_button_width());
-
-    set_button_width(allowed_width);
+    /* Recalculate button size */
+    set_button_width(get_target_button_width());
 }
 
 WayfireWindowList::WayfireWindowList(WayfireOutput *output)
