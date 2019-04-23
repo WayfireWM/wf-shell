@@ -317,8 +317,8 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
     button->property_scale_factor().signal_changed().connect(
         [=] () {update_icon(); });
 
-    container->pack_start(hbox, Gtk::PACK_SHRINK, 0);
-    hbox.pack_start(*button, Gtk::PACK_SHRINK, 0);
+    container->pack_start(hbox, false, false);
+    hbox.pack_start(*button, false, false);
 
     load_menu_items_all();
     update_popover_layout();

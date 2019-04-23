@@ -12,12 +12,15 @@
 
 #include <map>
 
+#include "panel.hpp"
+
 #include "widgets/battery.hpp"
 #include "widgets/menu.hpp"
 #include "widgets/clock.hpp"
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
+#include "widgets/window-list/window-list.hpp"
 
 #include "wf-shell-app.hpp"
 #include "wf-autohide-window.hpp"
@@ -35,9 +38,8 @@ const struct zwf_output_v1_listener zwf_output_impl =
     zwf_output_hide_panels
 };
 
-class WayfirePanel
+class WayfirePanel::impl
 {
-    WayfireShellApp *app;
     std::unique_ptr<WayfireAutohidingWindow> window;
 
     Gtk::HBox content_box;
@@ -123,7 +125,8 @@ class WayfirePanel
 
     void create_window()
     {
-        auto config_section = app->config->get_section("panel");
+        auto config_section =
+            WayfirePanelApp::get().get_config()->get_section("panel");
         minimal_panel_height = config_section->get_option("minimal_height",
             DEFAULT_PANEL_HEIGHT);
 
@@ -148,13 +151,13 @@ class WayfirePanel
         window->set_position(
             config_section->get_option("position", PANEL_POSITION_TOP));
 
-        init_layout();
         init_widgets();
+        init_layout();
 
         window->signal_delete_event().connect(
-            sigc::mem_fun(this, &WayfirePanel::on_delete));
+            sigc::mem_fun(this, &WayfirePanel::impl::on_delete));
         window->signal_focus_out_event().connect_notify(
-            sigc::mem_fun(this, &WayfirePanel::on_focus_out));
+            sigc::mem_fun(this, &WayfirePanel::impl::on_focus_out));
     }
 
     bool on_delete(GdkEventAny *ev)
@@ -183,7 +186,9 @@ class WayfirePanel
     void init_layout()
     {
         content_box.pack_start(left_box, false, false);
-        content_box.set_center_widget(center_box);
+        std::vector<Gtk::Widget*> center_children = center_box.get_children();
+        if (center_children.size() > 0)
+            content_box.set_center_widget(center_box);
         content_box.pack_end(right_box, false, false);
         window->add(content_box);
         content_box.show_all();
@@ -201,6 +206,8 @@ class WayfirePanel
             return Widget(new WayfireNetworkInfo());
         if (name == "battery")
             return Widget(new WayfireBatteryInfo());
+        if (name == "window-list")
+            return Widget(new WayfireWindowList(output));
 
         std::string spacing = "spacing";
         if (name.find(spacing) == 0)
@@ -249,7 +256,7 @@ class WayfirePanel
                 continue;
 
             widget->widget_name = widget_name;
-            widget->init(&box, app->config.get());
+            widget->init(&box, WayfirePanelApp::get().get_config());
             container.push_back(std::move(widget));
         }
     }
@@ -260,7 +267,7 @@ class WayfirePanel
 
     void init_widgets()
     {
-        auto section = app->config->get_section("panel");
+        auto section = WayfirePanelApp::get().get_config()->get_section("panel");
         left_widgets_opt = section->get_option("widgets_left", "menu spacing18 launchers");
         right_widgets_opt = section->get_option("widgets_right", "network battery");
         center_widgets_opt = section->get_option("widgets_center", "clock");
@@ -285,9 +292,8 @@ class WayfirePanel
     }
 
     public:
-    WayfirePanel(WayfireShellApp *app, WayfireOutput *output)
+    impl(WayfireOutput *output)
     {
-        this->app = app;
         this->output = output;
         zwf_output_v1_add_listener(output->zwf, &zwf_output_impl, &update_autohide_request);
 
@@ -297,7 +303,7 @@ class WayfirePanel
         };
     }
 
-    ~WayfirePanel()
+    ~impl()
     {
         autohide_opt->rem_updated_handler(&autohide_opt_updated);
         bg_color->rem_updated_handler(&on_window_color_updated);
@@ -307,27 +313,39 @@ class WayfirePanel
         center_widgets_opt->rem_updated_handler(&center_widgets_updated);
     }
 
+    wl_surface *get_wl_surface()
+    {
+        return window->get_wl_surface();
+    }
+
+    Gtk::Window& get_window()
+    {
+        return *window;
+    }
+
     void handle_config_reload()
     {
+        auto config = WayfirePanelApp::get().get_config();
         for (auto& w : left_widgets)
-            w->handle_config_reload(app->config.get());
+            w->handle_config_reload(config);
         for (auto& w : right_widgets)
-            w->handle_config_reload(app->config.get());
+            w->handle_config_reload(config);
         for (auto& w : center_widgets)
-            w->handle_config_reload(app->config.get());
+            w->handle_config_reload(config);
     }
 };
 
-class WayfirePanelApp : public WayfireShellApp
+WayfirePanel::WayfirePanel(WayfireOutput *output) : pimpl(new impl(output)) { }
+wl_surface *WayfirePanel::get_wl_surface() { return pimpl->get_wl_surface(); }
+Gtk::Window& WayfirePanel::get_window() { return pimpl->get_window(); }
+void WayfirePanel::handle_config_reload() { return pimpl->handle_config_reload(); }
+
+class WayfirePanelApp::impl : public WayfireShellApp
 {
+    public:
     std::map<WayfireOutput*, std::unique_ptr<WayfirePanel> > panels;
 
-    public:
-    WayfirePanelApp(int argc, char **argv)
-        : WayfireShellApp(argc, argv)
-    {
-    }
-
+    impl(int argc, char **argv) : WayfireShellApp(argc, argv) { }
     void on_config_reload()
     {
         for (auto& p : panels)
@@ -337,7 +355,18 @@ class WayfirePanelApp : public WayfireShellApp
     void on_new_output(WayfireOutput *output)
     {
         panels[output] = std::unique_ptr<WayfirePanel> (
-            new WayfirePanel(this, output));
+            new WayfirePanel(output));
+    }
+
+    WayfirePanel* panel_for_wl_output(wl_output *output)
+    {
+        for (auto& p : panels)
+        {
+            if (p.first->handle == output)
+                return p.second.get();
+        }
+
+        return nullptr;
     }
 
     void on_output_removed(WayfireOutput *output)
@@ -346,9 +375,33 @@ class WayfirePanelApp : public WayfireShellApp
     }
 };
 
+WayfirePanel* WayfirePanelApp::panel_for_wl_output(wl_output *output) { return pimpl->panel_for_wl_output(output); }
+WayfireDisplay *WayfirePanelApp::get_display() { return pimpl->display.get(); }
+wayfire_config *WayfirePanelApp::get_config() { return pimpl->config.get(); }
+
+std::unique_ptr<WayfirePanelApp> WayfirePanelApp::instance;
+WayfirePanelApp& WayfirePanelApp::get()
+{
+    if (!instance)
+        throw std::logic_error("Calling WayfirePanelApp::get() before starting app!");
+    return *instance.get();
+}
+
+void WayfirePanelApp::run(int argc, char **argv)
+{
+    if (instance)
+        throw std::logic_error("Running WayfirePanelApp twice!");
+
+    instance = std::unique_ptr<WayfirePanelApp>{new WayfirePanelApp(argc, argv)};
+    instance->pimpl->run();
+}
+
+WayfirePanelApp::~WayfirePanelApp() = default;
+WayfirePanelApp::WayfirePanelApp(int argc, char **argv)
+    : pimpl(new impl(argc, argv)) { }
+
 int main(int argc, char **argv)
 {
-    WayfirePanelApp panel_app(argc, argv);
-    panel_app.run();
+    WayfirePanelApp::run(argc, argv);
     return 0;
 }

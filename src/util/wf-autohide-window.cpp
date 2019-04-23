@@ -13,9 +13,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(int width, int height,
 
     this->show_all();
 
-    auto gdk_window = this->get_window()->gobj();
-    auto surface = gdk_wayland_window_get_wl_surface(gdk_window);
-
+    auto surface = this->get_wl_surface();
     if (!surface)
     {
         std::cerr << "Error: created window was not a wayland surface" << std::endl;
@@ -37,6 +35,12 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(int width, int height,
         sigc::mem_fun(this, &WayfireAutohidingWindow::on_leave));
 
     set_animation_duration(new_static_option("300"));
+}
+
+wl_surface* WayfireAutohidingWindow::get_wl_surface() const
+{
+    auto gdk_window = const_cast<GdkWindow*> (this->get_window()->gobj());
+    return gdk_wayland_window_get_wl_surface(gdk_window);
 }
 
 zwf_wm_surface_v1* WayfireAutohidingWindow::get_wm_surface() const
