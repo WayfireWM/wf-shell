@@ -32,7 +32,7 @@ class WayfireToplevel::impl
     Gtk::HBox button_contents;
     Gtk::Image image;
     Gtk::Label label;
-    std::unique_ptr<Gtk::Menu> menu = std::unique_ptr<Gtk::Menu> (new Gtk::Menu());
+    Gtk::Menu menu;
     Gtk::MenuItem minimize, maximize, close;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
 
@@ -70,9 +70,9 @@ class WayfireToplevel::impl
             sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_maximize));
         close.signal_activate().connect(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_close));
-        menu->attach(minimize, 0, 1, 0, 1);
-        menu->attach(maximize, 0, 1, 1, 2);
-        menu->attach(close, 0, 1, 2, 3);
+        menu.attach(minimize, 0, 1, 0, 1);
+        menu.attach(maximize, 0, 1, 1, 2);
+        menu.attach(close, 0, 1, 2, 3);
 
         drag_gesture = Gtk::GestureDrag::create(button);
         drag_gesture->signal_drag_begin().connect_notify(
@@ -153,11 +153,11 @@ class WayfireToplevel::impl
     {
         if ((event->type == GDK_BUTTON_PRESS) && (event->button == 3))
         {
-            if(!menu->get_attach_widget())
-                menu->attach_to_widget(button);
+            if(!menu.get_attach_widget())
+                menu.attach_to_widget(button);
 
-            menu->popup(event->button, event->time);
-            menu->show_all();
+            menu.popup(event->button, event->time);
+            menu.show_all();
             return true; //It has been handled.
         }
         else
@@ -166,7 +166,7 @@ class WayfireToplevel::impl
 
     void on_menu_minimize()
     {
-        menu->popdown();
+        menu.popdown();
         if (state & WF_TOPLEVEL_STATE_MINIMIZED)
             zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
         else
@@ -175,7 +175,7 @@ class WayfireToplevel::impl
 
     void on_menu_maximize()
     {
-        menu->popdown();
+        menu.popdown();
         if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
             zwlr_foreign_toplevel_handle_v1_unset_maximized(handle);
         else
@@ -184,7 +184,7 @@ class WayfireToplevel::impl
 
     void on_menu_close()
     {
-        menu->popdown();
+        menu.popdown();
         zwlr_foreign_toplevel_handle_v1_close(handle);
     }
 
