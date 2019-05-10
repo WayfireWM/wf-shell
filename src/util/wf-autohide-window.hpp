@@ -7,7 +7,7 @@
 #include <animation.hpp>
 
 #include "wayfire-shell-client-protocol.h"
-class WayfireOutput;
+struct WayfireOutput;
 
 #define WF_WINDOW_POSITION_TOP    "top"
 #define WF_WINDOW_POSITION_BOTTOM "bottom"
