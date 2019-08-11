@@ -1,5 +1,5 @@
 subdir('util')
 #subdir('panel')
-#subdir('background')
+subdir('background')
 #subdir('dock')
 
