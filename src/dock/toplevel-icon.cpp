@@ -4,6 +4,10 @@
 #include <gtkmm/icontheme.h>
 #include <gtkmm/image.h>
 
+#include <gdkmm/display.h>
+#include <gdkmm/seat.h>
+#include <gdk/gdkwayland.h>
+
 #include "dock.hpp"
 #include "toplevel.hpp"
 #include "toplevel-icon.hpp"
@@ -56,8 +60,9 @@ class WfToplevelIcon::impl
     {
         if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
         {
-            zwlr_foreign_toplevel_handle_v1_activate(handle,
-                WfDockApp::get().get_display()->default_seat);
+            auto gseat = Gdk::Display::get_default()->get_default_seat();
+            auto seat = gdk_wayland_seat_get_wl_seat(gseat->gobj());
+            zwlr_foreign_toplevel_handle_v1_activate(handle, seat);
         } else
         {
             send_rectangle_hint();

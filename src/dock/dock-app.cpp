@@ -75,18 +75,18 @@ class WfDockApp::impl : public WayfireShellApp
         this->manager = manager;
     }
 
-    void on_new_output(WayfireOutput *output) override
+    void handle_new_output(WayfireOutput *output) override
     {
         docks[output] = std::unique_ptr<WfDock>(new WfDock(output));
     }
 
-    void on_output_removed(WayfireOutput *output) override
+    void handle_output_removed(WayfireOutput *output) override
     {
         /* Send an artificial output leave.
          * This is useful because in this way the toplevel can safely destroy
          * its icons created on that particular output */
         for (auto& toplvl : toplevels)
-            toplvl.second->handle_output_leave(output->handle);
+            toplvl.second->handle_output_leave(output->wo);
 
         docks.erase(output);
     }
@@ -95,7 +95,7 @@ class WfDockApp::impl : public WayfireShellApp
     {
         for (auto& dock : docks)
         {
-            if (dock.first->handle == output)
+            if (dock.first->wo == output)
                 return dock.second.get();
         }
 
@@ -116,11 +116,6 @@ class WfDockApp::impl : public WayfireShellApp
 WfDock* WfDockApp::dock_for_wl_output(wl_output *output)
 {
     return pimpl->dock_for_wl_output(output);
-}
-
-WayfireDisplay* WfDockApp::get_display()
-{
-    return pimpl->display.get();
 }
 
 wayfire_config* WfDockApp::get_config()

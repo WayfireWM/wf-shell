@@ -1,6 +1,7 @@
 #include "wf-autohide-window.hpp"
 
 #include <gtk-layer-shell.h>
+#include <wf-shell-app.hpp>
 #include <gdk/gdkwayland.h>
 
 #include <glibmm.h>
@@ -11,10 +12,11 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
 {
     this->set_decorated(false);
     this->set_resizable(false);
-    this->realize();
 
     gtk_layer_init_for_window(this->gobj());
+    gtk_layer_set_monitor(this->gobj(), output->monitor->gobj());
 
+    this->m_position = new_static_option(WF_WINDOW_POSITION_TOP);
     this->m_position_changed = [=] () {this->update_position();};
     this->signal_draw().connect_notify(
         [=] (const Cairo::RefPtr<Cairo::Context>&) { update_margin(); });
@@ -62,7 +64,7 @@ void WayfireAutohidingWindow::update_position()
 
     /* When the position changes, show an animation from the new edge. */
     transition.start_value = transition.end_value = -this->get_allocated_height();
-    schedule_show(0);
+    schedule_show(16); // add some delay to finish setting up the window
     /* And don't forget to hide the window afterwards, if autohide is enabled */
     if (is_autohide())
         schedule_hide(600);
