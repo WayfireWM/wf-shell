@@ -1,33 +1,28 @@
 #include "wf-autohide-window.hpp"
-#include "display.hpp"
+
+#include <gtk-layer-shell.h>
+#include <gdk/gdkwayland.h>
+
 #include <glibmm.h>
 #include <iostream>
 #include <assert.h>
 
-WayfireAutohidingWindow::WayfireAutohidingWindow(int width, int height,
-    WayfireOutput *output, zwf_wm_surface_v1_role role)
+WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
 {
-    this->set_size_request(width, height);
     this->set_decorated(false);
     this->set_resizable(false);
+    this->realize();
 
-    this->show_all();
+    gtk_layer_init_for_window(this->gobj());
 
-    auto surface = this->get_wl_surface();
-    if (!surface)
-    {
-        std::cerr << "Error: created window was not a wayland surface" << std::endl;
-        std::exit(-1);
-    }
-
-    wm_surface = zwf_shell_manager_v1_get_wm_surface(
-        output->display->zwf_shell_manager, surface, role, output->handle);
     this->m_position_changed = [=] () {this->update_position();};
-
     this->signal_draw().connect_notify(
         [=] (const Cairo::RefPtr<Cairo::Context>&) { update_margin(); });
+
     this->signal_size_allocate().connect_notify(
-        [=] (Gtk::Allocation&) {this->update_exclusive_zone();});
+        [=] (Gtk::Allocation&) {
+            this->set_auto_exclusive_zone(this->has_auto_exclusive_zone);
+        });
 
     this->signal_enter_notify_event().connect_notify(
         sigc::mem_fun(this, &WayfireAutohidingWindow::on_enter));
@@ -43,27 +38,30 @@ wl_surface* WayfireAutohidingWindow::get_wl_surface() const
     return gdk_wayland_window_get_wl_surface(gdk_window);
 }
 
-zwf_wm_surface_v1* WayfireAutohidingWindow::get_wm_surface() const
+static GtkLayerShellEdge get_anchor_edge(std::string position)
 {
-    return this->wm_surface;
+    if (position == WF_WINDOW_POSITION_TOP) {
+        return GTK_LAYER_SHELL_EDGE_TOP;
+    } else if (position == WF_WINDOW_POSITION_BOTTOM) {
+        return GTK_LAYER_SHELL_EDGE_BOTTOM;
+    }
+
+    std::cerr << "Bad position in config file, defaulting to top" << std::endl;
+    return GTK_LAYER_SHELL_EDGE_TOP;
 }
 
 void WayfireAutohidingWindow::update_position()
 {
-    uint32_t anchor = 0;
-    if (this->m_position->as_string() == WF_WINDOW_POSITION_TOP) {
-        anchor = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP;
-    } else if (this->m_position->as_string() == WF_WINDOW_POSITION_BOTTOM) {
-        anchor = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_BOTTOM;
-    } else {
-        std::cerr << "Bad position in config file, defaulting to top" << std::endl;
-        anchor = ZWF_WM_SURFACE_V1_ANCHOR_EDGE_TOP;
-    }
+    /* Reset old anchors */
+    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_TOP, false);
+    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, false);
 
-    zwf_wm_surface_v1_set_anchor(wm_surface, anchor);
+    /* Set new anchor */
+    GtkLayerShellEdge anchor = get_anchor_edge(m_position->as_string());
+    gtk_layer_set_anchor(this->gobj(), anchor, true);
 
     /* When the position changes, show an animation from the new edge. */
-    transition.start_value = transition.end_value = get_hidden_y();
+    transition.start_value = transition.end_value = -this->get_allocated_height();
     schedule_show(0);
     /* And don't forget to hide the window afterwards, if autohide is enabled */
     if (is_autohide())
@@ -82,16 +80,6 @@ void WayfireAutohidingWindow::set_position(wf_option position)
     update_position();
 }
 
-void WayfireAutohidingWindow::set_hidden_height(int hidden_height)
-{
-    this->m_hidden_height = hidden_height;
-}
-
-int WayfireAutohidingWindow::get_hidden_y() const
-{
-    return m_hidden_height - get_allocated_height();
-}
-
 void WayfireAutohidingWindow::set_animation_duration(wf_option duration)
 {
     /* Make sure we do not lose progress */
@@ -102,23 +90,16 @@ void WayfireAutohidingWindow::set_animation_duration(wf_option duration)
     this->transition.start(current, end);
 }
 
-void WayfireAutohidingWindow::update_exclusive_zone()
+void WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
 {
-    int height = this->get_allocated_height();
-    if (!this->has_exclusive_zone)
-        height = 0;
+    this->has_auto_exclusive_zone = has_zone;
+    int target_zone = has_zone ? get_allocated_height() : 0;
 
-    if (height != exclusive_zone)
+    if (this->last_zone != target_zone)
     {
-        exclusive_zone = height;
-        zwf_wm_surface_v1_set_exclusive_zone(wm_surface, exclusive_zone);
+        gtk_layer_set_exclusive_zone(this->gobj(), target_zone);
+        last_zone = target_zone;
     }
-}
-
-void WayfireAutohidingWindow::set_exclusive_zone(bool exclusive)
-{
-    this->has_exclusive_zone = exclusive;;
-    update_exclusive_zone();
 }
 
 void WayfireAutohidingWindow::increase_autohide()
@@ -143,7 +124,7 @@ bool WayfireAutohidingWindow::is_autohide() const
 bool WayfireAutohidingWindow::m_do_hide()
 {
     int start = transition.progress();
-    transition.start(start, get_hidden_y());
+    transition.start(start, -get_allocated_height());
     update_margin();
     return false; // disconnect
 }
@@ -190,16 +171,14 @@ void WayfireAutohidingWindow::schedule_show(int delay)
 
 bool WayfireAutohidingWindow::update_margin()
 {
-    if (animation_running || transition.running())
+    if (transition.running())
     {
         int target_y = std::round(transition.progress());
+        gtk_layer_set_margin(this->gobj(),
+            get_anchor_edge(m_position->as_string()), target_y);
 
-        // takes effect only for anchored edges
-        zwf_wm_surface_v1_set_margin(wm_surface,
-            target_y, target_y, target_y, target_y);
-
-        this->queue_draw();
-        return (animation_running = transition.running());
+        this->queue_draw(); // XXX: is this necessary?
+        return true;
     }
 
     return false;
@@ -224,10 +203,4 @@ void WayfireAutohidingWindow::on_leave(GdkEventCrossing *cross)
 
     if (autohide_counter)
         schedule_hide(500);
-}
-
-void WayfireAutohidingWindow::set_keyboard_mode(
-    zwf_wm_surface_v1_keyboard_focus_mode mode)
-{
-    zwf_wm_surface_v1_set_keyboard_mode(wm_surface, mode);
 }
