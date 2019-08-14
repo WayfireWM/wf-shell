@@ -7,6 +7,7 @@
 #include <animation.hpp>
 
 struct WayfireOutput;
+struct zwf_hotspot_v2;
 
 #define WF_WINDOW_POSITION_TOP    "top"
 #define WF_WINDOW_POSITION_BOTTOM "bottom"
@@ -20,6 +21,7 @@ class WayfireAutohidingWindow : public Gtk::Window
 {
   public:
     WayfireAutohidingWindow(WayfireOutput *output);
+    ~WayfireAutohidingWindow();
     wl_surface* get_wl_surface() const;
 
     /* Sets the edge of the screen where the window is */
@@ -47,6 +49,8 @@ class WayfireAutohidingWindow : public Gtk::Window
     void set_auto_exclusive_zone(bool has_zone = false);
 
   private:
+    WayfireOutput *output;
+
     wf_option_callback m_position_changed;
     wf_option m_position;
     void update_position();
@@ -62,6 +66,14 @@ class WayfireAutohidingWindow : public Gtk::Window
     bool m_do_hide();
     int autohide_counter = 0;
 
+    /** Show the window but hide if no pointer input */
+    void m_show_uncertain();
+
+    zwf_hotspot_v2 *hotspot = NULL;
+    std::function<void()> hotspot_callback;
+    void setup_hotspot();
+
+    int count_enter = 0;
     void on_enter(GdkEventCrossing *cross);
     void on_leave(GdkEventCrossing *cross);
 };

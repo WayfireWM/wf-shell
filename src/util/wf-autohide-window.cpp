@@ -1,4 +1,5 @@
 #include "wf-autohide-window.hpp"
+#include "wayfire-shell-unstable-v2-client-protocol.h"
 
 #include <gtk-layer-shell.h>
 #include <wf-shell-app.hpp>
@@ -8,8 +9,11 @@
 #include <iostream>
 #include <assert.h>
 
+#define AUTOHIDE_SHOW_DELAY 300
+
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
 {
+    this->output = output;
     this->set_decorated(false);
     this->set_resizable(false);
 
@@ -34,22 +38,52 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
     set_animation_duration(new_static_option("300"));
 }
 
+WayfireAutohidingWindow::~WayfireAutohidingWindow()
+{
+    if (this->hotspot)
+        zwf_hotspot_v2_destroy(this->hotspot);
+}
+
 wl_surface* WayfireAutohidingWindow::get_wl_surface() const
 {
     auto gdk_window = const_cast<GdkWindow*> (this->get_window()->gobj());
     return gdk_wayland_window_get_wl_surface(gdk_window);
 }
 
-static GtkLayerShellEdge get_anchor_edge(std::string position)
+/** Verify that position is correct and return a correct position */
+static std::string check_position(std::string position)
 {
-    if (position == WF_WINDOW_POSITION_TOP) {
-        return GTK_LAYER_SHELL_EDGE_TOP;
-    } else if (position == WF_WINDOW_POSITION_BOTTOM) {
-        return GTK_LAYER_SHELL_EDGE_BOTTOM;
-    }
+    if (position == WF_WINDOW_POSITION_TOP)
+        return WF_WINDOW_POSITION_TOP;
+    if (position == WF_WINDOW_POSITION_BOTTOM)
+        return WF_WINDOW_POSITION_BOTTOM;
 
     std::cerr << "Bad position in config file, defaulting to top" << std::endl;
-    return GTK_LAYER_SHELL_EDGE_TOP;
+    return WF_WINDOW_POSITION_TOP;
+}
+
+static GtkLayerShellEdge get_anchor_edge(std::string position)
+{
+    position = check_position(position);
+    if (position == WF_WINDOW_POSITION_TOP)
+        return GTK_LAYER_SHELL_EDGE_TOP;
+    if (position == WF_WINDOW_POSITION_BOTTOM)
+        return GTK_LAYER_SHELL_EDGE_BOTTOM;
+
+    assert(false); // not reached because check_position()
+}
+
+void WayfireAutohidingWindow::m_show_uncertain()
+{
+    schedule_show(16); // add some delay to finish setting up the window
+    /* And don't forget to hide the window afterwards, if autohide is enabled */
+    if (is_autohide() && count_enter == 0)
+    {
+        pending_hide = Glib::signal_timeout().connect([=] () {
+            schedule_hide(0);
+            return false;
+        }, 1000);
+    }
 }
 
 void WayfireAutohidingWindow::update_position()
@@ -64,10 +98,38 @@ void WayfireAutohidingWindow::update_position()
 
     /* When the position changes, show an animation from the new edge. */
     transition.start_value = transition.end_value = -this->get_allocated_height();
-    schedule_show(16); // add some delay to finish setting up the window
-    /* And don't forget to hide the window afterwards, if autohide is enabled */
-    if (is_autohide())
-        schedule_hide(600);
+    setup_hotspot();
+    m_show_uncertain();
+}
+
+static void handle_hotspot_triggered(void *data, zwf_hotspot_v2*)
+{
+    auto callback = (std::function<void()>*) data;
+    (*callback)();
+}
+
+static zwf_hotspot_v2_listener hotspot_listener = {
+    .triggered = handle_hotspot_triggered,
+};
+
+void WayfireAutohidingWindow::setup_hotspot()
+{
+    if (!this->output->output)
+        return;
+
+    if (this->hotspot)
+        zwf_hotspot_v2_destroy(hotspot);
+
+    auto position = check_position(this->m_position->as_string());
+    uint32_t edge = (position == WF_WINDOW_POSITION_TOP) ?
+        ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP : ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
+
+    this->hotspot = zwf_output_v2_create_hotspot(output->output,
+        edge, 5, AUTOHIDE_SHOW_DELAY);
+
+    this->hotspot_callback = [=] () { m_show_uncertain(); };
+    zwf_hotspot_v2_add_listener(this->hotspot, &hotspot_listener,
+        &this->hotspot_callback);
 }
 
 void WayfireAutohidingWindow::set_position(wf_option position)
@@ -193,7 +255,8 @@ void WayfireAutohidingWindow::on_enter(GdkEventCrossing *cross)
         cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
         return;
 
-    schedule_show(300); // TODO: maybe configurable?
+    ++count_enter;
+    schedule_show(AUTOHIDE_SHOW_DELAY); // TODO: maybe configurable?
 }
 
 void WayfireAutohidingWindow::on_leave(GdkEventCrossing *cross)
@@ -202,6 +265,13 @@ void WayfireAutohidingWindow::on_leave(GdkEventCrossing *cross)
     if (cross->detail != GDK_NOTIFY_NONLINEAR &&
         cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
         return;
+
+    --count_enter;
+    if (count_enter < 0)
+    {
+        std::cerr << "Enter count dropped below 0!" << std::endl;
+        count_enter = 0;
+    }
 
     if (autohide_counter)
         schedule_hide(500);
