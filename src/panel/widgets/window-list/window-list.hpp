@@ -2,9 +2,9 @@
 #define WIDGETS_WINDOW_LIST_HPP
 
 #include "../../widget.hpp"
-#include "../../../util/display.hpp"
+#include "wf-shell-app.hpp"
 #include "panel.hpp"
-#include "toplevel.hpp"
+#include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
 #include <gtkmm/button.h>
 #include <gtkmm/scrolledwindow.h>
@@ -75,7 +75,6 @@ class WayfireWindowList : public WayfireWidget
     void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
     void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
 
-    WayfireDisplay *get_display();
     wayfire_config *get_config();
 
     void init(Gtk::HBox *container, wayfire_config *config);

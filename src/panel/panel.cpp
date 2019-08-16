@@ -5,6 +5,7 @@
 #include <gtkmm/application.h>
 #include <gdk/gdkwayland.h>
 #include <config.hpp>
+#include <gtk-layer-shell.h>
 
 #include <stdio.h>
 #include <iostream>
@@ -25,19 +26,6 @@
 #include "wf-shell-app.hpp"
 #include "wf-autohide-window.hpp"
 
-static void zwf_output_hide_panels(void *data,
-                                   struct zwf_output_v1 *zwf_output_v1,
-                                   uint32_t autohide)
-{
-    auto callback = (std::function<void(bool)>*) data;
-    (*callback) (autohide);
-}
-
-const struct zwf_output_v1_listener zwf_output_impl =
-{
-    zwf_output_hide_panels
-};
-
 class WayfirePanel::impl
 {
     std::unique_ptr<WayfireAutohidingWindow> window;
@@ -50,7 +38,6 @@ class WayfirePanel::impl
     WidgetContainer left_widgets, center_widgets, right_widgets;
 
     WayfireOutput *output;
-    int current_output_width = 0, current_output_height = 0;
 
     bool was_autohide_enabled = false;
     wf_option autohide_opt;
@@ -62,7 +49,7 @@ class WayfirePanel::impl
 
         was_autohide_enabled = is_autohide;
         update_autohide_request(is_autohide);
-        window->set_exclusive_zone(!is_autohide);
+        window->set_auto_exclusive_zone(!is_autohide);
     };
 
     std::function<void(bool)> update_autohide_request = [=] (bool autohide)
@@ -77,19 +64,6 @@ class WayfirePanel::impl
             this->window->decrease_autohide();
         }
     };
-
-    wf_option minimal_panel_height;
-    void handle_output_resize(uint32_t width, uint32_t height)
-    {
-        this->current_output_width = width;
-        this->current_output_height = height;
-
-        if (!this->window)
-            create_window();
-
-        this->window->set_size_request(current_output_width,
-            minimal_panel_height->as_int());
-    }
 
     wf_option bg_color;
     wf_option_callback on_window_color_updated = [=] ()
@@ -123,19 +97,28 @@ class WayfirePanel::impl
         window->override_background_color(rgba);
     };
 
+    wf_option minimal_panel_height;
     void create_window()
     {
         auto config_section =
             WayfirePanelApp::get().get_config()->get_section("panel");
+
         minimal_panel_height = config_section->get_option("minimal_height",
             DEFAULT_PANEL_HEIGHT);
 
-        window = std::unique_ptr<WayfireAutohidingWindow> (
-            new WayfireAutohidingWindow(
-                this->current_output_width,
-                minimal_panel_height->as_int(),
-                this->output,
-                ZWF_WM_SURFACE_V1_ROLE_OVERLAY));
+        window = std::make_unique<WayfireAutohidingWindow> (output);
+       // window->resize(1, minimal_panel_height->as_int());
+//        window->set_default_size(1, minimal_panel_height->as_int());
+//        window->set_size_request(0, minimal_panel_height->as_int());
+//       window->set_size_request(0, minimal_panel_height->as_int());
+//        window->set_size_request(0, minimal_panel_height->as_int());
+        gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+
+        window->signal_size_allocate().connect_notify([&] (Gtk::Allocation & alloc) {
+            std::cout << "allocated " << alloc.get_width() << " " << alloc.get_height() << std::endl;
+        });
 
         bg_color = config_section->get_option("background_color", "gtk_headerbar");
         bg_color->add_updated_handler(&on_window_color_updated);
@@ -151,6 +134,8 @@ class WayfirePanel::impl
         window->set_position(
             config_section->get_option("position", PANEL_POSITION_TOP));
 
+        window->show_all();
+//        window->set_size_request();
         init_widgets();
         init_layout();
 
@@ -191,7 +176,7 @@ class WayfirePanel::impl
             content_box.set_center_widget(center_box);
         content_box.pack_end(right_box, false, false);
         window->add(content_box);
-        content_box.show_all();
+        window->show_all();
     }
 
     Widget widget_from_name(std::string name)
@@ -295,12 +280,7 @@ class WayfirePanel::impl
     impl(WayfireOutput *output)
     {
         this->output = output;
-        zwf_output_v1_add_listener(output->zwf, &zwf_output_impl, &update_autohide_request);
-
-        output->resized_callback = [=] (WayfireOutput*, uint32_t w, uint32_t h)
-        {
-            handle_output_resize(w, h);
-        };
+        create_window();
     }
 
     ~impl()
@@ -346,13 +326,13 @@ class WayfirePanelApp::impl : public WayfireShellApp
     std::map<WayfireOutput*, std::unique_ptr<WayfirePanel> > panels;
 
     impl(int argc, char **argv) : WayfireShellApp(argc, argv) { }
-    void on_config_reload()
+    void on_config_reload() override
     {
         for (auto& p : panels)
             p.second->handle_config_reload();
     }
 
-    void on_new_output(WayfireOutput *output)
+    void handle_new_output(WayfireOutput *output) override
     {
         panels[output] = std::unique_ptr<WayfirePanel> (
             new WayfirePanel(output));
@@ -362,21 +342,20 @@ class WayfirePanelApp::impl : public WayfireShellApp
     {
         for (auto& p : panels)
         {
-            if (p.first->handle == output)
+            if (p.first->wo == output)
                 return p.second.get();
         }
 
         return nullptr;
     }
 
-    void on_output_removed(WayfireOutput *output)
+    void handle_output_removed(WayfireOutput *output) override
     {
         panels.erase(output);
     }
 };
 
 WayfirePanel* WayfirePanelApp::panel_for_wl_output(wl_output *output) { return pimpl->panel_for_wl_output(output); }
-WayfireDisplay *WayfirePanelApp::get_display() { return pimpl->display.get(); }
 wayfire_config *WayfirePanelApp::get_config() { return pimpl->config.get(); }
 
 std::unique_ptr<WayfirePanelApp> WayfirePanelApp::instance;

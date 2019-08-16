@@ -6,7 +6,7 @@
 #include <gtkmm/window.h>
 
 #include "config.hpp"
-#include "display.hpp"
+#include "wf-shell-app.hpp"
 
 class WayfirePanel
 {
@@ -26,7 +26,6 @@ class WayfirePanelApp
 {
     public:
     WayfirePanel* panel_for_wl_output(wl_output *output);
-    WayfireDisplay *get_display();
     wayfire_config *get_config();
 
     static WayfirePanelApp& get();

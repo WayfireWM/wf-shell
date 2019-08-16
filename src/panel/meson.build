@@ -9,5 +9,5 @@ widget_sources = ['widgets/battery.cpp',
                   'widgets/window-list/toplevel.cpp']
 
 executable('wf-panel', ['panel.cpp'] + widget_sources,
-        dependencies: [gtkmm, wayland_client, libutil, wf_protos, wfconfig],
+        dependencies: [gtkmm, wayland_client, libutil, wf_protos, wfconfig, gtklayershell],
         install: true)

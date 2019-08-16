@@ -17,6 +17,8 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
     this->set_decorated(false);
     this->set_resizable(false);
 
+//    this->set_default_size(0, 24);
+
     gtk_layer_init_for_window(this->gobj());
     gtk_layer_set_monitor(this->gobj(), output->monitor->gobj());
 

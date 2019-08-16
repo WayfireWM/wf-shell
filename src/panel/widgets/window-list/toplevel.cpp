@@ -7,6 +7,10 @@
 #include <giomm/desktopappinfo.h>
 #include <iostream>
 
+#include <gdkmm/seat.h>
+#include <gdk/gdkwayland.h>
+
+
 #include "toplevel.hpp"
 #include "gtk-utils.hpp"
 #include "panel.hpp"
@@ -218,8 +222,9 @@ class WayfireToplevel::impl
 
         if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
         {
-            zwlr_foreign_toplevel_handle_v1_activate(handle,
-                WayfirePanelApp::get().get_display()->default_seat);
+            auto gseat = Gdk::Display::get_default()->get_default_seat();
+            auto seat = gdk_wayland_seat_get_wl_seat(gseat->gobj());
+            zwlr_foreign_toplevel_handle_v1_activate(handle, seat);
         }
         else
         {
@@ -264,7 +269,8 @@ class WayfireToplevel::impl
             widget = widget->get_parent();
         }
 
-        auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->handle);
+        auto panel =
+            WayfirePanelApp::get().panel_for_wl_output( window_list->output->wo);
         if (!panel)
             return;
 
@@ -366,7 +372,7 @@ class WayfireToplevel::impl
     void handle_output_enter(wl_output *output)
     {
         auto& container = window_list->box;
-        if (window_list->output->handle == output)
+        if (window_list->output->wo == output)
         {
             container.add(button);
             container.show_all();
@@ -378,7 +384,7 @@ class WayfireToplevel::impl
     void handle_output_leave(wl_output *output)
     {
         auto& container = window_list->box;
-        if (window_list->output->handle == output)
+        if (window_list->output->wo == output)
             container.remove(button);
     }
 };
