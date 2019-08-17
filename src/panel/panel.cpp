@@ -26,6 +26,37 @@
 #include "wf-shell-app.hpp"
 #include "wf-autohide-window.hpp"
 
+struct WayfirePanelZwfOutputCallbacks
+{
+    std::function<void()> enter_fullscreen;
+    std::function<void()> leave_fullscreen;
+};
+
+static void handle_zwf_output_enter_fullscreen(void* dd,
+    zwf_output_v2 *zwf_output_v2)
+{
+    auto data = (WayfirePanelZwfOutputCallbacks*)
+        zwf_output_v2_get_user_data(zwf_output_v2);
+
+    if (data)
+        data->enter_fullscreen();
+}
+
+static void handle_zwf_output_leave_fullscreen(void *,
+    zwf_output_v2 *zwf_output_v2)
+{
+    auto data = (WayfirePanelZwfOutputCallbacks*)
+        zwf_output_v2_get_user_data(zwf_output_v2);
+
+    if (data)
+        data->leave_fullscreen();
+}
+
+static struct zwf_output_v2_listener output_impl = {
+    .enter_fullscreen = handle_zwf_output_enter_fullscreen,
+    .leave_fullscreen = handle_zwf_output_leave_fullscreen,
+};
+
 class WayfirePanel::impl
 {
     std::unique_ptr<WayfireAutohidingWindow> window;
@@ -107,18 +138,10 @@ class WayfirePanel::impl
             DEFAULT_PANEL_HEIGHT);
 
         window = std::make_unique<WayfireAutohidingWindow> (output);
-       // window->resize(1, minimal_panel_height->as_int());
-//        window->set_default_size(1, minimal_panel_height->as_int());
-//        window->set_size_request(0, minimal_panel_height->as_int());
-//       window->set_size_request(0, minimal_panel_height->as_int());
-//        window->set_size_request(0, minimal_panel_height->as_int());
+        window->set_size_request(1, minimal_panel_height->as_int());
         gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
         gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
         gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-
-        window->signal_size_allocate().connect_notify([&] (Gtk::Allocation & alloc) {
-            std::cout << "allocated " << alloc.get_width() << " " << alloc.get_height() << std::endl;
-        });
 
         bg_color = config_section->get_option("background_color", "gtk_headerbar");
         bg_color->add_updated_handler(&on_window_color_updated);
@@ -135,7 +158,6 @@ class WayfirePanel::impl
             config_section->get_option("position", PANEL_POSITION_TOP));
 
         window->show_all();
-//        window->set_size_request();
         init_widgets();
         init_layout();
 
@@ -276,15 +298,28 @@ class WayfirePanel::impl
         center_widgets_updated();
     }
 
+    WayfirePanelZwfOutputCallbacks callbacks;
+
     public:
     impl(WayfireOutput *output)
     {
         this->output = output;
         create_window();
+
+        if (output->output)
+        {
+            callbacks.enter_fullscreen = [=]() { window->increase_autohide(); };
+            callbacks.leave_fullscreen = [=]() { window->decrease_autohide(); };
+            zwf_output_v2_add_listener(output->output, &output_impl, NULL);
+            zwf_output_v2_set_user_data(output->output, &callbacks);
+        }
     }
 
     ~impl()
     {
+        if (output->output)
+            zwf_output_v2_set_user_data(output->output, NULL);
+
         autohide_opt->rem_updated_handler(&autohide_opt_updated);
         bg_color->rem_updated_handler(&on_window_color_updated);
 
