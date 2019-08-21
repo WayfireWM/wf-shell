@@ -40,7 +40,8 @@ void WayfireClock::on_calendar_shown()
 {
     auto now = Glib::DateTime::create_now_local();
 
-    calendar.select_month(now.get_month(), now.get_year());
+    /* GDateTime uses month in 1-12 format while GClender uses 0-11  */
+    calendar.select_month(now.get_month() - 1, now.get_year());
     calendar.select_day(now.get_day_of_month());
 }
 
