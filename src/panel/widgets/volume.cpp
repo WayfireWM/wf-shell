@@ -20,6 +20,23 @@ void WayfireVolume::on_scroll(GdkEventScroll *event)
     printf("Got event!\n");
 }
 
+static void
+default_sink_changed (GvcMixerControl *gvc_control,
+                      guint            id,
+                      gpointer         user_data)
+{
+    WayfireVolume *wf_volume = (WayfireVolume *) user_data;
+
+    wf_volume->gvc_stream = gvc_mixer_control_get_default_sink(gvc_control);
+    if (!wf_volume->gvc_stream) {
+        printf("GVC: Failed to get default sink\n");
+        return;
+    }
+
+    pa_volume_t volume = gvc_mixer_stream_get_volume(wf_volume->gvc_stream);
+    printf("GVC: volume: %d\n", volume);
+}
+
 void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
 {
     auto config_section = config->get_section("panel");
@@ -44,20 +61,13 @@ void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
         [=] () {update_icon(); });
 
     gvc_control = gvc_mixer_control_new("Wayfire Volume Control");
+    g_signal_connect (gvc_control, "default-sink-changed",
+        G_CALLBACK (default_sink_changed), this);
     bool gvc_open = gvc_mixer_control_open(gvc_control);
-    if (!gvc_open) {
+    if (gvc_open < 0) {
         printf("GVC: Failed to open control\n");
         return;
     }
-
-    gvc_stream = gvc_mixer_control_get_default_sink(gvc_control);
-    if (!gvc_stream) {
-        printf("GVC: Failed to get default sink\n");
-        return;
-    }
-
-    pa_volume_t volume = gvc_mixer_stream_get_volume(gvc_stream);
-    printf("GVC: volume: %d\n", volume);
 
     container->pack_start(hbox, false, false);
     hbox.pack_start(*button, false, false);

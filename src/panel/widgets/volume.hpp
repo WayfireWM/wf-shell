@@ -24,12 +24,12 @@ class WayfireVolume : public WayfireWidget
     void on_scroll(GdkEventScroll *event);
 
     GvcMixerControl *gvc_control;
-    GvcMixerStream *gvc_stream;
 
     public:
     void init(Gtk::HBox *container, wayfire_config *config) override;
     virtual ~WayfireVolume();
     void focus_lost() override;
+    GvcMixerStream *gvc_stream;
 };
 
 #endif /* end of include guard: WIDGETS_VOLUME_HPP */
