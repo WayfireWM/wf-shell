@@ -33,12 +33,13 @@ class WayfireVolume : public WayfireWidget
     GvcMixerControl *gvc_control;
 
     volume_level get_volume_level(pa_volume_t v);
+    void update_volume(int direction);
 
     public:
     void init(Gtk::HBox *container, wayfire_config *config) override;
     virtual ~WayfireVolume();
     void focus_lost() override;
-    bool update_icon();
+    void update_icon();
 
     GvcMixerStream *gvc_stream;
     pa_volume_t current_volume, last_volume;

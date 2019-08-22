@@ -19,7 +19,8 @@ WayfireVolume::get_volume_level(pa_volume_t v)
     return OOR;
 }
 
-bool WayfireVolume::update_icon()
+void
+WayfireVolume::update_icon()
 {
     int size = volume_size->as_int() / LAUNCHERS_ICON_SCALE;
     volume_level last, current;
@@ -28,41 +29,43 @@ bool WayfireVolume::update_icon()
     current = get_volume_level(current_volume);
 
     if (last == current)
-        return true;
+        return;
 
-    button->set_size_request(size, 0);
+    button->set_size_request(0, 0);
     if (current == MUTE)
-        main_image.set_from_icon_name("audio-volume-muted", Gtk::IconSize(size * main_image.get_scale_factor()));
+        main_image.set_from_icon_name("audio-volume-muted", Gtk::ICON_SIZE_MENU);
     else if (current == LOW)
-        main_image.set_from_icon_name("audio-volume-low", Gtk::IconSize(size * main_image.get_scale_factor()));
+        main_image.set_from_icon_name("audio-volume-low",  Gtk::ICON_SIZE_MENU);
     else if (current == MED)
-        main_image.set_from_icon_name("audio-volume-medium", Gtk::IconSize(size * main_image.get_scale_factor()));
-    else if (current == HIGH)
-        main_image.set_from_icon_name("audio-volume-high", Gtk::IconSize(size * main_image.get_scale_factor()));
-    else
+        main_image.set_from_icon_name("audio-volume-medium", Gtk::ICON_SIZE_MENU);
+     else if (current == HIGH)
+        main_image.set_from_icon_name("audio-volume-high", Gtk::ICON_SIZE_MENU);
+     else
         printf("GVC: Volume out of range\n");
-
-    return true;
 }
 
-void WayfireVolume::on_scroll(GdkEventScroll *event)
+void
+WayfireVolume::update_volume(int direction)
 {
-    if (event->direction == GDK_SCROLL_UP) {
-        last_volume = current_volume;
-        current_volume += inc;
-        if (current_volume > max_norm)
-            current_volume = max_norm;
-        gvc_mixer_stream_set_volume(gvc_stream, current_volume);
-        gvc_mixer_stream_push_volume(gvc_stream);
-        update_icon();
-    } else if (event->direction == GDK_SCROLL_DOWN) {
-        last_volume = current_volume;
-        current_volume -= inc;
-        if (int32_t(current_volume) < 0)
-            current_volume = 0;
-        gvc_mixer_stream_set_volume(gvc_stream, current_volume);
-        gvc_mixer_stream_push_volume(gvc_stream);
-        update_icon();
+    last_volume = current_volume;
+    current_volume += inc * direction;
+    if (current_volume > max_norm)
+        current_volume = max_norm;
+    else if (int32_t(current_volume) < 0)
+        current_volume = 0;
+    gvc_mixer_stream_set_volume(gvc_stream, current_volume);
+    gvc_mixer_stream_push_volume(gvc_stream);
+    update_icon();
+}
+
+void
+WayfireVolume::on_scroll(GdkEventScroll *event)
+{
+    if (event->direction == GDK_SCROLL_SMOOTH) {
+        if (event->delta_y > 0)
+            update_volume(-1);
+        else if (event->delta_y < 0)
+            update_volume(1);
     }
 }
 
@@ -85,7 +88,8 @@ default_sink_changed (GvcMixerControl *gvc_control,
     wf_volume->update_icon();
 }
 
-void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
+void
+WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
 {
     auto config_section = config->get_section("panel");
 
@@ -96,26 +100,26 @@ void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
 
     button = std::unique_ptr<WayfireMenuButton> (new WayfireMenuButton(config));
     button->add(main_image);
-
+    auto style = button->get_style_context();
+    style->context_save();
+    style->set_state(Gtk::STATE_FLAG_NORMAL & ~Gtk::STATE_FLAG_PRELIGHT);
+    button->reset_style();
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
-    button->set_events(Gdk::SCROLL_MASK);
+    button->set_events(Gdk::SMOOTH_SCROLL_MASK);
     button->signal_scroll_event().connect_notify(
         sigc::mem_fun(this, &WayfireVolume::on_scroll));
 
-    if (!update_icon())
-        return;
+    update_icon();
 
     button->property_scale_factor().signal_changed().connect(
         [=] () {update_icon(); });
 
     gvc_control = gvc_mixer_control_new("Wayfire Volume Control");
+
     g_signal_connect (gvc_control, "default-sink-changed",
         G_CALLBACK (default_sink_changed), this);
-    bool gvc_open = gvc_mixer_control_open(gvc_control);
-    if (gvc_open < 0) {
-        printf("GVC: Failed to open mixer control\n");
-        return;
-    }
+
+    gvc_mixer_control_open(gvc_control);
 
     container->pack_start(hbox, false, false);
     hbox.pack_start(*button, false, false);
@@ -125,7 +129,8 @@ void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
     button->show();
 }
 
-void WayfireVolume::focus_lost()
+void
+WayfireVolume::focus_lost()
 {
     button->set_active(false);
 }
