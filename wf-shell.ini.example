@@ -90,8 +90,8 @@ battery_icon_size = 32
 # because some icon sizes are white, and others are black
 battery_icon_invert = 1
 
-
-
+# Font to use in the battery percentage indicator
+battery_font = default
 
 
 # Configuration for the network widget
