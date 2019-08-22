@@ -32,10 +32,12 @@ class WayfireVolume : public WayfireWidget
     void on_scroll(GdkEventScroll *event);
 
     GvcMixerControl *gvc_control;
+    sigc::connection conn, volume_changed_signal;
 
     volume_level get_volume_level(pa_volume_t v);
     void update_volume(pa_volume_t volume);
     void on_volume_value_changed();
+    bool on_popover_timeout(int timer);
 
     public:
     void init(Gtk::HBox *container, wayfire_config *config) override;
