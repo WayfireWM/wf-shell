@@ -4,6 +4,7 @@
 #include "../widget.hpp"
 #include "wf-popover.hpp"
 #include <gtkmm/image.h>
+#include <gtkmm/scale.h>
 #include <pulse/pulseaudio.h>
 #include "gvc-mixer-control.h"
 
@@ -33,7 +34,8 @@ class WayfireVolume : public WayfireWidget
     GvcMixerControl *gvc_control;
 
     volume_level get_volume_level(pa_volume_t v);
-    void update_volume(int direction);
+    void update_volume(pa_volume_t volume);
+    void on_volume_value_changed();
 
     public:
     void init(Gtk::HBox *container, wayfire_config *config) override;
@@ -42,6 +44,7 @@ class WayfireVolume : public WayfireWidget
     void update_icon();
 
     GvcMixerStream *gvc_stream;
+    Gtk::Scale volume_scale;
     pa_volume_t current_volume, last_volume;
     gdouble max_norm, inc;
 };

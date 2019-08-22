@@ -22,11 +22,12 @@ WayfireVolume::get_volume_level(pa_volume_t v)
 void
 WayfireVolume::update_icon()
 {
-    int size = volume_size->as_int() / LAUNCHERS_ICON_SCALE;
     volume_level last, current;
 
     last = get_volume_level(last_volume);
     current = get_volume_level(current_volume);
+
+    last_volume = current_volume;
 
     if (last == current)
         return;
@@ -45,14 +46,14 @@ WayfireVolume::update_icon()
 }
 
 void
-WayfireVolume::update_volume(int direction)
+WayfireVolume::update_volume(pa_volume_t volume)
 {
-    last_volume = current_volume;
-    current_volume += inc * direction;
+    current_volume = volume;
     if (current_volume > max_norm)
         current_volume = max_norm;
     else if (int32_t(current_volume) < 0)
         current_volume = 0;
+    volume_scale.set_value(current_volume);
     gvc_mixer_stream_set_volume(gvc_stream, current_volume);
     gvc_mixer_stream_push_volume(gvc_stream);
     update_icon();
@@ -63,9 +64,9 @@ WayfireVolume::on_scroll(GdkEventScroll *event)
 {
     if (event->direction == GDK_SCROLL_SMOOTH) {
         if (event->delta_y > 0)
-            update_volume(-1);
+            update_volume(current_volume - inc);
         else if (event->delta_y < 0)
-            update_volume(1);
+            update_volume(current_volume + inc);
     }
 }
 
@@ -85,7 +86,20 @@ default_sink_changed (GvcMixerControl *gvc_control,
     wf_volume->inc = wf_volume->max_norm / 20;
 
     wf_volume->current_volume = gvc_mixer_stream_get_volume(wf_volume->gvc_stream);
+
+    wf_volume->volume_scale.set_increments(wf_volume->inc, wf_volume->inc);
+    wf_volume->volume_scale.set_range(0.0, wf_volume->max_norm);
+    wf_volume->volume_scale.set_value(wf_volume->current_volume);
+
     wf_volume->update_icon();
+}
+
+void
+WayfireVolume::on_volume_value_changed()
+{
+    auto volume = volume_scale.get_value();
+    printf("%s: %f\n", __func__, volume);
+    update_volume(volume);
 }
 
 void
@@ -105,9 +119,15 @@ WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
     style->set_state(Gtk::STATE_FLAG_NORMAL & ~Gtk::STATE_FLAG_PRELIGHT);
     button->reset_style();
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
+    button->get_popover()->add(volume_scale);
     button->set_events(Gdk::SMOOTH_SCROLL_MASK);
     button->signal_scroll_event().connect_notify(
         sigc::mem_fun(this, &WayfireVolume::on_scroll));
+
+    volume_scale.set_draw_value(false);
+    volume_scale.set_size_request(300, 0);
+    volume_scale.signal_value_changed().connect_notify(
+        sigc::mem_fun(this, &WayfireVolume::on_volume_value_changed));
 
     update_icon();
 
@@ -124,6 +144,7 @@ WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
     container->pack_start(hbox, false, false);
     hbox.pack_start(*button, false, false);
 
+    volume_scale.show();
     hbox.show();
     main_image.show();
     button->show();
