@@ -1,0 +1,3 @@
+[submodule "subprojects/gvc"]
+	path = subprojects/gvc
+	url = https://github.com/GNOME/libgnome-volume-control
