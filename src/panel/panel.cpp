@@ -21,6 +21,7 @@
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
+#include "widgets/volume.hpp"
 #include "widgets/window-list/window-list.hpp"
 
 #include "wf-shell-app.hpp"
@@ -200,6 +201,8 @@ class WayfirePanel::impl
             return Widget(new WayfireNetworkInfo());
         if (name == "battery")
             return Widget(new WayfireBatteryInfo());
+        if (name == "volume")
+            return Widget(new WayfireVolume());
         if (name == "window-list")
             return Widget(new WayfireWindowList(output));
 
