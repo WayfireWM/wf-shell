@@ -8,13 +8,14 @@
 volume_level
 WayfireVolume::get_volume_level(pa_volume_t v)
 {
+    auto third = max_norm / 3;
     if (v == 0)
         return MUTE;
-    else if (v > 0 && v <= (max_norm / 3))
+    else if (v > 0 && v <= third)
         return LOW;
-    else if (v > (max_norm / 3) && v <= ((max_norm / 3) * 2))
+    else if (v > third && v <= (third * 2))
         return MED;
-    else if (v > ((max_norm / 3) * 2) && v <= max_norm)
+    else if (v > (third * 2) && v <= max_norm)
         return HIGH;
 
     return OOR;
@@ -146,9 +147,6 @@ void
 WayfireVolume::on_volume_value_changed()
 {
     update_volume(volume_scale.get_value());
-    conn.disconnect();
-    conn = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-              &WayfireVolume::on_popover_timeout), 0), 2500);
 }
 
 void
