@@ -30,6 +30,7 @@ class WayfireVolume : public WayfireWidget
     wf_option_callback volume_size_changed;
 
     void on_scroll(GdkEventScroll *event);
+    void on_button(GdkEventButton *event);
 
     GvcMixerControl *gvc_control;
     sigc::connection conn, volume_changed_signal;

@@ -30,6 +30,11 @@ WayfireVolume::update_icon()
 
     last_volume = current_volume;
 
+    if (gvc_mixer_stream_get_is_muted(gvc_stream)) {
+        main_image.set_from_icon_name("audio-volume-muted", Gtk::ICON_SIZE_MENU);
+        return;
+    }
+
     if (last == current)
         return;
 
@@ -84,11 +89,30 @@ WayfireVolume::update_volume(pa_volume_t volume)
 void
 WayfireVolume::on_scroll(GdkEventScroll *event)
 {
+    /* Adjust volume on scroll */
     if (event->direction == GDK_SCROLL_SMOOTH) {
         if (event->delta_y > 0)
             update_volume(current_volume - inc);
         else if (event->delta_y < 0)
             update_volume(current_volume + inc);
+    }
+}
+
+void
+WayfireVolume::on_button(GdkEventButton* event)
+{
+    /* Toggle mute on middle click */
+    if (event->button == 2) {
+        if (gvc_mixer_stream_get_is_muted(gvc_stream)) {
+            gvc_mixer_stream_change_is_muted(gvc_stream, false);
+            gvc_mixer_stream_set_is_muted(gvc_stream, false);
+            last_volume = 0;
+        } else {
+            gvc_mixer_stream_change_is_muted(gvc_stream, true);
+            gvc_mixer_stream_set_is_muted(gvc_stream, true);
+        }
+
+        update_icon();
     }
 }
 
@@ -145,9 +169,11 @@ WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
     popover->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     popover->add(volume_scale);
     popover->set_modal(false);
-    button->set_events(Gdk::SMOOTH_SCROLL_MASK);
+    button->set_events(Gdk::SMOOTH_SCROLL_MASK |  Gdk::BUTTON_PRESS_MASK);
     button->signal_scroll_event().connect_notify(
         sigc::mem_fun(this, &WayfireVolume::on_scroll));
+    button->signal_button_press_event().connect_notify(
+        sigc::mem_fun(this, &WayfireVolume::on_button));
 
     volume_scale.set_draw_value(false);
     volume_scale.set_size_request(300, 0);
