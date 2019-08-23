@@ -33,7 +33,6 @@ class WayfireVolume : public WayfireWidget
     void on_button(GdkEventButton *event);
 
     GvcMixerControl *gvc_control;
-    sigc::connection conn, volume_changed_signal;
 
     volume_level get_volume_level(pa_volume_t v);
     void update_volume(pa_volume_t volume);
@@ -48,6 +47,7 @@ class WayfireVolume : public WayfireWidget
 
     GvcMixerStream *gvc_stream;
     Gtk::Scale volume_scale;
+    sigc::connection conn, volume_changed_signal;
     int32_t current_volume, last_volume;
     gdouble max_norm, inc;
 };

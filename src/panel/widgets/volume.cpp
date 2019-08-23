@@ -138,6 +138,8 @@ default_sink_changed (GvcMixerControl *gvc_control,
     wf_volume->volume_scale.set_value(wf_volume->current_volume);
 
     wf_volume->update_icon();
+
+    wf_volume->volume_changed_signal.unblock();
 }
 
 void
@@ -179,6 +181,7 @@ WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
     volume_scale.set_size_request(300, 0);
     volume_changed_signal = volume_scale.signal_value_changed().connect_notify(
         sigc::mem_fun(this, &WayfireVolume::on_volume_value_changed));
+    volume_changed_signal.block();
 
     last_volume = -1;
 
