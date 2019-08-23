@@ -47,7 +47,7 @@ class WayfireVolume : public WayfireWidget
 
     GvcMixerStream *gvc_stream;
     Gtk::Scale volume_scale;
-    pa_volume_t current_volume, last_volume;
+    int32_t current_volume, last_volume;
     gdouble max_norm, inc;
 };
 

@@ -60,10 +60,10 @@ WayfireVolume::update_volume(pa_volume_t volume)
 {
     current_volume = volume;
 
-    if (int32_t(current_volume) < 0)
-        current_volume = 0;
-    else if (current_volume > max_norm)
+    if (current_volume > max_norm)
         current_volume = max_norm;
+    else if (current_volume < 0)
+        current_volume = 0;
 
     volume_changed_signal.block();
     volume_scale.set_value(current_volume);
