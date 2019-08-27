@@ -29,8 +29,18 @@ class WayfireVolume : public WayfireWidget
     wf_option volume_size;
     wf_option_callback volume_size_changed;
 
-    void on_scroll(GdkEventScroll *event);
-    void on_button(GdkEventButton *event);
+    void reset_popover_timeout();
+    bool timeout_was_enabled = false;
+    float timeout;
+
+    void on_volume_scroll(GdkEventScroll *event);
+    void on_scale_button_press(GdkEventButton *event);
+    void on_scale_button_release(GdkEventButton *event);
+    bool on_volume_button_press(GdkEventButton *event);
+    void on_popover_button_press(GdkEventButton *event);
+
+    bool scale_pressed = false;
+    bool volume_clicked = false;
 
     GvcMixerControl *gvc_control;
 
@@ -47,7 +57,7 @@ class WayfireVolume : public WayfireWidget
 
     GvcMixerStream *gvc_stream;
     Gtk::Scale volume_scale;
-    sigc::connection conn, volume_changed_signal;
+    sigc::connection popover_timeout, volume_changed_signal;
     int32_t current_volume, last_volume;
     gdouble max_norm, inc;
 };
