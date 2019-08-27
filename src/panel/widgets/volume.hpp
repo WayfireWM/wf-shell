@@ -36,8 +36,9 @@ class WayfireVolume : public WayfireWidget
     void on_volume_scroll(GdkEventScroll *event);
     void on_scale_button_press(GdkEventButton *event);
     void on_scale_button_release(GdkEventButton *event);
-    bool on_volume_button_press(GdkEventButton *event);
+    void on_volume_button_press(GdkEventButton *event);
     void on_popover_button_press(GdkEventButton *event);
+    void on_popover_hide();
 
     bool scale_pressed = false;
     bool volume_clicked = false;
