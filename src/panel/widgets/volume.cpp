@@ -214,7 +214,7 @@ WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
     popover->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     popover->add(volume_scale);
     popover->set_modal(false);
-    button->set_events(Gdk::BUTTON_PRESS_MASK);
+    popover->set_events(Gdk::BUTTON_PRESS_MASK);
     popover->signal_button_press_event().connect_notify(
         sigc::mem_fun(this, &WayfireVolume::on_popover_button_press));
     popover->signal_hide().connect_notify(
