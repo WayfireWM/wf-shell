@@ -229,21 +229,45 @@ void WayfireMenu::on_popover_shown()
 bool WayfireMenu::update_icon()
 {
     std::string icon;
+    int size = menu_size / LAUNCHERS_ICON_SCALE;
+    Glib::RefPtr<Gdk::Pixbuf> ptr_pbuff;
+    bool error = false;
+
     if (((std::string) menu_icon).empty())
     {
-        icon = ICONDIR "/wayfire.png";
+        icon = default_icon;
     }
     else
     {
         icon = menu_icon;
     }
 
-    int size = menu_size / LAUNCHERS_ICON_SCALE;
-
     button->set_size_request(size, 0);
-    auto ptr_pbuff = Gdk::Pixbuf::create_from_file(menu_icon,
-        size * main_image.get_scale_factor(),
-        size * main_image.get_scale_factor());
+    try
+    {
+        ptr_pbuff = Gdk::Pixbuf::create_from_file(icon,
+            size * main_image.get_scale_factor(),
+            size * main_image.get_scale_factor());
+    }
+    catch(Glib::FileError)
+    {
+        std::cout << "Error loading file: " << icon << std::endl;
+        error = true;
+    }
+    catch(Gdk::PixbufError)
+    {
+        std::cout << "Pixbuf error: " << icon << std::endl;
+        error = true;
+    }
+
+
+    if (error)
+    {
+        std::cout << "Loading default icon: " << default_icon << std::endl;
+        ptr_pbuff = Gdk::Pixbuf::create_from_file(default_icon,
+            size * main_image.get_scale_factor(),
+            size * main_image.get_scale_factor());
+    }
 
     if (!ptr_pbuff)
         return false;
