@@ -17,8 +17,6 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
     this->set_decorated(false);
     this->set_resizable(false);
 
-//    this->set_default_size(0, 24);
-
     gtk_layer_init_for_window(this->gobj());
     gtk_layer_set_monitor(this->gobj(), output->monitor->gobj());
 
@@ -30,20 +28,18 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
     this->signal_size_allocate().connect_notify(
         [=] (Gtk::Allocation&) {
             this->set_auto_exclusive_zone(this->has_auto_exclusive_zone);
+            this->setup_hotspot();
         });
-
-    this->signal_enter_notify_event().connect_notify(
-        sigc::mem_fun(this, &WayfireAutohidingWindow::on_enter));
-    this->signal_leave_notify_event().connect_notify(
-        sigc::mem_fun(this, &WayfireAutohidingWindow::on_leave));
 
     set_animation_duration(new_static_option("300"));
 }
 
 WayfireAutohidingWindow::~WayfireAutohidingWindow()
 {
-    if (this->hotspot)
-        zwf_hotspot_v2_destroy(this->hotspot);
+    if (this->edge_hotspot)
+        zwf_hotspot_v2_destroy(this->edge_hotspot);
+    if (this->panel_hotspot)
+        zwf_hotspot_v2_destroy(this->panel_hotspot);
 }
 
 wl_surface* WayfireAutohidingWindow::get_wl_surface() const
@@ -79,7 +75,7 @@ void WayfireAutohidingWindow::m_show_uncertain()
 {
     schedule_show(16); // add some delay to finish setting up the window
     /* And don't forget to hide the window afterwards, if autohide is enabled */
-    if (is_autohide() && count_enter == 0)
+    if (is_autohide())
     {
         pending_hide = Glib::signal_timeout().connect([=] () {
             schedule_hide(0);
@@ -104,34 +100,91 @@ void WayfireAutohidingWindow::update_position()
     m_show_uncertain();
 }
 
-static void handle_hotspot_triggered(void *data, zwf_hotspot_v2*)
+struct WayfireAutohidingWindowHotspotCallbacks
 {
-    auto callback = (std::function<void()>*) data;
-    (*callback)();
+    std::function<void()> on_enter;
+    std::function<void()> on_leave;
+};
+
+static void handle_hotspot_enter(void *data, zwf_hotspot_v2*)
+{
+    auto cb = (WayfireAutohidingWindowHotspotCallbacks*) data;
+    cb->on_enter();
+}
+
+static void handle_hotspot_leave(void *data, zwf_hotspot_v2*)
+{
+    auto cb = (WayfireAutohidingWindowHotspotCallbacks*) data;
+    cb->on_leave();
 }
 
 static zwf_hotspot_v2_listener hotspot_listener = {
-    .triggered = handle_hotspot_triggered,
+    .enter = handle_hotspot_enter,
+    .leave = handle_hotspot_leave,
 };
+
+/**
+ * An autohide window needs 2 hotspots.
+ * One of them is used to trigger autohide and is generally a tiny strip on the
+ * edge of the output.
+ *
+ * The other hotspot covers the whole window. It is used primarily to know when
+ * the input leaves the window, in which case we need to hide the window again.
+ */
 
 void WayfireAutohidingWindow::setup_hotspot()
 {
     if (!this->output->output)
         return;
 
-    if (this->hotspot)
-        zwf_hotspot_v2_destroy(hotspot);
+    /* No need to recreate hotspots if the height didn't change */
+    if (this->get_allocated_height() == last_hotspot_height)
+        return;
+    this->last_hotspot_height = get_allocated_height();
+
+    if (this->edge_hotspot)
+        zwf_hotspot_v2_destroy(edge_hotspot);
+    if (this->panel_hotspot)
+        zwf_hotspot_v2_destroy(panel_hotspot);
 
     auto position = check_position(this->m_position->as_string());
     uint32_t edge = (position == WF_WINDOW_POSITION_TOP) ?
         ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP : ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
 
-    this->hotspot = zwf_output_v2_create_hotspot(output->output,
-        edge, 5, AUTOHIDE_SHOW_DELAY);
+    // TODO: make edge offset configurable
+    this->edge_hotspot = zwf_output_v2_create_hotspot(output->output,
+        edge, 20, AUTOHIDE_SHOW_DELAY);
 
-    this->hotspot_callback = [=] () { m_show_uncertain(); };
-    zwf_hotspot_v2_add_listener(this->hotspot, &hotspot_listener,
-        &this->hotspot_callback);
+    this->panel_hotspot = zwf_output_v2_create_hotspot(output->output,
+        edge, this->get_allocated_height(), 0); // immediate
+
+    this->edge_callbacks =
+        std::make_unique<WayfireAutohidingWindowHotspotCallbacks> ();
+    this->panel_callbacks =
+        std::make_unique<WayfireAutohidingWindowHotspotCallbacks> ();
+
+    edge_callbacks->on_enter = [=] () {
+        schedule_show(0);
+    };
+
+    edge_callbacks->on_leave = [=] () {
+        // nothing
+    };
+
+    panel_callbacks->on_enter = [=] () {
+        if (this->pending_hide.connected())
+            this->pending_hide.disconnect();
+    };
+
+    panel_callbacks->on_leave = [=] () {
+        if (this->is_autohide())
+            this->schedule_hide(300);
+    };
+
+    zwf_hotspot_v2_add_listener(edge_hotspot, &hotspot_listener,
+        edge_callbacks.get());
+    zwf_hotspot_v2_add_listener(panel_hotspot, &hotspot_listener,
+        panel_callbacks.get());
 }
 
 void WayfireAutohidingWindow::set_position(wf_option position)
@@ -248,33 +301,4 @@ bool WayfireAutohidingWindow::update_margin()
     }
 
     return false;
-}
-
-void WayfireAutohidingWindow::on_enter(GdkEventCrossing *cross)
-{
-    // ignore events between the window and widgets
-    if (cross->detail != GDK_NOTIFY_NONLINEAR &&
-        cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
-        return;
-
-    ++count_enter;
-    schedule_show(AUTOHIDE_SHOW_DELAY); // TODO: maybe configurable?
-}
-
-void WayfireAutohidingWindow::on_leave(GdkEventCrossing *cross)
-{
-    // ignore events between the window and widgets
-    if (cross->detail != GDK_NOTIFY_NONLINEAR &&
-        cross->detail != GDK_NOTIFY_NONLINEAR_VIRTUAL)
-        return;
-
-    --count_enter;
-    if (count_enter < 0)
-    {
-        std::cerr << "Enter count dropped below 0!" << std::endl;
-        count_enter = 0;
-    }
-
-    if (autohide_counter)
-        schedule_hide(500);
 }

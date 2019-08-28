@@ -8,13 +8,13 @@
     </description>
 
     <request name="get_wf_output">
-      <description summary="Create a wf_output from the given output"/>
+      <description summary="Create a zwf_output_v2 for the given wl_output"/>
       <arg name="output" type="object" interface="wl_output"/>
       <arg name="id" type="new_id" interface="zwf_output_v2"/>
     </request>
 
     <request name="get_wf_surface">
-      <description summary="Create a wf_surface from the given wl_surface"/>
+      <description summary="Create a zwf_surface_v2 for the given wl_surface"/>
       <arg name="surface" type="object" interface="wl_surface"/>
       <arg name="id" type="new_id" interface="zwf_surface_v2"/>
     </request>
@@ -73,10 +73,11 @@
     <request name="create_hotspot">
       <description summary="Create a hotspot on the output">
         A hotspot on the output is an edge or a corner region of the
-        output where the mouse has been residing for a given amount of time.
+        output where the mouse or touch point has been residing for a given
+        amount of time.
 
         The hotspot can be used for example for autohiding panels, where the
-        panel is shown when the mouse hovers on the edge of the output for a
+        panel is shown when the input hovers on the edge of the output for a
         specific amount of time.
       </description>
 
@@ -90,12 +91,21 @@
   <interface name="zwf_hotspot_v2" version="1">
     <description summary="An edge of the output defined by 1 or 2 edges"/>
 
-    <event name="triggered">
+    <event name="enter">
       <description summary="Hotspot was triggered">
-        Means that the mouse was inside the indicated hotspot for the given
-        amount of time.
+        Means that the mouse and/or touch finger was inside the indicated
+        hotspot for the given amount of time.
 
-        Emitted at most once for each entry of the mouse inside the hotspot.
+        Emitted at most once for each entry of the input inside the hotspot.
+      </description>
+    </event>
+
+    <event name="leave">
+      <description summary="Input left hotspot">
+        This event indicates that the mouse or touch point has left the hotspot
+        area.
+
+        Emitted only once after each enter.
       </description>
     </event>
   </interface>
@@ -103,7 +113,7 @@
   <interface name="zwf_surface_v2" version="1">
     <description summary="A special surface"/>
     <request name="interactive_move">
-      <description summary="Start and interactive move of the surface"/>
+      <description summary="Start an interactive move of the surface"/>
     </request>
   </interface>
 

@@ -12,6 +12,7 @@ struct zwf_hotspot_v2;
 #define WF_WINDOW_POSITION_TOP    "top"
 #define WF_WINDOW_POSITION_BOTTOM "bottom"
 
+struct WayfireAutohidingWindowHotspotCallbacks;
 /**
  * A window which is anchored to an edge of the screen, and can autohide.
  *
@@ -69,13 +70,12 @@ class WayfireAutohidingWindow : public Gtk::Window
     /** Show the window but hide if no pointer input */
     void m_show_uncertain();
 
-    zwf_hotspot_v2 *hotspot = NULL;
-    std::function<void()> hotspot_callback;
+    int32_t last_hotspot_height = -1;
+    zwf_hotspot_v2 *edge_hotspot = NULL;
+    zwf_hotspot_v2 *panel_hotspot = NULL;
+    std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> edge_callbacks;
+    std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> panel_callbacks;
     void setup_hotspot();
-
-    int count_enter = 0;
-    void on_enter(GdkEventCrossing *cross);
-    void on_leave(GdkEventCrossing *cross);
 };
 
 
