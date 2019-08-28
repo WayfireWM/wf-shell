@@ -228,10 +228,20 @@ void WayfireMenu::on_popover_shown()
 
 bool WayfireMenu::update_icon()
 {
+    std::string icon;
+    if (((std::string) menu_icon).empty())
+    {
+        icon = ICONDIR "/wayfire.png";
+    }
+    else
+    {
+        icon = menu_icon;
+    }
+
     int size = menu_size / LAUNCHERS_ICON_SCALE;
 
     button->set_size_request(size, 0);
-    auto ptr_pbuff = Gdk::Pixbuf::create_from_file(ICONDIR "/wayfire.png",
+    auto ptr_pbuff = Gdk::Pixbuf::create_from_file(menu_icon,
         size * main_image.get_scale_factor(),
         size * main_image.get_scale_factor());
 
@@ -289,6 +299,7 @@ void WayfireMenu::update_popover_layout()
 
 void WayfireMenu::init(Gtk::HBox *container)
 {
+    menu_icon.set_callback([=] () { update_icon(); });
     menu_size.set_callback([=] () { update_icon(); });
     panel_position.set_callback([=] () { update_popover_layout(); });
 

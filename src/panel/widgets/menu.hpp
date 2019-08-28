@@ -65,11 +65,11 @@ class WayfireMenu : public WayfireWidget
      * so that we don't show duplicate entries */
     std::set<std::pair<std::string, std::string>> loaded_apps;
 
-    WfOption<std::string> panel_position{"panel/position"};
-    void update_popover_layout();
-
     WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
+    WfOption<std::string> panel_position{"panel/position"};
     WfOption<int> menu_size{"panel/launcher_size"};
+    WfOption<std::string> menu_icon{"panel/menu_icon"};
+    void update_popover_layout();
 
     public:
     void init(Gtk::HBox *container) override;
