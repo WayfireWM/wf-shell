@@ -1,7 +1,6 @@
 #include <dirent.h>
 
 #include <cassert>
-#include <glibmm.h>
 #include <giomm/icon.h>
 #include <glibmm/spawn.h>
 #include <iostream>
@@ -230,7 +229,6 @@ bool WayfireMenu::update_icon()
 {
     std::string icon;
     int size = menu_size / LAUNCHERS_ICON_SCALE;
-    Glib::RefPtr<Gdk::Pixbuf> ptr_pbuff;
     bool error = false;
 
     if (((std::string) menu_icon).empty())
@@ -243,29 +241,14 @@ bool WayfireMenu::update_icon()
     }
 
     button->set_size_request(size, 0);
-    try
-    {
-        ptr_pbuff = Gdk::Pixbuf::create_from_file(icon,
-            size * main_image.get_scale_factor(),
-            size * main_image.get_scale_factor());
-    }
-    catch(Glib::FileError)
-    {
-        std::cout << "Error loading file: " << icon << std::endl;
-        error = true;
-    }
-    catch(Gdk::PixbufError)
-    {
-        std::cout << "Pixbuf error: " << icon << std::endl;
-        error = true;
-    }
 
+    auto ptr_pbuff = load_icon_pixbuf_safe(icon,
+        size * main_image.get_scale_factor());
 
-    if (error)
+    if (!ptr_pbuff.get())
     {
         std::cout << "Loading default icon: " << default_icon << std::endl;
-        ptr_pbuff = Gdk::Pixbuf::create_from_file(default_icon,
-            size * main_image.get_scale_factor(),
+        ptr_pbuff = load_icon_pixbuf_safe(default_icon,
             size * main_image.get_scale_factor());
     }
 
