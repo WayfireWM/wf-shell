@@ -4,7 +4,6 @@ widget_sources = ['widgets/battery.cpp',
                   'widgets/launchers.cpp',
                   'widgets/network.cpp',
                   'widgets/spacing.cpp',
-                  'widgets/wf-popover.cpp',
                   'widgets/window-list/window-list.cpp',
                   'widgets/window-list/toplevel.cpp']
 

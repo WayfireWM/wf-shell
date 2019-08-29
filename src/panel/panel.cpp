@@ -163,8 +163,6 @@ class WayfirePanel::impl
 
         window->signal_delete_event().connect(
             sigc::mem_fun(this, &WayfirePanel::impl::on_delete));
-        window->signal_focus_out_event().connect_notify(
-            sigc::mem_fun(this, &WayfirePanel::impl::on_focus_out));
     }
 
     bool on_delete(GdkEventAny *ev)
@@ -172,22 +170,6 @@ class WayfirePanel::impl
         /* We ignore close events, because the panel's lifetime is bound to
          * the lifetime of the output */
         return true;
-    }
-
-    void on_focus_out(const GdkEventFocus *ev)
-    {
-        for (auto& w : left_widgets)
-            w->focus_lost();
-        for (auto& w : right_widgets)
-            w->focus_lost();
-        for (auto& w : center_widgets)
-            w->focus_lost();
-
-        /* We want to hide much faster, because this will have any effect
-         * only in the case when there was an opened popup and the user wants
-         * to hide the panel, so no use delaying it */
-        if (window->is_autohide())
-            window->schedule_hide(100);
     }
 
     void init_layout()

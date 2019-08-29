@@ -10,6 +10,7 @@
 #include <assert.h>
 
 #define AUTOHIDE_SHOW_DELAY 300
+#define AUTOHIDE_HIDE_DELAY 500
 
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
 {
@@ -19,6 +20,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
 
     gtk_layer_init_for_window(this->gobj());
     gtk_layer_set_monitor(this->gobj(), output->monitor->gobj());
+    gtk_layer_set_namespace(this->gobj(), "$unfocus panel");
 
     this->m_position = new_static_option(WF_WINDOW_POSITION_TOP);
     this->m_position_changed = [=] () {this->update_position();};
@@ -29,6 +31,12 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
         [=] (Gtk::Allocation&) {
             this->set_auto_exclusive_zone(this->has_auto_exclusive_zone);
             this->setup_hotspot();
+        });
+
+    this->signal_focus_out_event().connect_notify(
+        [=] (const GdkEventFocus*) {
+            if (this->active_button)
+                unset_active_popover(*this->active_button);
         });
 
     set_animation_duration(new_static_option("300"));
@@ -75,12 +83,12 @@ void WayfireAutohidingWindow::m_show_uncertain()
 {
     schedule_show(16); // add some delay to finish setting up the window
     /* And don't forget to hide the window afterwards, if autohide is enabled */
-    if (is_autohide())
+    if (should_autohide())
     {
         pending_hide = Glib::signal_timeout().connect([=] () {
             schedule_hide(0);
             return false;
-        }, 1000);
+        }, AUTOHIDE_HIDE_DELAY);
     }
 }
 
@@ -171,14 +179,17 @@ void WayfireAutohidingWindow::setup_hotspot()
         // nothing
     };
 
+    this->input_inside_panel = false;
     panel_callbacks->on_enter = [=] () {
         if (this->pending_hide.connected())
             this->pending_hide.disconnect();
+        this->input_inside_panel = true;
     };
 
     panel_callbacks->on_leave = [=] () {
-        if (this->is_autohide())
-            this->schedule_hide(300);
+        this->input_inside_panel = false;
+        if (this->should_autohide())
+            this->schedule_hide(AUTOHIDE_HIDE_DELAY);
     };
 
     zwf_hotspot_v2_add_listener(edge_hotspot, &hotspot_listener,
@@ -235,9 +246,9 @@ void WayfireAutohidingWindow::decrease_autohide()
         schedule_show(0);
 }
 
-bool WayfireAutohidingWindow::is_autohide() const
+bool WayfireAutohidingWindow::should_autohide() const
 {
-    return autohide_counter;
+    return autohide_counter && !this->active_button && !this->input_inside_panel;
 }
 
 bool WayfireAutohidingWindow::m_do_hide()
@@ -301,4 +312,34 @@ bool WayfireAutohidingWindow::update_margin()
     }
 
     return false;
+}
+
+void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
+{
+    if (this->active_button)
+    {
+        this->popover_hide.disconnect();
+        this->active_button->set_active(false);
+    }
+
+    this->active_button = &button;
+    this->popover_hide =
+        this->active_button->m_popover.signal_hide().connect_notify(
+            [this, &button] () { unset_active_popover(button); });
+
+    gtk_layer_set_keyboard_interactivity(this->gobj(), true);
+    pending_hide.disconnect(); // make sure no hide will be scheduled
+}
+
+void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
+{
+    if (!this->active_button || &button != this->active_button)
+        return;
+
+    this->active_button->set_active(false);
+    this->active_button = nullptr;
+    gtk_layer_set_keyboard_interactivity(this->gobj(), false);
+
+    if (should_autohide())
+        schedule_hide(AUTOHIDE_HIDE_DELAY);
 }

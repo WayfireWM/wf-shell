@@ -24,8 +24,6 @@ class WayfireClock : public WayfireWidget
     public:
     void init(Gtk::HBox *container, wayfire_config *config) override;
     bool update_label();
-
-    virtual void focus_lost() override;
     ~WayfireClock();
 };
 
