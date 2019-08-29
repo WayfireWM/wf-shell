@@ -128,6 +128,19 @@ class WayfirePanel::impl
         window->override_background_color(rgba);
     };
 
+    wf_option panel_layer;
+    wf_option_callback set_panel_layer = [=] ()
+    {
+        if (panel_layer->as_string() == "overlay")
+            gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+        if (panel_layer->as_string() == "top")
+            gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
+        if (panel_layer->as_string() == "bottom")
+            gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
+        if (panel_layer->as_string() == "background")
+            gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
+    };
+
     wf_option minimal_panel_height;
     void create_window()
     {
@@ -139,7 +152,10 @@ class WayfirePanel::impl
 
         window = std::make_unique<WayfireAutohidingWindow> (output);
         window->set_size_request(1, minimal_panel_height->as_int());
-        gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+        panel_layer = config_section->get_option("layer", "overlay");
+        panel_layer->add_updated_handler(&set_panel_layer);
+        set_panel_layer(); // initial setting
+
         gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
         gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
 
@@ -302,6 +318,7 @@ class WayfirePanel::impl
         if (output->output)
             zwf_output_v2_set_user_data(output->output, NULL);
 
+        panel_layer->rem_updated_handler(&set_panel_layer);
         autohide_opt->rem_updated_handler(&autohide_opt_updated);
         bg_color->rem_updated_handler(&on_window_color_updated);
 
