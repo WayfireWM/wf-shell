@@ -35,6 +35,9 @@ minimal_height = 48
 # automatically hide when pointer isn't over the panel
 autohide = 1
 
+# layer can be top, bottom, overlay or background
+layer = overlay
+
 # where to position panel
 # Possible values are only "top" and "bottom"
 position = top
