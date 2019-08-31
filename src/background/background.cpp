@@ -5,6 +5,7 @@
 #include <gtkmm/image.h>
 #include <gdkmm/pixbuf.h>
 #include <gdkmm/general.h>
+#include <gtkmm/cssprovider.h>
 #include <gdk/gdkwayland.h>
 #include <config.hpp>
 
@@ -17,6 +18,8 @@
 
 #include "background.hpp"
 
+
+#define DEFAULT_BACKGROUND_COLOR "#333333"
 
 void
 BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image, double offset_x, double offset_y)
@@ -289,6 +292,44 @@ WayfireBackground::reset_cycle_timeout()
     }
 }
 
+static bool
+validate_color_string(std::string c)
+{
+    int i;
+
+    if (c.size() != 7 || c[0] != '#')
+        return false;
+
+    for (i = 1; i < 7; i++)
+    {
+        if (!std::isxdigit(c[i]))
+            return false;
+    }
+
+    return true;
+}
+
+void
+WayfireBackground::set_background_color()
+{
+    auto color = background_color->as_string();
+    auto style_context = window.get_style_context();
+
+    if (!validate_color_string(color))
+    {
+        std::cerr << "Ignoring invalid color: \"" << color << "\"" << std::endl;
+        std::cerr << "Color must be in format \\#XXXXXX where X is a hexidecimal digit." << std::endl;
+        color = DEFAULT_BACKGROUND_COLOR;
+    }
+
+    if (current_css_provider)
+        style_context->remove_provider(current_css_provider);
+
+    current_css_provider = Gtk::CssProvider::create();
+    current_css_provider->load_from_data("window {background-color: " + color + ";}");
+    style_context->add_provider(current_css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
+}
+
 void
 WayfireBackground::setup_window()
 {
@@ -297,6 +338,8 @@ WayfireBackground::setup_window()
 
     background_image = app->config->get_section("background")
         ->get_option("image", "none");
+    background_color = app->config->get_section("background")
+        ->get_option("color", DEFAULT_BACKGROUND_COLOR);
     background_cycle_timeout = app->config->get_section("background")
         ->get_option("cycle_timeout", "150");
     background_randomize = app->config->get_section("background")
@@ -304,14 +347,18 @@ WayfireBackground::setup_window()
     background_preserve_aspect = app->config->get_section("background")
         ->get_option("preserve_aspect", "0");
     init_background = [=] () { set_background(); };
+    background_color_changed = [=] () { set_background_color(); };
     cycle_timeout_updated = [=] () { reset_cycle_timeout(); };
     background_image->add_updated_handler(&init_background);
+    background_color->add_updated_handler(&background_color_changed);
     background_cycle_timeout->add_updated_handler(&cycle_timeout_updated);
     background_randomize->add_updated_handler(&init_background);
     background_preserve_aspect->add_updated_handler(&init_background);
 
     window.property_scale_factor().signal_changed().connect(
         sigc::mem_fun(this, &WayfireBackground::set_background));
+
+    set_background_color();
 }
 
 WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output)

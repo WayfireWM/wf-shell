@@ -44,13 +44,15 @@ class WayfireBackground
     int output_width, output_height;
     sigc::connection change_bg_conn;
 
-    wf_option background_image, background_cycle_timeout,
+    wf_option background_image, background_color, background_cycle_timeout,
         background_randomize, background_preserve_aspect;
-    wf_option_callback init_background, cycle_timeout_updated;
+    wf_option_callback init_background, background_color_changed, cycle_timeout_updated;
 
     Glib::RefPtr<Gdk::Pixbuf> create_from_file_safe(std::string path);
+    Glib::RefPtr<Gtk::CssProvider> current_css_provider;
     void create_wm_surface();
     void handle_output_resize(uint32_t width, uint32_t height);
+    void set_background_color();
     bool background_transition_frame(int timer);
     bool change_background(int timer);
     bool load_images_from_dir(std::string path);
