@@ -70,30 +70,22 @@ class WayfirePanel::impl
 
     WayfireOutput *output;
 
-    bool was_autohide_enabled = false;
+    int last_autohide_value = -1;
     wf_option autohide_opt;
     wf_option_callback autohide_opt_updated = [=] ()
     {
-        bool is_autohide = autohide_opt->as_int();
-        if (is_autohide == was_autohide_enabled)
+        int is_autohide = !!autohide_opt->as_int();
+        if (is_autohide == last_autohide_value)
             return;
 
-        was_autohide_enabled = is_autohide;
-        update_autohide_request(is_autohide);
-        window->set_auto_exclusive_zone(!is_autohide);
-    };
-
-    std::function<void(bool)> update_autohide_request = [=] (bool autohide)
-    {
-        /* FIXME: will break if panel is created while there are fullscreen windows */
-        if (!this->window)
-            return;
-
-        if (autohide) {
+        if (is_autohide) {
             this->window->increase_autohide();
-        } else {
+        } else if (last_autohide_value == 1) {
             this->window->decrease_autohide();
         }
+
+        last_autohide_value = is_autohide;
+        window->set_auto_exclusive_zone(!is_autohide);
     };
 
     wf_option bg_color;
@@ -165,9 +157,6 @@ class WayfirePanel::impl
 
         autohide_opt = config_section->get_option("autohide", "1");
         autohide_opt->add_updated_handler(&autohide_opt_updated);
-        /* Make sure that we trigger an autohide opt update. We haven't set any
-         * autohide state up to now, so this won't corrupt the autohide counters */
-        was_autohide_enabled = !autohide_opt->as_int();
         autohide_opt_updated(); // set initial autohide status
 
         window->set_position(
