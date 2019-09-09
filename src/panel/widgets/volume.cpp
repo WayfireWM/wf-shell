@@ -162,6 +162,17 @@ WayfireVolume::on_popover_button_press(GdkEventButton* event)
 }
 
 static void
+volume_changed (GvcMixerControl *gvc_control,
+                guint            id,
+                gpointer         user_data)
+{
+    WayfireVolume *wf_volume = (WayfireVolume *) user_data;
+
+    wf_volume->current_volume = gvc_mixer_stream_get_volume(wf_volume->gvc_stream);
+    wf_volume->volume_scale.set_value(wf_volume->current_volume);
+}
+
+static void
 default_sink_changed (GvcMixerControl *gvc_control,
                       guint            id,
                       gpointer         user_data)
@@ -173,6 +184,11 @@ default_sink_changed (GvcMixerControl *gvc_control,
         printf("GVC: Failed to get default sink\n");
         return;
     }
+
+    wf_volume->gvc_channel_map = (GvcChannelMap *) gvc_mixer_stream_get_channel_map(wf_volume->gvc_stream);
+    g_signal_connect (wf_volume->gvc_channel_map, "volume-changed",
+        G_CALLBACK (volume_changed), user_data);
+
     wf_volume->max_norm = gvc_mixer_control_get_vol_max_norm(gvc_control);
     wf_volume->inc = wf_volume->max_norm / 20;
 

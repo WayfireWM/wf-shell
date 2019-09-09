@@ -57,6 +57,7 @@ class WayfireVolume : public WayfireWidget
     void update_icon();
 
     GvcMixerStream *gvc_stream;
+    GvcChannelMap *gvc_channel_map;
     Gtk::Scale volume_scale;
     sigc::connection popover_timeout, volume_changed_signal;
     int32_t current_volume, last_volume;
