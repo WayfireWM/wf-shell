@@ -185,8 +185,11 @@ default_sink_changed (GvcMixerControl *gvc_control,
         return;
     }
 
+    if (wf_volume->gvc_channel_map)
+        g_signal_handler_disconnect(wf_volume->gvc_channel_map, wf_volume->volume_changed_g_signal);
+
     wf_volume->gvc_channel_map = (GvcChannelMap *) gvc_mixer_stream_get_channel_map(wf_volume->gvc_stream);
-    g_signal_connect (wf_volume->gvc_channel_map, "volume-changed",
+    wf_volume->volume_changed_g_signal = g_signal_connect (wf_volume->gvc_channel_map, "volume-changed",
         G_CALLBACK (volume_changed), user_data);
 
     wf_volume->max_norm = gvc_mixer_control_get_vol_max_norm(gvc_control);
