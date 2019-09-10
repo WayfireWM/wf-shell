@@ -128,13 +128,10 @@ WayfireVolume::on_volume_button_press(GdkEventButton* event)
         if (gvc_mixer_stream_get_is_muted(gvc_stream)) {
             gvc_mixer_stream_change_is_muted(gvc_stream, false);
             gvc_mixer_stream_set_is_muted(gvc_stream, false);
-            last_volume = 0;
         } else {
             gvc_mixer_stream_change_is_muted(gvc_stream, true);
             gvc_mixer_stream_set_is_muted(gvc_stream, true);
         }
-
-        update_icon();
     }
 }
 
@@ -173,6 +170,18 @@ notify_volume (GvcMixerControl *gvc_control,
 }
 
 static void
+notify_is_muted (GvcMixerControl *gvc_control,
+                guint            id,
+                gpointer         user_data)
+{
+    WayfireVolume *wf_volume = (WayfireVolume *) user_data;
+
+    wf_volume->last_volume = -1;
+
+    wf_volume->update_icon();
+}
+
+static void
 default_sink_changed (GvcMixerControl *gvc_control,
                       guint            id,
                       gpointer         user_data)
@@ -190,6 +199,12 @@ default_sink_changed (GvcMixerControl *gvc_control,
 
     wf_volume->notify_volume_signal = g_signal_connect (wf_volume->gvc_stream, "notify::volume",
         G_CALLBACK (notify_volume), user_data);
+
+    if (wf_volume->notify_is_muted_signal)
+        g_signal_handler_disconnect(wf_volume->gvc_stream, wf_volume->notify_is_muted_signal);
+
+    wf_volume->notify_is_muted_signal = g_signal_connect (wf_volume->gvc_stream, "notify::is-muted",
+        G_CALLBACK (notify_is_muted), user_data);
 
     wf_volume->max_norm = gvc_mixer_control_get_vol_max_norm(gvc_control);
     wf_volume->inc = wf_volume->max_norm / 20;
