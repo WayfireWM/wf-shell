@@ -327,7 +327,8 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
         this->active_button->m_popover.signal_hide().connect_notify(
             [this, &button] () { unset_active_popover(button); });
 
-    gtk_layer_set_keyboard_interactivity(this->gobj(), true);
+    gtk_layer_set_keyboard_interactivity(this->gobj(),
+        this->active_button->get_keyboard_interactive());
     schedule_show(0);
 }
 

@@ -35,3 +35,13 @@ WayfireMenuButton::~WayfireMenuButton()
 {
     panel_position->rem_updated_handler(&panel_position_changed);
 }
+
+void WayfireMenuButton::set_keyboard_interactive(bool interactive)
+{
+    this->interactive = interactive;
+}
+
+bool WayfireMenuButton::get_keyboard_interactive() const
+{
+    return this->interactive;
+}
