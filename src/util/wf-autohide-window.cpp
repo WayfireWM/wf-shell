@@ -235,14 +235,14 @@ void WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
 void WayfireAutohidingWindow::increase_autohide()
 {
     ++autohide_counter;
-    if (autohide_counter == 1)
+    if (should_autohide())
         schedule_hide(0);
 }
 
 void WayfireAutohidingWindow::decrease_autohide()
 {
     autohide_counter = std::max(autohide_counter - 1, 0);
-    if (autohide_counter == 0)
+    if (!should_autohide())
         schedule_show(0);
 }
 
@@ -328,7 +328,7 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
             [this, &button] () { unset_active_popover(button); });
 
     gtk_layer_set_keyboard_interactivity(this->gobj(), true);
-    pending_hide.disconnect(); // make sure no hide will be scheduled
+    schedule_show(0);
 }
 
 void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
@@ -338,6 +338,8 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
 
     this->active_button->set_active(false);
     this->active_button = nullptr;
+    this->popover_hide.disconnect();
+
     gtk_layer_set_keyboard_interactivity(this->gobj(), false);
 
     if (should_autohide())
