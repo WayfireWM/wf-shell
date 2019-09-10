@@ -162,7 +162,7 @@ WayfireVolume::on_popover_button_press(GdkEventButton* event)
 }
 
 static void
-volume_changed (GvcMixerControl *gvc_control,
+notify_volume (GvcMixerControl *gvc_control,
                 guint            id,
                 gpointer         user_data)
 {
@@ -185,12 +185,11 @@ default_sink_changed (GvcMixerControl *gvc_control,
         return;
     }
 
-    if (wf_volume->gvc_channel_map)
-        g_signal_handler_disconnect(wf_volume->gvc_channel_map, wf_volume->volume_changed_g_signal);
+    if (wf_volume->notify_volume_signal)
+        g_signal_handler_disconnect(wf_volume->gvc_stream, wf_volume->notify_volume_signal);
 
-    wf_volume->gvc_channel_map = (GvcChannelMap *) gvc_mixer_stream_get_channel_map(wf_volume->gvc_stream);
-    wf_volume->volume_changed_g_signal = g_signal_connect (wf_volume->gvc_channel_map, "volume-changed",
-        G_CALLBACK (volume_changed), user_data);
+    wf_volume->notify_volume_signal = g_signal_connect (wf_volume->gvc_stream, "notify::volume",
+        G_CALLBACK (notify_volume), user_data);
 
     wf_volume->max_norm = gvc_mixer_control_get_vol_max_norm(gvc_control);
     wf_volume->inc = wf_volume->max_norm / 20;
