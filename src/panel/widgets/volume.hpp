@@ -10,11 +10,11 @@
 
 
 enum volume_level {
-    MUTE = 0,
-    LOW,
-    MED,
-    HIGH,
-    OOR
+    VOLUME_LEVEL_MUTE = 0,
+    VOLUME_LEVEL_LOW,
+    VOLUME_LEVEL_MED,
+    VOLUME_LEVEL_HIGH,
+    VOLUME_LEVEL_OOR /* Out of range */
 };
 
 class WayfireVolume : public WayfireWidget

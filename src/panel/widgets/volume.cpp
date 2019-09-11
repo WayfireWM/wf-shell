@@ -9,15 +9,15 @@ volume_level WayfireVolume::get_volume_level(pa_volume_t v)
 {
     auto third = max_norm / 3;
     if (v == 0)
-        return MUTE;
+        return VOLUME_LEVEL_MUTE;
     else if (v > 0 && v <= third)
-        return LOW;
+        return VOLUME_LEVEL_LOW;
     else if (v > third && v <= (third * 2))
-        return MED;
+        return VOLUME_LEVEL_MED;
     else if (v > (third * 2) && v <= max_norm)
-        return HIGH;
+        return VOLUME_LEVEL_HIGH;
 
-    return OOR;
+    return VOLUME_LEVEL_OOR;
 }
 
 void WayfireVolume::update_icon()
@@ -38,13 +38,13 @@ void WayfireVolume::update_icon()
         return;
 
     button->set_size_request(0, 0);
-    if (current == MUTE) {
+    if (current == VOLUME_LEVEL_MUTE) {
         main_image.set_from_icon_name("audio-volume-muted", Gtk::ICON_SIZE_MENU);
-    } else if (current == LOW) {
+    } else if (current == VOLUME_LEVEL_LOW) {
         main_image.set_from_icon_name("audio-volume-low",  Gtk::ICON_SIZE_MENU);
-    } else if (current == MED) {
+    } else if (current == VOLUME_LEVEL_MED) {
         main_image.set_from_icon_name("audio-volume-medium", Gtk::ICON_SIZE_MENU);
-    } else if (current == HIGH) {
+    } else if (current == VOLUME_LEVEL_HIGH) {
         main_image.set_from_icon_name("audio-volume-high", Gtk::ICON_SIZE_MENU);
     } else {
         gvc_mixer_stream_set_volume(gvc_stream, 0.0);
