@@ -7,11 +7,33 @@
 #include <gtkmm/scale.h>
 #include <pulse/pulseaudio.h>
 #include "gvc-mixer-control.h"
+#include <animation.hpp>
+
+/**
+ * A custom scale which animates transitions when its value is
+ * changed programatically.
+ */
+class WayfireVolumeScale : public Gtk::Scale
+{
+    wf_duration current_volume;
+    sigc::connection value_changed;
+    std::function<void()> user_changed_callback;
+
+  public:
+    WayfireVolumeScale();
+
+    /* Gets the current target value */
+    double get_target_value() const;
+    /* Set a target value to animate towards */
+    void set_target_value(double value);
+    /** Set the callback when the user changes the scale value */
+    void set_user_changed_callback(std::function<void()> callback);
+};
 
 class WayfireVolume : public WayfireWidget
 {
     Gtk::Image main_image;
-    Gtk::Scale volume_scale;
+    WayfireVolumeScale volume_scale;
     std::unique_ptr<WayfireMenuButton> button;
 
     wf_option volume_size;

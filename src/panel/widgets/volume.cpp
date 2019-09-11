@@ -7,6 +7,48 @@
 
 #define INCREMENT_STEP_PC 0.05
 
+WayfireVolumeScale::WayfireVolumeScale()
+{
+    this->current_volume =
+        wf_duration(new_static_option("200"), wf_animation::circle);
+    this->current_volume.start();
+
+    this->signal_draw().connect_notify(
+        [=] (const Cairo::RefPtr<Cairo::Context>& ctx)
+        {
+            if (this->current_volume.running())
+            {
+                value_changed.block();
+                this->set_value(this->current_volume.progress());
+                value_changed.unblock();
+            }
+        }, true);
+
+    value_changed = this->signal_value_changed().connect_notify([=] () {
+        this->current_volume.start(this->get_value(), this->get_value());
+        if (this->user_changed_callback)
+            this->user_changed_callback();
+    });
+}
+
+void WayfireVolumeScale::set_target_value(double value)
+{
+    std::cout << "set target volume " << value << std::endl;
+    this->current_volume.start(this->current_volume.progress(), value);
+    this->queue_draw();
+}
+
+double WayfireVolumeScale::get_target_value() const
+{
+    return this->current_volume.end_value;
+}
+
+void WayfireVolumeScale::set_user_changed_callback(
+    std::function<void()> callback)
+{
+    this->user_changed_callback = callback;
+}
+
 enum VolumeLevel {
     VOLUME_LEVEL_MUTE = 0,
     VOLUME_LEVEL_LOW,
@@ -32,7 +74,8 @@ static VolumeLevel get_volume_level(pa_volume_t volume, pa_volume_t max)
 
 void WayfireVolume::update_icon()
 {
-    VolumeLevel current = get_volume_level(volume_scale.get_value(), max_norm);
+    VolumeLevel current =
+        get_volume_level(volume_scale.get_target_value(), max_norm);
 
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
@@ -77,12 +120,7 @@ void WayfireVolume::check_set_popover_timeout()
 
 void WayfireVolume::set_volume(pa_volume_t volume, bool show_popover)
 {
-    /* Make sure to not get the volume changed signal, because this time
-     * we're setting it ourselves */
-    volume_changed_signal.block();
-    volume_scale.set_value(volume);
-    volume_changed_signal.unblock();
-
+    volume_scale.set_target_value(volume);
     if (gvc_stream)
     {
         gvc_mixer_stream_set_volume(gvc_stream, volume);
@@ -97,7 +135,7 @@ void WayfireVolume::set_volume(pa_volume_t volume, bool show_popover)
 
 void WayfireVolume::on_volume_scroll(GdkEventScroll *event)
 {
-    int32_t current_volume = volume_scale.get_value();
+    int32_t current_volume = volume_scale.get_target_value();
     const int32_t adjustment_step = max_norm * INCREMENT_STEP_PC;
 
     /* Adjust volume on button scroll */
@@ -202,7 +240,7 @@ void WayfireVolume::on_volume_value_changed()
 {
     /* User manually changed volume */
     button->grab_focus();
-    set_volume(volume_scale.get_value());
+    set_volume(volume_scale.get_target_value());
 }
 
 void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
@@ -236,8 +274,7 @@ void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
 
     volume_scale.set_draw_value(false);
     volume_scale.set_size_request(300, 0);
-    volume_changed_signal = volume_scale.signal_value_changed().connect_notify(
-        sigc::mem_fun(this, &WayfireVolume::on_volume_value_changed));
+    volume_scale.set_user_changed_callback([=] () { on_volume_value_changed(); });
 
     volume_scale.signal_state_flags_changed().connect_notify(
         [=] (Gtk::StateFlags) { check_set_popover_timeout(); });
