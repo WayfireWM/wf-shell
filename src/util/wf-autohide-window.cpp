@@ -322,6 +322,7 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
         {
             this->popover_hide.disconnect();
             this->active_button->set_active(false);
+            this->active_button->get_popover()->popdown();
         }
 
         this->active_button = &button;
@@ -341,6 +342,7 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
         return;
 
     this->active_button->set_active(false);
+    this->active_button->get_popover()->popdown();
     this->active_button = nullptr;
     this->popover_hide.disconnect();
 
