@@ -15,6 +15,9 @@ class WayfireMenuButton : public Gtk::MenuButton
     wf_option panel_position;
     wf_option_callback panel_position_changed;
 
+    /* Make the menu button active on its AutohideWindow */
+    void set_active_on_window();
+
   public:
     Gtk::Popover m_popover;
 
@@ -29,6 +32,14 @@ class WayfireMenuButton : public Gtk::MenuButton
 
     /** @return Whether the menu button interacts with the keyboard */
     bool get_keyboard_interactive() const;
+
+    /**
+     * Grab the keyboard focus.
+     * Also sets the popover to keyboard interactive.
+     *
+     * NOTE: this works only if the popover was already opened.
+     */
+    void grab_focus();
 };
 
 #endif /* end of include guard: WF_PANEL_POPOVER_HPP */

@@ -316,16 +316,19 @@ bool WayfireAutohidingWindow::update_margin()
 
 void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
 {
-    if (this->active_button)
+    if (&button != this->active_button)
     {
-        this->popover_hide.disconnect();
-        this->active_button->set_active(false);
-    }
+        if (this->active_button)
+        {
+            this->popover_hide.disconnect();
+            this->active_button->set_active(false);
+        }
 
-    this->active_button = &button;
-    this->popover_hide =
-        this->active_button->m_popover.signal_hide().connect_notify(
-            [this, &button] () { unset_active_popover(button); });
+        this->active_button = &button;
+        this->popover_hide =
+            this->active_button->m_popover.signal_hide().connect_notify(
+                [this, &button] () { unset_active_popover(button); });
+    }
 
     gtk_layer_set_keyboard_interactivity(this->gobj(),
         this->active_button->get_keyboard_interactive());
