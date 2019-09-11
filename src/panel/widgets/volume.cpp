@@ -5,8 +5,7 @@
 #include "config.hpp"
 #include "gtk-utils.hpp"
 
-volume_level
-WayfireVolume::get_volume_level(pa_volume_t v)
+volume_level WayfireVolume::get_volume_level(pa_volume_t v)
 {
     auto third = max_norm / 3;
     if (v == 0)
@@ -21,8 +20,7 @@ WayfireVolume::get_volume_level(pa_volume_t v)
     return OOR;
 }
 
-void
-WayfireVolume::update_icon()
+void WayfireVolume::update_icon()
 {
     volume_level last, current;
 
@@ -54,15 +52,13 @@ WayfireVolume::update_icon()
     }
 }
 
-bool
-WayfireVolume::on_popover_timeout(int timer)
+bool WayfireVolume::on_popover_timeout(int timer)
 {
     button->get_popover()->hide();
     return false;
 }
 
-void
-WayfireVolume::reset_popover_timeout()
+void WayfireVolume::reset_popover_timeout()
 {
     if (scale_pressed || volume_clicked)
         return;
@@ -72,8 +68,7 @@ WayfireVolume::reset_popover_timeout()
         &WayfireVolume::on_popover_timeout), 0), timeout * 1000);
 }
 
-void
-WayfireVolume::update_volume(pa_volume_t volume)
+void WayfireVolume::update_volume(pa_volume_t volume)
 {
     current_volume = volume;
 
@@ -96,8 +91,7 @@ WayfireVolume::update_volume(pa_volume_t volume)
     update_icon();
 }
 
-void
-WayfireVolume::on_volume_scroll(GdkEventScroll *event)
+void WayfireVolume::on_volume_scroll(GdkEventScroll *event)
 {
     /* Adjust volume on button scroll */
     if (event->direction == GDK_SCROLL_UP) {
@@ -112,14 +106,12 @@ WayfireVolume::on_volume_scroll(GdkEventScroll *event)
     }
 }
 
-void
-WayfireVolume::on_popover_hide()
+void WayfireVolume::on_popover_hide()
 {
     volume_clicked = false;
 }
 
-void
-WayfireVolume::on_volume_button_press(GdkEventButton* event)
+void WayfireVolume::on_volume_button_press(GdkEventButton* event)
 {
     if (event->button == 1 && event->type == GDK_BUTTON_PRESS) {
         volume_clicked = !volume_clicked;
@@ -135,16 +127,14 @@ WayfireVolume::on_volume_button_press(GdkEventButton* event)
     }
 }
 
-void
-WayfireVolume::on_scale_button_press(GdkEventButton* event)
+void WayfireVolume::on_scale_button_press(GdkEventButton* event)
 {
     timeout_was_enabled = !popover_timeout.empty();
     popover_timeout.disconnect();
     scale_pressed = true;
 }
 
-void
-WayfireVolume::on_scale_button_release(GdkEventButton* event)
+void WayfireVolume::on_scale_button_release(GdkEventButton* event)
 {
     if (timeout_was_enabled)
         popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
@@ -152,14 +142,12 @@ WayfireVolume::on_scale_button_release(GdkEventButton* event)
     scale_pressed = false;
 }
 
-void
-WayfireVolume::on_popover_button_press(GdkEventButton* event)
+void WayfireVolume::on_popover_button_press(GdkEventButton* event)
 {
     button->get_popover()->hide();
 }
 
-static void
-notify_volume (GvcMixerControl *gvc_control,
+static void notify_volume (GvcMixerControl *gvc_control,
                 guint            id,
                 gpointer         user_data)
 {
@@ -169,8 +157,7 @@ notify_volume (GvcMixerControl *gvc_control,
     wf_volume->volume_scale.set_value(wf_volume->current_volume);
 }
 
-static void
-notify_is_muted (GvcMixerControl *gvc_control,
+static void notify_is_muted (GvcMixerControl *gvc_control,
                 guint            id,
                 gpointer         user_data)
 {
@@ -181,8 +168,7 @@ notify_is_muted (GvcMixerControl *gvc_control,
     wf_volume->update_icon();
 }
 
-static void
-default_sink_changed (GvcMixerControl *gvc_control,
+static void default_sink_changed (GvcMixerControl *gvc_control,
                       guint            id,
                       gpointer         user_data)
 {
@@ -220,14 +206,12 @@ default_sink_changed (GvcMixerControl *gvc_control,
     wf_volume->volume_changed_signal.unblock();
 }
 
-void
-WayfireVolume::on_volume_value_changed()
+void WayfireVolume::on_volume_value_changed()
 {
     update_volume(volume_scale.get_value());
 }
 
-void
-WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
+void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
 {
     auto config_section = config->get_section("panel");
     timeout = config_section->get_option("volume_display_timeout", "2.5")->as_double();
@@ -290,8 +274,7 @@ WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
     button->show();
 }
 
-void
-WayfireVolume::focus_lost()
+void WayfireVolume::focus_lost()
 {
     button->get_popover()->hide();
 }
