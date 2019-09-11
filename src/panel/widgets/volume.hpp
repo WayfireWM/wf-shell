@@ -41,7 +41,6 @@ class WayfireVolume : public WayfireWidget
     void on_popover_hide();
 
     bool scale_pressed = false;
-    bool volume_clicked = false;
 
     GvcMixerControl *gvc_control;
 

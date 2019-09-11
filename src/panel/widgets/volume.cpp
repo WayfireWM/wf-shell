@@ -52,13 +52,13 @@ void WayfireVolume::update_icon()
 
 bool WayfireVolume::on_popover_timeout(int timer)
 {
-    button->get_popover()->hide();
+    button->get_popover()->popdown();
     return false;
 }
 
 void WayfireVolume::reset_popover_timeout()
 {
-    if (scale_pressed || volume_clicked)
+    if (scale_pressed || button->get_state_flags() & Gtk::STATE_FLAG_SELECTED)
         return;
 
     popover_timeout.disconnect();
@@ -104,15 +104,11 @@ void WayfireVolume::on_volume_scroll(GdkEventScroll *event)
     }
 }
 
-void WayfireVolume::on_popover_hide()
-{
-    volume_clicked = false;
-}
-
 void WayfireVolume::on_volume_button_press(GdkEventButton* event)
 {
     if (event->button == 1 && event->type == GDK_BUTTON_PRESS) {
-        volume_clicked = !volume_clicked;
+        if (button->get_popover()->is_visible())
+            button->get_popover()->popdown();
     } else if (event->button == 2 && event->type == GDK_BUTTON_PRESS) {
         /* Toggle mute on middle click */
         if (gvc_mixer_stream_get_is_muted(gvc_stream)) {
@@ -142,7 +138,7 @@ void WayfireVolume::on_scale_button_release(GdkEventButton* event)
 
 void WayfireVolume::on_popover_button_press(GdkEventButton* event)
 {
-    button->get_popover()->hide();
+    button->get_popover()->popdown();
 }
 
 static void notify_volume (GvcMixerControl *gvc_control,
@@ -231,8 +227,6 @@ void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
     popover->set_events(Gdk::BUTTON_PRESS_MASK);
     popover->signal_button_press_event().connect_notify(
         sigc::mem_fun(this, &WayfireVolume::on_popover_button_press));
-    popover->signal_hide().connect_notify(
-        sigc::mem_fun(this, &WayfireVolume::on_popover_hide));
     button->set_events(Gdk::SCROLL_MASK | Gdk::SMOOTH_SCROLL_MASK | Gdk::BUTTON_PRESS_MASK);
     button->signal_scroll_event().connect_notify(
         sigc::mem_fun(this, &WayfireVolume::on_volume_scroll));
@@ -273,7 +267,7 @@ void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
 
 void WayfireVolume::focus_lost()
 {
-    button->get_popover()->hide();
+    button->get_popover()->popdown();
 }
 
 WayfireVolume::~WayfireVolume()
