@@ -22,10 +22,8 @@ volume_level WayfireVolume::get_volume_level(pa_volume_t v)
 
 void WayfireVolume::update_icon()
 {
-    volume_level last, current;
-
-    last = get_volume_level(last_volume);
-    current = get_volume_level(current_volume);
+    volume_level last = get_volume_level(last_volume);
+    volume_level current = get_volume_level(current_volume);
 
     last_volume = current_volume;
 
