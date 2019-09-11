@@ -65,7 +65,7 @@ void WayfireVolume::reset_popover_timeout()
 
     popover_timeout.disconnect();
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireVolume::on_popover_timeout), 0), timeout * 1000);
+        &WayfireVolume::on_popover_timeout), 0), timeout->as_double() * 1000);
 }
 
 void WayfireVolume::update_volume(pa_volume_t volume)
@@ -138,7 +138,7 @@ void WayfireVolume::on_scale_button_release(GdkEventButton* event)
 {
     if (timeout_was_enabled)
         popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-            &WayfireVolume::on_popover_timeout), 0), timeout * 1000);
+            &WayfireVolume::on_popover_timeout), 0), timeout->as_double() * 1000);
     scale_pressed = false;
 }
 
@@ -214,7 +214,7 @@ void WayfireVolume::on_volume_value_changed()
 void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
 {
     auto config_section = config->get_section("panel");
-    timeout = config_section->get_option("volume_display_timeout", "2.5")->as_double();
+    timeout = config_section->get_option("volume_display_timeout", "2.5");
 
     volume_size = config_section->get_option("launcher_size",
         std::to_string(DEFAULT_ICON_SIZE));

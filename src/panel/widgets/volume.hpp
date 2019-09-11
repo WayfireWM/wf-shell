@@ -31,7 +31,7 @@ class WayfireVolume : public WayfireWidget
 
     void reset_popover_timeout();
     bool timeout_was_enabled = false;
-    float timeout;
+    wf_option timeout;
 
     void on_volume_scroll(GdkEventScroll *event);
     void on_scale_button_press(GdkEventButton *event);
