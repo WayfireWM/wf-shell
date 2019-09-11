@@ -228,7 +228,6 @@ void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
     style->set_state(Gtk::STATE_FLAG_NORMAL & ~Gtk::STATE_FLAG_PRELIGHT);
     button->reset_style();
     auto popover = button->get_popover();
-    popover->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     popover->add(volume_scale);
     popover->set_modal(false);
     popover->set_events(Gdk::BUTTON_PRESS_MASK);
