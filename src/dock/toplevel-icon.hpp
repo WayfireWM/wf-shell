@@ -1,7 +1,6 @@
 #ifndef WF_DOCK_TOPLEVEL_ICON_HPP
 #define WF_DOCK_TOPLEVEL_ICON_HPP
 
-#include "display.hpp"
 #include "config.hpp"
 #include <memory>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>

@@ -49,8 +49,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
 void WfMenuMenuItem::on_click()
 {
     m_app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
-
-    menu->focus_lost();
+    menu->hide_menu();
 }
 
 /* Fuzzy search for pattern in text. We use a greedy algorithm as follows:
@@ -300,11 +299,11 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
 
     fuzzy_search_enabled = config_section->get_option("menu_fuzzy_search", "1");
 
-    panel_position = config_section->get_option("position", PANEL_POSITION_DEFAULT);
+    panel_position = PANEL_POSITION_OPT(config);
     panel_position_changed = [=] () { update_popover_layout(); };
     panel_position->add_updated_handler(&panel_position_changed);
 
-    button = std::unique_ptr<WayfireMenuButton> (new WayfireMenuButton(config));
+    button = std::make_unique<WayfireMenuButton> (panel_position);
     button->add(main_image);
 
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
@@ -328,7 +327,7 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
     button->show();
 }
 
-void WayfireMenu::focus_lost()
+void WayfireMenu::hide_menu()
 {
     button->set_active(false);
 }

@@ -7,6 +7,11 @@
 #include <giomm/desktopappinfo.h>
 #include <iostream>
 
+#include <gdkmm/seat.h>
+#include <gdk/gdkwayland.h>
+#include <cmath>
+
+
 #include "toplevel.hpp"
 #include "gtk-utils.hpp"
 #include "panel.hpp"
@@ -87,9 +92,12 @@ class WayfireToplevel::impl
 
     int grab_off_x;
     double grab_start_x, grab_start_y;
+    double grab_abs_start_x;
+    bool drag_exceeds_threshold;
+
     void on_drag_begin(double _x, double _y)
     {
-	auto& container = window_list->box;
+        auto& container = window_list->box;
         /* Set grab start, before transforming it to absolute position */
         grab_start_x = _x;
         grab_start_y = _y;
@@ -99,22 +107,28 @@ class WayfireToplevel::impl
 
         /* Find the distance between pointer X and button origin */
         int x = container.get_absolute_position(_x, button);
+        grab_abs_start_x = x;
 
         /* Find button corner in window-relative coords */
         int loc_x = container.get_absolute_position(0, button);
         grab_off_x = x - loc_x;
+
+        drag_exceeds_threshold = false;
     }
 
+    static constexpr int DRAG_THRESHOLD = 3;
     void on_drag_update(double _x, double)
     {
-	auto& container = window_list->box;
+        auto& container = window_list->box;
         /* Window was not just clicked, but also dragged. Ignore the next click,
          * which is the one that happens when the drag gesture ends. */
         set_ignore_next_click();
 
         int x = _x + grab_start_x;
-
         x = container.get_absolute_position(x, button);
+        if (std::abs(x - grab_abs_start_x) > DRAG_THRESHOLD)
+            drag_exceeds_threshold = true;
+
         auto hovered_button = container.get_widget_at(x);
 
         if (hovered_button != &button && hovered_button)
@@ -146,6 +160,11 @@ class WayfireToplevel::impl
          * the button, unset ignore_next_click or else the next
          * click on the button won't cause action. */
         if (x < 0 || x > width || y < 0 || y > height)
+            unset_ignore_next_click();
+
+        /* When dragging with touch or pen, we allow some small movement while
+         * still counting the action as button press as opposed to only dragging. */
+        if (!drag_exceeds_threshold)
             unset_ignore_next_click();
     }
 
@@ -218,8 +237,9 @@ class WayfireToplevel::impl
 
         if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
         {
-            zwlr_foreign_toplevel_handle_v1_activate(handle,
-                WayfirePanelApp::get().get_display()->default_seat);
+            auto gseat = Gdk::Display::get_default()->get_default_seat();
+            auto seat = gdk_wayland_seat_get_wl_seat(gseat->gobj());
+            zwlr_foreign_toplevel_handle_v1_activate(handle, seat);
         }
         else
         {
@@ -264,7 +284,8 @@ class WayfireToplevel::impl
             widget = widget->get_parent();
         }
 
-        auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->handle);
+        auto panel =
+            WayfirePanelApp::get().panel_for_wl_output( window_list->output->wo);
         if (!panel)
             return;
 
@@ -366,7 +387,7 @@ class WayfireToplevel::impl
     void handle_output_enter(wl_output *output)
     {
         auto& container = window_list->box;
-        if (window_list->output->handle == output)
+        if (window_list->output->wo == output)
         {
             container.add(button);
             container.show_all();
@@ -378,7 +399,7 @@ class WayfireToplevel::impl
     void handle_output_leave(wl_output *output)
     {
         auto& container = window_list->box;
-        if (window_list->output->handle == output)
+        if (window_list->output->wo == output)
             container.remove(button);
     }
 };

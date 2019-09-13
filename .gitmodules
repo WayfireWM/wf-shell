@@ -1,0 +1,3 @@
+[submodule "subprojects/gtk-layer-shell"]
+	path = subprojects/gtk-layer-shell
+	url = https://github.com/wmww/gtk-layer-shell

@@ -9,6 +9,7 @@
 
 #include <gtk-utils.hpp>
 #include <wf-shell-app.hpp>
+#include <gtk-layer-shell.h>
 #include <wf-autohide-window.hpp>
 
 #include "dock.hpp"
@@ -26,20 +27,21 @@ class WfDock::impl
     {
         this->output = output;
         window = std::unique_ptr<WayfireAutohidingWindow> (
-            new WayfireAutohidingWindow(100, 100, output,
-                ZWF_WM_SURFACE_V1_ROLE_PANEL));
-        window->set_keyboard_mode(ZWF_WM_SURFACE_V1_KEYBOARD_FOCUS_MODE_NO_FOCUS);
+            new WayfireAutohidingWindow(output));
+
+        window->set_size_request(100, 100);
+        gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
         window->increase_autohide();
 
         window->set_position(WfDockApp::get().get_config()->get_section("dock")
             ->get_option("position", WF_WINDOW_POSITION_BOTTOM));
 
-        _wl_surface = gdk_wayland_window_get_wl_surface(
-            window->get_window()->gobj());
-
         window->signal_size_allocate().connect_notify(
             sigc::mem_fun(this, &WfDock::impl::on_allocation));
         window->add(box);
+        window->show_all();
+        _wl_surface = gdk_wayland_window_get_wl_surface(
+            window->get_window()->gobj());
     }
 
     void add_child(Gtk::Widget& widget)

@@ -75,8 +75,8 @@ class WayfireMenu : public WayfireWidget
 
     public:
     void init(Gtk::HBox *container, wayfire_config *config) override;
+    void hide_menu();
     virtual ~WayfireMenu();
-    void focus_lost() override;
 };
 
 #endif /* end of include guard: WIDGETS_MENU_HPP */

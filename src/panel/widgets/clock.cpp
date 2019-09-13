@@ -10,7 +10,7 @@ void WayfireClock::init(Gtk::HBox *container, wayfire_config *config)
     font = config->get_section("panel")
         ->get_option("clock_font", default_font);
 
-    button = std::unique_ptr<WayfireMenuButton> (new WayfireMenuButton(config));
+    button = std::make_unique<WayfireMenuButton> (PANEL_POSITION_OPT(config));
     button->add(label);
     button->show();
     label.show();
@@ -43,11 +43,6 @@ void WayfireClock::on_calendar_shown()
     /* GDateTime uses month in 1-12 format while GClender uses 0-11  */
     calendar.select_month(now.get_month() - 1, now.get_year());
     calendar.select_day(now.get_day_of_month());
-}
-
-void WayfireClock::focus_lost()
-{
-    button->set_active(false);
 }
 
 bool WayfireClock::update_label()

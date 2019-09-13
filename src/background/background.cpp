@@ -12,14 +12,13 @@
 #include <map>
 
 #include <gtk-utils.hpp>
-#include <wf-shell-app.hpp>
-#include <animation.hpp>
+#include <gtk-layer-shell.h>
 
 #include "background.hpp"
 
 
-void
-BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image, double offset_x, double offset_y)
+void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
+    double offset_x, double offset_y)
 {
     if (!image)
     {
@@ -32,16 +31,19 @@ BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image, double offset
     to_image.pbuf = image;
     to_image.x = offset_x;
     to_image.y = offset_y;
+    fade.start(from_image.pbuf ? 0.0 : 1.0, 1.0);
 
-    queue_draw();
-    fade.start(0.0, 1.0);
+    Glib::signal_idle().connect_once([=] () {
+        this->queue_draw();
+    });
 }
 
-bool
-BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
-    auto alpha = fade.progress();
+    if (!to_image.pbuf)
+        return false;
 
+    auto alpha = fade.progress();
     if (fade.running())
         queue_draw();
 
@@ -52,8 +54,10 @@ BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     if (!from_image.pbuf)
         return false;
 
-    Gdk::Cairo::set_source_pixbuf(cr, from_image.pbuf, from_image.x, from_image.y);
-    cr->rectangle(0, 0, from_image.pbuf->get_width(), from_image.pbuf->get_height());
+    Gdk::Cairo::set_source_pixbuf(cr, from_image.pbuf,
+        from_image.x, from_image.y);
+    cr->rectangle(0, 0, from_image.pbuf->get_width(),
+        from_image.pbuf->get_height());
     cr->paint_with_alpha(1.0 - alpha);
 
     return false;
@@ -69,66 +73,32 @@ Glib::RefPtr<Gdk::Pixbuf>
 WayfireBackground::create_from_file_safe(std::string path)
 {
     Glib::RefPtr<Gdk::Pixbuf> pbuf;
-    int width = output_width * scale;
-    int height = output_height * scale;
+    int width = window.get_allocated_width() * scale;
+    int height = window.get_allocated_height() * scale;
     bool preserve_aspect = background_preserve_aspect->as_int() ? true : false;
 
-    try
-    {
-        pbuf = Gdk::Pixbuf::create_from_file(path, width, height, preserve_aspect);
-        if (preserve_aspect)
-        {
-            bool eq_width = (width == pbuf->get_width());
-            offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
-            offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
-        }
-        else
-        {
-            offset_x = offset_y = 0.0;
-        }
-        return pbuf;
-    }
-    catch (...)
-    {
-        return pbuf;
-    }
-}
-
-void
-WayfireBackground::create_wm_surface()
-{
-    auto gdk_window = window.get_window()->gobj();
-    auto surface = gdk_wayland_window_get_wl_surface(gdk_window);
-
-    if (!surface)
-    {
-        std::cerr << "Error: created window was not a wayland surface" << std::endl;
-        std::exit(-1);
+    try {
+        pbuf =
+            Gdk::Pixbuf::create_from_file(path, width, height, preserve_aspect);
+    } catch (...) {
+        return Glib::RefPtr<Gdk::Pixbuf>();
     }
 
-    wm_surface = zwf_shell_manager_v1_get_wm_surface(
-        output->display->zwf_shell_manager, surface,
-        ZWF_WM_SURFACE_V1_ROLE_BACKGROUND, output->handle);
-    zwf_wm_surface_v1_configure(wm_surface, 0, 0);
+    if (preserve_aspect)
+    {
+        bool eq_width = (width == pbuf->get_width());
+        offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
+        offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
+    }
+    else
+    {
+        offset_x = offset_y = 0.0;
+    }
+
+    return pbuf;
 }
 
-void
-WayfireBackground::handle_output_resize(uint32_t width, uint32_t height)
-{
-    output_width = width;
-    output_height = height;
-
-    window.set_size_request(width, height);
-    window.show_all();
-
-    if (!wm_surface)
-        create_wm_surface();
-
-    set_background();
-}
-
-bool
-WayfireBackground::change_background(int timer)
+bool WayfireBackground::change_background(int timer)
 {
     Glib::RefPtr<Gdk::Pixbuf> pbuf;
     std::string path;
@@ -137,14 +107,11 @@ WayfireBackground::change_background(int timer)
         return false;
 
     std::cout << "Loaded " << path << std::endl;
-
     drawing_area.show_image(pbuf, offset_x, offset_y);
-
     return true;
 }
 
-bool
-WayfireBackground::load_images_from_dir(std::string path)
+bool WayfireBackground::load_images_from_dir(std::string path)
 {
     wordexp_t exp;
 
@@ -167,13 +134,10 @@ WayfireBackground::load_images_from_dir(std::string path)
         struct stat next;
         if (stat(fullpath.c_str(), &next) == 0)
         {
-            if (S_ISDIR(next.st_mode))
-            {
+            if (S_ISDIR(next.st_mode)) {
                 /* Recursive search */
                 load_images_from_dir(fullpath);
-            }
-            else
-            {
+            } else {
                 images.push_back(fullpath);
             }
         }
@@ -188,14 +152,15 @@ WayfireBackground::load_images_from_dir(std::string path)
     return true;
 }
 
-bool
-WayfireBackground::load_next_background(Glib::RefPtr<Gdk::Pixbuf> &pbuf, std::string &path)
+bool WayfireBackground::load_next_background(Glib::RefPtr<Gdk::Pixbuf> &pbuf,
+    std::string &path)
 {
     while (!pbuf)
     {
         if (!images.size())
         {
-            std::cerr << "Failed to load background images from " << background_image->as_string() << std::endl;
+            std::cerr << "Failed to load background images from "
+                << background_image->as_string() << std::endl;
             window.remove();
             return false;
         }
@@ -212,8 +177,7 @@ WayfireBackground::load_next_background(Glib::RefPtr<Gdk::Pixbuf> &pbuf, std::st
     return true;
 }
 
-void
-WayfireBackground::reset_background()
+void WayfireBackground::reset_background()
 {
     images.clear();
     current_background = 0;
@@ -221,15 +185,13 @@ WayfireBackground::reset_background()
     scale = window.get_scale_factor();
 }
 
-void
-WayfireBackground::set_background()
+void WayfireBackground::set_background()
 {
     Glib::RefPtr<Gdk::Pixbuf> pbuf;
 
     reset_background();
 
     auto path = background_image->as_string();
-    int cycle_timeout = background_cycle_timeout->as_int() * 1000;
     try {
         if (load_images_from_dir(path) && images.size())
         {
@@ -244,41 +206,22 @@ WayfireBackground::set_background()
             if (!pbuf)
                 throw std::exception();
         }
-
-        if (!drawing_area.get_parent())
-        {
-            window.add(drawing_area);
-            window.show_all();
-        }
-        if (images.size())
-        {
-            change_bg_conn = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(
-                this, &WayfireBackground::change_background), 0), cycle_timeout);
-        }
     } catch (...)
     {
-        window.remove();
-        if (images.size())
-        {
-            std::cerr << "Failed to load background images from " << path << std::endl;
-        }
-        else if (path != "none")
-        {
-            std::cerr << "Failed to load background image " << path << std::endl;
-        }
+        std::cerr << "Failed to load background image(s) " << path << std::endl;
     }
 
+    reset_cycle_timeout();
     drawing_area.show_image(pbuf, offset_x, offset_y);
 
-    if (inhibited)
+    if (inhibited && output->output)
     {
-        zwf_output_v1_inhibit_output_done(output->zwf);
+        zwf_output_v2_inhibit_output_done(output->output);
         inhibited = false;
     }
 }
 
-void
-WayfireBackground::reset_cycle_timeout()
+void WayfireBackground::reset_cycle_timeout()
 {
     int cycle_timeout = background_cycle_timeout->as_int() * 1000;
     change_bg_conn.disconnect();
@@ -289,11 +232,22 @@ WayfireBackground::reset_cycle_timeout()
     }
 }
 
-void
-WayfireBackground::setup_window()
+void WayfireBackground::setup_window()
 {
-    window.set_resizable(false);
     window.set_decorated(false);
+
+    gtk_layer_init_for_window(window.gobj());
+    gtk_layer_set_layer(window.gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
+    gtk_layer_set_monitor(window.gobj(), this->output->monitor->gobj());
+
+    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
+    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+
+    gtk_layer_set_exclusive_zone(window.gobj(), -1);
+    window.add(drawing_area);
+    window.show_all();
 
     background_image = app->config->get_section("background")
         ->get_option("image", "none");
@@ -319,13 +273,24 @@ WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output
     this->app = app;
     this->output = output;
 
-    zwf_output_v1_inhibit_output(output->zwf);
-    setup_window();
-    output->resized_callback = [=] (WayfireOutput*, uint32_t w, uint32_t h)
+    if (output->output)
     {
-        std::cout << "handle resize" << std::endl;
-        handle_output_resize(w, h);
-    };
+        this->inhibited = true;
+        zwf_output_v2_inhibit_output(output->output);
+    }
+
+    setup_window();
+
+    this->window.signal_size_allocate().connect_notify(
+        [this, width = 0, height = 0] (Gtk::Allocation& alloc) mutable
+        {
+            if (alloc.get_width() != width || alloc.get_height() != height)
+            {
+                this->set_background();
+                width = alloc.get_width();
+                height = alloc.get_height();
+            }
+        });
 }
 
 WayfireBackground::~WayfireBackground()
@@ -346,13 +311,13 @@ class WayfireBackgroundApp : public WayfireShellApp
     {
     }
 
-    void on_new_output(WayfireOutput *output)
+    void handle_new_output(WayfireOutput *output) override
     {
         backgrounds[output] = std::unique_ptr<WayfireBackground> (
             new WayfireBackground(this, output));
     }
 
-    void on_output_removed(WayfireOutput *output)
+    void handle_output_removed(WayfireOutput *output) override
     {
         backgrounds.erase(output);
     }
