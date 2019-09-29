@@ -33,7 +33,6 @@ WayfireVolumeScale::WayfireVolumeScale()
 
 void WayfireVolumeScale::set_target_value(double value)
 {
-    std::cout << "set target volume " << value << std::endl;
     this->current_volume.start(this->current_volume.progress(), value);
     this->queue_draw();
 }
@@ -104,14 +103,8 @@ bool WayfireVolume::on_popover_timeout(int timer)
 
 void WayfireVolume::check_set_popover_timeout()
 {
-    uint32_t clicked_state =
-        (volume_scale.get_state_flags() | button->get_state_flags());
-    uint32_t active_mask =
-        Gtk::STATE_FLAG_SELECTED | Gtk::STATE_FLAG_ACTIVE |
-        Gtk::STATE_FLAG_FOCUSED;
-
     popover_timeout.disconnect();
-    if (clicked_state & active_mask)
+    if (this->button->is_popover_focused())
         return;
 
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
@@ -127,7 +120,7 @@ void WayfireVolume::set_volume(pa_volume_t volume, bool show_popover)
         gvc_mixer_stream_push_volume(gvc_stream);
     }
 
-    if (show_popover)
+    if (show_popover && !button->get_popover()->is_visible())
         button->get_popover()->popup();
 
     update_icon();

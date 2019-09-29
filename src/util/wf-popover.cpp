@@ -35,9 +35,19 @@ void WayfireMenuButton::set_keyboard_interactive(bool interactive)
     this->interactive = interactive;
 }
 
-bool WayfireMenuButton::get_keyboard_interactive() const
+bool WayfireMenuButton::is_keyboard_interactive() const
 {
     return this->interactive;
+}
+
+void WayfireMenuButton::set_has_focus(bool focus)
+{
+    this->has_focus = focus;
+}
+
+bool WayfireMenuButton::is_popover_focused() const
+{
+    return this->has_focus;
 }
 
 void WayfireMenuButton::set_active_on_window()
