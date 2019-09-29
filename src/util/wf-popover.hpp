@@ -12,11 +12,16 @@
 class WayfireMenuButton : public Gtk::MenuButton
 {
     bool interactive = true;
+    bool has_focus = false;
     wf_option panel_position;
     wf_option_callback panel_position_changed;
 
     /* Make the menu button active on its AutohideWindow */
     void set_active_on_window();
+
+    friend class WayfireAutohidingWindow;
+    /* Set the has_focus property */
+    void set_has_focus(bool focus);
 
   public:
     Gtk::Popover m_popover;
@@ -31,7 +36,10 @@ class WayfireMenuButton : public Gtk::MenuButton
     void set_keyboard_interactive(bool interactive = true);
 
     /** @return Whether the menu button interacts with the keyboard */
-    bool get_keyboard_interactive() const;
+    bool is_keyboard_interactive() const;
+
+    /** @return Whether the popover currently has keyboard focus */
+    bool is_popover_focused() const;
 
     /**
      * Grab the keyboard focus.

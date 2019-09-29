@@ -111,6 +111,13 @@ network_status_use_color = yes
 # whether to enable fuzzy search in the menu
 menu_fuzzy_search = 1
 
+
+
+# Configuration for the volume widget
+# Number of seconds volume popover will display
+# after scrolling on the volume icon
+volume_display_timeout = 2.5
+
 [dock]
 position = bottom # or top
 

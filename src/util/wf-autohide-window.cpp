@@ -331,8 +331,9 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
                 [this, &button] () { unset_active_popover(button); });
     }
 
-    gtk_layer_set_keyboard_interactivity(this->gobj(),
-        this->active_button->get_keyboard_interactive());
+    bool should_grab_focus = this->active_button->is_keyboard_interactive();
+    gtk_layer_set_keyboard_interactivity(this->gobj(), should_grab_focus);
+    this->active_button->set_has_focus(should_grab_focus);
     schedule_show(0);
 }
 
@@ -341,6 +342,7 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
     if (!this->active_button || &button != this->active_button)
         return;
 
+    this->active_button->set_has_focus(false);
     this->active_button->set_active(false);
     this->active_button->get_popover()->popdown();
     this->active_button = nullptr;

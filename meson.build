@@ -18,6 +18,8 @@ wayland_protos = dependency('wayland-protocols')
 gtkmm          = dependency('gtkmm-3.0')
 wfconfig       = dependency('wf-config') #TODO fallback submodule
 gtklayershell  = dependency('gtk-layer-shell-0', fallback: ['gtk-layer-shell', 'gtk_layer_shell_dep'])
+libpulse       = dependency('libpulse')
+libgvc         = subproject('gvc', default_options: ['static=true']).get_variable('libgvc_dep')
 
 needs_libinotify = ['freebsd', 'dragonfly'].contains(host_machine.system())
 libinotify       = dependency('libinotify', required: needs_libinotify)
