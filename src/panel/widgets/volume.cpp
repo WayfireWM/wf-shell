@@ -164,13 +164,16 @@ void WayfireVolume::on_volume_button_press(GdkEventButton* event)
 
 void WayfireVolume::on_volume_changed_external()
 {
-    /* When the volume changes externally, we want to temporarily show the
-     * popover. However it shouldn't grab focus, because we're just displaying
-     * a notification. */
-    button->set_keyboard_interactive(false);
     auto volume = gvc_mixer_stream_get_volume(gvc_stream);
-    set_volume(volume);
-    button->set_keyboard_interactive(true);
+    if (volume != (pa_volume_t)this->volume_scale.get_target_value())
+    {
+        /* When the volume changes externally, we want to temporarily show the
+         * popover. However it shouldn't grab focus, because we're just displaying
+         * a notification. */
+        button->set_keyboard_interactive(false);
+        set_volume(volume);
+        button->set_keyboard_interactive(true);
+    }
 
     check_set_popover_timeout();
 }
