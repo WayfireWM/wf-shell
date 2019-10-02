@@ -255,7 +255,7 @@ void WayfireNetworkInfo::update_active_connection()
     Glib::Variant<Glib::ustring> active_conn_path;
     nm_proxy->get_cached_property(active_conn_path, ACTIVE_CONNECTION);
 
-    if (active_conn_path.get() != "/")
+    if (active_conn_path && active_conn_path.get() != "/")
     {
         active_connection_proxy = Gio::DBus::Proxy::create_sync(
             connection, NM_DBUS_NAME, active_conn_path.get(),
@@ -378,7 +378,6 @@ void WayfireNetworkInfo::init(Gtk::HBox *container, wayfire_config *config)
         sigc::mem_fun(this, &WayfireNetworkInfo::update_icon));
 
     handle_config_reload(config);
-
     update_active_connection();
 }
 
