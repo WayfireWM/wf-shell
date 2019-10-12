@@ -111,17 +111,20 @@ void WayfireVolume::check_set_popover_timeout()
         &WayfireVolume::on_popover_timeout), 0), timeout->as_double() * 1000);
 }
 
-void WayfireVolume::set_volume(pa_volume_t volume, bool show_popover)
+void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
 {
     volume_scale.set_target_value(volume);
-    if (gvc_stream)
+    if (gvc_stream && (flags & VOLUME_FLAG_UPDATE_GVC))
     {
         gvc_mixer_stream_set_volume(gvc_stream, volume);
         gvc_mixer_stream_push_volume(gvc_stream);
     }
 
-    if (show_popover && !button->get_popover()->is_visible())
+    if ((flags & VOLUME_FLAG_SHOW_POPOVER) &&
+        !button->get_popover()->is_visible())
+    {
         button->get_popover()->popup();
+    }
 
     update_icon();
 }
@@ -171,7 +174,7 @@ void WayfireVolume::on_volume_changed_external()
          * popover. However it shouldn't grab focus, because we're just displaying
          * a notification. */
         button->set_keyboard_interactive(false);
-        set_volume(volume);
+        set_volume(volume, VOLUME_FLAG_SHOW_POPOVER);
         button->set_keyboard_interactive(true);
     }
 
@@ -221,7 +224,7 @@ void WayfireVolume::on_default_sink_changed()
 
     /* Finally, update the displayed volume. However, do not show the
      * popup */
-    set_volume(gvc_mixer_stream_get_volume(gvc_stream), false);
+    set_volume(gvc_mixer_stream_get_volume(gvc_stream), VOLUME_FLAG_NO_ACTION);
 }
 
 

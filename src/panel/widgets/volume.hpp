@@ -54,14 +54,27 @@ class WayfireVolume : public WayfireWidget
     sigc::connection popover_timeout;
     sigc::connection volume_changed_signal;
 
+    enum set_volume_flags_t
+    {
+        /* Neither show popover nor update volume */
+        VOLUME_FLAG_NO_ACTION    = 0,
+        /* Show volume popover */
+        VOLUME_FLAG_SHOW_POPOVER = 1,
+        /* Update real volume with GVC */
+        VOLUME_FLAG_UPDATE_GVC   = 2,
+        /* Both of the above */
+        VOLUME_FLAG_FULL         = 3,
+    };
+
     /**
      * Set the current volume level to volume_level.
      * This updates both the popover scale and the real pulseaudio volume,
-     * if such an update is necessary.
+     * depending on the passed flags.
      *
      * Precondition: volume_level should be between 0 and max_norm
      */
-    void set_volume(pa_volume_t volume_level, bool show_popover = true);
+    void set_volume(pa_volume_t volume_level,
+        set_volume_flags_t flags = VOLUME_FLAG_FULL);
 
 
   public:
