@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include <map>
+#include "../../config.h"
 
 #include "panel.hpp"
 
@@ -21,7 +22,9 @@
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
+#ifdef HAVE_PULSE
 #include "widgets/volume.hpp"
+#endif
 #include "widgets/window-list/window-list.hpp"
 
 #include "wf-shell-app.hpp"
@@ -201,8 +204,10 @@ class WayfirePanel::impl
             return Widget(new WayfireNetworkInfo());
         if (name == "battery")
             return Widget(new WayfireBatteryInfo());
+#ifdef HAVE_PULSE
         if (name == "volume")
             return Widget(new WayfireVolume());
+#endif
         if (name == "window-list")
             return Widget(new WayfireWindowList(output));
 

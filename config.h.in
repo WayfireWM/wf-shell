@@ -1,0 +1,6 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#mesondefine HAVE_PULSE
+
+#endif /* end of include guard: CONFIG_H */
