@@ -30,8 +30,7 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
     to_image.pbuf = image;
     to_image.x = offset_x;
     to_image.y = offset_y;
-    fade.set(from_image.pbuf ? 0.0 : 1.0, 1.0);
-    animation.start();
+    fade.animate(from_image.pbuf ? 0.0 : 1.0, 1.0);
 
     Glib::signal_idle().connect_once([=] () {
         this->queue_draw();
@@ -43,7 +42,7 @@ bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     if (!to_image.pbuf)
         return false;
 
-    if (animation.running())
+    if (fade.running())
         queue_draw();
 
     Gdk::Cairo::set_source_pixbuf(cr, to_image.pbuf, to_image.x, to_image.y);
@@ -64,7 +63,7 @@ bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 BackgroundDrawingArea::BackgroundDrawingArea()
 {
-    fade.set(0, 0);
+    fade.animate(0, 0);
 }
 
 Glib::RefPtr<Gdk::Pixbuf>
