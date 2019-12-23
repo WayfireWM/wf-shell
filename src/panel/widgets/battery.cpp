@@ -2,7 +2,6 @@
 #include <gtk-utils.hpp>
 #include <iostream>
 #include <algorithm>
-#include <config.hpp>
 
 #define UPOWER_NAME "org.freedesktop.UPower"
 #define DISPLAY_DEVICE "/org/freedesktop/UPower/devices/DisplayDevice"
@@ -61,9 +60,9 @@ void WayfireBatteryInfo::update_icon()
     display_device->get_cached_property(icon_name, ICON);
 
     WfIconLoadOptions options;
-    options.invert = invert_opt->as_int();
+    options.invert = invert_opt;
     options.user_scale = button.get_scale_factor();
-    set_image_icon(icon, icon_name.get(), size_opt->as_cached_int(), options);
+    set_image_icon(icon, icon_name.get(), size_opt, options);
 }
 
 static std::string state_descriptions[] = {
@@ -102,12 +101,10 @@ static std::string uint_to_time(int64_t time)
 
 void WayfireBatteryInfo::update_font()
 {
-    if (font_opt->as_string() == "default")
-    {
+    if ((std::string)font_opt == "default") {
         label.unset_font();
-    } else
-    {
-        label.override_font(Pango::FontDescription(font_opt->as_string()));
+    } else {
+        label.override_font(Pango::FontDescription((std::string)font_opt));
     }
 }
 
@@ -143,11 +140,11 @@ void WayfireBatteryInfo::update_details()
     button.set_tooltip_text(
         get_device_type_description(type.get()) + description);
 
-    if (status == BATTERY_STATUS_PERCENT)
+    if (status_opt == BATTERY_STATUS_PERCENT)
     {
         label.set_text(percentage_string);
     }
-    else if (status == BATTERY_STATUS_FULL)
+    else if (status_opt == BATTERY_STATUS_FULL)
     {
         label.set_text(description);
     } else
@@ -204,7 +201,7 @@ bool WayfireBatteryInfo::setup_dbus()
 // TODO: simplify config loading
 
 static const std::string default_font = "default";
-void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
+void WayfireBatteryInfo::init(Gtk::HBox *container)
 {
     if (!setup_dbus())
         return;
@@ -212,34 +209,14 @@ void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
     button_box.add(icon);
     button.get_style_context()->add_class("flat");
 
-    auto section = config->get_section("panel");
+    status_opt.set_callback([=] () { update_details(); });
+    font_opt.set_callback([=] () { update_font(); });
+    size_opt.set_callback([=] () { update_icon(); });
+    invert_opt.set_callback([=] () { update_icon(); });
 
-    status_opt = section->get_option("battery_status", "1");
-    status_updated = [=] () {
-        status = (WfBatteryStatusDescription) std::min(2, std::max(status_opt->as_int(), 0));
-        update_details();
-    };
-    status_opt->add_updated_handler(&status_updated);
-    status_updated();
-
-    font_opt = section->get_option("battery_font", "default");
-    font_updated = [=] () {
-        update_font();
-    };
-    font_opt->add_updated_handler(&font_updated);
-
-    size_opt = section->get_option("battery_icon_size",
-        std::to_string(DEFAULT_ICON_SIZE));
-    invert_opt = section->get_option("battery_icon_invert", "0");
-    icon_attr_updated = [=] () {
-        update_icon();
-    };
-    size_opt->add_updated_handler(&icon_attr_updated);
-    invert_opt->add_updated_handler(&icon_attr_updated);
-
+    update_details();
     update_font();
     update_icon();
-    update_details();
 
     container->pack_start(button, Gtk::PACK_SHRINK);
     button_box.add(label);
@@ -250,15 +227,3 @@ void WayfireBatteryInfo::init(Gtk::HBox *container, wayfire_config *config)
 
     button.show_all();
 }
-
-WayfireBatteryInfo::~WayfireBatteryInfo()
-{
-    if (status_opt) // otherwise DBus connection failed altogether
-    {
-        status_opt->rem_updated_handler(&status_updated);
-        font_opt->rem_updated_handler(&font_updated);
-        size_opt->rem_updated_handler(&icon_attr_updated);
-        invert_opt->rem_updated_handler(&icon_attr_updated);
-    }
-}
-

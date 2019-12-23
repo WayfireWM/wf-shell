@@ -65,18 +65,16 @@ class WayfireMenu : public WayfireWidget
      * so that we don't show duplicate entries */
     std::set<std::pair<std::string, std::string>> loaded_apps;
 
-    wf_option panel_position;
-    wf_option_callback panel_position_changed;
+    WfOption<std::string> panel_position{"panel/position"};
     void update_popover_layout();
 
-    wf_option fuzzy_search_enabled;
-    wf_option menu_size;
-    wf_option_callback menu_size_changed;
+    WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
+    WfOption<int> menu_size{"panel/launcher_size"};
 
     public:
-    void init(Gtk::HBox *container, wayfire_config *config) override;
+    void init(Gtk::HBox *container) override;
     void hide_menu();
-    virtual ~WayfireMenu();
+    virtual ~WayfireMenu() = default;
 };
 
 #endif /* end of include guard: WIDGETS_MENU_HPP */

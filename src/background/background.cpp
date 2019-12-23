@@ -6,7 +6,6 @@
 #include <gdkmm/pixbuf.h>
 #include <gdkmm/general.h>
 #include <gdk/gdkwayland.h>
-#include <config.hpp>
 
 #include <iostream>
 #include <map>
@@ -31,7 +30,7 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
     to_image.pbuf = image;
     to_image.x = offset_x;
     to_image.y = offset_y;
-    fade.start(from_image.pbuf ? 0.0 : 1.0, 1.0);
+    fade.animate(from_image.pbuf ? 0.0 : 1.0, 1.0);
 
     Glib::signal_idle().connect_once([=] () {
         this->queue_draw();
@@ -43,13 +42,12 @@ bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     if (!to_image.pbuf)
         return false;
 
-    auto alpha = fade.progress();
     if (fade.running())
         queue_draw();
 
     Gdk::Cairo::set_source_pixbuf(cr, to_image.pbuf, to_image.x, to_image.y);
     cr->rectangle(0, 0, to_image.pbuf->get_width(), to_image.pbuf->get_height());
-    cr->paint_with_alpha(alpha);
+    cr->paint_with_alpha(fade);
 
     if (!from_image.pbuf)
         return false;
@@ -58,15 +56,14 @@ bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         from_image.x, from_image.y);
     cr->rectangle(0, 0, from_image.pbuf->get_width(),
         from_image.pbuf->get_height());
-    cr->paint_with_alpha(1.0 - alpha);
+    cr->paint_with_alpha(1.0 - fade);
 
     return false;
 }
 
 BackgroundDrawingArea::BackgroundDrawingArea()
 {
-    fade = wf_duration(new_static_option("1000"), wf_animation::linear);
-    fade.start(0.0, 0.0);
+    fade.animate(0, 0);
 }
 
 Glib::RefPtr<Gdk::Pixbuf>
@@ -75,16 +72,16 @@ WayfireBackground::create_from_file_safe(std::string path)
     Glib::RefPtr<Gdk::Pixbuf> pbuf;
     int width = window.get_allocated_width() * scale;
     int height = window.get_allocated_height() * scale;
-    bool preserve_aspect = background_preserve_aspect->as_int() ? true : false;
 
     try {
         pbuf =
-            Gdk::Pixbuf::create_from_file(path, width, height, preserve_aspect);
+            Gdk::Pixbuf::create_from_file(path, width, height,
+                background_preserve_aspect);
     } catch (...) {
         return Glib::RefPtr<Gdk::Pixbuf>();
     }
 
-    if (preserve_aspect)
+    if (background_preserve_aspect)
     {
         bool eq_width = (width == pbuf->get_width());
         offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
@@ -143,7 +140,7 @@ bool WayfireBackground::load_images_from_dir(std::string path)
         }
     }
 
-    if (background_randomize->as_int() && images.size())
+    if (background_randomize && images.size())
     {
         srand(time(0));
         std::random_shuffle(images.begin(), images.end());
@@ -160,7 +157,7 @@ bool WayfireBackground::load_next_background(Glib::RefPtr<Gdk::Pixbuf> &pbuf,
         if (!images.size())
         {
             std::cerr << "Failed to load background images from "
-                << background_image->as_string() << std::endl;
+                << (std::string)background_image << std::endl;
             window.remove();
             return false;
         }
@@ -191,7 +188,7 @@ void WayfireBackground::set_background()
 
     reset_background();
 
-    auto path = background_image->as_string();
+    std::string path = background_image;
     try {
         if (load_images_from_dir(path) && images.size())
         {
@@ -223,7 +220,7 @@ void WayfireBackground::set_background()
 
 void WayfireBackground::reset_cycle_timeout()
 {
-    int cycle_timeout = background_cycle_timeout->as_int() * 1000;
+    int cycle_timeout = background_cycle_timeout * 1000;
     change_bg_conn.disconnect();
     if (images.size())
     {
@@ -249,20 +246,12 @@ void WayfireBackground::setup_window()
     window.add(drawing_area);
     window.show_all();
 
-    background_image = app->config->get_section("background")
-        ->get_option("image", "none");
-    background_cycle_timeout = app->config->get_section("background")
-        ->get_option("cycle_timeout", "150");
-    background_randomize = app->config->get_section("background")
-        ->get_option("randomize", "0");
-    background_preserve_aspect = app->config->get_section("background")
-        ->get_option("preserve_aspect", "0");
-    init_background = [=] () { set_background(); };
-    cycle_timeout_updated = [=] () { reset_cycle_timeout(); };
-    background_image->add_updated_handler(&init_background);
-    background_cycle_timeout->add_updated_handler(&cycle_timeout_updated);
-    background_randomize->add_updated_handler(&init_background);
-    background_preserve_aspect->add_updated_handler(&init_background);
+    auto reset_background = [=] () { set_background(); };
+    auto reset_cycle = [=] () { reset_cycle_timeout(); };
+    background_image.set_callback(reset_background);
+    background_randomize.set_callback(reset_background);
+    background_preserve_aspect.set_callback(reset_background);
+    background_cycle_timeout.set_callback(reset_cycle);
 
     window.property_scale_factor().signal_changed().connect(
         sigc::mem_fun(this, &WayfireBackground::set_background));
@@ -293,22 +282,17 @@ WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output
         });
 }
 
-WayfireBackground::~WayfireBackground()
-{
-    background_image->rem_updated_handler(&init_background);
-    background_cycle_timeout->rem_updated_handler(&cycle_timeout_updated);
-    background_randomize->rem_updated_handler(&init_background);
-    background_preserve_aspect->rem_updated_handler(&init_background);
-}
-
 class WayfireBackgroundApp : public WayfireShellApp
 {
     std::map<WayfireOutput*, std::unique_ptr<WayfireBackground> > backgrounds;
 
-    public:
-    WayfireBackgroundApp(int argc, char **argv)
-        : WayfireShellApp(argc, argv)
+  public:
+    using WayfireShellApp::WayfireShellApp;
+    static void create(int argc, char **argv)
     {
+        WayfireShellApp::instance =
+            std::make_unique<WayfireBackgroundApp> (argc, argv);
+        instance->run();
     }
 
     void handle_new_output(WayfireOutput *output) override
@@ -325,7 +309,6 @@ class WayfireBackgroundApp : public WayfireShellApp
 
 int main(int argc, char **argv)
 {
-    WayfireBackgroundApp background_app(argc, argv);
-    background_app.run();
+    WayfireBackgroundApp::create(argc, argv);
     return 0;
 }

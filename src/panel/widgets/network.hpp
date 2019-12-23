@@ -7,8 +7,6 @@
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
 
-#include <config.hpp>
-
 #include "../widget.hpp"
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
@@ -61,8 +59,11 @@ class WayfireNetworkInfo : public WayfireWidget
     Gtk::Label status;
 
     bool enabled = true;
-    wf_option status_opt, icon_size_opt, icon_invert_opt,
-              status_font_opt, status_color_opt;
+    WfOption<int> status_opt{"panel/network_status"};
+    WfOption<int> icon_size_opt{"panel/network_icon_size"};
+    WfOption<bool> icon_invert_opt{"panel/network_icon_invert_color"};
+    WfOption<bool> status_color_opt{"panel/network_status_use_color"};
+    WfOption<std::string> status_font_opt{"panel/network_status_font"};
 
     bool setup_dbus();
     void update_active_connection();
@@ -75,8 +76,8 @@ class WayfireNetworkInfo : public WayfireWidget
     void update_icon();
     void update_status();
 
-    void init(Gtk::HBox *container, wayfire_config *config);
-    void handle_config_reload(wayfire_config *config);
+    void init(Gtk::HBox *container);
+    void handle_config_reload();
     virtual ~WayfireNetworkInfo();
 };
 

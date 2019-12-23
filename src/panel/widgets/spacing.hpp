@@ -9,7 +9,7 @@ class WayfireSpacing : public WayfireWidget
     public:
         WayfireSpacing(int pixels);
 
-        virtual void init(Gtk::HBox *container, wayfire_config *config);
+        virtual void init(Gtk::HBox *container);
         virtual ~WayfireSpacing() {}
 };
 

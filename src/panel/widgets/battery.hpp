@@ -9,8 +9,6 @@
 #include <giomm/dbusproxy.h>
 #include <giomm/dbusconnection.h>
 
-#include <config.hpp>
-
 #include "../widget.hpp"
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
@@ -26,16 +24,16 @@ enum WfBatteryStatusDescription
 class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
-    wf_option_callback status_updated, font_updated, icon_attr_updated;
-    wf_option status_opt, font_opt, invert_opt, size_opt;
+    WfOption<int> status_opt{"panel/battery_status"};
+    WfOption<std::string> font_opt{"panel/battery_font"};
+    WfOption<int> size_opt{"panel/battery_icon_size"};
+    WfOption<bool> invert_opt{"panel/battery_icon_invert"};
 
     Gtk::Button button;
     Gtk::Label label;
     Gtk::HBox button_box;
 
     Gtk::Image icon;
-
-    WfBatteryStatusDescription status;
 
     DBusConnection connection;
     DBusProxy upower_proxy, display_device;
@@ -52,8 +50,8 @@ class WayfireBatteryInfo : public WayfireWidget
         const std::vector<Glib::ustring>& invalidated);
 
     public:
-    virtual void init(Gtk::HBox *container, wayfire_config *config);
-    virtual ~WayfireBatteryInfo();
+    virtual void init(Gtk::HBox *container);
+    virtual ~WayfireBatteryInfo() = default;
 };
 
 

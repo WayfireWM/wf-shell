@@ -12,7 +12,10 @@
 #define AUTOHIDE_SHOW_DELAY 300
 #define AUTOHIDE_HIDE_DELAY 500
 
-WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
+WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
+    const std::string& section) :
+    position{section + "/position"},
+    y_position{WfOption<int>{section + "/autohide_duration"}}
 {
     this->output = output;
     this->set_decorated(false);
@@ -22,8 +25,9 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
     gtk_layer_set_monitor(this->gobj(), output->monitor->gobj());
     gtk_layer_set_namespace(this->gobj(), "$unfocus panel");
 
-    this->m_position = new_static_option(WF_WINDOW_POSITION_TOP);
-    this->m_position_changed = [=] () {this->update_position();};
+    this->position.set_callback([=] () { this->update_position(); });
+    this->update_position();
+
     this->signal_draw().connect_notify(
         [=] (const Cairo::RefPtr<Cairo::Context>&) { update_margin(); });
 
@@ -38,8 +42,6 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output)
             if (this->active_button)
                 unset_active_popover(*this->active_button);
         });
-
-    set_animation_duration(new_static_option("300"));
 }
 
 WayfireAutohidingWindow::~WayfireAutohidingWindow()
@@ -99,11 +101,11 @@ void WayfireAutohidingWindow::update_position()
     gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, false);
 
     /* Set new anchor */
-    GtkLayerShellEdge anchor = get_anchor_edge(m_position->as_string());
+    GtkLayerShellEdge anchor = get_anchor_edge(position);
     gtk_layer_set_anchor(this->gobj(), anchor, true);
 
     /* When the position changes, show an animation from the new edge. */
-    transition.start_value = transition.end_value = -this->get_allocated_height();
+    y_position.animate(-this->get_allocated_height(), -this->get_allocated_height());
     setup_hotspot();
     m_show_uncertain();
 }
@@ -155,7 +157,7 @@ void WayfireAutohidingWindow::setup_hotspot()
     if (this->panel_hotspot)
         zwf_hotspot_v2_destroy(panel_hotspot);
 
-    auto position = check_position(this->m_position->as_string());
+    auto position = check_position(this->position);
     uint32_t edge = (position == WF_WINDOW_POSITION_TOP) ?
         ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP : ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
 
@@ -198,28 +200,6 @@ void WayfireAutohidingWindow::setup_hotspot()
         panel_callbacks.get());
 }
 
-void WayfireAutohidingWindow::set_position(wf_option position)
-{
-    assert(position);
-
-    if (this->m_position)
-        this->m_position->rem_updated_handler(&this->m_position_changed);
-
-    this->m_position = position;
-    this->m_position->add_updated_handler(&m_position_changed);
-    update_position();
-}
-
-void WayfireAutohidingWindow::set_animation_duration(wf_option duration)
-{
-    /* Make sure we do not lose progress */
-    auto current = this->transition.progress();
-    auto end = this->transition.end_value;
-
-    this->transition = wf_duration{duration};
-    this->transition.start(current, end);
-}
-
 void WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
 {
     this->has_auto_exclusive_zone = has_zone;
@@ -253,8 +233,7 @@ bool WayfireAutohidingWindow::should_autohide() const
 
 bool WayfireAutohidingWindow::m_do_hide()
 {
-    int start = transition.progress();
-    transition.start(start, -get_allocated_height());
+    y_position.animate(-get_allocated_height());
     update_margin();
     return false; // disconnect
 }
@@ -277,8 +256,7 @@ void WayfireAutohidingWindow::schedule_hide(int delay)
 
 bool WayfireAutohidingWindow::m_do_show()
 {
-    int start = transition.progress();
-    transition.start(start, 0);
+    y_position.animate(0);
     update_margin();
     return false; // disconnect
 }
@@ -301,11 +279,10 @@ void WayfireAutohidingWindow::schedule_show(int delay)
 
 bool WayfireAutohidingWindow::update_margin()
 {
-    if (transition.running())
+    if (y_position.running())
     {
-        int target_y = std::round(transition.progress());
         gtk_layer_set_margin(this->gobj(),
-            get_anchor_edge(m_position->as_string()), target_y);
+            get_anchor_edge(position), y_position);
 
         this->queue_draw(); // XXX: is this necessary?
         return true;

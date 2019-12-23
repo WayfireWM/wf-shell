@@ -2,7 +2,6 @@
 #define WIDGETS_WINDOW_LIST_HPP
 
 #include "../../widget.hpp"
-#include "wf-shell-app.hpp"
 #include "panel.hpp"
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
@@ -77,7 +76,7 @@ class WayfireWindowList : public WayfireWidget
 
     wayfire_config *get_config();
 
-    void init(Gtk::HBox *container, wayfire_config *config);
+    void init(Gtk::HBox *container) override;
     void add_output(WayfireOutput *output);
 
     private:

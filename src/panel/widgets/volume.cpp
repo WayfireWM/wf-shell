@@ -2,30 +2,25 @@
 #include <glibmm.h>
 #include "volume.hpp"
 #include "launchers.hpp"
-#include "config.hpp"
 #include "gtk-utils.hpp"
 
 #define INCREMENT_STEP_PC 0.05
 
 WayfireVolumeScale::WayfireVolumeScale()
 {
-    this->current_volume =
-        wf_duration(new_static_option("200"), wf_animation::circle);
-    this->current_volume.start();
-
     this->signal_draw().connect_notify(
         [=] (const Cairo::RefPtr<Cairo::Context>& ctx)
         {
             if (this->current_volume.running())
             {
                 value_changed.block();
-                this->set_value(this->current_volume.progress());
+                this->set_value(this->current_volume);
                 value_changed.unblock();
             }
         }, true);
 
     value_changed = this->signal_value_changed().connect_notify([=] () {
-        this->current_volume.start(this->get_value(), this->get_value());
+        this->current_volume.animate(this->get_value(), this->get_value());
         if (this->user_changed_callback)
             this->user_changed_callback();
     });
@@ -33,13 +28,13 @@ WayfireVolumeScale::WayfireVolumeScale()
 
 void WayfireVolumeScale::set_target_value(double value)
 {
-    this->current_volume.start(this->current_volume.progress(), value);
+    this->current_volume.animate(value);
     this->queue_draw();
 }
 
 double WayfireVolumeScale::get_target_value() const
 {
-    return this->current_volume.end_value;
+    return this->current_volume;
 }
 
 void WayfireVolumeScale::set_user_changed_callback(
@@ -108,7 +103,7 @@ void WayfireVolume::check_set_popover_timeout()
         return;
 
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireVolume::on_popover_timeout), 0), timeout->as_double() * 1000);
+        &WayfireVolume::on_popover_timeout), 0), timeout * 1000);
 }
 
 void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
@@ -242,18 +237,12 @@ void WayfireVolume::on_volume_value_changed()
     set_volume(volume_scale.get_target_value());
 }
 
-void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
+void WayfireVolume::init(Gtk::HBox *container)
 {
-    auto config_section = config->get_section("panel");
-    timeout = config_section->get_option("volume_display_timeout", "2.5");
-
-    volume_size = config_section->get_option("launcher_size",
-        std::to_string(DEFAULT_ICON_SIZE));
-    volume_size_changed = [=] () { update_icon(); };
-    volume_size->add_updated_handler(&volume_size_changed);
+    volume_size.set_callback([=] () { update_icon(); });
 
     /* Setup button */
-    button = std::make_unique<WayfireMenuButton> (PANEL_POSITION_OPT(config));
+    button = std::make_unique<WayfireMenuButton> ("panel");
     auto style = button->get_style_context();
     style->context_save();
     style->set_state(Gtk::STATE_FLAG_NORMAL & ~Gtk::STATE_FLAG_PRELIGHT);
@@ -293,6 +282,4 @@ void WayfireVolume::init(Gtk::HBox *container, wayfire_config *config)
 }
 
 WayfireVolume::~WayfireVolume()
-{
-    volume_size->rem_updated_handler(&volume_size_changed);
-}
+{ }

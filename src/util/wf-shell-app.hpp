@@ -3,7 +3,7 @@
 
 #include <set>
 #include <string>
-#include <config.hpp>
+#include <wayfire/config/config-manager.hpp>
 
 #include <gtkmm/application.h>
 #include <gdkmm/monitor.h>
@@ -36,29 +36,40 @@ class WayfireShellApp
     std::vector<std::unique_ptr<WayfireOutput>> monitors;
 
   protected:
-    Glib::RefPtr<Gtk::Application> app;
-    virtual ~WayfireShellApp() {};
+    /** This should be initialized by the subclass in each program which uses
+     * wf-shell-app */
+    static std::unique_ptr<WayfireShellApp> instance;
 
-    virtual void on_activate();
+    Glib::RefPtr<Gtk::Application> app;
 
     virtual void add_output(GMonitor monitor);
     virtual void rem_output(GMonitor monitor);
 
-  public:
-
-    int inotify_fd;
-    std::unique_ptr<wayfire_config> config;
-    zwf_shell_manager_v2 *manager = nullptr;
-
-    WayfireShellApp(int argc, char **argv);
-
-    virtual std::string get_config_file();
-    virtual void on_config_reload() {}
-
+    /* The following functions can be overridden in the shell implementation to
+     * handle the events */
+    virtual void on_activate();
     virtual void handle_new_output(WayfireOutput *output) {}
     virtual void handle_output_removed(WayfireOutput *output) {}
 
+  public:
+    int inotify_fd;
+    wf::config::config_manager_t config;
+    zwf_shell_manager_v2 *manager = nullptr;
+
+    WayfireShellApp(int argc, char **argv);
+    virtual ~WayfireShellApp();
+
+    virtual std::string get_config_file();
     virtual void run();
+
+    virtual void on_config_reload() {}
+
+    /**
+     * WayfireShellApp is a singleton class.
+     * Using this function, any part of the application can get access to the
+     * shell app.
+     */
+    static WayfireShellApp& get();
 };
 
 #endif /* end of include guard: WF_SHELL_APP_HPP */

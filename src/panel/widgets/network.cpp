@@ -193,9 +193,9 @@ void WayfireNetworkInfo::update_icon()
     auto icon_name = info->get_icon_name(
         get_connection_state(active_connection_proxy));
     WfIconLoadOptions options;
-    options.invert = icon_invert_opt->as_int();
+    options.invert = icon_invert_opt;
     options.user_scale = icon.get_scale_factor();
-    set_image_icon(icon, icon_name, icon_size_opt->as_int(), options);
+    set_image_icon(icon, icon_name, icon_size_opt, options);
 }
 
 struct status_color
@@ -242,8 +242,7 @@ void WayfireNetworkInfo::update_status()
     status.set_text(description);
     button.set_tooltip_text(description);
 
-    if (status_color_opt->as_string() == "yes")
-    {
+    if (status_color_opt) {
         status.override_color(get_color_for_pc(info->get_connection_strength()));
     } else {
         status.unset_color();
@@ -352,7 +351,7 @@ void WayfireNetworkInfo::on_click()
     info->spawn_control_center(nm_proxy);
 }
 
-void WayfireNetworkInfo::init(Gtk::HBox *container, wayfire_config *config)
+void WayfireNetworkInfo::init(Gtk::HBox *container)
 {
     if (!setup_dbus())
     {
@@ -377,34 +376,20 @@ void WayfireNetworkInfo::init(Gtk::HBox *container, wayfire_config *config)
     icon.property_scale_factor().signal_changed().connect(
         sigc::mem_fun(this, &WayfireNetworkInfo::update_icon));
 
-    handle_config_reload(config);
     update_active_connection();
+    button.show_all();
 }
 
-void WayfireNetworkInfo::handle_config_reload(wayfire_config *config)
+void WayfireNetworkInfo::handle_config_reload()
 {
-    bool first_reload = !(bool)status_opt;
-
-    auto section = config->get_section("panel");
-    if (first_reload)
-    {
-        status_opt = section->get_option("network_status", "1");
-        icon_size_opt = section->get_option("network_icon_size",
-            std::to_string(DEFAULT_ICON_SIZE));
-        icon_invert_opt = section->get_option("network_icon_invert_color", "0");
-        status_font_opt = section->get_option("network_status_font", "default");
-        status_color_opt = section->get_option("network_status_use_color", "no");
-    }
-
-    if (status_font_opt->as_string() == "default")
-    {
+    if ((std::string)status_font_opt == "default") {
         status.unset_font();
-    } else
-    {
-        status.override_font(Pango::FontDescription(status_font_opt->as_string()));
+    } else {
+        status.override_font(
+            Pango::FontDescription((std::string)status_font_opt));
     }
 
-    if (status_opt->as_int() < NETWORK_STATUS_CONN_NAME)
+    if (status_opt < NETWORK_STATUS_CONN_NAME)
     {
         if (status.get_parent())
             button_content.remove(status);
@@ -413,16 +398,10 @@ void WayfireNetworkInfo::handle_config_reload(wayfire_config *config)
             button_content.pack_start(status);
     }
 
-    if (!first_reload)
-    {
-        update_icon();
-        update_status();
-    }
-
-    button.show_all();
+    update_icon();
+    update_status();
 }
 
 WayfireNetworkInfo::~WayfireNetworkInfo()
 {
 }
-

@@ -4,6 +4,7 @@
 #include <gdk/gdkwayland.h>
 #include <iostream>
 #include <memory>
+#include <wayfire/config/file.hpp>
 
 #include <unistd.h>
 
@@ -20,7 +21,8 @@ char buf[INOT_BUF_SIZE];
 /* Reload file and add next inotify watch */
 static void do_reload_config(WayfireShellApp *app)
 {
-    app->config->reload_config();
+    wf::config::load_configuration_options_from_file(
+        app->config, app->get_config_file());
     app->on_config_reload();
     inotify_add_watch(app->inotify_fd, app->get_config_file().c_str(), IN_MODIFY);
 }
@@ -73,8 +75,8 @@ void WayfireShellApp::on_activate()
     wl_display_roundtrip(wl_display);
 
     // setup config
-    config = std::unique_ptr<wayfire_config> (
-        new wayfire_config(get_config_file()));
+    this->config = wf::config::build_configuration(
+        "/home/ilex/build/wcm/metadata/", "", get_config_file());
 
     inotify_fd = inotify_init();
     do_reload_config(this);
@@ -120,6 +122,14 @@ WayfireShellApp::WayfireShellApp(int argc, char **argv)
     app = Gtk::Application::create(argc, argv);
     app->signal_activate().connect_notify(
         sigc::mem_fun(this, &WayfireShellApp::on_activate));
+}
+
+WayfireShellApp::~WayfireShellApp() {}
+
+std::unique_ptr<WayfireShellApp> WayfireShellApp::instance;
+WayfireShellApp& WayfireShellApp::get()
+{
+    return *instance;
 }
 
 void WayfireShellApp::run()
