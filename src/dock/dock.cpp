@@ -1,8 +1,6 @@
 #include <gtkmm/window.h>
 #include <glibmm/main.h>
 #include <gdk/gdkwayland.h>
-#include <config.hpp>
-#include <animation.hpp>
 
 #include <iostream>
 #include <map>
@@ -27,14 +25,11 @@ class WfDock::impl
     {
         this->output = output;
         window = std::unique_ptr<WayfireAutohidingWindow> (
-            new WayfireAutohidingWindow(output));
+            new WayfireAutohidingWindow(output, "dock"));
 
         window->set_size_request(100, 100);
         gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
         window->increase_autohide();
-
-        window->set_position(WfDockApp::get().get_config()->get_section("dock")
-            ->get_option("position", WF_WINDOW_POSITION_BOTTOM));
 
         window->signal_size_allocate().connect_notify(
             sigc::mem_fun(this, &WfDock::impl::on_allocation));

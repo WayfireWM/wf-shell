@@ -5,7 +5,6 @@
 #include <wayland-client.h>
 #include <gtkmm/window.h>
 
-#include "config.hpp"
 #include "wf-shell-app.hpp"
 
 class WayfirePanel
@@ -22,25 +21,26 @@ class WayfirePanel
     std::unique_ptr<impl> pimpl;
 };
 
-class WayfirePanelApp
+class WayfirePanelApp : public WayfireShellApp
 {
-    public:
+  public:
     WayfirePanel* panel_for_wl_output(wl_output *output);
-    wayfire_config *get_config();
-
     static WayfirePanelApp& get();
 
     /* Starts the program. get() is valid afterward the first (and the only)
-     * call to run() */
-    static void run(int argc, char **argv);
+     * call to create() */
+    static void create(int argc, char **argv);
     ~WayfirePanelApp();
 
-    private:
+    void handle_new_output(WayfireOutput *output) override;
+    void handle_output_removed(WayfireOutput *output) override;
+    void on_config_reload() override;
+
+  private:
     WayfirePanelApp(int argc, char **argv);
 
     class impl;
-    std::unique_ptr<impl> pimpl;
-    static std::unique_ptr<WayfirePanelApp> instance;
+    std::unique_ptr<impl> priv;
 };
 
 #endif /* end of include guard: WF_PANEL_HPP */

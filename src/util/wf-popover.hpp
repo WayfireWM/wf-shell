@@ -1,9 +1,9 @@
 #ifndef WF_PANEL_POPOVER_HPP
 #define WF_PANEL_POPOVER_HPP
 
-#include <config.hpp>
 #include <gtkmm/menubutton.h>
 #include <gtkmm/popover.h>
+#include <wf-option-wrap.hpp>
 
 /**
  * A button which shows a popover on click. It adjusts the popup position
@@ -13,8 +13,7 @@ class WayfireMenuButton : public Gtk::MenuButton
 {
     bool interactive = true;
     bool has_focus = false;
-    wf_option panel_position;
-    wf_option_callback panel_position_changed;
+    WfOption<std::string> panel_position;
 
     /* Make the menu button active on its AutohideWindow */
     void set_active_on_window();
@@ -26,8 +25,8 @@ class WayfireMenuButton : public Gtk::MenuButton
   public:
     Gtk::Popover m_popover;
 
-    WayfireMenuButton(wf_option panel_position);
-    virtual ~WayfireMenuButton();
+    WayfireMenuButton(const std::string& config_section);
+    virtual ~WayfireMenuButton() {}
 
     /**
      * Set whether the popup should grab input focus when opened

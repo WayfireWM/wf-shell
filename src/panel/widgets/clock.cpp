@@ -2,15 +2,9 @@
 #include <iostream>
 #include "clock.hpp"
 
-static const std::string default_font = "default";
-void WayfireClock::init(Gtk::HBox *container, wayfire_config *config)
+void WayfireClock::init(Gtk::HBox *container)
 {
-    format = config->get_section("panel")
-        ->get_option("clock_format", "%e %A %H:%M");
-    font = config->get_section("panel")
-        ->get_option("clock_font", default_font);
-
-    button = std::make_unique<WayfireMenuButton> (PANEL_POSITION_OPT(config));
+    button = std::make_unique<WayfireMenuButton> ("panel");
     button->add(label);
     button->show();
     label.show();
@@ -30,10 +24,7 @@ void WayfireClock::init(Gtk::HBox *container, wayfire_config *config)
     // initially set font
     set_font();
 
-    font_changed = [=] () {
-        set_font();
-    };
-    font->add_updated_handler(&font_changed);
+    font.set_callback([=] () { set_font(); });
 }
 
 void WayfireClock::on_calendar_shown()
@@ -48,8 +39,7 @@ void WayfireClock::on_calendar_shown()
 bool WayfireClock::update_label()
 {
     auto time = Glib::DateTime::create_now_local();
-
-    auto text = time.format(format->as_string());
+    auto text = time.format((std::string)format);
 
     /* Sometimes GLib::DateTime will add leading spaces. This results in
      * unevenly balanced padding around the text, which looks quite bad.
@@ -67,17 +57,14 @@ bool WayfireClock::update_label()
 
 void WayfireClock::set_font()
 {
-    if (font->as_string() == default_font)
-    {
+    if ((std::string)font == "default") {
         label.unset_font();
-    } else
-    {
-        label.override_font(Pango::FontDescription(font->as_string()));
+    } else {
+        label.override_font(Pango::FontDescription((std::string)font));
     }
 }
 
 WayfireClock::~WayfireClock()
 {
     timeout.disconnect();
-    font->rem_updated_handler(&font_changed);
 }

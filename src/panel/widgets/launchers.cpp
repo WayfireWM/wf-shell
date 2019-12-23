@@ -6,8 +6,8 @@
 #include <gdk/gdkcairo.h>
 #include <cassert>
 #include <iostream>
-#include <config.hpp>
 #include <gtk-utils.hpp>
+#include <wf-shell-app.hpp>
 
 // create launcher from a .desktop file or app-id
 struct DesktopLauncherInfo : public LauncherInfo
@@ -91,7 +91,6 @@ struct FileLauncherInfo : public LauncherInfo
 
 void WfLauncherButton::set_size(int size)
 {
-    this->current_size = size;
     int full_size = base_size * LAUNCHERS_ICON_SCALE;
 
     /* set button spacing */
@@ -105,15 +104,10 @@ void WfLauncherButton::set_size(int size)
     on_scale_update();
 }
 
-bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
-                                  std::string icon)
+bool WfLauncherButton::initialize(std::string name, std::string icon)
 {
     launcher_name = name;
-
-    base_size = *config->get_section("panel")->get_option("launcher_size",
-        std::to_string(DEFAULT_ICON_SIZE));
-    base_size = base_size / LAUNCHERS_ICON_SCALE;
-
+    base_size = WfOption<int> {"panel/launcher_size"} / LAUNCHERS_ICON_SCALE;
     if (icon == "none")
     {
         auto dl = new DesktopLauncherInfo();
@@ -145,9 +139,7 @@ bool WfLauncherButton::initialize(wayfire_config *config, std::string name,
         set_size(base_size);
     });
 
-    hover_animation = wf_duration(new_static_option("1000"), wf_animation::linear);
-    hover_animation.start(base_size, base_size);
-
+    current_size.set(base_size, base_size);
     evbox.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(this, &WfLauncherButton::on_scale_update));
 
@@ -161,14 +153,14 @@ bool WfLauncherButton::on_click(GdkEventButton *ev)
     if (ev->button == 1 && ev->type == GDK_BUTTON_RELEASE)
     {
         info->execute();
-        if (!hover_animation.running())
+        if (!current_size.running())
             on_leave(NULL);
     }
 
     if (ev->button == 1 && ev->type == GDK_BUTTON_PRESS)
     {
         /* touch will generate button_press, but not enter notify */
-        if (!hover_animation.running())
+        if (!current_size.running())
             on_enter(NULL);
     }
 
@@ -189,42 +181,32 @@ static int get_animation_duration(int start, int end, int scale)
 
 bool WfLauncherButton::on_enter(GdkEventCrossing* ev)
 {
-    int current_size = hover_animation.progress();
     int target_size = base_size * LAUNCHERS_ICON_SCALE;
-
     int duration = get_animation_duration(
         current_size, target_size, image.get_scale_factor());
 
     evbox.queue_draw();
-    hover_animation = wf_duration(new_static_option(std::to_string(duration)));
-    hover_animation.start(current_size, target_size);
-    animation_running = true;
-
+    current_size = LauncherAnimation{wf::create_option(duration),
+        (int)current_size, target_size};
     return false;
 }
 
 bool WfLauncherButton::on_leave(GdkEventCrossing *ev)
 {
-    int current_size = hover_animation.progress();
     evbox.queue_draw();
-
     int duration = get_animation_duration(
         current_size, base_size, image.get_scale_factor());
 
-    hover_animation = wf_duration(new_static_option(std::to_string(duration)));
-    hover_animation.start(current_size, base_size);
-    animation_running = true;
+    current_size = LauncherAnimation{wf::create_option(duration),
+        (int)current_size, base_size};
 
     return false;
 }
 
 bool WfLauncherButton::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
 {
-    if (animation_running)
-    {
-        set_size(hover_animation.progress());
-        animation_running = hover_animation.running();
-    }
+    if (current_size.running())
+        set_size(current_size);
 
     return false;
 }
@@ -249,7 +231,6 @@ void WfLauncherButton::on_scale_update()
 }
 
 WfLauncherButton::WfLauncherButton() { }
-
 WfLauncherButton::~WfLauncherButton()
 {
     delete info;
@@ -261,69 +242,66 @@ static bool begins_with(const std::string& string, const std::string& prefix)
         string.substr(0, prefix.size()) == prefix;
 }
 
-launcher_container WayfireLaunchers::get_launchers_from_config(wayfire_config *config)
+launcher_container WayfireLaunchers::get_launchers_from_config()
 {
-    auto section = config->get_section("panel");
-
+    auto section = WayfireShellApp::get().config.get_section("panel");
     const std::string desktop_prefix   = "launcher_";
     const std::string file_icon_prefix = "launcher_icon_";
     const std::string file_cmd_prefix = "launcher_cmd_";
 
     launcher_container launchers;
-    auto try_push_launcher = [&launchers, config] (const std::string cmd,
-                                                   const std::string icon)
+    auto try_push_launcher = [&launchers] (
+        const std::string cmd, const std::string icon)
     {
         auto launcher = new WfLauncherButton();
-        if (launcher->initialize(config, cmd, icon))
-        {
+        if (launcher->initialize(cmd, icon)) {
             launchers.push_back(std::unique_ptr<WfLauncherButton>(launcher));
-        } else
-        {
+        } else {
             delete launcher;
         }
     };
 
-    auto options = section->options;
-    for (auto opt : options)
+    for (auto opt : section->get_registered_options())
     {
         /* we have a command */
-        if (begins_with(opt->name, file_cmd_prefix))
+        if (begins_with(opt->get_name(), file_cmd_prefix))
         {
             /* extract launcher name, i.e the string after the prefix */
-            auto launcher_name = opt->name.substr(file_cmd_prefix.size());
+            auto launcher_name = opt->get_name().substr(file_cmd_prefix.size());
             /* look for the corresponding icon */
-            auto icon_option = section->get_option(file_icon_prefix + launcher_name, "");
-            if (icon_option->as_string() != "")
+            auto icon_option = section->get_option_or(file_icon_prefix + launcher_name);
+            if (icon_option)
             {
                 /* bingo, found command + icon */
-                try_push_launcher(opt->as_string(), icon_option->as_string());
+                try_push_launcher(opt->get_value_str(),
+                    icon_option->get_value_str());
             }
         }
 
         /* an entry is a deskop-file entry if the it has the desktop prefix
          * but not the file_icon or file_cmd prefix */
-        if (begins_with(opt->name, desktop_prefix) &&
-            !begins_with(opt->name, file_icon_prefix) &&
-            !begins_with(opt->name, file_cmd_prefix))
+        if (begins_with(opt->get_name(), desktop_prefix) &&
+            !begins_with(opt->get_name(), file_icon_prefix) &&
+            !begins_with(opt->get_name(), file_cmd_prefix))
         {
-            try_push_launcher(opt->as_string(), "none");
+            try_push_launcher(opt->get_value_str(), "none");
         }
     }
 
     return launchers;
 }
 
-void WayfireLaunchers::init(Gtk::HBox *container, wayfire_config *config)
+void WayfireLaunchers::init(Gtk::HBox *container)
 {
     container->pack_start(box, false, false);
-    handle_config_reload(config);
+    handle_config_reload();
 }
 
-void WayfireLaunchers::handle_config_reload(wayfire_config *config)
+void WayfireLaunchers::handle_config_reload()
 {
-    box.set_spacing(*config->get_section("panel")->get_option("launchers_spacing", "6"));
+    box.set_spacing(WfOption<int> {"panel/launchers_spacing"});
 
-    launchers = get_launchers_from_config(config);
+    launchers = get_launchers_from_config();
     for (auto& l : launchers)
         box.pack_start(l->evbox, false, false);
 

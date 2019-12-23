@@ -23,12 +23,10 @@ class WfDock
     std::unique_ptr<impl> pimpl;
 };
 
-class WfDockApp
+class WfDockApp : public WayfireShellApp
 {
-    public:
+  public:
     WfDock* dock_for_wl_output(wl_output *output);
-    wayfire_config *get_config();
-
     void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
     void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1* handle);
     void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
@@ -37,15 +35,18 @@ class WfDockApp
 
     /* Starts the program. get() is valid afterward the first (and the only)
      * call to run() */
-    static void run(int argc, char **argv);
-    ~WfDockApp();
+    static void create(int argc, char **argv);
+    virtual ~WfDockApp();
 
-    private:
+    void on_activate() override;
+    void handle_new_output(WayfireOutput *output) override;
+    void handle_output_removed(WayfireOutput *output) override;
+
+  private:
     WfDockApp(int argc, char **argv);
 
     class impl;
-    std::unique_ptr<impl> pimpl;
-    static std::unique_ptr<WfDockApp> instance;
+    std::unique_ptr<impl> priv;
 };
 
 #endif /* end of include guard: WF_DOCK_HPP */

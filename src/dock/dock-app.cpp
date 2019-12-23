@@ -30,138 +30,109 @@ static struct wl_registry_listener registry_listener =
     &registry_remove_object
 };
 
-class WfDockApp::impl : public WayfireShellApp
+class WfDockApp::impl
 {
+  public:
     std::map<zwlr_foreign_toplevel_handle_v1*,
         std::unique_ptr<WfToplevel>> toplevels;
     std::map<WayfireOutput*, std::unique_ptr<WfDock>> docks;
 
     zwlr_foreign_toplevel_manager_v1 *manager = NULL;
-
-    public:
-    impl(int argc, char **argv)
-        :WayfireShellApp(argc, argv)
-    {
-    }
-
-    void on_activate() override
-    {
-        WayfireShellApp::on_activate();
-        IconProvider::load_custom_icons(this->config->get_section("dock"));
-
-        /* At this point, wayland connection has been initialized,
-         * and hopefully outputs have been created */
-        auto gdk_display = gdk_display_get_default();
-        auto display = gdk_wayland_display_get_wl_display(gdk_display);
-
-        wl_registry *registry = wl_display_get_registry(display);
-        wl_registry_add_listener(registry, &registry_listener, NULL);
-        wl_display_roundtrip(display);
-
-        if (!this->manager)
-        {
-            std::cerr << "Compositor doesn't support" <<
-                " wlr-foreign-toplevel-management, exiting." << std::endl;
-            std::exit(-1);
-        }
-
-        wl_registry_destroy(registry);
-        zwlr_foreign_toplevel_manager_v1_add_listener(manager,
-            &toplevel_manager_v1_impl, NULL);
-    }
-
-    void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager)
-    {
-        this->manager = manager;
-    }
-
-    void handle_new_output(WayfireOutput *output) override
-    {
-        docks[output] = std::unique_ptr<WfDock>(new WfDock(output));
-    }
-
-    void handle_output_removed(WayfireOutput *output) override
-    {
-        /* Send an artificial output leave.
-         * This is useful because in this way the toplevel can safely destroy
-         * its icons created on that particular output */
-        for (auto& toplvl : toplevels)
-            toplvl.second->handle_output_leave(output->wo);
-
-        docks.erase(output);
-    }
-
-    WfDock* dock_for_wl_output(wl_output *output)
-    {
-        for (auto& dock : docks)
-        {
-            if (dock.first->wo == output)
-                return dock.second.get();
-        }
-
-        return nullptr;
-    }
-
-    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
-    {
-        toplevels[handle] = std::unique_ptr<WfToplevel> (new WfToplevel(handle));
-    }
-
-    void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
-    {
-        toplevels.erase(handle);
-    }
 };
 
-WfDock* WfDockApp::dock_for_wl_output(wl_output *output)
+void WfDockApp::on_activate()
 {
-    return pimpl->dock_for_wl_output(output);
-}
+    WayfireShellApp::on_activate();
+    IconProvider::load_custom_icons();
 
-wayfire_config* WfDockApp::get_config()
-{
-    return pimpl->config.get();
+    /* At this point, wayland connection has been initialized,
+     * and hopefully outputs have been created */
+    auto gdk_display = gdk_display_get_default();
+    auto display = gdk_wayland_display_get_wl_display(gdk_display);
+
+    wl_registry *registry = wl_display_get_registry(display);
+    wl_registry_add_listener(registry, &registry_listener, NULL);
+    wl_display_roundtrip(display);
+
+    if (!this->manager)
+    {
+        std::cerr << "Compositor doesn't support" <<
+            " wlr-foreign-toplevel-management, exiting." << std::endl;
+        std::exit(-1);
+    }
+
+    wl_registry_destroy(registry);
+    zwlr_foreign_toplevel_manager_v1_add_listener(priv->manager,
+        &toplevel_manager_v1_impl, NULL);
 }
 
 void WfDockApp::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager)
 {
-    return pimpl->handle_toplevel_manager(manager);
+    priv->manager = manager;
 }
 
-void WfDockApp::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1* handle)
+void WfDockApp::handle_new_output(WayfireOutput *output)
 {
-    return pimpl->handle_new_toplevel(handle);
+    priv->docks[output] = std::unique_ptr<WfDock>(new WfDock(output));
+}
+
+void WfDockApp::handle_output_removed(WayfireOutput *output)
+{
+    /* Send an artificial output leave.
+     * This is useful because in this way the toplevel can safely destroy
+     * its icons created on that particular output */
+    for (auto& toplvl : priv->toplevels)
+        toplvl.second->handle_output_leave(output->wo);
+
+    priv->docks.erase(output);
+}
+
+WfDock* WfDockApp::dock_for_wl_output(wl_output *output)
+{
+    for (auto& dock : priv->docks)
+    {
+        if (dock.first->wo == output)
+            return dock.second.get();
+    }
+
+    return nullptr;
+}
+
+void WfDockApp::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
+{
+    priv->toplevels[handle] =
+        std::unique_ptr<WfToplevel> (new WfToplevel(handle));
 }
 
 void WfDockApp::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
 {
-    return pimpl->handle_toplevel_closed(handle);
+    priv->toplevels.erase(handle);
 }
 
-std::unique_ptr<WfDockApp> WfDockApp::instance;
 WfDockApp& WfDockApp::get()
 {
     if (!instance)
         throw std::logic_error("Calling WfDockApp::get() before starting app!");
-    return *instance.get();
+
+    return dynamic_cast<WfDockApp&> (*instance.get());
 }
 
-void WfDockApp::run(int argc, char **argv)
+void WfDockApp::create(int argc, char **argv)
 {
     if (instance)
         throw std::logic_error("Running WfDockApp twice!");
 
     instance = std::unique_ptr<WfDockApp>{new WfDockApp(argc, argv)};
-    instance->pimpl->run();
+    instance->run();
 }
 
 WfDockApp::WfDockApp(int argc, char **argv)
-    : pimpl(new WfDockApp::impl(argc, argv)) { }
+    : WayfireShellApp(argc, argv), priv(new WfDockApp::impl()) { }
 WfDockApp::~WfDockApp() = default;
 
 int main(int argc, char **argv)
 {
-    WfDockApp::run(argc, argv);
+    WfDockApp::create(argc, argv);
     return 0;
 }
 

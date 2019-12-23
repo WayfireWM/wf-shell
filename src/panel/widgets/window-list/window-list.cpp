@@ -5,7 +5,6 @@
 #include "toplevel.hpp"
 #include "window-list.hpp"
 #include "panel.hpp"
-#include "config.hpp"
 
 WayfireWindowListBox::WayfireWindowListBox() : Gtk::HBox()
 {
@@ -157,7 +156,7 @@ static struct wl_registry_listener registry_listener =
     &registry_remove_object
 };
 
-void WayfireWindowList::init(Gtk::HBox *container, wayfire_config *config)
+void WayfireWindowList::init(Gtk::HBox *container)
 {
     auto gdk_display = gdk_display_get_default();
     auto display = gdk_wayland_display_get_wl_display(gdk_display);

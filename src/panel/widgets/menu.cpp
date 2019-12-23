@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include "menu.hpp"
-#include "config.hpp"
 #include "gtk-utils.hpp"
 #include "launchers.hpp"
 #include "wf-autohide-window.hpp"
@@ -188,7 +187,7 @@ void WayfireMenu::on_search_changed()
     flowbox.invalidate_filter();
 
     /* We got no matches, try to fuzzy-match */
-    if (count_matches <= 0 && fuzzy_search_enabled->as_int())
+    if (count_matches <= 0 && fuzzy_search_enabled)
     {
         fuzzy_filter = true;
         flowbox.invalidate_filter();
@@ -229,7 +228,7 @@ void WayfireMenu::on_popover_shown()
 
 bool WayfireMenu::update_icon()
 {
-    int size = menu_size->as_int() / LAUNCHERS_ICON_SCALE;
+    int size = menu_size / LAUNCHERS_ICON_SCALE;
 
     button->set_size_request(size, 0);
     auto ptr_pbuff = Gdk::Pixbuf::create_from_file(ICONDIR "/wayfire.png",
@@ -274,7 +273,7 @@ void WayfireMenu::update_popover_layout()
         popover_layout_box.remove(scrolled_window);
     }
 
-    if (panel_position->as_string() == WF_WINDOW_POSITION_TOP)
+    if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {
         popover_layout_box.pack_start(search_box);
         popover_layout_box.pack_start(scrolled_window);
@@ -288,24 +287,13 @@ void WayfireMenu::update_popover_layout()
     popover_layout_box.show_all();
 }
 
-void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
+void WayfireMenu::init(Gtk::HBox *container)
 {
-    auto config_section = config->get_section("panel");
+    menu_size.set_callback([=] () { update_icon(); });
+    panel_position.set_callback([=] () { update_popover_layout(); });
 
-    menu_size = config_section->get_option("launcher_size",
-        std::to_string(DEFAULT_ICON_SIZE));
-    menu_size_changed = [=] () { update_icon(); };
-    menu_size->add_updated_handler(&menu_size_changed);
-
-    fuzzy_search_enabled = config_section->get_option("menu_fuzzy_search", "1");
-
-    panel_position = PANEL_POSITION_OPT(config);
-    panel_position_changed = [=] () { update_popover_layout(); };
-    panel_position->add_updated_handler(&panel_position_changed);
-
-    button = std::make_unique<WayfireMenuButton> (panel_position);
+    button = std::make_unique<WayfireMenuButton> ("panel");
     button->add(main_image);
-
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     button->get_popover()->signal_show().connect_notify(
         sigc::mem_fun(this, &WayfireMenu::on_popover_shown));
@@ -330,10 +318,4 @@ void WayfireMenu::init(Gtk::HBox *container, wayfire_config *config)
 void WayfireMenu::hide_menu()
 {
     button->set_active(false);
-}
-
-WayfireMenu::~WayfireMenu()
-{
-    menu_size->rem_updated_handler(&menu_size_changed);
-    panel_position->rem_updated_handler(&panel_position_changed);
 }

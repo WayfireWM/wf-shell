@@ -3,9 +3,9 @@
 
 #include <gtkmm/window.h>
 #include <gdk/gdkwayland.h>
-#include <config.hpp>
-#include <animation.hpp>
 #include "wf-popover.hpp"
+#include <wf-option-wrap.hpp>
+#include <wayfire/util/duration.hpp>
 
 struct WayfireOutput;
 struct zwf_hotspot_v2;
@@ -22,15 +22,18 @@ struct WayfireAutohidingWindowHotspotCallbacks;
 class WayfireAutohidingWindow : public Gtk::Window
 {
   public:
-    WayfireAutohidingWindow(WayfireOutput *output);
+    /**
+     * WayfireAutohidingWindow's behavior can be modified with several config
+     * file options:
+     *
+     * 1. section/position
+     * 2. section/autohide_duration
+     */
+    WayfireAutohidingWindow(WayfireOutput *output,
+        const std::string& section);
+
     ~WayfireAutohidingWindow();
     wl_surface* get_wl_surface() const;
-
-    /* Sets the edge of the screen where the window is */
-    void set_position(wf_option position);
-
-    /* Sets the time for hiding/showing animation */
-    void set_animation_duration(wf_option duration);
 
     /* Add one more autohide request */
     void increase_autohide();
@@ -71,11 +74,10 @@ class WayfireAutohidingWindow : public Gtk::Window
   private:
     WayfireOutput *output;
 
-    wf_option_callback m_position_changed;
-    wf_option m_position;
+    WfOption<std::string> position;
     void update_position();
 
-    wf_duration transition;
+    wf::animation::simple_animation_t y_position;
     bool update_margin();
 
     bool has_auto_exclusive_zone = false;

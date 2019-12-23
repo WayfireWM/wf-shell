@@ -1,11 +1,11 @@
 #pragma once
 
 #include <glibmm/refptr.h>
-#include <config.hpp>
-#include <animation.hpp>
 #include <gtkmm/drawingarea.h>
 #include <gtkmm/window.h>
 #include <wf-shell-app.hpp>
+#include <wf-option-wrap.hpp>
+#include <wayfire/util/duration.hpp>
 
 class WayfireBackground;
 
@@ -18,7 +18,11 @@ class BackgroundImage
 
 class BackgroundDrawingArea : public Gtk::DrawingArea
 {
-    wf_duration fade;
+    wf::animation::duration_t animation{
+        wf::create_option(1000),
+        wf::animation::smoothing::linear
+    };
+    wf::animation::timed_transition_t fade{animation};
     /* These two pixbufs are used for fading one background
      * image to the next when changing backgrounds or when
      * automatically cycling through a directory of images.
@@ -51,9 +55,10 @@ class WayfireBackground
     uint current_background;
     sigc::connection change_bg_conn;
 
-    wf_option background_image, background_cycle_timeout,
-        background_randomize, background_preserve_aspect;
-    wf_option_callback init_background, cycle_timeout_updated;
+    WfOption<std::string> background_image{"background/image"};
+    WfOption<int> background_cycle_timeout{"background/cycle_timeout"};
+    WfOption<bool> background_randomize{"background/randomize"};
+    WfOption<bool> background_preserve_aspect{"background/preserve_aspect"};
 
     Glib::RefPtr<Gdk::Pixbuf> create_from_file_safe(std::string path);
     bool background_transition_frame(int timer);
@@ -68,5 +73,4 @@ class WayfireBackground
 
   public:
     WayfireBackground(WayfireShellApp *app, WayfireOutput *output);
-    ~WayfireBackground();
 };

@@ -168,16 +168,18 @@ namespace IconProvider
         std::map<std::string, std::string> custom_icons;
     }
 
-    void load_custom_icons(wayfire_config_section *section)
+    void load_custom_icons()
     {
         static const std::string prefix = "icon_mapping_";
-        for (auto option : section->options)
+        auto section = WayfireShellApp::get().config.get_section("dock");
+
+        for (auto option : section->get_registered_options())
         {
-            if (option->name.compare(0, prefix.length(), prefix) != 0)
+            if (option->get_name().compare(0, prefix.length(), prefix) != 0)
                 continue;
 
-            auto app_id = option->name.substr(prefix.length());
-            custom_icons[app_id] = option->as_string();
+            auto app_id = option->get_name().substr(prefix.length());
+            custom_icons[app_id] = option->get_value_str();
         }
     }
 

@@ -7,7 +7,7 @@
 #include <gtkmm/scale.h>
 #include <pulse/pulseaudio.h>
 #include "gvc-mixer-control.h"
-#include <animation.hpp>
+#include <wayfire/util/duration.hpp>
 
 /**
  * A custom scale which animates transitions when its value is
@@ -15,7 +15,7 @@
  */
 class WayfireVolumeScale : public Gtk::Scale
 {
-    wf_duration current_volume;
+    wf::animation::simple_animation_t current_volume{wf::create_option(200)};
     sigc::connection value_changed;
     std::function<void()> user_changed_callback;
 
@@ -36,9 +36,8 @@ class WayfireVolume : public WayfireWidget
     WayfireVolumeScale volume_scale;
     std::unique_ptr<WayfireMenuButton> button;
 
-    wf_option volume_size;
-    wf_option_callback volume_size_changed;
-    wf_option timeout;
+    WfOption<int> volume_size{"panel/launcher_size"};
+    WfOption<double> timeout{"panel/volume_display_timeout"};
 
     void on_volume_scroll(GdkEventScroll *event);
     void on_volume_button_press(GdkEventButton *event);
@@ -78,7 +77,7 @@ class WayfireVolume : public WayfireWidget
 
 
   public:
-    void init(Gtk::HBox *container, wayfire_config *config) override;
+    void init(Gtk::HBox *container) override;
     virtual ~WayfireVolume();
 
     /** Update the icon based on volume and muted state */
