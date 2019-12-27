@@ -23,8 +23,6 @@
 #include "widgets/spacing.hpp"
 #ifdef HAVE_PULSE
 #include "widgets/volume.hpp"
-#else
-#warning "Pulse not found, volume widget will not be available."
 #endif
 #include "widgets/window-list/window-list.hpp"
 
@@ -205,10 +203,15 @@ class WayfirePanel::impl
             return Widget(new WayfireNetworkInfo());
         if (name == "battery")
             return Widget(new WayfireBatteryInfo());
+        if (name == "volume") {
 #ifdef HAVE_PULSE
-        if (name == "volume")
             return Widget(new WayfireVolume());
+#else
+#warning "Pulse not found, volume widget will not be available."
+        std::cerr << "Built without pulse support, volume widget "
+            " is not available." << std::endl;
 #endif
+        }
         if (name == "window-list")
             return Widget(new WayfireWindowList(output));
 
