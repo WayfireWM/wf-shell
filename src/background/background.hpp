@@ -11,9 +11,9 @@ class WayfireBackground;
 
 class BackgroundImage
 {
-    public:
+  public:
     double x, y;
-    Glib::RefPtr<Gdk::Pixbuf> pbuf;
+    Cairo::RefPtr<Cairo::Surface> source;
 };
 
 class BackgroundDrawingArea : public Gtk::DrawingArea
