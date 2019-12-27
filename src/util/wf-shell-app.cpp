@@ -76,7 +76,7 @@ void WayfireShellApp::on_activate()
 
     // setup config
     this->config = wf::config::build_configuration(
-        "/home/ilex/build/wcm/metadata/", "", get_config_file());
+        METADATA_DIR, "", get_config_file());
 
     inotify_fd = inotify_init();
     do_reload_config(this);
