@@ -29,7 +29,7 @@ endif
 needs_libinotify = ['freebsd', 'dragonfly'].contains(host_machine.system())
 libinotify       = dependency('libinotify', required: needs_libinotify)
 
-add_project_arguments(['-Wno-pedantic', '-Wno-unused-parameter', '-Wno-parentheses', '-Wno-cast-function-type'], language: 'cpp')
+add_project_arguments(['-Wno-pedantic', '-Wno-unused-parameter', '-Wno-parentheses'], language: 'cpp')
 
 icon_dir = join_paths(get_option('prefix'), 'share', 'wayfire', 'icons')
 add_project_arguments('-DICONDIR="' + icon_dir + '"', language : 'cpp')

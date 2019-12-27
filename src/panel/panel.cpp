@@ -23,6 +23,8 @@
 #include "widgets/spacing.hpp"
 #ifdef HAVE_PULSE
 #include "widgets/volume.hpp"
+#else
+#warning "Pulse not found, volume widget will not be available."
 #endif
 #include "widgets/window-list/window-list.hpp"
 
