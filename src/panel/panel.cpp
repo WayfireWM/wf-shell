@@ -12,7 +12,6 @@
 #include <sstream>
 
 #include <map>
-#include "../../config.h"
 
 #include "panel.hpp"
 

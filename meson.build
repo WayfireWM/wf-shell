@@ -21,16 +21,10 @@ gtklayershell  = dependency('gtk-layer-shell-0', version: '>= 0.1', fallback: ['
 libpulse       = dependency('libpulse', required : get_option('pulse'))
 libgvc         = subproject('gvc', default_options: ['static=true'], required : get_option('pulse'))
 
-conf_data = configuration_data()
-
 if libpulse.found()
   libgvc = libgvc.get_variable('libgvc_dep')
-  conf_data.set('HAVE_PULSE', true)
+  add_project_arguments('-DHAVE_PULSE=1', language : 'cpp')
 endif
-
-configure_file(input: 'config.h.in',
-               output: 'config.h',
-               configuration: conf_data)
 
 needs_libinotify = ['freebsd', 'dragonfly'].contains(host_machine.system())
 libinotify       = dependency('libinotify', required: needs_libinotify)
