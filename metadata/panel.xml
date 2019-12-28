@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<wf-shell>
+	<plugin name="panel">
+	<_short>Panel</_short>
+	<category>Shell</category>
+	<group>
+	<_short>General</_short>
+	<option name="widgets_left" type="string">
+		<_short>Widgets Left</_short>
+		<default>menu spacing18 launchers</default>
+	</option>
+	<option name="widgets_center" type="string">
+		<_short>Widgets Center</_short>
+		<default>clock</default>
+	</option>
+	<option name="widgets_right" type="string">
+		<_short>Widgets Right</_short>
+		<default>network battery</default>
+	</option>
+	<option name="minimal_height" type="int">
+		<_short>Minimal Height</_short>
+		<default>48</default>
+	</option>
+	<option name="autohide" type="bool">
+		<_short>Autohide</_short>
+		<default>true</default>
+	</option>
+	<option name="autohide_duration" type="int">
+		<default>300</default>
+	</option>
+	<option name="layer" type="string">
+		<_short>Layer</_short>
+		<default>overlay</default>
+		<desc>
+			<value>top</value>
+			<_name>Top</_name>
+		</desc>
+		<desc>
+			<value>bottom</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>overlay</value>
+			<_name>Overlay</_name>
+		</desc>
+		<desc>
+			<value>background</value>
+			<_name>Background</_name>
+		</desc>
+	</option>
+	<option name="background_color" type="string">
+		<_short>Background Color</_short>
+		<default>gtk_headerbar</default>
+	</option>
+	</group>
+	<group>
+	<_short>Launchers</_short>
+	<option name="launchers_spacing" type="int">
+		<_short>Launchers Spacing</_short>
+		<default>6</default>
+	</option>
+	<option name="launcher_size" type="int">
+		<_short>Launcher Size</_short>
+		<default>32</default>
+	</option>
+	</group>
+	<group>
+	<_short>Clock</_short>
+	<option name="clock_format" type="string">
+		<_short>Clock Format</_short>
+		<default>%e %A %H:%M</default>
+	</option>
+	<option name="clock_font" type="string">
+		<_short>Clock Font</_short>
+		<default>default</default>
+	</option>
+	</group>
+	<group>
+	<_short>Battery</_short>
+	<option name="battery_status" type="int">
+		<_short>Battery Status</_short>
+		<default>1</default>
+		<min>0</min>
+		<max>2</max>
+		<desc>
+			<value>0</value>
+			<_name>Icon</_name>
+		</desc>
+		<desc>
+			<value>1</value>
+			<_name>Icon with Percentage</_name>
+		</desc>
+		<desc>
+			<value>2</value>
+			<_name>Full Information</_name>
+		</desc>
+	</option>
+	<option name="battery_icon_size" type="int">
+		<_short>Battery Icon Size</_short>
+		<default>32</default>
+	</option>
+	<option name="battery_icon_invert" type="bool">
+		<_short>Battery Icon Invert Color</_short>
+		<default>false</default>
+	</option>
+	<option name="battery_font" type="string">
+		<_short>Battery Font</_short>
+		<default>default</default>
+	</option>
+	</group>
+	<group>
+	<_short>Network</_short>
+	<option name="network_status" type="int">
+		<_short>Network Status</_short>
+		<default>1</default>
+		<min>0</min>
+		<max>2</max>
+		<desc>
+			<value>0</value>
+			<_name>None</_name>
+		</desc>
+		<desc>
+			<value>1</value>
+			<_name>Connection</_name>
+		</desc>
+		<desc>
+			<value>2</value>
+			<_name>Connection with IP</_name>
+		</desc>
+	</option>
+	<option name="network_status_font" type="string">
+		<_short>Clock Font</_short>
+		<default>default</default>
+	</option>
+	<option name="network_icon_size" type="int">
+		<_short>Network Icon Size</_short>
+		<default>32</default>
+	</option>
+	<option name="network_icon_invert_color" type="bool">
+		<_short>Network Icon Invert Color</_short>
+		<default>false</default>
+	</option>
+	<option name="network_status_use_color" type="bool">
+		<_short>Network Status Use Color</_short>
+		<default>false</default>
+	</option>
+	</group>
+	<group>
+	<_short>Menu</_short>
+	<option name="menu_fuzzy_search" type="bool">
+		<_short>Use Fuzzy Search in Menu</_short>
+		<default>true</default>
+	</option>
+	</group>
+	<group>
+	<_short>Volume</_short>
+	<option name="volume_display_timeout" type="double">
+		<_short>Volume Display Timeout</_short>
+		<default>2.5</default>
+	</option>
+	</group>
+	</plugin>
+</wf-shell>

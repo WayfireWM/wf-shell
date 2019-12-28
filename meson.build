@@ -33,6 +33,7 @@ icon_dir = join_paths(get_option('prefix'), 'share', 'wayfire', 'icons')
 add_project_arguments('-DICONDIR="' + icon_dir + '"', language : 'cpp')
 add_project_arguments('-DMETADATA_DIR="' + metadata_dir + '"', language : 'cpp')
 
+subdir('metadata')
 subdir('proto')
 subdir('data')
 subdir('src')
