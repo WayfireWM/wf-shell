@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<wf-shell>
+	<plugin name="dock">
+	<_short>Dock</_short>
+	<category>Shell</category>
+	<option name="autohide_duration" type="int">
+		<default>300</default>
+	</option>
+	<option name="position" type="string">
+		<_short>Position</_short>
+		<default>bottom</default>
+		<desc>
+			<value>top</value>
+			<_name>Top</_name>
+		</desc>
+		<desc>
+			<value>bottom</value>
+			<_name>Bottom</_name>
+		</desc>
+	</option>
+	</plugin>
+</wf-shell>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<wf-shell>
+	<plugin name="background">
+	<_short>Background</_short>
+	<category>Shell</category>
+	<option name="image" type="string">
+		<_short>Background</_short>
+		<default>&lt;file or directory&gt;</default>
+		<hint>file</hint>
+		<hint>directory</hint>
+	</option>
+	<option name="cycle_timeout" type="int">
+		<_short>Cycle Timeout</_short>
+		<default>150</default>
+	</option>
+	<option name="randomize" type="bool">
+		<_short>Randomize</_short>
+		<default>false</default>
+	</option>
+	<option name="preserve_aspect" type="bool">
+		<_short>Preserve Aspect</_short>
+		<default>false</default>
+	</option>
+	</plugin>
+</wf-shell>
