@@ -101,7 +101,7 @@ class WayfirePanel::impl
             rgba = headerbar.get_style_context()->get_background_color();
         } else {
             auto color = wf::option_type::from_string<wf::color_t> (
-                bg_color.raw_option->get_value_str());
+                ((wf::option_sptr_t<std::string>)bg_color)->get_value_str());
             if (!color) {
                 std::cerr << "Invalid panel background color in"
                     " config file" << std::endl;
