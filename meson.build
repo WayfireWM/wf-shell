@@ -33,10 +33,12 @@ libinotify       = dependency('libinotify', required: needs_libinotify)
 add_project_arguments(['-Wno-pedantic', '-Wno-unused-parameter', '-Wno-parentheses'], language: 'cpp')
 
 metadata_dir = join_paths(wayfire.get_variable(pkgconfig: 'metadatadir'), 'wf-shell')
+sysconf_dir = wayfire.get_variable(pkgconfig: 'sysconfdir')
 
 icon_dir = join_paths(get_option('prefix'), 'share', 'wayfire', 'icons')
 add_project_arguments('-DICONDIR="' + icon_dir + '"', language : 'cpp')
 add_project_arguments('-DMETADATA_DIR="' + metadata_dir + '"', language : 'cpp')
+add_project_arguments('-DSYSCONF_DIR="' + sysconf_dir + '"', language : 'cpp')
 
 subdir('metadata')
 subdir('proto')

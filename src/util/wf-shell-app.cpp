@@ -76,7 +76,8 @@ void WayfireShellApp::on_activate()
 
     // setup config
     this->config = wf::config::build_configuration(
-        METADATA_DIR, "", get_config_file());
+        METADATA_DIR, SYSCONF_DIR "/wayfire/wf-shell-defaults.ini",
+        get_config_file());
 
     inotify_fd = inotify_init();
     do_reload_config(this);
