@@ -32,7 +32,7 @@ libinotify       = dependency('libinotify', required: needs_libinotify)
 
 add_project_arguments(['-Wno-pedantic', '-Wno-unused-parameter', '-Wno-parentheses'], language: 'cpp')
 
-metadata_dir = wayfire.get_variable(pkgconfig: 'metadatadir')
+metadata_dir = join_paths(wayfire.get_variable(pkgconfig: 'metadatadir'), 'wf-shell')
 
 icon_dir = join_paths(get_option('prefix'), 'share', 'wayfire', 'icons')
 add_project_arguments('-DICONDIR="' + icon_dir + '"', language : 'cpp')
