@@ -70,7 +70,6 @@ class WayfireMenu : public WayfireWidget
     WfOption<int> menu_size{"panel/launcher_size"};
     WfOption<std::string> menu_icon{"panel/menu_icon"};
     void update_popover_layout();
-    std::string default_icon;
 
     public:
     void init(Gtk::HBox *container) override;

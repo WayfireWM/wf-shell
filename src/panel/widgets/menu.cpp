@@ -11,6 +11,7 @@
 #include "wf-autohide-window.hpp"
 
 #define MAX_LAUNCHER_NAME_LENGTH 11
+const std::string default_icon = ICONDIR "/wayfire.png";
 
 WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
     : Gtk::HBox(), menu(_menu), m_app_info(app)
@@ -306,8 +307,6 @@ void WayfireMenu::update_popover_layout()
 
 void WayfireMenu::init(Gtk::HBox *container)
 {
-    default_icon = ICONDIR "/wayfire.png";
-
     menu_icon.set_callback([=] () { update_icon(); });
     menu_size.set_callback([=] () { update_icon(); });
     panel_position.set_callback([=] () { update_popover_layout(); });
