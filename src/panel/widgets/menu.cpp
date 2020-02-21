@@ -1,7 +1,6 @@
 #include <dirent.h>
 
 #include <cassert>
-#include <glibmm.h>
 #include <giomm/icon.h>
 #include <glibmm/spawn.h>
 #include <iostream>
@@ -12,6 +11,7 @@
 #include "wf-autohide-window.hpp"
 
 #define MAX_LAUNCHER_NAME_LENGTH 11
+const std::string default_icon = ICONDIR "/wayfire.png";
 
 WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
     : Gtk::HBox(), menu(_menu), m_app_info(app)
@@ -228,12 +228,30 @@ void WayfireMenu::on_popover_shown()
 
 bool WayfireMenu::update_icon()
 {
+    std::string icon;
     int size = menu_size / LAUNCHERS_ICON_SCALE;
+    bool error = false;
+
+    if (((std::string) menu_icon).empty())
+    {
+        icon = default_icon;
+    }
+    else
+    {
+        icon = menu_icon;
+    }
 
     button->set_size_request(size, 0);
-    auto ptr_pbuff = Gdk::Pixbuf::create_from_file(ICONDIR "/wayfire.png",
-        size * main_image.get_scale_factor(),
+
+    auto ptr_pbuff = load_icon_pixbuf_safe(icon,
         size * main_image.get_scale_factor());
+
+    if (!ptr_pbuff.get())
+    {
+        std::cout << "Loading default icon: " << default_icon << std::endl;
+        ptr_pbuff = load_icon_pixbuf_safe(default_icon,
+            size * main_image.get_scale_factor());
+    }
 
     if (!ptr_pbuff)
         return false;
@@ -289,6 +307,7 @@ void WayfireMenu::update_popover_layout()
 
 void WayfireMenu::init(Gtk::HBox *container)
 {
+    menu_icon.set_callback([=] () { update_icon(); });
     menu_size.set_callback([=] () { update_icon(); });
     panel_position.set_callback([=] () { update_popover_layout(); });
 
