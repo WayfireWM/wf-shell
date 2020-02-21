@@ -151,6 +151,11 @@
 		<_short>Use Fuzzy Search in Menu</_short>
 		<default>true</default>
 	</option>
+	<option name="menu_icon" type="string">
+		<_short>Menu Icon</_short>
+		<hint>file</hint>
+		<default></default>
+	</option>
 	</group>
 	<group>
 	<_short>Volume</_short>
