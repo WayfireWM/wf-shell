@@ -50,8 +50,10 @@ class WayfireVolume : public WayfireWidget
 
     gulong notify_volume_signal = 0;
     gulong notify_is_muted_signal = 0;
+    gulong notify_default_sink_changed = 0;
     sigc::connection popover_timeout;
     sigc::connection volume_changed_signal;
+    void disconnect_gvc_stream_signals();
 
     enum set_volume_flags_t
     {
