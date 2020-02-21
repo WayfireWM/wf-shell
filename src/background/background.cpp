@@ -21,16 +21,18 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
 {
     if (!image)
     {
-        to_image.pbuf.clear();
-        from_image.pbuf.clear();
+        to_image.source.clear();
+        from_image.source.clear();
         return;
     }
 
     from_image = to_image;
-    to_image.pbuf = image;
-    to_image.x = offset_x;
-    to_image.y = offset_y;
-    fade.animate(from_image.pbuf ? 0.0 : 1.0, 1.0);
+    to_image.source = Gdk::Cairo::create_surface_from_pixbuf(image,
+        this->get_scale_factor());
+
+    to_image.x = offset_x / this->get_scale_factor();
+    to_image.y = offset_y / this->get_scale_factor();
+    fade.animate(from_image.source ? 0.0 : 1.0, 1.0);
 
     Glib::signal_idle().connect_once([=] () {
         this->queue_draw();
@@ -39,25 +41,19 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
 
 bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
-    if (!to_image.pbuf)
+    if (!to_image.source)
         return false;
 
     if (fade.running())
         queue_draw();
 
-    Gdk::Cairo::set_source_pixbuf(cr, to_image.pbuf, to_image.x, to_image.y);
-    cr->rectangle(0, 0, to_image.pbuf->get_width(), to_image.pbuf->get_height());
+    cr->set_source(to_image.source, to_image.x, to_image.y);
     cr->paint_with_alpha(fade);
-
-    if (!from_image.pbuf)
+    if (!from_image.source)
         return false;
 
-    Gdk::Cairo::set_source_pixbuf(cr, from_image.pbuf,
-        from_image.x, from_image.y);
-    cr->rectangle(0, 0, from_image.pbuf->get_width(),
-        from_image.pbuf->get_height());
+    cr->set_source(from_image.source, from_image.x, from_image.y);
     cr->paint_with_alpha(1.0 - fade);
-
     return false;
 }
 
