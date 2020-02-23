@@ -110,6 +110,9 @@ bool WayfireBackground::load_images_from_dir(std::string path)
 
     /* Expand path */
     wordexp(path.c_str(), &exp, 0);
+    if (!exp.we_wordv)
+        return false;
+
     auto dir = opendir(exp.we_wordv[0]);
     if (!dir)
         return false;
