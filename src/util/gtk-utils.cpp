@@ -10,13 +10,13 @@ Glib::RefPtr<Gdk::Pixbuf> load_icon_pixbuf_safe(std::string icon_path, int size)
     {
         auto pb = Gdk::Pixbuf::create_from_file(icon_path, size, size);
         return pb;
-    } 
-    catch(Glib::FileError)
+    }
+    catch(Glib::FileError&)
     {
         std::cerr << "Error loading file: " << icon_path << std::endl;
         return {};
     }
-    catch(Gdk::PixbufError)
+    catch(Gdk::PixbufError&)
     {
         std::cerr << "Pixbuf error: " << icon_path << std::endl;
         return {};

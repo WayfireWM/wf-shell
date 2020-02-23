@@ -230,8 +230,6 @@ bool WayfireMenu::update_icon()
 {
     std::string icon;
     int size = menu_size / LAUNCHERS_ICON_SCALE;
-    bool error = false;
-
     if (((std::string) menu_icon).empty())
     {
         icon = default_icon;
