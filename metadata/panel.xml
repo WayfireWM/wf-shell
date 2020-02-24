@@ -26,6 +26,7 @@
 		<default>true</default>
 	</option>
 	<option name="autohide_duration" type="int">
+		<_short>Autohide Duration</_short>
 		<default>300</default>
 	</option>
 	<option name="position" type="string">
