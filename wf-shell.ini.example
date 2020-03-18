@@ -2,7 +2,7 @@
 
 [background]
 # Full path to image or directory of images
-image = /home/ilex/Desktop/sea-tree.jpeg
+# image = /usr/share/wayfire/wallpaper.jpg
 # Whether to scale images or preserve background ratio
 preserve_aspect = 0
 # In the case of directory, timeout between changing backgrounds, in seconds
