@@ -7,7 +7,7 @@
 	<_short>General</_short>
 	<option name="widgets_left" type="string">
 		<_short>Widgets Left</_short>
-		<default>menu spacing18 launchers</default>
+		<default>spacing4 menu spacing18 launchers</default>
 	</option>
 	<option name="widgets_center" type="string">
 		<_short>Widgets Center</_short>
@@ -19,11 +19,11 @@
 	</option>
 	<option name="minimal_height" type="int">
 		<_short>Minimal Height</_short>
-		<default>48</default>
+		<default>24</default>
 	</option>
 	<option name="autohide" type="bool">
 		<_short>Autohide</_short>
-		<default>true</default>
+		<default>false</default>
 	</option>
 	<option name="autohide_duration" type="int">
 		<_short>Autohide Duration</_short>
@@ -43,7 +43,7 @@
 	</option>
 	<option name="layer" type="string">
 		<_short>Layer</_short>
-		<default>overlay</default>
+		<default>top</default>
 		<desc>
 			<value>top</value>
 			<_name>Top</_name>
@@ -70,11 +70,11 @@
 	<_short>Launchers</_short>
 	<option name="launchers_spacing" type="int">
 		<_short>Launchers Spacing</_short>
-		<default>6</default>
+		<default>4</default>
 	</option>
 	<option name="launcher_size" type="int">
 		<_short>Launcher Size</_short>
-		<default>32</default>
+		<default>42</default>
 	</option>
 	</group>
 	<group>
@@ -110,11 +110,11 @@
 	</option>
 	<option name="battery_icon_size" type="int">
 		<_short>Battery Icon Size</_short>
-		<default>32</default>
+		<default>24</default>
 	</option>
 	<option name="battery_icon_invert" type="bool">
 		<_short>Battery Icon Invert Color</_short>
-		<default>false</default>
+		<default>true</default>
 	</option>
 	<option name="battery_font" type="string">
 		<_short>Battery Font</_short>
