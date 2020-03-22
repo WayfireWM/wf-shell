@@ -7,6 +7,9 @@
 #include <gdkmm/general.h>
 #include <gdk/gdkwayland.h>
 
+#include <random>
+#include <algorithm>
+
 #include <iostream>
 #include <map>
 
@@ -141,8 +144,9 @@ bool WayfireBackground::load_images_from_dir(std::string path)
 
     if (background_randomize && images.size())
     {
-        srand(time(0));
-        std::random_shuffle(images.begin(), images.end());
+        std::random_device random_device;
+        std::mt19937 random_gen(random_device());
+        std::shuffle(images.begin(), images.end(), random_gen);
     }
 
     return true;
