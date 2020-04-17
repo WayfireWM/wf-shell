@@ -62,11 +62,16 @@ struct FileLauncherInfo : public LauncherInfo
 {
     std::string command;
     std::string icon;
+    std::string label;
 
-    bool load(std::string name, std::string icon)
+    bool load(std::string command, std::string icon, std::string label = "")
     {
-        command = name;
+        this->command = command;
         this->icon = icon;
+        if(label == "")
+            this->label = command;
+        else
+            this->label = label;
 
         return load_icon_pixbuf_safe(icon, 24).get() != nullptr;
     }
@@ -78,7 +83,7 @@ struct FileLauncherInfo : public LauncherInfo
 
     std::string get_text()
     {
-        return command;
+        return label;
     }
 
     void execute()
