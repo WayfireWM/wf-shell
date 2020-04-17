@@ -253,13 +253,14 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
     const std::string desktop_prefix   = "launcher_";
     const std::string file_icon_prefix = "launcher_icon_";
     const std::string file_cmd_prefix = "launcher_cmd_";
+    const std::string file_label_prefix = "launcher_label_";
 
     launcher_container launchers;
     auto try_push_launcher = [&launchers] (
-        const std::string cmd, const std::string icon)
+        const std::string cmd, const std::string icon, const std::string label = "")
     {
         auto launcher = new WfLauncherButton();
-        if (launcher->initialize(cmd, icon)) {
+        if (launcher->initialize(cmd, icon, label)) {
             launchers.push_back(std::unique_ptr<WfLauncherButton>(launcher));
         } else {
             delete launcher;
@@ -277,17 +278,25 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
             auto icon_option = section->get_option_or(file_icon_prefix + launcher_name);
             if (icon_option)
             {
-                /* bingo, found command + icon */
-                try_push_launcher(opt->get_value_str(),
-                    icon_option->get_value_str());
+                /* bingo, found command + icon
+                 * now look for the corresponding label  */
+                auto label_option = section->get_option_or(file_label_prefix + launcher_name);
+                if(label_option)
+                {
+                    /* found label */
+                    try_push_launcher(opt->get_value_str(), icon_option->get_value_str(), label_option->get_value_str());
+                } else {
+                    try_push_launcher(opt->get_value_str(), icon_option->get_value_str());
+                }
             }
         }
 
         /* an entry is a deskop-file entry if the it has the desktop prefix
-         * but not the file_icon or file_cmd prefix */
+         * but not the file_icon, file_cmd or file_label prefix */
         if (begins_with(opt->get_name(), desktop_prefix) &&
             !begins_with(opt->get_name(), file_icon_prefix) &&
-            !begins_with(opt->get_name(), file_cmd_prefix))
+            !begins_with(opt->get_name(), file_cmd_prefix) &&
+            !begins_with(opt->get_name(), file_label_prefix))
         {
             try_push_launcher(opt->get_value_str(), "none");
         }
