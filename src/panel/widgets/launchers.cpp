@@ -64,7 +64,7 @@ struct FileLauncherInfo : public LauncherInfo
     std::string icon;
     std::string label;
 
-    bool load(std::string command, std::string icon, std::string label = "")
+    bool load(std::string command, std::string icon, std::string label)
     {
         this->command = command;
         this->icon = icon;
@@ -109,7 +109,7 @@ void WfLauncherButton::set_size(int size)
     on_scale_update();
 }
 
-bool WfLauncherButton::initialize(std::string name, std::string icon)
+bool WfLauncherButton::initialize(std::string name, std::string icon, std::string label)
 {
     launcher_name = name;
     base_size = WfOption<int> {"panel/launcher_size"} / LAUNCHERS_ICON_SCALE;
@@ -125,7 +125,7 @@ bool WfLauncherButton::initialize(std::string name, std::string icon)
     } else
     {
         auto fl = new FileLauncherInfo();
-        if (!fl->load(name, icon))
+        if (!fl->load(name, icon, label))
         {
             std::cerr << "Failed to load icon " << icon << std::endl;
             return false;

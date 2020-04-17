@@ -49,7 +49,7 @@ struct WfLauncherButton
     WfLauncherButton& operator = (const WfLauncherButton&) = delete;
     ~WfLauncherButton();
 
-    bool initialize(std::string name, std::string icon = "none");
+    bool initialize(std::string name, std::string icon = "none", std::string label = "");
 
     bool on_click(GdkEventButton *ev);
     bool on_enter(GdkEventCrossing *ev);
