@@ -285,7 +285,8 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
                 if(label_option)
                 {
                     /* found label */
-                    try_push_launcher(opt->get_value_str(), icon_option->get_value_str(), label_option->get_value_str());
+                    try_push_launcher(opt->get_value_str(), icon_option->get_value_str(),
+                        label_option->get_value_str());
                 } else {
                     try_push_launcher(opt->get_value_str(), icon_option->get_value_str());
                 }
