@@ -69,10 +69,11 @@ struct FileLauncherInfo : public LauncherInfo
         this->command = command;
         this->icon = icon;
         if(label == "")
+        {
             this->label = command;
-        else
+        } else {
             this->label = label;
-
+        }
         return load_icon_pixbuf_safe(icon, 24).get() != nullptr;
     }
 
