@@ -290,10 +290,11 @@ WayfireVolume::~WayfireVolume()
 {
     disconnect_gvc_stream_signals();
 
-    gvc_mixer_control_close(gvc_control);
-    g_object_unref(gvc_control);
     if (notify_default_sink_changed)
         g_signal_handler_disconnect(gvc_control, notify_default_sink_changed);
+
+    gvc_mixer_control_close(gvc_control);
+    g_object_unref(gvc_control);
 
     popover_timeout.disconnect();
 }
