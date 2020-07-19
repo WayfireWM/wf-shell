@@ -74,9 +74,11 @@ void WayfireShellApp::on_activate()
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(wl_display);
 
+    std::vector<std::string> xmldirs(1, METADATA_DIR);
+
     // setup config
     this->config = wf::config::build_configuration(
-        METADATA_DIR, SYSCONF_DIR "/wayfire/wf-shell-defaults.ini",
+        xmldirs, SYSCONF_DIR "/wayfire/wf-shell-defaults.ini",
         get_config_file());
 
     inotify_fd = inotify_init();
