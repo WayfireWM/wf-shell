@@ -71,10 +71,11 @@ WayfireBackground::create_from_file_safe(std::string path)
     Glib::RefPtr<Gdk::Pixbuf> pbuf;
     int width = window.get_allocated_width() * scale;
     int height = window.get_allocated_height() * scale;
+    float aspect_ratio = (float) width / (float) height;
 
     try {
         pbuf =
-            Gdk::Pixbuf::create_from_file(path, width, height,
+            Gdk::Pixbuf::create_from_file(path, aspect_ratio * 2 * width, height,
                 background_preserve_aspect);
     } catch (...) {
         return Glib::RefPtr<Gdk::Pixbuf>();
@@ -82,9 +83,21 @@ WayfireBackground::create_from_file_safe(std::string path)
 
     if (background_preserve_aspect)
     {
-        bool eq_width = (width == pbuf->get_width());
-        offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
-        offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
+       
+    	std::cout << "AR: " << aspect_ratio << std::endl;
+    	std::cout << "scale: " << scale << std::endl;
+
+        // bool eq_width = (width == pbuf->get_width());
+        // offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
+
+        // offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
+     	offset_x = (width - pbuf->get_width()) * 0.5;
+
+        // offset_y = height - pbuf->get_height();
+        offset_y = 0.0;
+
+        std::cout << "offset_x: " << offset_x << std::endl;
+        std::cout << "offset_y: " << offset_y << std::endl;
     }
     else
     {
