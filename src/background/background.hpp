@@ -57,6 +57,7 @@ class WayfireBackground
     WfOption<std::string> background_image{"background/image"};
     WfOption<int> background_cycle_timeout{"background/cycle_timeout"};
     WfOption<bool> background_randomize{"background/randomize"};
+    WfOption<bool> background_fill_and_crop{"background/fill_and_crop"};
     WfOption<bool> background_preserve_aspect{"background/preserve_aspect"};
 
     Glib::RefPtr<Gdk::Pixbuf> create_from_file_safe(std::string path);

@@ -75,33 +75,31 @@ WayfireBackground::create_from_file_safe(std::string path)
 
     try {
         pbuf =
-            Gdk::Pixbuf::create_from_file(path, aspect_ratio * 2 * width, height,
-                background_preserve_aspect);
+            Gdk::Pixbuf::create_from_file(path, 
+                background_fill_and_crop ? aspect_ratio * 2 * width : width,
+                height, background_fill_and_crop || background_preserve_aspect);
     } catch (...) {
         return Glib::RefPtr<Gdk::Pixbuf>();
     }
 
-    if (background_preserve_aspect)
-    {
-       
-    	std::cout << "AR: " << aspect_ratio << std::endl;
-    	std::cout << "scale: " << scale << std::endl;
-
-        // bool eq_width = (width == pbuf->get_width());
-        // offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
-
-        // offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
+    if (background_fill_and_crop)
+    {        
      	offset_x = (width - pbuf->get_width()) * 0.5;
-
-        // offset_y = height - pbuf->get_height();
         offset_y = 0.0;
 
-        std::cout << "offset_x: " << offset_x << std::endl;
-        std::cout << "offset_y: " << offset_y << std::endl;
     }
     else
     {
+    	if (background_preserve_aspect) 
+    	{
+    	    bool eq_width = (width == pbuf->get_width());
+            offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
+            offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
+    	} 
+    	else
+    	{
         offset_x = offset_y = 0.0;
+        }
     }
 
     return pbuf;
@@ -266,6 +264,7 @@ void WayfireBackground::setup_window()
     auto reset_cycle = [=] () { reset_cycle_timeout(); };
     background_image.set_callback(reset_background);
     background_randomize.set_callback(reset_background);
+    background_fill_and_crop.set_callback(reset_background);
     background_preserve_aspect.set_callback(reset_background);
     background_cycle_timeout.set_callback(reset_cycle);
 
