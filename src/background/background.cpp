@@ -71,13 +71,12 @@ WayfireBackground::create_from_file_safe(std::string path)
     Glib::RefPtr<Gdk::Pixbuf> pbuf;
     int width = window.get_allocated_width() * scale;
     int height = window.get_allocated_height() * scale;
-    float aspect_ratio = (float) width / (float) height;
 
     try {
         pbuf =
             Gdk::Pixbuf::create_from_file(path, 
-                background_fill_and_crop ? aspect_ratio * 2 * width : width,
-                height, background_fill_and_crop || background_preserve_aspect);
+                background_fill_and_crop ? -1 : width, height,
+                background_fill_and_crop || background_preserve_aspect);
     } catch (...) {
         return Glib::RefPtr<Gdk::Pixbuf>();
     }
@@ -85,7 +84,7 @@ WayfireBackground::create_from_file_safe(std::string path)
     if (background_fill_and_crop)
     {        
      	offset_x = (width - pbuf->get_width()) * 0.5;
-        offset_y = 0.0;
+        offset_y = (height - pbuf->get_height()) * 0.5;
 
     }
     else
