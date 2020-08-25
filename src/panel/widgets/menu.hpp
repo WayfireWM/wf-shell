@@ -43,11 +43,11 @@ class WayfireMenu : public WayfireWidget
     Gtk::HBox categories_and_scrolledwindow_box;
     Gtk::VBox bottom_pad;
     Gtk::VBox popover_layout_box;
+    Gtk::VBox categories;
     Gtk::Image main_image;
     Gtk::Entry search_box;
     Gtk::FlowBox flowbox;
     Gtk::ScrolledWindow scrolled_window;
-    Gtk::ListBox categories;
     std::unique_ptr<WayfireMenuButton> button;
 
     void load_menu_item(AppInfo app_info);
