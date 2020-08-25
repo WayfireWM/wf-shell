@@ -284,6 +284,9 @@ void WayfireMenu::update_popover_layout()
         scrolled_window.set_min_content_height(500);
         scrolled_window.add(flowbox_container);
 
+        categories_and_scrolledwindow_box.add(categories);
+        categories_and_scrolledwindow_box.add(scrolled_window);
+
         search_box.property_margin().set_value(20);
         search_box.set_icon_from_icon_name("search", Gtk::ENTRY_ICON_SECONDARY);
         search_box.signal_changed().connect_notify(
@@ -293,16 +296,16 @@ void WayfireMenu::update_popover_layout()
         /* Layout was already initialized, make sure to remove widgets before
          * adding them again */
         popover_layout_box.remove(search_box);
-        popover_layout_box.remove(scrolled_window);
+        popover_layout_box.remove(categories_and_scrolledwindow_box);
     }
 
     if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {
         popover_layout_box.pack_start(search_box);
-        popover_layout_box.pack_start(scrolled_window);
+        popover_layout_box.pack_start(categories_and_scrolledwindow_box);
     } else
     {
-        popover_layout_box.pack_start(scrolled_window);
+        popover_layout_box.pack_start(categories_and_scrolledwindow_box);
         popover_layout_box.pack_start(search_box);
     }
 
