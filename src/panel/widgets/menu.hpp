@@ -20,6 +20,7 @@ class WfMenuMenuItem : public Gtk::HBox
 
     bool matches(Glib::ustring text);
     bool fuzzy_match(Glib::ustring text);
+    bool category_match(Glib::ustring text);
     bool operator < (const WfMenuMenuItem& other);
 
     private:

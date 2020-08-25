@@ -3,6 +3,7 @@
 #include <cassert>
 #include <giomm/icon.h>
 #include <glibmm/spawn.h>
+#include <glibmm/regex.h>
 #include <iostream>
 
 #include "menu.hpp"
@@ -106,6 +107,12 @@ bool WfMenuMenuItem::matches(Glib::ustring pattern)
         + descr.lowercase();
 
     return text.find(pattern.lowercase()) != text.npos;
+}
+
+bool WfMenuMenuItem::category_match(Glib::ustring pattern)
+{
+    auto regex = Glib::Regex::create(pattern);
+    return regex->match(pattern);
 }
 
 bool WfMenuMenuItem::operator < (const WfMenuMenuItem& other)
