@@ -121,6 +121,17 @@ bool WfMenuMenuItem::operator < (const WfMenuMenuItem& other)
         < Glib::ustring(other.m_app_info->get_name()).lowercase();
 }
 
+WfMenuCategory::WfMenuCategory(Glib::ustring name, Glib::ustring pattern)
+    : Gtk::HBox(false,10),label(name), pattern(pattern)
+{
+    image.set_from_icon_name("applications-"+name.lowercase(),
+        (Gtk::IconSize)Gtk::ICON_SIZE_MENU);
+    image.set_pixel_size(16);
+
+    add(image);
+    add(label);
+}
+
 void WayfireMenu::load_menu_item(AppInfo app_info)
 {
     if (!app_info)

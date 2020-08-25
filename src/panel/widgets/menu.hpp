@@ -36,6 +36,21 @@ class WfMenuMenuItem : public Gtk::HBox
     void on_click();
 };
 
+class WfMenuCategory : public Gtk::HBox
+{
+  public:
+    WfMenuCategory(Glib::ustring name, Glib::ustring pattern);
+    Glib::ustring get_patern(){return pattern;};
+  private:
+    Gtk::Box left_pad, right_pad;
+    Gtk::Button button;
+    Gtk::Button button_box;
+    Gtk::Image image;
+    Gtk::Label label;
+
+    Glib::ustring pattern;
+};
+
 class WayfireMenu : public WayfireWidget
 {
     Gtk::Box flowbox_container;
