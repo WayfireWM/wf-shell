@@ -1,4 +1,5 @@
-<protocol name="wayfire_shell">
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="wayfire_shell_unstable_v2">
   <interface name="zwf_shell_manager_v2" version="1">
     <description summary="DE integration">
       This protocol provides additional events and requests for special DE
