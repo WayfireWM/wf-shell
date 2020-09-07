@@ -360,7 +360,6 @@ void WayfireNetworkInfo::init(Gtk::HBox *container)
     }
 
     container->add(button);
-
     button.add(button_content);
     button.get_style_context()->add_class("flat");
 
@@ -377,7 +376,7 @@ void WayfireNetworkInfo::init(Gtk::HBox *container)
         sigc::mem_fun(this, &WayfireNetworkInfo::update_icon));
 
     update_active_connection();
-    button.show_all();
+    handle_config_reload();
 }
 
 void WayfireNetworkInfo::handle_config_reload()
@@ -393,9 +392,13 @@ void WayfireNetworkInfo::handle_config_reload()
     {
         if (status.get_parent())
             button_content.remove(status);
-    } else {
+    } else
+    {
         if (!status.get_parent())
+        {
             button_content.pack_start(status);
+            button_content.show_all();
+        }
     }
 
     update_icon();
