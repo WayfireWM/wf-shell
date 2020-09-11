@@ -119,7 +119,7 @@ WayfireBackground::create_from_file_safe(std::string path)
 	    } catch (...) {
 	        return Glib::RefPtr<Gdk::Pixbuf>();
 	    }
-    } else
+    }
 
 	if (current_mode == stretch)
 	{
