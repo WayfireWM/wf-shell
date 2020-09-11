@@ -107,10 +107,8 @@ WayfireBackground::create_from_file_safe(std::string path)
     }
 
     if (current_mode == fill_and_crop) {
-	    image_aspect_ratio = (float) pbuf->get_height() / pbuf->get_width();
-		bool should_fill_width = 
-		     !((image_aspect_ratio < 1) && (screen_aspect_ratio > 1));
-
+	    image_aspect_ratio = (float) pbuf->get_width() / pbuf->get_height();
+		bool should_fill_width = (screen_aspect_ratio > image_aspect_ratio);
 	    try {
 	        pbuf =
 	            Gdk::Pixbuf::create_from_file(path, 
