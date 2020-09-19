@@ -67,7 +67,7 @@ class WayfireMenu : public WayfireWidget
 
     WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
     WfOption<std::string> panel_position{"panel/position"};
-    WfOption<int> menu_size{"panel/launcher_size"};
+    WfOption<int> menu_size{"panel/launchers_size"};
     WfOption<std::string> menu_icon{"panel/menu_icon"};
     void update_popover_layout();
 

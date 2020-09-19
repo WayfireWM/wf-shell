@@ -113,7 +113,7 @@ void WfLauncherButton::set_size(int size)
 bool WfLauncherButton::initialize(std::string name, std::string icon, std::string label)
 {
     launcher_name = name;
-    base_size = WfOption<int> {"panel/launcher_size"} / LAUNCHERS_ICON_SCALE;
+    base_size = WfOption<int> {"panel/launchers_size"} / LAUNCHERS_ICON_SCALE;
     if (icon == "none")
     {
         auto dl = new DesktopLauncherInfo();

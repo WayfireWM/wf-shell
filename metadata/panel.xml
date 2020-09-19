@@ -72,8 +72,8 @@
 		<_short>Launchers Spacing</_short>
 		<default>4</default>
 	</option>
-	<option name="launcher_size" type="int">
-		<_short>Launcher Size</_short>
+	<option name="launchers_size" type="int">
+		<_short>Launchers Size</_short>
 		<default>42</default>
 	</option>
 	</group>
