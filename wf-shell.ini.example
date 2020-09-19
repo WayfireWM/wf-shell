@@ -68,7 +68,7 @@ launcher_nau = org.gnome.Nautilus.desktop
 launchers_spacing = 4
 
 # size of the launcher icon
-launcher_size = 42
+launchers_size = 42
 
 
 

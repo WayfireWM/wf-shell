@@ -36,7 +36,7 @@ class WayfireVolume : public WayfireWidget
     WayfireVolumeScale volume_scale;
     std::unique_ptr<WayfireMenuButton> button;
 
-    WfOption<int> volume_size{"panel/launcher_size"};
+    WfOption<int> volume_size{"panel/launchers_size"};
     WfOption<double> timeout{"panel/volume_display_timeout"};
 
     void on_volume_scroll(GdkEventScroll *event);
