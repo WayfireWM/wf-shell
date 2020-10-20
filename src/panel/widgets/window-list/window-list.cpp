@@ -143,7 +143,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
         auto zwlr_toplevel_manager = (zwlr_foreign_toplevel_manager_v1*)
             wl_registry_bind(registry, name,
                 &zwlr_foreign_toplevel_manager_v1_interface,
-                std::min(version, 1u));
+                std::min(version, 3u));
 
         window_list->handle_toplevel_manager(zwlr_toplevel_manager);
     }
