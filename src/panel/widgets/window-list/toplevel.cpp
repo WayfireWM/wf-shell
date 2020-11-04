@@ -543,7 +543,10 @@ static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t par
     auto impl = static_cast<WayfireToplevel::impl*> (data);
     if (!parent)
     {
-        impl->handle_output_enter(impl->window_list->output->wo);
+        if (impl->get_parent())
+        {
+            impl->handle_output_enter(impl->window_list->output->wo);
+        }
         remove_child_from_parent(impl, handle);
         impl->set_parent(parent);
         return;
