@@ -519,26 +519,33 @@ static void handle_toplevel_done(void *data, toplevel_t)
 //    auto impl = static_cast<WayfireToplevel::impl*> (data);
 }
 
+static void remove_child_from_parent(WayfireToplevel::impl *impl, toplevel_t child)
+{
+    auto parent = impl->get_parent();
+    auto& parent_toplevel = impl->window_list->toplevels[parent];
+    if (child && parent && parent_toplevel)
+    {
+        auto& children = parent_toplevel->get_children();
+        children.erase(std::find(children.begin(), children.end(), child));
+    }
+}
+
 static void handle_toplevel_closed(void *data, toplevel_t handle)
 {
     //WayfirePanelApp::get().handle_toplevel_closed(handle);
     auto impl = static_cast<WayfireToplevel::impl*> (data);
-    auto parent = impl->get_parent();
-    if (parent && impl->window_list->toplevels[parent])
-    {
-        auto& children = impl->window_list->toplevels[parent]->get_children();
-        children.erase(std::find(children.begin(), children.end(), handle));
-    }
+    remove_child_from_parent(impl, handle);
     impl->window_list->handle_toplevel_closed(handle);
 }
 
 static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t parent)
 {
     auto impl = static_cast<WayfireToplevel::impl*> (data);
-    impl->set_parent(parent);
     if (!parent)
     {
         impl->handle_output_enter(impl->window_list->output->wo);
+        remove_child_from_parent(impl, handle);
+        impl->set_parent(parent);
         return;
     }
     if (impl->window_list->toplevels[parent])
@@ -546,6 +553,7 @@ static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t par
         auto& children = impl->window_list->toplevels[parent]->get_children();
         children.push_back(handle);
     }
+    impl->set_parent(parent);
     impl->remove_button();
 }
 
