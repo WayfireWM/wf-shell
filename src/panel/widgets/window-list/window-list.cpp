@@ -192,7 +192,10 @@ void WayfireWindowList::set_button_width(int width)
 {
     std::cout << "set width " << width << std::endl;
     for (auto& toplevel : toplevels)
-        toplevel.second->set_width(width);
+    {
+        if (toplevel.second)
+            toplevel.second->set_width(width);
+    }
 }
 
 int WayfireWindowList::get_default_button_width()
