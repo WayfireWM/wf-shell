@@ -22,6 +22,8 @@ gtklayershell  = dependency('gtk-layer-shell-0', version: '>= 0.1', fallback: ['
 libpulse       = dependency('libpulse', required : get_option('pulse'))
 libgvc         = subproject('gvc', default_options: ['static=true'], required : get_option('pulse'))
 
+wayland_logout = subproject('wayland-logout')
+
 if libpulse.found()
   libgvc = libgvc.get_variable('libgvc_dep')
   add_project_arguments('-DHAVE_PULSE=1', language : 'cpp')
