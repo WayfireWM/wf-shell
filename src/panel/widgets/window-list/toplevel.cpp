@@ -535,12 +535,17 @@ static void handle_toplevel_closed(void *data, toplevel_t handle)
 static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t parent)
 {
     auto impl = static_cast<WayfireToplevel::impl*> (data);
+    impl->set_parent(parent);
+    if (!parent)
+    {
+        impl->handle_output_enter(impl->window_list->output->wo);
+        return;
+    }
     if (impl->window_list->toplevels[parent])
     {
         auto& children = impl->window_list->toplevels[parent]->get_children();
         children.push_back(handle);
     }
-    impl->set_parent(parent);
     impl->remove_button();
 }
 
