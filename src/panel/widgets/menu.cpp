@@ -303,6 +303,11 @@ void WayfireMenu::update_popover_layout()
     popover_layout_box.show_all();
 }
 
+void WayfireMenu::on_logout_click()
+{
+    g_spawn_command_line_async(std::string(menu_logout_command).c_str(), NULL);
+}
+
 void WayfireMenu::init(Gtk::HBox *container)
 {
     menu_icon.set_callback([=] () { update_icon(); });
@@ -323,6 +328,15 @@ void WayfireMenu::init(Gtk::HBox *container)
 
     container->pack_start(hbox, false, false);
     hbox.pack_start(*button, false, false);
+
+    logout_button.set_image_from_icon_name("system-shutdown", Gtk::ICON_SIZE_DIALOG);
+    logout_button.signal_clicked().connect_notify(
+        sigc::mem_fun(this, &WayfireMenu::on_logout_click));
+    logout_button.property_margin().set_value(20);
+    logout_button.set_margin_right(35);
+    hbox_bottom.pack_end(logout_button, false, false);
+    popover_layout_box.pack_end(hbox_bottom);
+    popover_layout_box.pack_end(separator);
 
     load_menu_items_all();
     update_popover_layout();

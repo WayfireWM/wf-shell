@@ -8,6 +8,7 @@
 #include <gtkmm/image.h>
 #include <gtkmm/flowbox.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/separator.h>
 #include <set>
 
 class WayfireMenu;
@@ -37,12 +38,14 @@ class WfMenuMenuItem : public Gtk::HBox
 class WayfireMenu : public WayfireWidget
 {
     Gtk::Box flowbox_container;
-    Gtk::HBox hbox;
+    Gtk::HBox hbox, hbox_bottom;
     Gtk::VBox bottom_pad;
     Gtk::VBox popover_layout_box;
+    Gtk::Separator separator;
     Gtk::Image main_image;
     Gtk::Entry search_box;
     Gtk::FlowBox flowbox;
+    Gtk::Button logout_button;
     Gtk::ScrolledWindow scrolled_window;
     std::unique_ptr<WayfireMenuButton> button;
 
@@ -65,11 +68,13 @@ class WayfireMenu : public WayfireWidget
      * so that we don't show duplicate entries */
     std::set<std::pair<std::string, std::string>> loaded_apps;
 
+    WfOption<std::string> menu_logout_command{"panel/menu_logout_command"};
     WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
     WfOption<std::string> panel_position{"panel/position"};
-    WfOption<int> menu_size{"panel/launchers_size"};
     WfOption<std::string> menu_icon{"panel/menu_icon"};
+    WfOption<int> menu_size{"panel/launchers_size"};
     void update_popover_layout();
+    void on_logout_click();
 
     public:
     void init(Gtk::HBox *container) override;

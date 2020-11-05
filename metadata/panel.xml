@@ -169,6 +169,10 @@
 		<hint>file</hint>
 		<default></default>
 	</option>
+	<option name="menu_logout_command" type="string">
+		<_short>Menu Logout Command</_short>
+		<default>wayland-logout</default>
+	</option>
 	</group>
 	<group>
 	<_short>Volume</_short>

@@ -4,3 +4,6 @@
 [submodule "subprojects/gvc"]
 	path = subprojects/gvc
 	url = https://github.com/GNOME/libgnome-volume-control
+[submodule "subprojects/wayland-logout"]
+	path = subprojects/wayland-logout
+	url = https://github.com/soreau/wayland-logout
