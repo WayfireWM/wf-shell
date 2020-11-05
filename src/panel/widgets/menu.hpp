@@ -8,6 +8,7 @@
 #include <gtkmm/image.h>
 #include <gtkmm/flowbox.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/separator.h>
 #include <set>
 
 class WayfireMenu;
@@ -40,6 +41,7 @@ class WayfireMenu : public WayfireWidget
     Gtk::HBox hbox, hbox_bottom;
     Gtk::VBox bottom_pad;
     Gtk::VBox popover_layout_box;
+    Gtk::Separator separator;
     Gtk::Image main_image;
     Gtk::Entry search_box;
     Gtk::FlowBox flowbox;

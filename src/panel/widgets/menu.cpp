@@ -336,6 +336,7 @@ void WayfireMenu::init(Gtk::HBox *container)
     logout_button.set_margin_right(35);
     hbox_bottom.pack_end(logout_button, false, false);
     popover_layout_box.pack_end(hbox_bottom);
+    popover_layout_box.pack_end(separator);
 
     load_menu_items_all();
     update_popover_layout();
