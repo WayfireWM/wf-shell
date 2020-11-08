@@ -30,7 +30,8 @@ namespace IconProvider
 
 class WayfireToplevel::impl
 {
-    zwlr_foreign_toplevel_handle_v1 *handle;
+    zwlr_foreign_toplevel_handle_v1 *handle, *parent;
+    std::vector<zwlr_foreign_toplevel_handle_v1 *> children;
     uint32_t state;
 
     Gtk::Button button;
@@ -48,6 +49,7 @@ class WayfireToplevel::impl
     impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle)
     {
         this->handle = handle;
+        this->parent = nullptr;
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
             &toplevel_handle_v1_impl, this);
 
@@ -235,7 +237,17 @@ class WayfireToplevel::impl
             return;
         }
 
-        if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
+        bool child_activated = false;
+        for (auto c : get_children())
+        {
+            if (window_list->toplevels[c]->get_state() & WF_TOPLEVEL_STATE_ACTIVATED)
+            {
+                    child_activated = true;
+                    break;
+            }
+        }
+
+        if (!(state & WF_TOPLEVEL_STATE_ACTIVATED) && !child_activated)
         {
             auto gseat = Gdk::Display::get_default()->get_default_seat();
             auto seat = gdk_wayland_seat_get_wl_seat(gseat->gobj());
@@ -285,7 +297,7 @@ class WayfireToplevel::impl
         }
 
         auto panel =
-            WayfirePanelApp::get().panel_for_wl_output( window_list->output->wo);
+            WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
         if (!panel)
             return;
 
@@ -349,6 +361,32 @@ class WayfireToplevel::impl
         label.set_text(shorten_title(show_chars));
     }
 
+    uint32_t get_state()
+    {
+        return this->state;
+    }
+
+    zwlr_foreign_toplevel_handle_v1 * get_parent()
+    {
+        return this->parent;
+    }
+
+    void set_parent(zwlr_foreign_toplevel_handle_v1 *parent)
+    {
+        this->parent = parent;
+    }
+
+    std::vector<zwlr_foreign_toplevel_handle_v1 *>& get_children()
+    {
+        return this->children;
+    }
+
+    void remove_button()
+    {
+        auto& container = window_list->box;
+        container.remove(button);
+    }
+
     void update_menu_item_text()
     {
         if (state & WF_TOPLEVEL_STATE_MINIMIZED)
@@ -386,6 +424,10 @@ class WayfireToplevel::impl
 
     void handle_output_enter(wl_output *output)
     {
+        if (this->parent)
+        {
+            return;
+        }
         auto& container = window_list->box;
         if (window_list->output->wo == output)
         {
@@ -410,6 +452,10 @@ WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list,
     :pimpl(new WayfireToplevel::impl(window_list, handle)) { }
 
 void WayfireToplevel::set_width(int pixels) { return pimpl->set_max_width(pixels); }
+std::vector<zwlr_foreign_toplevel_handle_v1 *>& WayfireToplevel::get_children() { return pimpl->get_children(); }
+zwlr_foreign_toplevel_handle_v1 * WayfireToplevel::get_parent() { return pimpl->get_parent(); }
+void WayfireToplevel::set_parent(zwlr_foreign_toplevel_handle_v1 *parent) { return pimpl->set_parent(parent); }
+uint32_t WayfireToplevel::get_state() { return pimpl->get_state(); }
 WayfireToplevel::~WayfireToplevel() = default;
 
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;
@@ -473,11 +519,45 @@ static void handle_toplevel_done(void *data, toplevel_t)
 //    auto impl = static_cast<WayfireToplevel::impl*> (data);
 }
 
+static void remove_child_from_parent(WayfireToplevel::impl *impl, toplevel_t child)
+{
+    auto parent = impl->get_parent();
+    auto& parent_toplevel = impl->window_list->toplevels[parent];
+    if (child && parent && parent_toplevel)
+    {
+        auto& children = parent_toplevel->get_children();
+        children.erase(std::find(children.begin(), children.end(), child));
+    }
+}
+
 static void handle_toplevel_closed(void *data, toplevel_t handle)
 {
     //WayfirePanelApp::get().handle_toplevel_closed(handle);
     auto impl = static_cast<WayfireToplevel::impl*> (data);
+    remove_child_from_parent(impl, handle);
     impl->window_list->handle_toplevel_closed(handle);
+}
+
+static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t parent)
+{
+    auto impl = static_cast<WayfireToplevel::impl*> (data);
+    if (!parent)
+    {
+        if (impl->get_parent())
+        {
+            impl->handle_output_enter(impl->window_list->output->wo);
+        }
+        remove_child_from_parent(impl, handle);
+        impl->set_parent(parent);
+        return;
+    }
+    if (impl->window_list->toplevels[parent])
+    {
+        auto& children = impl->window_list->toplevels[parent]->get_children();
+        children.push_back(handle);
+    }
+    impl->set_parent(parent);
+    impl->remove_button();
 }
 
 namespace
@@ -489,7 +569,8 @@ struct zwlr_foreign_toplevel_handle_v1_listener toplevel_handle_v1_impl = {
     .output_leave = handle_toplevel_output_leave,
     .state        = handle_toplevel_state,
     .done         = handle_toplevel_done,
-    .closed       = handle_toplevel_closed
+    .closed       = handle_toplevel_closed,
+    .parent       = handle_toplevel_parent
 };
 }
 
