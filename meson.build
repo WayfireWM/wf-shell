@@ -2,7 +2,7 @@ project(
 	'wf-shell',
     'c',
 	'cpp',
-	version: '0.6.0',
+	version: '0.6.1',
 	license: 'MIT',
 	meson_version: '>=0.51.0',
 	default_options: [
