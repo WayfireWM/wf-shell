@@ -225,10 +225,10 @@ void WayfireMenu::on_popover_shown()
 {
     flowbox.unselect_all();
     for (auto* child : flowbox.get_children())
- 		{flowbox.remove(*child);}
-	loaded_apps.clear();
-	load_menu_items_all();
-	update_popover_layout();
+ 	{flowbox.remove(*child);}
+    loaded_apps.clear();
+    load_menu_items_all();
+    update_popover_layout();
 }
 
 bool WayfireMenu::update_icon()
