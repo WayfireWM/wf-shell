@@ -224,6 +224,11 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild* a, Gtk::FlowBoxChild* b)
 void WayfireMenu::on_popover_shown()
 {
     flowbox.unselect_all();
+    for (auto* child : flowbox.get_children())
+ 		{flowbox.remove(*child);}
+	loaded_apps.clear();
+	load_menu_items_all();
+	update_popover_layout();
 }
 
 bool WayfireMenu::update_icon()
@@ -337,9 +342,6 @@ void WayfireMenu::init(Gtk::HBox *container)
     hbox_bottom.pack_end(logout_button, false, false);
     popover_layout_box.pack_end(hbox_bottom);
     popover_layout_box.pack_end(separator);
-
-    load_menu_items_all();
-    update_popover_layout();
 
     hbox.show();
     main_image.show();
