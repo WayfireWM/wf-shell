@@ -11,6 +11,7 @@
 #include <wf-autohide-window.hpp>
 
 #include "dock.hpp"
+#include "../util/gtk-utils.hpp"
 
 class WfDock::impl
 {
@@ -19,6 +20,8 @@ class WfDock::impl
     wl_surface *_wl_surface;
 
     Gtk::HBox box;
+
+    WfOption<std::string> css_path{"dock/css_path"};
 
     public:
     impl(WayfireOutput *output)
@@ -34,6 +37,19 @@ class WfDock::impl
         window->signal_size_allocate().connect_notify(
             sigc::mem_fun(this, &WfDock::impl::on_allocation));
         window->add(box);
+
+        if ((std::string)css_path != "")
+        {
+            auto css = load_css_from_path(css_path);
+            if (css)
+            {
+                auto screen = Gdk::Screen::get_default();
+                auto style_context = Gtk::StyleContext::create();
+                style_context->add_provider_for_screen(
+                    screen, css, GTK_STYLE_PROVIDER_PRIORITY_USER);
+            }
+        }
+
         window->show_all();
         _wl_surface = gdk_wayland_window_get_wl_surface(
             window->get_window()->gobj());

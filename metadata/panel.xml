@@ -5,6 +5,10 @@
 	<category>Shell</category>
 	<group>
 	<_short>General</_short>
+	<option name="css_path" type="string">
+		<_short>CSS Path</_short>
+		<default></default>
+	</option>
 	<option name="widgets_left" type="string">
 		<_short>Widgets Left</_short>
 		<default>spacing4 menu spacing18 launchers</default>

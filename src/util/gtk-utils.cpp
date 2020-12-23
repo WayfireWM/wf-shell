@@ -28,6 +28,26 @@ Glib::RefPtr<Gdk::Pixbuf> load_icon_pixbuf_safe(std::string icon_path, int size)
     }
 }
 
+Glib::RefPtr<Gtk::CssProvider> load_css_from_path(std::string path)
+{
+    try
+    {
+        auto css = Gtk::CssProvider::create();
+        css->load_from_path(path);
+        return css;
+    }
+    catch(Glib::Error& err)
+    {
+        std::cerr << "Failed to load CSS: " << err.what() << std::endl;
+        return {};
+    }
+    catch(...)
+    {
+        std::cerr << "Failed to load CSS at: " << path << std::endl;
+        return {};
+    }
+}
+
 void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff)
 {
     int channels = pbuff->get_n_channels();

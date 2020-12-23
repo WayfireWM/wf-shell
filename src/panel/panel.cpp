@@ -13,6 +13,7 @@
 #include <map>
 
 #include "panel.hpp"
+#include "../util/gtk-utils.hpp"
 
 #include "widgets/battery.hpp"
 #include "widgets/menu.hpp"
@@ -131,6 +132,7 @@ class WayfirePanel::impl
     };
 
     WfOption<int> minimal_panel_height{"panel/minimal_height"};
+    WfOption<std::string> css_path{"panel/css_path"};
 
     void create_window()
     {
@@ -147,6 +149,18 @@ class WayfirePanel::impl
 
         autohide_opt.set_callback(autohide_opt_updated);
         autohide_opt_updated(); // set initial autohide status
+
+        if ((std::string)css_path != "")
+        {
+            auto css = load_css_from_path(css_path);
+            if (css)
+            {
+                auto screen = Gdk::Screen::get_default();
+                auto style_context = Gtk::StyleContext::create();
+                style_context->add_provider_for_screen(
+                    screen, css, GTK_STYLE_PROVIDER_PRIORITY_USER);
+            }
+        }
 
         window->show_all();
         init_widgets();
