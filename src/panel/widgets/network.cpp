@@ -348,7 +348,14 @@ bool WayfireNetworkInfo::setup_dbus()
 
 void WayfireNetworkInfo::on_click()
 {
-    info->spawn_control_center(nm_proxy);
+    if ((std::string)click_command_opt != "default")
+    {
+        Glib::spawn_command_line_async((std::string)click_command_opt);
+    }
+    else
+    {
+        info->spawn_control_center(nm_proxy);
+    }
 }
 
 void WayfireNetworkInfo::init(Gtk::HBox *container)

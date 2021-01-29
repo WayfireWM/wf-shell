@@ -161,6 +161,10 @@
 		<_short>Network Status Use Color</_short>
 		<default>false</default>
 	</option>
+	<option name="network_onclick_command" type="string">
+		<_short>On Click Command</_short>
+		<default>default</default>
+	</option>
 	</group>
 	<group>
 	<_short>Menu</_short>
