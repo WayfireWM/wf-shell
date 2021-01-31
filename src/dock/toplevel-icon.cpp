@@ -256,8 +256,16 @@ namespace IconProvider
          * send a single app-id, but in any case this works fine */
         while (stream >> app_id)
         {
+            std::string app_name = app_id.substr(
+                app_id.rfind(".")+1, app_id.size()
+            );
+
             /* Try first method: custom icon file provided by the user */
-            if (set_custom_icon(image, app_id, size, scale))
+            if (
+                set_custom_icon(image, app_id, size, scale)
+                ||
+                set_custom_icon(image, app_name, size, scale)
+            )
             {
                 found_icon = true;
                 break;
@@ -268,10 +276,15 @@ namespace IconProvider
             std::string icon_name = "unknown";
 
             if (!icon)
+                icon = get_from_desktop_app_info(app_name);
+
+            if (!icon)
             {
                 /* Finally try directly looking up the icon, if it exists */
                 if (Gtk::IconTheme::get_default()->lookup_icon(app_id, 24))
                     icon_name = app_id;
+                else if (Gtk::IconTheme::get_default()->lookup_icon(app_name, 24))
+                    icon_name = app_name;
             } else
             {
                 icon_name = icon->to_string();
