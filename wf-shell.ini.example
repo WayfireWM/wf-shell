@@ -1,5 +1,3 @@
-# configuration section for the background, supports just the image option
-
 [background]
 # Full path to image or directory of images
 # image = /usr/share/wayfire/wallpaper.jpg
@@ -12,11 +10,7 @@ randomize = 0
 
 
 
-
-
-# configuration for the panel
 [panel]
-
 # widgets_* is a space-separated list of widgets to be displayed
 # at the corresponding part of the panel
 # Supported widgets are: launchers clock network battery window-list volume menu
@@ -35,6 +29,9 @@ minimal_height = 24
 # automatically hide when pointer isn't over the panel
 autohide = false
 
+# time in milliseconds to wait before hiding
+autohide_duration = 300
+
 # layer can be top, bottom, overlay or background
 layer = top
 
@@ -48,9 +45,7 @@ background_color = gtk_headerbar # match the color of a GtkHeaderbar
 #background_color = 0.033 0.041 0.047 0.9 # RGBA color, 1.0 0.0 0.0 0.5 for semi-transparent red
 
 
-
 # Configuration for the launchers widget
-
 # can be a desktop file
 launcher_chrome = google-chrome.desktop
 launcher_firefox = firefox.desktop
@@ -71,17 +66,11 @@ launchers_spacing = 4
 launchers_size = 42
 
 
-
-
-
 # Configuration for the clock widget
 # clock format, uses the Glib Time formatting
 clock_format = %e %a %H:%M
 # clock font
 clock_font = DejaVu Sans:style=Book 12
-
-
-
 
 
 # Configuration for the battery widget
@@ -109,9 +98,16 @@ network_icon_invert_color = 1
 # whether to colour the wifi signal strength
 network_status_use_color = yes
 
+
+# Configuration for the menu widget
 # whether to enable fuzzy search in the menu
 menu_fuzzy_search = 1
 
+# image file to use as the menu icon
+# menu_icon = /usr/share/wayfire/icons/wayfire.png
+
+# command run when the logout button is clicked
+menu_logout_command = wayland-logout
 
 
 # Configuration for the volume widget
@@ -119,8 +115,15 @@ menu_fuzzy_search = 1
 # after scrolling on the volume icon
 volume_display_timeout = 2.5
 
+
+
 [dock]
-position = bottom # or top
+# time in milliseconds to wait before hiding
+autohide_duration = 300
+
+# vertical alignment on the desktop
+# the only possible values are "top" and "bottom"
+position = bottom
 
 # For applications that aren't installed/configured properly, you can manually
 # set icons for given app_id's. Below is an example for IntelliJ IDEA
