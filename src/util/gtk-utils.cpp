@@ -1,6 +1,8 @@
-#include <gtk-utils.hpp>
+#include "gtk-utils.hpp"
+
 #include <glibmm.h>
 #include <gtkmm/icontheme.h>
+#include <gio/gdesktopappinfo.h>
 #include <gdk/gdkcairo.h>
 #include <iostream>
 
@@ -86,17 +88,165 @@ void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
                  image.get_scale_factor() : options.user_scale);
     int scaled_size = size * scale;
 
+    Glib::RefPtr<Gdk::Pixbuf> pbuff;
+
     if (!icon_theme->lookup_icon(icon_name, scaled_size))
+    {
+        if (Glib::file_test(icon_name, Glib::FILE_TEST_EXISTS))
+            pbuff = load_icon_pixbuf_safe(icon_name, scaled_size);
+    }
+    else
+    {
+        pbuff = icon_theme->load_icon(icon_name, scaled_size)
+            ->scale_simple(scaled_size, scaled_size, Gdk::INTERP_BILINEAR);
+    }
+
+    if (!pbuff)
     {
         std::cerr << "Failed to load icon \"" << icon_name << "\"" << std::endl;
         return;
     }
 
-    auto pbuff = icon_theme->load_icon(icon_name, scaled_size)
-        ->scale_simple(scaled_size, scaled_size, Gdk::INTERP_BILINEAR);
-
     if (options.invert)
         invert_pixbuf(pbuff);
 
     set_image_pixbuf(image, pbuff, scale);
+}
+
+/* Gio::DesktopAppInfo
+ *
+ * Usually knowing the app_id, we can get a desktop app info from Gio
+ * The filename is either the app_id + ".desktop" or lower_app_id + ".desktop"
+ */
+Glib::RefPtr<Gio::DesktopAppInfo> get_desktop_app_info(std::string app_id)
+{
+    Glib::RefPtr<Gio::DesktopAppInfo> app_info;
+
+    // search also on user defined .desktop files
+    std::string home_dir = std::getenv("HOME");
+    home_dir += "/.local/share/applications/";
+
+    std::vector<std::string> prefixes = {
+        "",
+        "/usr/share/applications/",
+        "/usr/share/applications/kde/",
+        "/usr/share/applications/org.kde.",
+        "/usr/local/share/applications/",
+        "/usr/local/share/applications/org.kde.",
+        home_dir
+    };
+
+    std::string app_id_lowercase = app_id;
+    for (auto& c : app_id_lowercase)
+        c = std::tolower(c);
+
+    // if app id is org.name.appname take only the appname part
+    std::string app_id_basename = app_id.substr(
+        app_id.rfind(".")+1, app_id.size()
+    );
+
+    std::vector<std::string> app_id_variations = {
+        app_id,
+        app_id_lowercase,
+        app_id_basename
+    };
+
+    std::vector<std::string> suffixes = {
+        "",
+        ".desktop"
+    };
+
+    for (auto& prefix : prefixes)
+    {
+        for (auto& id : app_id_variations)
+        {
+            for (auto& suffix : suffixes)
+            {
+                if (!app_info)
+                {
+                    app_info = Gio::DesktopAppInfo
+                        ::create_from_filename(prefix + id + suffix);
+                }
+            }
+        }
+    }
+
+    // As last resort perform a search and select best match
+    if (!app_info)
+    {
+        std::string desktop_file = "";
+
+        gchar*** desktop_list = g_desktop_app_info_search(app_id.c_str());
+        if (desktop_list != nullptr && desktop_list[0] != nullptr)
+        {
+            for (size_t i=0; desktop_list[0][i]; i++)
+            {
+                if(desktop_file == "")
+                    desktop_file = desktop_list[0][i];
+
+                break;
+            }
+            g_strfreev(desktop_list[0]);
+        }
+        g_free(desktop_list);
+
+        if(desktop_file != "")
+            app_info = Gio::DesktopAppInfo::create(desktop_file);
+    }
+
+    if (app_info)
+        return app_info;
+
+    return {};
+}
+
+bool set_image_from_icon(Gtk::Image& image,
+    std::string app_id_list, int size, int scale)
+{
+    std::string app_id;
+    std::istringstream stream(app_id_list);
+
+    bool found_icon = false;
+
+    std::string icon_name = "unknown";
+
+    // Wayfire sends a list of app-id's in space separated format, other
+    // compositors send a single app-id, but in any case this works fine
+    while (stream >> app_id)
+    {
+        std::string app_name = app_id.substr(
+            app_id.rfind(".")+1, app_id.size()
+        );
+
+        // Try to load icon from the DesktopAppInfo
+        auto app_info = get_desktop_app_info(app_id);
+
+        if (app_info)
+            icon_name = app_info->get_icon()->to_string();
+
+        // Try directly looking up the icon, if it exists
+        if (icon_name == "unknown")
+        {
+            if (Gtk::IconTheme::get_default()->lookup_icon(app_id, 24))
+                icon_name = app_id;
+            else if (Gtk::IconTheme::get_default()->lookup_icon(app_name, 24))
+                icon_name = app_name;
+        }
+
+        if (icon_name != "unknown")
+        {
+            found_icon = true;
+            break;
+        }
+    }
+
+    WfIconLoadOptions options;
+    options.user_scale = scale;
+    set_image_icon(image, icon_name, size, options);
+
+    if (found_icon)
+        return true;
+
+    std::cout << "Failed to load icon for any of " << app_id_list << std::endl;
+    return false;
 }
