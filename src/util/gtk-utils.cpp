@@ -264,7 +264,7 @@ bool set_image_from_icon(Gtk::Image& image,
         // Try to load icon from the DesktopAppInfo
         auto app_info = get_desktop_app_info(app_id);
 
-        if (app_info && app_info->has_key("Icon"))
+        if (app_info && app_info->get_icon())
             icon_name = app_info->get_icon()->to_string();
 
         // Try directly looking up the icon, if it exists
