@@ -145,10 +145,15 @@ Glib::RefPtr<Gio::DesktopAppInfo> get_desktop_app_info(std::string app_id)
         app_id.rfind(".")+1, app_id.size()
     );
 
+    std::string app_id_basename_lowercase = app_id;
+    for (auto& c : app_id_basename_lowercase)
+        c = std::tolower(c);
+
     std::vector<std::string> app_id_variations = {
         app_id,
         app_id_lowercase,
-        app_id_basename
+        app_id_basename,
+        app_id_basename_lowercase
     };
 
     std::vector<std::string> suffixes = {
@@ -171,27 +176,65 @@ Glib::RefPtr<Gio::DesktopAppInfo> get_desktop_app_info(std::string app_id)
         }
     }
 
-    // As last resort perform a search and select best match
+    // Perform a search and select best match
     if (!app_info)
     {
+        std::vector<std::string> app_id_variations;
+
+        if (app_id == "Code")
+            app_id_variations.push_back("visual-studio-code");
+
+        app_id_variations.push_back(app_id);
+
+        // If appid has dashes add first component to search
+        if (app_id.find('-') != std::string::npos)
+        {
+            std::istringstream stream(app_id);
+            std::string token;
+            std::getline(stream, token, '-');
+
+            app_id_variations.push_back(token);
+        }
+
         std::string desktop_file = "";
 
-        gchar*** desktop_list = g_desktop_app_info_search(app_id.c_str());
-        if (desktop_list != nullptr && desktop_list[0] != nullptr)
+        for (auto token : app_id_variations)
         {
-            for (size_t i=0; desktop_list[0][i]; i++)
+            gchar*** desktop_list = g_desktop_app_info_search(token.c_str());
+            if (desktop_list != nullptr && desktop_list[0] != nullptr)
             {
-                if(desktop_file == "")
-                    desktop_file = desktop_list[0][i];
+                for (size_t i=0; desktop_list[0][i]; i++)
+                {
+                    if(desktop_file == "")
+                        desktop_file = desktop_list[0][i];
 
+                    break;
+                }
+                g_strfreev(desktop_list[0]);
+            }
+            g_free(desktop_list);
+
+            if(desktop_file != "")
+            {
+                app_info = Gio::DesktopAppInfo::create(desktop_file);
                 break;
             }
-            g_strfreev(desktop_list[0]);
         }
-        g_free(desktop_list);
+    }
 
-        if(desktop_file != "")
-            app_info = Gio::DesktopAppInfo::create(desktop_file);
+    // If app has dots try each component
+    if (!app_info && app_id.find('.') != std::string::npos)
+    {
+        std::istringstream stream(app_id);
+        std::string token;
+
+        while (std::getline(stream, token, '.'))
+        {
+           app_info = Gio::DesktopAppInfo::create(token + ".desktop");
+
+           if (app_info)
+               break;
+        }
     }
 
     if (app_info)
@@ -221,7 +264,7 @@ bool set_image_from_icon(Gtk::Image& image,
         // Try to load icon from the DesktopAppInfo
         auto app_info = get_desktop_app_info(app_id);
 
-        if (app_info)
+        if (app_info && app_info->has_key("Icon"))
             icon_name = app_info->get_icon()->to_string();
 
         // Try directly looking up the icon, if it exists
