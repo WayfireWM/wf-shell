@@ -208,7 +208,7 @@ Glib::RefPtr<Gio::DesktopAppInfo> get_desktop_app_info(std::string app_id)
                     }
                     else
                     {
-                        auto tmp_info = Gio::DesktopAppInfo::create(desktop_file);
+                        auto tmp_info = Gio::DesktopAppInfo::create(desktop_list[0][i]);
                         auto startup_class = tmp_info->get_startup_wm_class();
 
                         if (
