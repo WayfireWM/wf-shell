@@ -202,10 +202,22 @@ Glib::RefPtr<Gio::DesktopAppInfo> get_desktop_app_info(std::string app_id)
             {
                 for (size_t i=0; desktop_list[0][i]; i++)
                 {
-                    if(desktop_file == "")
+                    if (desktop_file == "")
+                    {
                         desktop_file = desktop_list[0][i];
+                    }
+                    else
+                    {
+                        auto tmp_info = Gio::DesktopAppInfo::create(desktop_file);
+                        auto startup_class = tmp_info->get_startup_wm_class();
 
-                    break;
+                        if (
+                            startup_class == app_id
+                            ||
+                            startup_class == app_id_lowercase
+                        )
+                            desktop_file = desktop_list[0][i];
+                    }
                 }
                 g_strfreev(desktop_list[0]);
             }
