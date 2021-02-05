@@ -181,9 +181,6 @@ Glib::RefPtr<Gio::DesktopAppInfo> get_desktop_app_info(std::string app_id)
     {
         std::vector<std::string> app_id_variations;
 
-        if (app_id == "Code")
-            app_id_variations.push_back("visual-studio-code");
-
         app_id_variations.push_back(app_id);
 
         // If appid has dashes add first component to search
