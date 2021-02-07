@@ -216,7 +216,10 @@ Glib::RefPtr<Gio::DesktopAppInfo> get_desktop_app_info(std::string app_id)
                             ||
                             startup_class == app_id_lowercase
                         )
+                        {
                             desktop_file = desktop_list[0][i];
+                            break;
+                        }
                     }
                 }
                 g_strfreev(desktop_list[0]);
