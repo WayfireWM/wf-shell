@@ -127,13 +127,13 @@ Glib::RefPtr<Gio::DesktopAppInfo> get_desktop_app_info(std::string app_id)
     home_dir += "/.local/share/applications/";
 
     std::vector<std::string> prefixes = {
+        home_dir,
         "",
         "/usr/share/applications/",
         "/usr/share/applications/kde/",
         "/usr/share/applications/org.kde.",
         "/usr/local/share/applications/",
-        "/usr/local/share/applications/org.kde.",
-        home_dir
+        "/usr/local/share/applications/org.kde."
     };
 
     std::string app_id_lowercase = app_id;
