@@ -10,9 +10,18 @@
 
 std::string WayfireShellApp::get_config_file()
 {
-    std::string home_dir = getenv("HOME");
-    std::string config_file = home_dir + "/.config/wf-shell.ini";
-    return config_file;
+    std::string config_dir;
+
+    char* config_home = getenv("XDG_CONFIG_HOME");
+    if (config_home == NULL)
+    {
+        config_dir = std::string(getenv("HOME")) + "/.config";
+    } else
+    {
+        config_dir = std::string(config_home);
+    }
+
+    return config_dir + "/wf-shell.ini";
 }
 
 #define INOT_BUF_SIZE (1024 * sizeof(inotify_event))
