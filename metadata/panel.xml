@@ -1,207 +1,193 @@
 <?xml version="1.0"?>
 <wf-shell>
-        <plugin name="panel">
-        <_short>Panel</_short>
-        <category>Shell</category>
-        <group>
-        <_short>General</_short>
-        <option name="css_path" type="string">
-                <_short>CSS Path</_short>
-                <default></default>
-        </option>
-        <option name="widgets_left" type="string">
-                <_short>Widgets Left</_short>
-                <default>spacing4 menu spacing18 launchers</default>
-        </option>
-        <option name="widgets_center" type="string">
-                <_short>Widgets Center</_short>
-                <default>clock</default>
-        </option>
-        <option name="widgets_right" type="string">
-                <_short>Widgets Right</_short>
-                <default>network battery</default>
-        </option>
-        <option name="minimal_height" type="int">
-                <_short>Minimal Height</_short>
-                <default>24</default>
-        </option>
-        <option name="autohide" type="bool">
-                <_short>Autohide</_short>
-                <default>false</default>
-        </option>
-        <option name="autohide_duration" type="int">
-                <_short>Autohide Duration</_short>
-                <default>300</default>
-        </option>
-        <option name="position" type="string">
-                <_short>Panel Position</_short>
-                <default>top</default>
-                <desc>
-                        <value>top</value>
-                        <_name>Top</_name>
-                </desc>
-                <desc>
-                        <value>bottom</value>
-                        <_name>Bottom</_name>
-                </desc>
-        </option>
-        <option name="layer" type="string">
-                <_short>Layer</_short>
-                <default>top</default>
-                <desc>
-                        <value>top</value>
-                        <_name>Top</_name>
-                </desc>
-                <desc>
-                        <value>bottom</value>
-                        <_name>Bottom</_name>
-                </desc>
-                <desc>
-                        <value>overlay</value>
-                        <_name>Overlay</_name>
-                </desc>
-                <desc>
-                        <value>background</value>
-                        <_name>Background</_name>
-                </desc>
-        </option>
-        <option name="background_color" type="string">
-                <_short>Background Color</_short>
-                <default>gtk_headerbar</default>
-        </option>
-        </group>
-        <group>
-        <_short>Launchers</_short>
-        <option name="launchers_spacing" type="int">
-                <_short>Launchers Spacing</_short>
-                <default>4</default>
-        </option>
-        <option name="launchers_size" type="int">
-                <_short>Launchers Size</_short>
-                <default>42</default>
-        </option>
-        </group>
-        <group>
-        <_short>Clock</_short>
-        <option name="clock_format" type="string">
-                <_short>Clock Format</_short>
-                <default>%e %A %H:%M</default>
-        </option>
-        <option name="clock_font" type="string">
-                <_short>Clock Font</_short>
-                <default>default</default>
-        </option>
-        </group>
-        <group>
-        <_short>Battery</_short>
-        <option name="battery_status" type="int">
-                <_short>Battery Status</_short>
-                <default>1</default>
-                <min>0</min>
-                <max>2</max>
-                <desc>
-                        <value>0</value>
-                        <_name>Icon</_name>
-                </desc>
-                <desc>
-                        <value>1</value>
-                        <_name>Icon with Percentage</_name>
-                </desc>
-                <desc>
-                        <value>2</value>
-                        <_name>Full Information</_name>
-                </desc>
-        </option>
-        <option name="battery_icon_size" type="int">
-                <_short>Battery Icon Size</_short>
-                <default>24</default>
-        </option>
-        <option name="battery_icon_invert" type="bool">
-                <_short>Battery Icon Invert Color</_short>
-                <default>true</default>
-        </option>
-        <option name="battery_font" type="string">
-                <_short>Battery Font</_short>
-                <default>default</default>
-        </option>
-        </group>
-        <group>
-        <_short>Network</_short>
-        <option name="network_status" type="int">
-                <_short>Network Status</_short>
-                <default>1</default>
-                <min>0</min>
-                <max>2</max>
-                <desc>
-                        <value>0</value>
-                        <_name>None</_name>
-                </desc>
-                <desc>
-                        <value>1</value>
-                        <_name>Connection</_name>
-                </desc>
-                <desc>
-                        <value>2</value>
-                        <_name>Connection with IP</_name>
-                </desc>
-        </option>
-        <option name="network_status_font" type="string">
-                <_short>Clock Font</_short>
-                <default>default</default>
-        </option>
-        <option name="network_icon_size" type="int">
-                <_short>Network Icon Size</_short>
-                <default>32</default>
-        </option>
-        <option name="network_icon_invert_color" type="bool">
-                <_short>Network Icon Invert Color</_short>
-                <default>false</default>
-        </option>
-        <option name="network_status_use_color" type="bool">
-                <_short>Network Status Use Color</_short>
-                <default>false</default>
-        </option>
-        <option name="network_onclick_command" type="string">
-                <_short>On Click Command</_short>
-                <default>default</default>
-        </option>
-        </group>
-        <group>
-        <_short>Menu</_short>
-        <option name="menu_fuzzy_search" type="bool">
-                <_short>Use Fuzzy Search in Menu</_short>
-                <default>true</default>
-        </option>
-        <option name="menu_icon" type="string">
-                <_short>Menu Icon</_short>
-                <hint>file</hint>
-                <default></default>
-        </option>
-        <option name="menu_logout_command" type="string">
-                <_short>Menu Logout Command</_short>
-                <default>wayland-logout</default>
-        </option>
-        </group>
-        <group>
-        <_short>Volume</_short>
-        <option name="volume_display_timeout" type="double">
-                <_short>Volume Display Timeout</_short>
-                <default>2.5</default>
-        </option>
-        </group>
-        <group>
-          <option name="customizables_size" type="int">
-                  <_short>Customizables Icon Size</_short>
-                  <default>16</default>
-          </option>
-          <option name="customizables_spacing" type="int">
-                  <_short>Customizables Icon Size</_short>
-                  <default>2</default>
-          </option>
-          <option name="customizables_invert" type="bool">
-                  <_short>Customizables Icon Invert Color</_short>
-                  <default>true</default>
-          </option>
-        </group>
-        </plugin>
+	<plugin name="panel">
+	<_short>Panel</_short>
+	<category>Shell</category>
+	<group>
+	<_short>General</_short>
+	<option name="css_path" type="string">
+		<_short>CSS Path</_short>
+		<default></default>
+	</option>
+	<option name="widgets_left" type="string">
+		<_short>Widgets Left</_short>
+		<default>spacing4 menu spacing18 launchers</default>
+	</option>
+	<option name="widgets_center" type="string">
+		<_short>Widgets Center</_short>
+		<default>clock</default>
+	</option>
+	<option name="widgets_right" type="string">
+		<_short>Widgets Right</_short>
+		<default>network battery</default>
+	</option>
+	<option name="minimal_height" type="int">
+		<_short>Minimal Height</_short>
+		<default>24</default>
+	</option>
+	<option name="autohide" type="bool">
+		<_short>Autohide</_short>
+		<default>false</default>
+	</option>
+	<option name="autohide_duration" type="int">
+		<_short>Autohide Duration</_short>
+		<default>300</default>
+	</option>
+	<option name="position" type="string">
+		<_short>Panel Position</_short>
+		<default>top</default>
+		<desc>
+			<value>top</value>
+			<_name>Top</_name>
+		</desc>
+		<desc>
+			<value>bottom</value>
+			<_name>Bottom</_name>
+		</desc>
+	</option>
+	<option name="layer" type="string">
+		<_short>Layer</_short>
+		<default>top</default>
+		<desc>
+			<value>top</value>
+			<_name>Top</_name>
+		</desc>
+		<desc>
+			<value>bottom</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>overlay</value>
+			<_name>Overlay</_name>
+		</desc>
+		<desc>
+			<value>background</value>
+			<_name>Background</_name>
+		</desc>
+	</option>
+	<option name="background_color" type="string">
+		<_short>Background Color</_short>
+		<default>gtk_headerbar</default>
+	</option>
+	</group>
+	<group>
+	<_short>Launchers</_short>
+	<option name="launchers_spacing" type="int">
+		<_short>Launchers Spacing</_short>
+		<default>4</default>
+	</option>
+	<option name="launchers_size" type="int">
+		<_short>Launchers Size</_short>
+		<default>42</default>
+	</option>
+	</group>
+	<group>
+	<_short>Clock</_short>
+	<option name="clock_format" type="string">
+		<_short>Clock Format</_short>
+		<default>%e %A %H:%M</default>
+	</option>
+	<option name="clock_font" type="string">
+		<_short>Clock Font</_short>
+		<default>default</default>
+	</option>
+	</group>
+	<group>
+	<_short>Battery</_short>
+	<option name="battery_status" type="int">
+		<_short>Battery Status</_short>
+		<default>1</default>
+		<min>0</min>
+		<max>2</max>
+		<desc>
+			<value>0</value>
+			<_name>Icon</_name>
+		</desc>
+		<desc>
+			<value>1</value>
+			<_name>Icon with Percentage</_name>
+		</desc>
+		<desc>
+			<value>2</value>
+			<_name>Full Information</_name>
+		</desc>
+	</option>
+	<option name="battery_icon_size" type="int">
+		<_short>Battery Icon Size</_short>
+		<default>24</default>
+	</option>
+	<option name="battery_icon_invert" type="bool">
+		<_short>Battery Icon Invert Color</_short>
+		<default>true</default>
+	</option>
+	<option name="battery_font" type="string">
+		<_short>Battery Font</_short>
+		<default>default</default>
+	</option>
+	</group>
+	<group>
+	<_short>Network</_short>
+	<option name="network_status" type="int">
+		<_short>Network Status</_short>
+		<default>1</default>
+		<min>0</min>
+		<max>2</max>
+		<desc>
+			<value>0</value>
+			<_name>None</_name>
+		</desc>
+		<desc>
+			<value>1</value>
+			<_name>Connection</_name>
+		</desc>
+		<desc>
+			<value>2</value>
+			<_name>Connection with IP</_name>
+		</desc>
+	</option>
+	<option name="network_status_font" type="string">
+		<_short>Clock Font</_short>
+		<default>default</default>
+	</option>
+	<option name="network_icon_size" type="int">
+		<_short>Network Icon Size</_short>
+		<default>32</default>
+	</option>
+	<option name="network_icon_invert_color" type="bool">
+		<_short>Network Icon Invert Color</_short>
+		<default>false</default>
+	</option>
+	<option name="network_status_use_color" type="bool">
+		<_short>Network Status Use Color</_short>
+		<default>false</default>
+	</option>
+	<option name="network_onclick_command" type="string">
+		<_short>On Click Command</_short>
+		<default>default</default>
+	</option>
+	</group>
+	<group>
+	<_short>Menu</_short>
+	<option name="menu_fuzzy_search" type="bool">
+		<_short>Use Fuzzy Search in Menu</_short>
+		<default>true</default>
+	</option>
+	<option name="menu_icon" type="string">
+		<_short>Menu Icon</_short>
+		<hint>file</hint>
+		<default></default>
+	</option>
+	<option name="menu_logout_command" type="string">
+		<_short>Menu Logout Command</_short>
+		<default>wayland-logout</default>
+	</option>
+	</group>
+	<group>
+	<_short>Volume</_short>
+	<option name="volume_display_timeout" type="double">
+		<_short>Volume Display Timeout</_short>
+		<default>2.5</default>
+	</option>
+	</group>
+	</plugin>
 </wf-shell>
