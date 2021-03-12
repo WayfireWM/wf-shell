@@ -189,5 +189,19 @@
 		<default>2.5</default>
 	</option>
 	</group>
+	<group>
+          <option name="customizables_size" type="int">
+                  <_short>Customizables Icon Size</_short>
+                  <default>16</default>
+          </option>
+          <option name="customizables_spacing" type="int">
+                  <_short>Customizables Icon Size</_short>
+                  <default>2</default>
+          </option>
+          <option name="customizables_invert" type="bool">
+                  <_short>Customizables Icon Invert Color</_short>
+                  <default>true</default>
+          </option>
+        </group>
 	</plugin>
 </wf-shell>
