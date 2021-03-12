@@ -262,7 +262,7 @@ customizable_container WayfireCustomizables::get_customizables_from_config()
     /* This one needs a label
        custom_label_<name> =
        custom_icon_<name> =
-       custom_btn_[1-3]_cmd_<name> =
+       custom_btn[1-3]_cmd_<name> =
        custom_scr_[up|dn]_cmd_<name> =
        custom_tooltip_cmd_<name> =
     */
