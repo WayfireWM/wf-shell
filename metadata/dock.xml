@@ -22,5 +22,13 @@
 			<_name>Bottom</_name>
 		</desc>
 	</option>
+	<option name="dock_height" type="int">
+		<_short>Dock height</_short>
+		<default>100</default>
+	</option>
+	<option name="icon_height" type="int">
+		<_short>Dock icons height</_short>
+		<default>72</default>
+	</option>
 	</plugin>
 </wf-shell>
