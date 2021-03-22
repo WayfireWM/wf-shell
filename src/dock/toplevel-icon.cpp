@@ -15,7 +15,6 @@
 #include <iostream>
 #include <sstream>
 #include <cassert>
-#include "wf-option-wrap.hpp"
 
 namespace IconProvider
 {
@@ -33,7 +32,6 @@ class WfToplevelIcon::impl
     Gtk::Button button;
     Gtk::Image image;
     std::string app_id;
-    WfOption<int> icon_height{"dock/icon_height"};
 
     public:
     impl(zwlr_foreign_toplevel_handle_v1 *handle, wl_output *output)
@@ -92,9 +90,7 @@ class WfToplevelIcon::impl
     {
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image, app_id,
-					  // 72,
-					  icon_height, // 32
-					  button.get_scale_factor());
+            72, button.get_scale_factor());
 
     }
 

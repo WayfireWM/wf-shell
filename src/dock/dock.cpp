@@ -22,7 +22,6 @@ class WfDock::impl
     Gtk::HBox box;
 
     WfOption<std::string> css_path{"dock/css_path"};
-    WfOption<int> dock_height{"dock/dock_height"};
 
     public:
     impl(WayfireOutput *output)
@@ -31,7 +30,7 @@ class WfDock::impl
         window = std::unique_ptr<WayfireAutohidingWindow> (
             new WayfireAutohidingWindow(output, "dock"));
 
-        window->set_size_request(dock_height, dock_height); // (50, 50); // (100, 100); // 
+        window->set_size_request(100, 100);
         gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
         window->increase_autohide();
 
@@ -88,7 +87,6 @@ class WfDock::impl
         return this->_wl_surface;
     }
 
-    // int32_t last_width = 40, last_height = 40;
     int32_t last_width = 100, last_height = 100;
     void on_allocation(Gtk::Allocation& alloc)
     {
