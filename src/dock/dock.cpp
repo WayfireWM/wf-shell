@@ -12,6 +12,7 @@
 
 #include "dock.hpp"
 #include "../util/gtk-utils.hpp"
+#include <wayfire/config/types.hpp>
 
 class WfDock::impl
 {
@@ -23,6 +24,7 @@ class WfDock::impl
 
     WfOption<std::string> css_path{"dock/css_path"};
     WfOption<int> dock_height{"dock/dock_height"};
+    WfOption<wf::color_t> background_color{"dock/background_color"};
 
     public:
     impl(WayfireOutput *output)
@@ -50,7 +52,8 @@ class WfDock::impl
                     screen, css, GTK_STYLE_PROVIDER_PRIORITY_USER);
             }
         }
-
+	window->override_background_color
+	    (Gdk::RGBA(wf::option_type::to_string<wf::color_t>(background_color)));
         window->show_all();
         _wl_surface = gdk_wayland_window_get_wl_surface(
             window->get_window()->gobj());
