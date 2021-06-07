@@ -11,15 +11,15 @@
 	</option>
 	<option name="widgets_left" type="string">
 		<_short>Widgets Left</_short>
-		<default>spacing4 menu spacing18 launchers</default>
+		<default>spacing4 menu spacing18 launchers window-list</default>
 	</option>
 	<option name="widgets_center" type="string">
 		<_short>Widgets Center</_short>
-		<default>clock</default>
+		<default>none</default>
 	</option>
 	<option name="widgets_right" type="string">
 		<_short>Widgets Right</_short>
-		<default>network battery</default>
+		<default>volume network battery clock</default>
 	</option>
 	<option name="minimal_height" type="int">
 		<_short>Minimal Height</_short>
