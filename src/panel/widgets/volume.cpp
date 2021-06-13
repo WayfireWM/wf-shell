@@ -34,7 +34,7 @@ void WayfireVolumeScale::set_target_value(double value)
 
 double WayfireVolumeScale::get_target_value() const
 {
-    return this->current_volume;
+    return this->current_volume.end;
 }
 
 void WayfireVolumeScale::set_user_changed_callback(
