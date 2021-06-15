@@ -1,8 +1,11 @@
 [background]
 # Full path to image or directory of images
 # image = /usr/share/wayfire/wallpaper.jpg
-# Whether to scale images or preserve background ratio
+# Whether to scale images or preserve background ratio and fit width
 preserve_aspect = 0
+# Whether to scale images or preserve background ratio and fit height and center
+# This overrides background/preserve_aspect
+fill_and_crop = 0
 # In the case of directory, timeout between changing backgrounds, in seconds
 cycle_timeout = 150
 # In the case of directory, whether or not to randomize images
