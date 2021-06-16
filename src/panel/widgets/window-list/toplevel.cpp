@@ -80,6 +80,8 @@ class WayfireToplevel::impl
         menu.attach(minimize, 0, 1, 0, 1);
         menu.attach(maximize, 0, 1, 1, 2);
         menu.attach(close, 0, 1, 2, 3);
+        menu.attach_to_widget(button);
+        menu.show_all();
 
         drag_gesture = Gtk::GestureDrag::create(button);
         drag_gesture->signal_drag_begin().connect_notify(
@@ -174,11 +176,7 @@ class WayfireToplevel::impl
     {
         if ((event->type == GDK_BUTTON_PRESS) && (event->button == 3))
         {
-            if(!menu.get_attach_widget())
-                menu.attach_to_widget(button);
-
             menu.popup(event->button, event->time);
-            menu.show_all();
             return true; //It has been handled.
         }
         else
