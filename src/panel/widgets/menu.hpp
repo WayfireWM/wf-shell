@@ -79,6 +79,7 @@ class WayfireMenu : public WayfireWidget
     public:
     void init(Gtk::HBox *container) override;
     void hide_menu();
+    void refresh();
     virtual ~WayfireMenu() = default;
 };
 

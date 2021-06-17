@@ -308,6 +308,25 @@ void WayfireMenu::on_logout_click()
     g_spawn_command_line_async(std::string(menu_logout_command).c_str(), NULL);
 }
 
+void WayfireMenu::refresh()
+{
+    loaded_apps.clear();
+    items.clear();
+    for (auto child : flowbox.get_children())
+    {
+        gtk_widget_destroy(GTK_WIDGET(child->gobj()));
+    }
+    load_menu_items_all();
+    flowbox.show_all();
+}
+
+static void app_info_changed(GAppInfoMonitor *gappinfomonitor, gpointer user_data)
+{
+    WayfireMenu *menu = (WayfireMenu *) user_data;
+
+    menu->refresh();
+}
+
 void WayfireMenu::init(Gtk::HBox *container)
 {
     menu_icon.set_callback([=] () { update_icon(); });
@@ -340,6 +359,9 @@ void WayfireMenu::init(Gtk::HBox *container)
 
     load_menu_items_all();
     update_popover_layout();
+
+    GAppInfoMonitor *app_info_monitor = g_app_info_monitor_get();
+    g_signal_connect(app_info_monitor, "changed", G_CALLBACK(app_info_changed), this);
 
     hbox.show();
     main_image.show();
