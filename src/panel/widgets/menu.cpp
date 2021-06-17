@@ -21,7 +21,6 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
     m_image.set_pixel_size(48);
 
     Glib::ustring name = app->get_name();
-    set_tooltip_text(app->get_name());
 
     if (name.length() > MAX_LAUNCHER_NAME_LENGTH)
         name = name.substr(0, MAX_LAUNCHER_NAME_LENGTH - 2) + "..";
