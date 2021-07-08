@@ -1,8 +1,10 @@
 #ifndef WF_GTK_UTILS
 #define WF_GTK_UTILS
 
+#include <giomm/desktopappinfo.h>
 #include <gtkmm/image.h>
 #include <gtkmm/cssprovider.h>
+#include <giomm/desktopappinfo.h>
 #include <string>
 
 /* Loads a pixbuf with the given size from the given file, returns null if unsuccessful */
@@ -26,5 +28,10 @@ void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
                     const WfIconLoadOptions& options);
 
 void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff);
+
+Glib::RefPtr<Gio::DesktopAppInfo> get_desktop_app_info(std::string app_id);
+
+bool set_image_from_icon(Gtk::Image& image,
+                         std::string app_id_list, int size, int scale);
 
 #endif /* end of include guard: WF_GTK_UTILS */
