@@ -302,9 +302,137 @@ void WayfireMenu::update_popover_layout()
     popover_layout_box.show_all();
 }
 
+void WayfireLogoutUI::on_logout_click()
+{
+    ui.hide();
+    g_spawn_command_line_async(std::string(logout_command).c_str(), NULL);
+}
+
+void WayfireLogoutUI::on_reboot_click()
+{
+    ui.hide();
+    g_spawn_command_line_async(std::string(reboot_command).c_str(), NULL);
+}
+
+void WayfireLogoutUI::on_shutdown_click()
+{
+    ui.hide();
+    g_spawn_command_line_async(std::string(shutdown_command).c_str(), NULL);
+}
+
+void WayfireLogoutUI::on_suspend_click()
+{
+    ui.hide();
+    g_spawn_command_line_async(std::string(suspend_command).c_str(), NULL);
+}
+
+void WayfireLogoutUI::on_hibernate_click()
+{
+    ui.hide();
+    g_spawn_command_line_async(std::string(hibernate_command).c_str(), NULL);
+}
+
+void WayfireLogoutUI::on_switchuser_click()
+{
+    ui.hide();
+    g_spawn_command_line_async(std::string(switchuser_command).c_str(), NULL);
+}
+
+void WayfireLogoutUI::on_cancel_click()
+{
+    ui.hide();
+}
+
+#define LOGOUT_BUTTON_SIZE 125
+#define LOGOUT_BUTTON_MARGIN 5
+
+void WayfireLogoutUI::create_logout_ui_button(WayfireLogoutUIButton *button, const char *icon, const char *label)
+{
+    button->button.set_size_request(LOGOUT_BUTTON_SIZE, LOGOUT_BUTTON_SIZE);
+    button->image.set_from_icon_name(icon, Gtk::ICON_SIZE_DIALOG);
+    button->label.set_text(label);
+    button->layout.pack_start(button->image, true, false);
+    button->layout.pack_start(button->label, true, false);
+    button->button.add(button->layout);
+}
+
+const std::string get_ui_title()
+{
+    std::string title;
+
+    title = "Log out";
+
+    auto full_user_name = g_get_real_name();
+    if (!full_user_name || !strcmp(full_user_name, "Unknown"))
+    {
+        return title.c_str();
+    }
+
+    return title + ' ' + full_user_name;
+}
+
+WayfireLogoutUI::WayfireLogoutUI()
+{
+    create_logout_ui_button(&logout, "system-log-out", "Log Out");
+    logout.button.signal_clicked().connect_notify(
+        sigc::mem_fun(this, &WayfireLogoutUI::on_logout_click));
+    top_layout.pack_start(logout.button, true, false);
+
+    create_logout_ui_button(&reboot, "system-reboot", "Reboot");
+    reboot.button.signal_clicked().connect_notify(
+        sigc::mem_fun(this, &WayfireLogoutUI::on_reboot_click));
+    top_layout.pack_start(reboot.button, true, false);
+
+    create_logout_ui_button(&shutdown, "system-shutdown", "Shut Down");
+    shutdown.button.signal_clicked().connect_notify(
+        sigc::mem_fun(this, &WayfireLogoutUI::on_shutdown_click));
+    top_layout.pack_start(shutdown.button, true, false);
+
+    create_logout_ui_button(&suspend, "emblem-synchronizing", "Suspend");
+    suspend.button.signal_clicked().connect_notify(
+        sigc::mem_fun(this, &WayfireLogoutUI::on_suspend_click));
+    middle_layout.pack_start(suspend.button, true, false);
+
+    create_logout_ui_button(&hibernate, "weather-clear-night", "Hibernate");
+    hibernate.button.signal_clicked().connect_notify(
+        sigc::mem_fun(this, &WayfireLogoutUI::on_hibernate_click));
+    middle_layout.pack_start(hibernate.button, true, false);
+
+    create_logout_ui_button(&switchuser, "system-users", "Switch User");
+    switchuser.button.signal_clicked().connect_notify(
+        sigc::mem_fun(this, &WayfireLogoutUI::on_switchuser_click));
+    middle_layout.pack_start(switchuser.button, true, false);
+
+    cancel.button.set_size_request(100, 50);
+    cancel.button.set_label("Cancel");
+    bottom_layout.pack_start(cancel.button, true, false);
+    cancel.button.signal_clicked().connect_notify(
+        sigc::mem_fun(this, &WayfireLogoutUI::on_cancel_click));
+
+    top_layout.set_spacing(LOGOUT_BUTTON_MARGIN);
+    middle_layout.set_spacing(LOGOUT_BUTTON_MARGIN);
+    bottom_layout.set_spacing(LOGOUT_BUTTON_MARGIN);
+    main_layout.set_spacing(LOGOUT_BUTTON_MARGIN);
+    main_layout.add(top_layout);
+    main_layout.add(middle_layout);
+    main_layout.add(bottom_layout);
+    ui.set_title(get_ui_title().c_str());
+    ui.set_keep_above(true);
+    ui.set_resizable(false);
+    ui.add(main_layout);
+}
+
 void WayfireMenu::on_logout_click()
 {
-    g_spawn_command_line_async(std::string(menu_logout_command).c_str(), NULL);
+    if (!std::string(menu_logout_command).empty())
+    {
+        g_spawn_command_line_async(std::string(menu_logout_command).c_str(), NULL);
+        return;
+    }
+
+    /* If no command specified for logout, show our own logout window */
+    logout_ui->ui.present();
+    logout_ui->ui.show_all();
 }
 
 void WayfireMenu::refresh()
@@ -355,6 +483,8 @@ void WayfireMenu::init(Gtk::HBox *container)
     hbox_bottom.pack_end(logout_button, false, false);
     popover_layout_box.pack_end(hbox_bottom);
     popover_layout_box.pack_end(separator);
+
+    logout_ui = std::make_unique<WayfireLogoutUI>();
 
     load_menu_items_all();
     update_popover_layout();

@@ -179,7 +179,32 @@
 	</option>
 	<option name="menu_logout_command" type="string">
 		<_short>Menu Logout Command</_short>
+		<_long>If not specified, a default logout interface will be used.</_long>
+		<default></default>
+	</option>
+	<option name="logout_command" type="string">
+		<_short>Logout Button Command</_short>
 		<default>wayland-logout</default>
+	</option>
+	<option name="reboot_command" type="string">
+		<_short>Reboot Button Command</_short>
+		<default>systemctl reboot</default>
+	</option>
+	<option name="shutdown_command" type="string">
+		<_short>Shutdown Button Command</_short>
+		<default>systemctl poweroff</default>
+	</option>
+	<option name="suspend_command" type="string">
+		<_short>Suspend Button Command</_short>
+		<default>systemctl suspend</default>
+	</option>
+	<option name="hibernate_command" type="string">
+		<_short>Hibernate Button Command</_short>
+		<default>systemctl hibernate</default>
+	</option>
+	<option name="switchuser_command" type="string">
+		<_short>Switch User Button Command</_short>
+		<default>dm-tool switch-to-greeter</default>
 	</option>
 	</group>
 	<group>
