@@ -6,6 +6,7 @@
 #include <giomm/desktopappinfo.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/image.h>
+#include <gtkmm/window.h>
 #include <gtkmm/flowbox.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/separator.h>
@@ -35,6 +36,47 @@ class WfMenuMenuItem : public Gtk::HBox
     void on_click();
 };
 
+class WayfireLogoutUIButton
+{
+    public:
+    Gtk::VBox layout;
+    Gtk::Image image;
+    Gtk::Label label;
+    Gtk::Button button;
+};
+
+class WayfireLogoutUI
+{
+    public:
+    WayfireLogoutUI();
+    WfOption<std::string> logout_command{"panel/logout_command"};
+    WfOption<std::string> reboot_command{"panel/reboot_command"};
+    WfOption<std::string> shutdown_command{"panel/shutdown_command"};
+    WfOption<std::string> suspend_command{"panel/suspend_command"};
+    WfOption<std::string> hibernate_command{"panel/hibernate_command"};
+    WfOption<std::string> switchuser_command{"panel/switchuser_command"};
+    Gtk::Window ui, bg;
+    Gtk::HBox bg_box;
+    WayfireLogoutUIButton logout;
+    WayfireLogoutUIButton reboot;
+    WayfireLogoutUIButton shutdown;
+    WayfireLogoutUIButton suspend;
+    WayfireLogoutUIButton hibernate;
+    WayfireLogoutUIButton switchuser;
+    WayfireLogoutUIButton cancel;
+    Gtk::VBox main_layout, vspacing_layout;
+    Gtk::HBox top_layout, middle_layout, bottom_layout, hspacing_layout;
+    void create_logout_ui_button(WayfireLogoutUIButton *button,
+        const char *icon, const char *label);
+    void on_logout_click();
+    void on_reboot_click();
+    void on_shutdown_click();
+    void on_suspend_click();
+    void on_hibernate_click();
+    void on_switchuser_click();
+    void on_cancel_click();
+};
+
 class WayfireMenu : public WayfireWidget
 {
     Gtk::Box flowbox_container;
@@ -48,6 +90,7 @@ class WayfireMenu : public WayfireWidget
     Gtk::Button logout_button;
     Gtk::ScrolledWindow scrolled_window;
     std::unique_ptr<WayfireMenuButton> button;
+    std::unique_ptr<WayfireLogoutUI> logout_ui;
 
     void load_menu_item(AppInfo app_info);
     void load_menu_items_from_dir(std::string directory);
@@ -74,6 +117,7 @@ class WayfireMenu : public WayfireWidget
     WfOption<std::string> menu_icon{"panel/menu_icon"};
     WfOption<int> menu_size{"panel/launchers_size"};
     void update_popover_layout();
+    void create_logout_ui();
     void on_logout_click();
 
     public:
