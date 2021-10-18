@@ -17,7 +17,7 @@ randomize = 0
 # A special widgets is spacing widgets, it can be used to add padding everywhere on the panel
 # To use it, just append the amount of pixels you want as a padding
 # to the word "spacing" and use it as a plugin
-widgets_left = spacing4 menu spacing18 launchers window-list
+widgets_left = menu spacing4 launchers window-list
 widgets_center = none
 widgets_right = volume network battery clock
 
