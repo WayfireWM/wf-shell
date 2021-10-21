@@ -11,7 +11,7 @@
 	</option>
 	<option name="widgets_left" type="string">
 		<_short>Widgets Left</_short>
-		<default>spacing4 menu spacing18 launchers window-list</default>
+		<default>menu spacing4 launchers window-list</default>
 	</option>
 	<option name="widgets_center" type="string">
 		<_short>Widgets Center</_short>
