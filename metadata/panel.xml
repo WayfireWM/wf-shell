@@ -180,10 +180,12 @@
 	<option name="menu_min_content_width" type="int">
 		<_short>Menu Minimum Content Width</_short>
 		<default>500</default>
+		<min>100</min>
 	</option>
 	<option name="menu_min_content_height" type="int">
 		<_short>Menu Minimum Content Height</_short>
 		<default>500</default>
+		<min>100</min>
 	</option>
 	<option name="menu_logout_command" type="string">
 		<_short>Menu Logout Command</_short>
