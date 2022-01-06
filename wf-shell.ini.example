@@ -103,6 +103,11 @@ network_status_use_color = yes
 # whether to enable fuzzy search in the menu
 menu_fuzzy_search = 1
 
+# Minimum width and height for the contents of the menu.
+# Can be useful for small screens and/or high DPI scaling.
+menu_min_content_width = 500
+menu_min_content_height = 500
+
 # image file to use as the menu icon
 # menu_icon = /usr/share/wayfire/icons/wayfire.png
 
