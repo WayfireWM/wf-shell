@@ -116,6 +116,8 @@ class WayfireMenu : public WayfireWidget
     WfOption<std::string> panel_position{"panel/position"};
     WfOption<std::string> menu_icon{"panel/menu_icon"};
     WfOption<int> menu_size{"panel/launchers_size"};
+    WfOption<int> menu_min_content_width{"panel/menu_min_content_width"};
+    WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     void update_popover_layout();
     void create_logout_ui();
     void on_logout_click();
