@@ -276,8 +276,8 @@ void WayfireMenu::update_popover_layout()
         flowbox_container.add(bottom_pad);
         flowbox_container.add(flowbox);
 
-        scrolled_window.set_min_content_width(500);
-        scrolled_window.set_min_content_height(500);
+        scrolled_window.set_min_content_width(int(menu_min_content_width));
+        scrolled_window.set_min_content_height(int(menu_min_content_height));
         scrolled_window.add(flowbox_container);
 
         search_box.property_margin().set_value(20);

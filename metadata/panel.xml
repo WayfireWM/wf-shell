@@ -177,6 +177,14 @@
 		<hint>file</hint>
 		<default></default>
 	</option>
+	<option name="menu_min_content_width" type="int">
+		<_short>Menu minimum content width</_short>
+		<default>500</default>
+	</option>
+	<option name="menu_min_content_height" type="int">
+		<_short>Menu minimum content height</_short>
+		<default>500</default>
+	</option>
 	<option name="menu_logout_command" type="string">
 		<_short>Menu Logout Command</_short>
 		<_long>If not specified, a default logout interface will be used.</_long>
