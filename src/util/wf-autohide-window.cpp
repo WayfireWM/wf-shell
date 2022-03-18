@@ -15,7 +15,8 @@
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     const std::string& section) :
     position{section + "/position"},
-    y_position{WfOption<int>{section + "/autohide_duration"}}
+    y_position{WfOption<int>{section + "/autohide_duration"}},
+    edge_offset{WfOption<int>{section + "/edge_offset"}}
 {
     this->output = output;
     this->set_decorated(false);
@@ -27,6 +28,8 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
 
     this->position.set_callback([=] () { this->update_position(); });
     this->update_position();
+
+    this->edge_offset.set_callback([=] () { this->setup_hotspot(); });
 
     this->signal_draw().connect_notify(
         [=] (const Cairo::RefPtr<Cairo::Context>&) { update_margin(); });
@@ -148,9 +151,10 @@ void WayfireAutohidingWindow::setup_hotspot()
         return;
 
     /* No need to recreate hotspots if the height didn't change */
-    if (this->get_allocated_height() == last_hotspot_height)
+    if (this->get_allocated_height() == last_hotspot_height && edge_offset == last_edge_offset)
         return;
     this->last_hotspot_height = get_allocated_height();
+    this->last_edge_offset = edge_offset;
 
     if (this->edge_hotspot)
         zwf_hotspot_v2_destroy(edge_hotspot);
@@ -161,9 +165,8 @@ void WayfireAutohidingWindow::setup_hotspot()
     uint32_t edge = (position == WF_WINDOW_POSITION_TOP) ?
         ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP : ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
 
-    // TODO: make edge offset configurable
     this->edge_hotspot = zwf_output_v2_create_hotspot(output->output,
-        edge, 20, AUTOHIDE_SHOW_DELAY);
+        edge, edge_offset, AUTOHIDE_SHOW_DELAY);
 
     this->panel_hotspot = zwf_output_v2_create_hotspot(output->output,
         edge, this->get_allocated_height(), 0); // immediate

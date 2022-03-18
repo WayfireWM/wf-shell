@@ -29,6 +29,10 @@
 	<option name="icon_height" type="int">
 		<_short>Dock icons height</_short>
 		<default>72</default>
-	</option>
+    </option>
+    <option name="edge_offset" type="int">
+        <_short>Edge offset</_short>
+        <default>20</default>
+    </option>
 	</plugin>
 </wf-shell>

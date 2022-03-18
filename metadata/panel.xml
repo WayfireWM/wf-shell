@@ -45,6 +45,10 @@
 			<_name>Bottom</_name>
 		</desc>
 	</option>
+    <option name="edge_offset" type="int">
+        <_short>Edge offset</_short>
+        <default>20</default>
+    </option>
 	<option name="layer" type="string">
 		<_short>Layer</_short>
 		<default>top</default>
