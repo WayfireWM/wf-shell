@@ -28,6 +28,7 @@ class WayfireAutohidingWindow : public Gtk::Window
      *
      * 1. section/position
      * 2. section/autohide_duration
+     * 3. section/edge_offset
      */
     WayfireAutohidingWindow(WayfireOutput *output,
         const std::string& section);
@@ -79,6 +80,9 @@ class WayfireAutohidingWindow : public Gtk::Window
 
     wf::animation::simple_animation_t y_position;
     bool update_margin();
+
+    WfOption<int> edge_offset;
+    int last_edge_offset = -1;
 
     bool has_auto_exclusive_zone = false;
     int last_zone = 0;
