@@ -32,6 +32,7 @@
     </option>
     <option name="edge_offset" type="int">
         <_short>Edge offset</_short>
+        <_long>The distance from the cursor to the edge of screen to show the panel when it's hidden.</_long>
         <default>20</default>
     </option>
 	</plugin>
