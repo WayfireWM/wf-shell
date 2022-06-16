@@ -58,6 +58,7 @@ const auto introspection_data =
                                         "    </interface>"
                                         "</node>") -> lookup_interface();
 
+bool is_running = false;
 guint owner_id;
 WayfireNotificationCenter *center;
 
@@ -81,26 +82,39 @@ dbus_method(Notify)
 {
     const auto notification = Notification(parameters);
     const auto id = notification.id;
+    const auto id_var = Glib::VariantContainerBase::create_tuple(Glib::Variant<Notification::id_type>::create(id));
 
-    const auto id_var =
-        Glib::VariantContainerBase::create_tuple(Glib::Variant<Notification::id_type>::create(id));
     invocation->return_value(id_var);
     connection->flush();
 
+    bool is_replacing = notifications.count(id) == 1;
+    if (is_replacing)
+    {
+        notifications.erase(id);
+    }
     notifications.insert({id, notification});
-    center->newNotification(id);
+
+    if (is_replacing)
+    {
+        center->replaceNotification(id);
+    }
+    else
+    {
+        center->newNotification(id);
+    }
 }
 
 dbus_method(CloseNotification)
 {
     auto id = Glib::VariantBase::cast_dynamic<Glib::Variant<Notification::id_type>>(parameters).get();
-    center->closeNotification(id);
+    removeNotification(id);
 }
 
 dbus_method(GetServerInformation)
 {
     static const auto info =
-        Glib::Variant<std::tuple<Glib::ustring, Glib::ustring, Glib::ustring, Glib::ustring>>::create({"wf-panel", "wayfire.org", "0.8.0", "1.2"});
+        Glib::Variant<std::tuple<Glib::ustring, Glib::ustring, Glib::ustring, Glib::ustring>>::create(
+            {"wf-panel", "wayfire.org", "0.8.0", "1.2"});
     invocation->return_value(info);
     connection->flush();
 }
@@ -132,42 +146,55 @@ void on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> &connect
 
 const auto interface_vtable = Gio::DBus::InterfaceVTable(&on_interface_method_call);
 
-/* ---------------------------------------------------------------------------------------------------- */
-
 void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, Glib::ustring name)
 {
-        connection->register_object(FDN_PATH, introspection_data, interface_vtable);
+    connection->register_object(FDN_PATH, introspection_data, interface_vtable);
 }
 
 void on_name_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, Glib::ustring name)
 {
-    if (name == FDN_NAME)
-    {
-    }
 }
 
 void on_name_lost(const Glib::RefPtr<Gio::DBus::Connection> &connection, Glib::ustring name)
 {
     std::cerr << "Notifications: Error: DBus connection name has been lost.\n";
+    stop();
 }
 
 void start(WayfireNotificationCenter *center)
 {
     if (owner_id == 0)
     {
-        Daemon::center = center;
         owner_id = Gio::DBus::own_name(Gio::DBus::BUS_TYPE_SESSION, FDN_NAME, &on_bus_acquired, &on_name_acquired,
-                                   &on_name_lost, Gio::DBus::BUS_NAME_OWNER_FLAGS_NONE);
+                                       &on_name_lost, Gio::DBus::BUS_NAME_OWNER_FLAGS_NONE);
     }
     else
     {
         std::cerr << "Notifications daemon is alredy running.\n";
     }
+    Daemon::center = center;
 }
 
 void stop()
 {
     Gio::DBus::unown_name(owner_id);
+    owner_id = 0;
+    notifications.clear();
+    center->onDaemonStop();
+    center = nullptr;
+}
+
+void connect(WayfireNotificationCenter *center)
+{
+    if (owner_id == 0)
+    {
+        start(center);
+    }
+    else
+    {
+        // TODO(NamorNiradnug) multiple centers connected
+        Daemon::center = center;
+    }
 }
 
 const std::map<Notification::id_type, const Notification> &getNotifications()
@@ -177,6 +204,7 @@ const std::map<Notification::id_type, const Notification> &getNotifications()
 
 void removeNotification(Notification::id_type id)
 {
+    center->removeNotification(id);
     notifications.erase(id);
 }
 } // namespace Daemon

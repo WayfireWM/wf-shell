@@ -6,15 +6,20 @@
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
+#include <gtkmm/revealer.h>
 
 #include "notification-info.hpp"
 
-class WfSingleNotification : public Gtk::VBox
+class WayfireNotificationCenter;
+
+class WfSingleNotification : public Gtk::Revealer
 {
     public:
     static const int WIDTH = 300;
 
     private:
+    Gtk::VBox child;
+
     Gtk::HBox top_bar;
     Gtk::HBox content;
 

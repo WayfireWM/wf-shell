@@ -1,4 +1,6 @@
 #include "single-notification.hpp"
+#include "daemon.hpp"
+#include "notification-center.hpp"
 #include <gtk-utils.hpp>
 #include <iostream>
 #include <string>
@@ -49,7 +51,9 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
     close_image.set_from_icon_name("window-close", Gtk::ICON_SIZE_LARGE_TOOLBAR);
     close_button.add(close_image);
     close_button.get_style_context()->add_class("flat");
-    close_button.signal_clicked().connect([=] { std::cout << "Notification with id " << notification.id << " should be closed.\n"; });
+    close_button.signal_clicked().connect([=] {
+        Daemon::removeNotification(notification.id);
+    });
     top_bar.pack_start(close_button);
 
     top_bar.set_spacing(5);
@@ -75,9 +79,19 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
     text.set_halign(Gtk::ALIGN_START);
     text.set_line_wrap();
     text.set_line_wrap_mode(Pango::WRAP_CHAR);
-    text.set_markup(notification.summary + "\n" + notification.body);
+    if (notification.body.empty())
+    {
+        text.set_markup(notification.summary);
+    }
+    else
+    {
+        text.set_markup("<b>" + notification.summary + "</b>" + "\n" + notification.body);
+    }
     content.pack_start(text);
 
-    add(top_bar);
-    add(content);
+    child.add(top_bar);
+    child.add(content);
+    add(child);
+    set_transition_type(Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
 }
+
