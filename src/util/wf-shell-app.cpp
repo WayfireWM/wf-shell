@@ -10,6 +10,11 @@
 
 std::string WayfireShellApp::get_config_file()
 {
+    if (cmdline_config.has_value())
+    {
+        return cmdline_config.value();
+    }
+
     std::string config_dir;
 
     char* config_home = getenv("XDG_CONFIG_HOME");
@@ -22,6 +27,14 @@ std::string WayfireShellApp::get_config_file()
     }
 
     return config_dir + "/wf-shell.ini";
+}
+
+bool WayfireShellApp::parse_cfgfile(const Glib::ustring &option_name,
+    const Glib::ustring &value, bool has_value)
+{
+    std::cout << "Using custom config file " << value << std::endl;
+    cmdline_config = value;
+    return true;
 }
 
 #define INOT_BUF_SIZE (1024 * sizeof(inotify_event))
@@ -131,9 +144,18 @@ void WayfireShellApp::rem_output(GMonitor monitor)
 
 WayfireShellApp::WayfireShellApp(int argc, char **argv)
 {
-    app = Gtk::Application::create(argc, argv);
+    app = Gtk::Application::create(argc, argv, "",
+        Gio::APPLICATION_HANDLES_COMMAND_LINE);
     app->signal_activate().connect_notify(
         sigc::mem_fun(this, &WayfireShellApp::on_activate));
+    app->add_main_option_entry(
+        sigc::mem_fun(this, &WayfireShellApp::parse_cfgfile),
+        "config", 'c', "config file to use", "file");
+
+    // Activate app after parsing command line
+    app->signal_command_line().connect_notify([=] (auto&) {
+        app->activate();
+    });
 }
 
 WayfireShellApp::~WayfireShellApp() {}

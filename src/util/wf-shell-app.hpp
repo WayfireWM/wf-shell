@@ -39,6 +39,7 @@ class WayfireShellApp
     /** This should be initialized by the subclass in each program which uses
      * wf-shell-app */
     static std::unique_ptr<WayfireShellApp> instance;
+    std::optional<std::string> cmdline_config;
 
     Glib::RefPtr<Gtk::Application> app;
 
@@ -48,6 +49,8 @@ class WayfireShellApp
     /* The following functions can be overridden in the shell implementation to
      * handle the events */
     virtual void on_activate();
+    virtual bool parse_cfgfile(const Glib::ustring &option_name,
+        const Glib::ustring &value, bool has_value);
     virtual void handle_new_output(WayfireOutput *output) {}
     virtual void handle_output_removed(WayfireOutput *output) {}
 
