@@ -42,12 +42,12 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id)
     button->get_popover()->popup();
 }
 
-
 void WayfireNotificationCenter::replaceNotification(Notification::id_type id)
 {
     auto &widget = notification_widgets.at(id);
     widget->property_child_revealed().signal_changed().connect([=] {
-        notification_widgets.erase(id);
+        if (notification_widgets.count(id) != 0)
+            notification_widgets.erase(id);
         newNotification(id);
     });
     widget->set_reveal_child(false);
