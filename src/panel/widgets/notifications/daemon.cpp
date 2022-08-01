@@ -2,7 +2,6 @@
 #include <glibmm.h>
 
 #include "daemon.hpp"
-#include "notification-center.hpp"
 #include "notification-info.hpp"
 
 #include <iostream>
@@ -60,7 +59,34 @@ const auto introspection_data =
 
 bool is_running = false;
 guint owner_id;
-WayfireNotificationCenter *center;
+
+// used to emit dbus signals
+Glib::RefPtr<Gio::DBus::Connection> connection;
+
+notification_signal signal_notification_new;
+notification_signal signal_notification_replaced;
+notification_signal signal_notification_closed;
+
+notification_signal signalNotificationNew()
+{
+    return signal_notification_new;
+}
+
+notification_signal signalNotificationReplaced()
+{
+    return signal_notification_replaced;
+}
+
+notification_signal signalNotificationClosed()
+{
+    return signal_notification_closed;
+}
+
+sigc::signal<void> signal_daemon_stopped;
+
+sigc::signal<void> signalDaemonStopped() {
+    return signal_daemon_stopped;
+}
 
 using DBusMethod = void (*)(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &sender,
                             const Glib::VariantContainerBase &parameters,
@@ -73,14 +99,15 @@ using DBusMethod = void (*)(const Glib::RefPtr<Gio::DBus::Connection> &connectio
 
 dbus_method(GetCapabilities)
 {
-    static const auto value = Glib::Variant<std::tuple<std::vector<Glib::ustring>>>::create({{"body", "persistance"}});
+    static const auto value = Glib::Variant<std::tuple<std::vector<Glib::ustring>>>::create(
+        {{"body", "persistance", "actions", "action-icons"}});
     invocation->return_value(value);
     connection->flush();
 }
 
 dbus_method(Notify)
 {
-    const auto notification = Notification(parameters);
+    const auto notification = Notification(parameters, sender);
     const auto id = notification.id;
     const auto id_var = Glib::VariantContainerBase::create_tuple(Glib::Variant<Notification::id_type>::create(id));
 
@@ -96,18 +123,20 @@ dbus_method(Notify)
 
     if (is_replacing)
     {
-        center->replaceNotification(id);
+        signal_notification_replaced.emit(id);
     }
     else
     {
-        center->newNotification(id);
+        signal_notification_new.emit(id);
     }
 }
 
 dbus_method(CloseNotification)
 {
-    auto id = Glib::VariantBase::cast_dynamic<Glib::Variant<Notification::id_type>>(parameters).get();
-    removeNotification(id);
+    Glib::VariantBase id_var;
+    parameters.get_child(id_var, 0);
+    closeNotification(Glib::VariantBase::cast_dynamic<Glib::Variant<Notification::id_type>>(id_var).get(),
+                       CloseReason::MethodCalled);
 }
 
 dbus_method(GetServerInformation)
@@ -146,55 +175,38 @@ void on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> &connect
 
 const auto interface_vtable = Gio::DBus::InterfaceVTable(&on_interface_method_call);
 
-void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, Glib::ustring name)
+void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name)
 {
     connection->register_object(FDN_PATH, introspection_data, interface_vtable);
 }
 
-void on_name_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, Glib::ustring name)
+void on_name_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name)
 {
+    if (name == FDN_NAME)
+        Daemon::connection = connection;
 }
 
-void on_name_lost(const Glib::RefPtr<Gio::DBus::Connection> &connection, Glib::ustring name)
+void on_name_lost(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name)
 {
     std::cerr << "Notifications: Error: DBus connection name has been lost.\n";
     stop();
 }
 
-void start(WayfireNotificationCenter *center)
+void start()
 {
     if (owner_id == 0)
     {
         owner_id = Gio::DBus::own_name(Gio::DBus::BUS_TYPE_SESSION, FDN_NAME, &on_bus_acquired, &on_name_acquired,
                                        &on_name_lost, Gio::DBus::BUS_NAME_OWNER_FLAGS_NONE);
     }
-    else
-    {
-        std::cerr << "Notifications daemon is alredy running.\n";
-    }
-    Daemon::center = center;
 }
 
 void stop()
 {
+    signal_daemon_stopped.emit();
     Gio::DBus::unown_name(owner_id);
     owner_id = 0;
     notifications.clear();
-    center->onDaemonStop();
-    center = nullptr;
-}
-
-void connect(WayfireNotificationCenter *center)
-{
-    if (owner_id == 0)
-    {
-        start(center);
-    }
-    else
-    {
-        // TODO(NamorNiradnug) multiple centers connected
-        Daemon::center = center;
-    }
 }
 
 const std::map<Notification::id_type, const Notification> &getNotifications()
@@ -202,9 +214,14 @@ const std::map<Notification::id_type, const Notification> &getNotifications()
     return notifications;
 }
 
-void removeNotification(Notification::id_type id)
+void closeNotification(Notification::id_type id, CloseReason reason)
 {
-    center->removeNotification(id);
-    notifications.erase(id);
+    signal_notification_closed.emit(id);
+    const auto &notification = notifications.at(id);
+    if (connection)
+    {
+        Glib::VariantContainerBase body = Glib::Variant<std::tuple<guint32, guint32>>::create({id, reason});
+        connection->emit_signal(FDN_PATH, FDN_NAME, "NotificationClosed", notification.additional_info.sender, body);
+    }
 }
 } // namespace Daemon

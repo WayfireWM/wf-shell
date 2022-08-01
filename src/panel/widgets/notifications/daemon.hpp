@@ -2,19 +2,32 @@
 #define NOTIFICATION_DAEMON_HPP
 
 #include "notification-info.hpp"
+#include <glibmm/object.h>
 
 #include <set>
 
-class WayfireNotificationCenter;
-
 namespace Daemon
 {
-void start(WayfireNotificationCenter *center);
+enum CloseReason : guint32
+{
+    Expired = 1,
+    Dismissed = 2,
+    MethodCalled = 3,
+    Undefined = 4,
+};
+
+using notification_signal = sigc::signal<void(Notification::id_type)>;
+notification_signal signalNotificationNew();
+notification_signal signalNotificationReplaced();
+notification_signal signalNotificationClosed();
+
+sigc::signal<void> signalDaemonStopped();
+
+void start();
 void stop();
-void connect(WayfireNotificationCenter *center);
 
 const std::map<Notification::id_type, const Notification> &getNotifications();
-void removeNotification(Notification::id_type id);
+void closeNotification(Notification::id_type id, CloseReason reason);
 }; // namespace Daemon
 
 #endif

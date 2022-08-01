@@ -1,10 +1,16 @@
 #include "notification-center.hpp"
+#include "daemon.hpp"
 #include "widgets/notifications/single-notification.hpp"
 #include <iostream>
 
 void WayfireNotificationCenter::init(Gtk::HBox *container)
 {
-    Daemon::connect(this);
+    Daemon::start();
+    Daemon::signalNotificationNew().connect([=](Notification::id_type id) { newNotification(id); });
+    Daemon::signalNotificationReplaced().connect([=](Notification::id_type id) { replaceNotification(id); });
+    Daemon::signalNotificationClosed().connect([=](Notification::id_type id) { closeNotification(id); });
+    Daemon::signalDaemonStopped().connect([=] { onDaemonStop(); });
+
     button = std::make_unique<WayfireMenuButton>("panel");
 
     icon.set_from_icon_name("notification", Gtk::ICON_SIZE_LARGE_TOOLBAR);
@@ -21,11 +27,9 @@ void WayfireNotificationCenter::init(Gtk::HBox *container)
 
     status_label.show();
     status_label.set_line_wrap();
+    status_label.set_line_wrap_mode(Pango::WRAP_WORD);
 }
 
-/*!
- * This function should be called only by Daemon when it receives a new notification.
- */
 void WayfireNotificationCenter::newNotification(Notification::id_type id)
 {
     const auto &notification = Daemon::getNotifications().at(id);
@@ -38,28 +42,21 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id)
     button->get_popover()->popup();
 }
 
-/*!
- * This function should be called only by the Daemon when the notification is closed.
- *
- * Removes widget of the notification.
- */
-void WayfireNotificationCenter::removeNotification(Notification::id_type id)
-{
-    auto &widget = notification_widgets.at(id);
-    widget->property_child_revealed().signal_changed().connect([=] {
-        notification_widgets.erase(id);
-    });
-    widget->set_reveal_child(false);
-}
 
 void WayfireNotificationCenter::replaceNotification(Notification::id_type id)
 {
     auto &widget = notification_widgets.at(id);
-    std::cout << widget->property_reveal_child().get_value() << "\n";
     widget->property_child_revealed().signal_changed().connect([=] {
         notification_widgets.erase(id);
         newNotification(id);
     });
+    widget->set_reveal_child(false);
+}
+
+void WayfireNotificationCenter::closeNotification(Notification::id_type id)
+{
+    auto &widget = notification_widgets.at(id);
+    widget->property_child_revealed().signal_changed().connect([=] { notification_widgets.erase(id); });
     widget->set_reveal_child(false);
 }
 

@@ -45,10 +45,10 @@ struct Notification
     {
         /// when the notification was received
         std::time_t recv_time;
+        Glib::ustring sender;
     } additional_info;
 
-    explicit Notification(const Glib::VariantContainerBase &parameters);
-
+    explicit Notification(const Glib::VariantContainerBase &parameters, const Glib::ustring &sender);
     private:
     inline static guint notifications_count = 0;
 };

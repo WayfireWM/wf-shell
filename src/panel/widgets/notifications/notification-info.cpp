@@ -73,7 +73,7 @@ Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> &map)
     urgency = getHint<guint8>(map, "urgency");
 }
 
-Notification::Notification(const Glib::VariantContainerBase &parameters)
+Notification::Notification(const Glib::VariantContainerBase &parameters, const Glib::ustring &sender)
 {
     static const auto REQUIRED_TYPE = Glib::VariantType("(susssasa{sv}i)");
     if (!parameters.is_of_type(REQUIRED_TYPE))
@@ -96,4 +96,5 @@ Notification::Notification(const Glib::VariantContainerBase &parameters)
     hints = Hints(hints_map);
 
     additional_info.recv_time = std::time(nullptr);
+    additional_info.sender = sender;
 }

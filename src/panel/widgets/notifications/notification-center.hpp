@@ -2,7 +2,6 @@
 #define NOTIFICATION_CENTER_HPP
 
 #include "../../widget.hpp"
-#include "daemon.hpp"
 #include "single-notification.hpp"
 #include <gtkmm/scrolledwindow.h>
 #include <wf-popover.hpp>
@@ -19,12 +18,13 @@ class WayfireNotificationCenter : public WayfireWidget
 
     std::map<Notification::id_type, std::unique_ptr<WfSingleNotification>> notification_widgets = {};
 
+    void newNotification(Notification::id_type id);
+    void replaceNotification(Notification::id_type id);
+    void closeNotification(Notification::id_type id);
+    void onDaemonStop();
+
     public:
     void init(Gtk::HBox *container) override;
-    void newNotification(Notification::id_type id);
-    void removeNotification(Notification::id_type id);
-    void replaceNotification(Notification::id_type id);
-    void onDaemonStop();
     ~WayfireNotificationCenter() override = default;
 };
 
