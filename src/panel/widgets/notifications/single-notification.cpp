@@ -38,14 +38,12 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
             app_icon.set_from_icon_name(notification.app_icon, Gtk::ICON_SIZE_LARGE_TOOLBAR);
         }
         top_bar.pack_start(app_icon);
+        top_bar.child_property_expand(app_icon).set_value(false);
     }
 
     app_name.set_label(notification.app_name);
     app_name.set_halign(Gtk::ALIGN_START);
-    app_name.set_margin_start(5);
-    app_name.set_single_line_mode();
     app_name.set_ellipsize(Pango::ELLIPSIZE_END);
-    app_name.set_hexpand();
     top_bar.pack_start(app_name);
 
     close_image.set_from_icon_name("window-close", Gtk::ICON_SIZE_LARGE_TOOLBAR);
@@ -53,7 +51,8 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
     close_button.get_style_context()->add_class("flat");
     close_button.signal_clicked().connect(
         [=] { Daemon::closeNotification(notification.id, Daemon::CloseReason::Dismissed); });
-    top_bar.pack_start(close_button);
+    top_bar.pack_end(close_button);
+    top_bar.child_property_expand(close_button).set_value(false);
 
     top_bar.set_spacing(5);
 
@@ -85,6 +84,7 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
     else
     {
         // NOTE: that is not a really right way to implement FDN markup feature, but the easiest one.
+        // TODO(NamorNiradnug): markup works exactly as it should by FDN spec.
         text.set_markup("<b>" + notification.summary + "</b>" + "\n" + notification.body);
     }
     content.pack_start(text);

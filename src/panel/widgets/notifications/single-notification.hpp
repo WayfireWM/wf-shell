@@ -36,4 +36,3 @@ class WfSingleNotification : public Gtk::Revealer
 };
 
 #endif
-

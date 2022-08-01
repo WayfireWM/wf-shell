@@ -44,10 +44,14 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id)
 
 void WayfireNotificationCenter::replaceNotification(Notification::id_type id)
 {
+    if (notification_widgets.count(id) == 0)
+    {
+        newNotification(id);
+        return;
+    }
     auto &widget = notification_widgets.at(id);
     widget->property_child_revealed().signal_changed().connect([=] {
-        if (notification_widgets.count(id) != 0)
-            notification_widgets.erase(id);
+        notification_widgets.erase(id);
         newNotification(id);
     });
     widget->set_reveal_child(false);
@@ -55,6 +59,8 @@ void WayfireNotificationCenter::replaceNotification(Notification::id_type id)
 
 void WayfireNotificationCenter::closeNotification(Notification::id_type id)
 {
+    if (notification_widgets.count(id) == 0)
+        return;
     auto &widget = notification_widgets.at(id);
     widget->property_child_revealed().signal_changed().connect([=] { notification_widgets.erase(id); });
     widget->set_reveal_child(false);
