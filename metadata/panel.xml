@@ -231,5 +231,13 @@
 		<default>2.5</default>
 	</option>
 	</group>
+	<group>
+	<_short>Notifications</_short>
+	<option name="notifications_autohide_timeout" type="double">
+		<_short>Notifications Display Timeout</_short>
+		<_long>Set to negative value to disable.</_long>
+		<default>2.5</default>
+	</option>
+	</group>
 	</plugin>
 </wf-shell>

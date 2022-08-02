@@ -1,6 +1,9 @@
 #include "notification-center.hpp"
+
+#include <glibmm/main.h>
+
 #include "daemon.hpp"
-#include "widgets/notifications/single-notification.hpp"
+#include "single-notification.hpp"
 #include <iostream>
 
 void WayfireNotificationCenter::init(Gtk::HBox *container)
@@ -39,7 +42,13 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id)
     vbox.pack_end(*widget);
     vbox.show_all();
     widget->set_reveal_child();
-    button->get_popover()->popup();
+    auto *popover = button->get_popover();
+    if (!popover_timeout.empty() || !popover->is_visible())
+    {
+        popover_timeout.disconnect();
+        popover_timeout = Glib::signal_timeout().connect([=]() -> bool { popover->popdown(); }, timeout * 1000);
+    }
+    popover->popup();
 }
 
 void WayfireNotificationCenter::replaceNotification(Notification::id_type id)
