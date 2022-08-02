@@ -53,8 +53,9 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
         [=] { Daemon::closeNotification(notification.id, Daemon::CloseReason::Dismissed); });
     top_bar.pack_end(close_button);
     top_bar.child_property_expand(close_button).set_value(false);
-
     top_bar.set_spacing(5);
+
+    child.add(top_bar);
 
     if (notification.hints.image_data)
     {
@@ -89,8 +90,20 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
     }
     content.pack_start(text);
 
-    child.add(top_bar);
     child.add(content);
+
+    if (!notification.actions.empty())
+    {
+        for (uint i = 0; i + 1 < notification.actions.size(); ++ ++i)
+        {
+            auto action_button = Glib::RefPtr<Gtk::Button>(new Gtk::Button(notification.actions[i + 1]));
+            action_button->signal_clicked().connect(
+                [=] { Daemon::invokeAction(notification.id, notification.actions[i]); });
+            actions.add(*action_button.get());
+        }
+        child.add(actions);
+    }
+
     add(child);
     set_transition_type(Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
 }

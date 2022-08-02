@@ -84,7 +84,8 @@ notification_signal signalNotificationClosed()
 
 sigc::signal<void> signal_daemon_stopped;
 
-sigc::signal<void> signalDaemonStopped() {
+sigc::signal<void> signalDaemonStopped()
+{
     return signal_daemon_stopped;
 }
 
@@ -100,7 +101,7 @@ using DBusMethod = void (*)(const Glib::RefPtr<Gio::DBus::Connection> &connectio
 dbus_method(GetCapabilities)
 {
     static const auto value = Glib::Variant<std::tuple<std::vector<Glib::ustring>>>::create(
-        {{"body", "persistance", "actions", "action-icons"}});
+        {{"action-icons", "actions", "body", "body-images", "persistance"}});
     invocation->return_value(value);
     connection->flush();
 }
@@ -136,7 +137,7 @@ dbus_method(CloseNotification)
     Glib::VariantBase id_var;
     parameters.get_child(id_var, 0);
     closeNotification(Glib::VariantBase::cast_dynamic<Glib::Variant<Notification::id_type>>(id_var).get(),
-                       CloseReason::MethodCalled);
+                      CloseReason::MethodCalled);
 }
 
 dbus_method(GetServerInformation)
@@ -216,12 +217,25 @@ const std::map<Notification::id_type, const Notification> &getNotifications()
 
 void closeNotification(Notification::id_type id, CloseReason reason)
 {
+    if (notifications.count(id) == 0)
+        return;
     signal_notification_closed.emit(id);
     const auto &notification = notifications.at(id);
     if (connection)
     {
-        Glib::VariantContainerBase body = Glib::Variant<std::tuple<guint32, guint32>>::create({id, reason});
+        auto body = Glib::Variant<std::tuple<guint32, guint32>>::create({id, reason});
         connection->emit_signal(FDN_PATH, FDN_NAME, "NotificationClosed", notification.additional_info.sender, body);
+    }
+}
+
+void invokeAction(Notification::id_type id, const std::string &action_key)
+{
+    if (notifications.count(id) == 0)
+        return;
+    if (connection)
+    {
+        auto body = Glib::Variant<std::tuple<guint32, std::string>>::create({id, action_key});
+        connection->emit_signal(FDN_PATH, FDN_NAME, "ActionInvoked", notifications.at(id).additional_info.sender, body);
     }
 }
 } // namespace Daemon

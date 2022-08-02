@@ -10,8 +10,6 @@
 
 #include "notification-info.hpp"
 
-class WayfireNotificationCenter;
-
 class WfSingleNotification : public Gtk::Revealer
 {
     public:
@@ -30,6 +28,8 @@ class WfSingleNotification : public Gtk::Revealer
 
     Gtk::Label text;
     Gtk::Image image;
+
+    Gtk::Box actions;
 
     public:
     explicit WfSingleNotification(const Notification &notification);
