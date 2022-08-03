@@ -23,6 +23,8 @@ class WfSingleNotification : public Gtk::Revealer
 
     Gtk::Image app_icon;
     Gtk::Label app_name;
+    Gtk::Label time_label;
+    sigc::connection time_label_update;
     Gtk::Button close_button;
     Gtk::Image close_image;
 
@@ -33,6 +35,7 @@ class WfSingleNotification : public Gtk::Revealer
 
     public:
     explicit WfSingleNotification(const Notification &notification);
+    ~WfSingleNotification() override;
 };
 
 #endif
