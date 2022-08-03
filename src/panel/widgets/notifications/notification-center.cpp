@@ -4,7 +4,6 @@
 
 #include "daemon.hpp"
 #include "single-notification.hpp"
-#include <iostream>
 
 void WayfireNotificationCenter::init(Gtk::HBox *container)
 {
@@ -46,7 +45,13 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id)
     if (!popover_timeout.empty() || !popover->is_visible())
     {
         popover_timeout.disconnect();
-        popover_timeout = Glib::signal_timeout().connect([=]() -> bool { popover->popdown(); }, timeout * 1000);
+        popover_timeout = Glib::signal_timeout().connect(
+            [=] {
+                popover->popdown();
+                popover_timeout.disconnect();
+                return true;
+            },
+            timeout * 1000);
     }
     popover->popup();
 }

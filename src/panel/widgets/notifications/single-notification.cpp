@@ -2,7 +2,6 @@
 #include "daemon.hpp"
 #include <gtk-utils.hpp>
 #include <gtkmm/icontheme.h>
-#include <iostream>
 #include <string>
 
 const static std::string FILE_PREFIX = "file://";
