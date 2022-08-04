@@ -173,16 +173,9 @@ bool WfLauncherButton::on_click(GdkEventButton *ev)
     return true;
 }
 
-// calculate the animation duration based on the difference in the icons' sizes
-// this is needed because for small differences the animation looks jittery if it is
-// too slow
 static int get_animation_duration(int start, int end, int scale)
 {
-    start *= scale;
-    end *= scale;
-
-    int diff = std::abs(start - end);
-    return std::min(diff * 16 / scale, 300); // TODO: what if the screen isn't 60FPS??
+    return WfOption<int>{"panel/launchers_animation_duration"}.value();
 }
 
 bool WfLauncherButton::on_enter(GdkEventCrossing* ev)
