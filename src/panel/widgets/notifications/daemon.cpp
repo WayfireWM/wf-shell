@@ -58,7 +58,7 @@ const auto introspection_data =
                                         "</node>") -> lookup_interface();
 
 bool is_running = false;
-guint owner_id;
+guint owner_id = 0;
 
 // used to emit dbus signals
 Glib::RefPtr<Gio::DBus::Connection> connection;
