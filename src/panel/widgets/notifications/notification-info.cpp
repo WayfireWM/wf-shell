@@ -15,12 +15,14 @@ static K getHint(const std::map<std::string, Glib::VariantBase> &map, const std:
 {
     if (map.count(key) != 0)
     {
-        return Glib::VariantBase::cast_dynamic<Glib::Variant<K>>(map.at(key)).get();
+        const auto &val = map.at(key);
+        if (val.is_of_type(Glib::Variant<K>::variant_type()))
+            return Glib::VariantBase::cast_dynamic<Glib::Variant<K>>(map.at(key)).get();
     }
     return K();
 }
 
-Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase& variant)
+Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase &variant)
 {
     if (!variant.is_of_type(Glib::VariantType("iiibiiay")))
         throw std::invalid_argument("Cannot create pixbuf from variant.");
@@ -45,10 +47,11 @@ Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase& variant)
 
     // for integer positive A, floor((A + 7) / 8) = ceil(A / 8)
     ulong pixel_size = (channels * bits_per_sample + 7) / 8;
-    if (data_var.get_size() != ((ulong) height - 1) * (ulong) rowstride + (ulong) width * pixel_size)
+    if (data_var.get_size() != ((ulong)height - 1) * (ulong)rowstride + (ulong)width * pixel_size)
         throw std::invalid_argument("Cannot create pixbuf from variant: expected data size doesn't equal actual one.");
-    const auto* data = (guint8 *) (g_memdup2(data_var.get_data(), data_var.get_size()));
-    return Gdk::Pixbuf::create_from_data(data, Gdk::COLORSPACE_RGB, has_alpha, bits_per_sample, width, height, rowstride);
+    const auto *data = (guint8 *)(g_memdup2(data_var.get_data(), data_var.get_size()));
+    return Gdk::Pixbuf::create_from_data(data, Gdk::COLORSPACE_RGB, has_alpha, bits_per_sample, width, height,
+                                         rowstride);
 }
 
 Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> &map)

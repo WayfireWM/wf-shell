@@ -49,6 +49,7 @@ struct Notification
     } additional_info;
 
     explicit Notification(const Glib::VariantContainerBase &parameters, const Glib::ustring &sender);
+
     private:
     inline static guint notifications_count = 0;
 };
