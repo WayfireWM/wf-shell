@@ -12,7 +12,7 @@ const static std::string FILE_PREFIX = "file://";
 
 static bool begins_with(const std::string &str, const std::string &prefix)
 {
-    return str.size() >= prefix.size() && str.substr(prefix.size()) == prefix;
+    return str.size() >= prefix.size() && str.substr(0, prefix.size()) == prefix;
 }
 
 inline static bool is_file_uri(const std::string &str)
