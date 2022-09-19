@@ -238,6 +238,11 @@
 		<_long>Set to negative value to disable.</_long>
 		<default>2.5</default>
 	</option>
+	<option name="notifications_dnd" type="bool">
+		<_short>Do Not Disturb</_short>
+		<_long>Disable showing popover when a new notification recieved.</_long>
+		<default>false</default>
+	</option>
 	</group>
 	</plugin>
 </wf-shell>

@@ -41,19 +41,22 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id)
     vbox.pack_end(*widget);
     vbox.show_all();
     widget->set_reveal_child();
-    auto *popover = button->get_popover();
-    if (!popover_timeout.empty() || !popover->is_visible())
+    if (!dnd_enabled)
     {
-        popover_timeout.disconnect();
-        popover_timeout = Glib::signal_timeout().connect(
-            [=] {
-                popover->popdown();
-                popover_timeout.disconnect();
-                return true;
-            },
-            timeout * 1000);
+        auto *popover = button->get_popover();
+        if (timeout > 0 && (!popover_timeout.empty() || !popover->is_visible()))
+        {
+            popover_timeout.disconnect();
+            popover_timeout = Glib::signal_timeout().connect(
+                [=] {
+                    popover->popdown();
+                    popover_timeout.disconnect();
+                    return true;
+                },
+                timeout * 1000);
+        }
+        popover->popup();
     }
-    popover->popup();
 }
 
 void WayfireNotificationCenter::replaceNotification(Notification::id_type id)

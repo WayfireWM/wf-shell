@@ -26,6 +26,7 @@ class WayfireNotificationCenter : public WayfireWidget
 
     sigc::connection popover_timeout;
     WfOption<double> timeout{"panel/notifications_autohide_timeout"};
+    WfOption<bool> dnd_enabled{"panel/notifications_dnd"};
 
     public:
     void init(Gtk::HBox *container) override;
