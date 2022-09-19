@@ -238,10 +238,10 @@
 		<_long>Set to negative value to disable.</_long>
 		<default>2.5</default>
 	</option>
-	<option name="notifications_dnd" type="bool">
-		<_short>Do Not Disturb</_short>
-		<_long>Disable showing popover when a new notification recieved.</_long>
-		<default>false</default>
+	<option name="notifications_critical_in_dnd" type="bool">
+		<_short>Always Show Critical notifications</_short>
+		<_long>Makes critical notifications to be shown even in DND mode.</_long>
+		<default>true</default>
 	</option>
 	</group>
 	</plugin>

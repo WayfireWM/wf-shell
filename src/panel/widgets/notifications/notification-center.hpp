@@ -23,10 +23,12 @@ class WayfireNotificationCenter : public WayfireWidget
     void replaceNotification(Notification::id_type id);
     void closeNotification(Notification::id_type id);
     void onDaemonStop();
+    void updateIcon();
 
     sigc::connection popover_timeout;
     WfOption<double> timeout{"panel/notifications_autohide_timeout"};
-    WfOption<bool> dnd_enabled{"panel/notifications_dnd"};
+    WfOption<bool> show_critical_in_dnd{"panel/notifications_critical_in_dnd"};
+    bool dnd_enabled = false;
 
     public:
     void init(Gtk::HBox *container) override;
