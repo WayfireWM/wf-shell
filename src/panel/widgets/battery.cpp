@@ -147,9 +147,14 @@ void WayfireBatteryInfo::update_details()
     else if (status_opt == BATTERY_STATUS_FULL)
     {
         label.set_text(description);
-    } else
+    }
+    if (status_opt == BATTERY_STATUS_ICON)
     {
-        label.set_text("");
+        label.hide();
+    }
+    else
+    {
+        label.show();
     }
 }
 
@@ -220,6 +225,7 @@ void WayfireBatteryInfo::init(Gtk::HBox *container)
 
     container->pack_start(button, Gtk::PACK_SHRINK);
     button_box.add(label);
+    button_box.set_spacing(5);
 
     button.add(button_box);
     button.property_scale_factor().signal_changed()
