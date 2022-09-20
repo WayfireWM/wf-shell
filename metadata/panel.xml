@@ -45,11 +45,11 @@
 			<_name>Bottom</_name>
 		</desc>
 	</option>
-    <option name="edge_offset" type="int">
-        <_short>Edge offset</_short>
-        <_long>The distance from the cursor to the edge of screen to show the panel when it's hidden.</_long>
-        <default>20</default>
-    </option>
+	<option name="edge_offset" type="int">
+		<_short>Edge offset</_short>
+		<_long>The distance from the cursor to the edge of screen to show the panel when it's hidden.</_long>
+		<default>20</default>
+	</option>
 	<option name="layer" type="string">
 		<_short>Layer</_short>
 		<default>top</default>
@@ -229,6 +229,19 @@
 	<option name="volume_display_timeout" type="double">
 		<_short>Volume Display Timeout</_short>
 		<default>2.5</default>
+	</option>
+	</group>
+	<group>
+	<_short>Notifications</_short>
+	<option name="notifications_autohide_timeout" type="double">
+		<_short>Notifications Display Timeout</_short>
+		<_long>Set to negative value to disable.</_long>
+		<default>2.5</default>
+	</option>
+	<option name="notifications_critical_in_dnd" type="bool">
+		<_short>Always Show Critical notifications</_short>
+		<_long>Makes critical notifications to be shown even in DND mode.</_long>
+		<default>true</default>
 	</option>
 	</group>
 	</plugin>
