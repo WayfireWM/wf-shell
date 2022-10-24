@@ -286,6 +286,8 @@ bool WayfireAutohidingWindow::update_margin()
     {
         gtk_layer_set_margin(this->gobj(),
             get_anchor_edge(position), y_position);
+        // queue_draw does not work when the panel is hidden
+        // so calling wl_surface_commit to make WM show the panel back
         if (get_window())
             wl_surface_commit(get_wl_surface());
         this->queue_draw();
