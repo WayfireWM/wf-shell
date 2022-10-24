@@ -259,7 +259,7 @@ void WayfireAutohidingWindow::schedule_hide(int delay)
 
 bool WayfireAutohidingWindow::m_do_show()
 {
-    y_position.animate(0);
+    y_position.animate(y_position + 1, 0);
     update_margin();
     return false; // disconnect
 }
@@ -286,8 +286,9 @@ bool WayfireAutohidingWindow::update_margin()
     {
         gtk_layer_set_margin(this->gobj(),
             get_anchor_edge(position), y_position);
-
-        this->queue_draw(); // XXX: is this necessary?
+        if (get_window())
+            wl_surface_commit(get_wl_surface());
+        this->queue_draw();
         return true;
     }
 
