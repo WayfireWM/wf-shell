@@ -259,7 +259,7 @@ void WayfireAutohidingWindow::schedule_hide(int delay)
 
 bool WayfireAutohidingWindow::m_do_show()
 {
-    y_position.animate(y_position + 1, 0);
+    y_position.animate(std::fmin(0, y_position + 1), 0);
     update_margin();
     return false; // disconnect
 }
