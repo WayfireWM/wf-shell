@@ -88,7 +88,7 @@
 	<option name="launchers_animation_duration" type="int">
 		<_short>Animation Duration</_short>
 		<_long>High values may cause jittery animations</_long>
-		<default>300</default>
+		<default>200</default>
 	</option>
 	</group>
 	<group>
