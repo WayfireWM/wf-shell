@@ -59,11 +59,13 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id)
             popover_timeout = Glib::signal_timeout().connect(
                 [=] {
                     popover->popdown();
+                    button->set_keyboard_interactive();
                     popover_timeout.disconnect();
                     return true;
                 },
                 timeout * 1000);
         }
+        button->set_keyboard_interactive(false);
         popover->popup();
     }
 }
