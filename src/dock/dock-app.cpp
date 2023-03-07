@@ -54,7 +54,7 @@ void WfDockApp::on_activate()
     wl_registry_add_listener(registry, &registry_listener, NULL);
     wl_display_roundtrip(display);
 
-    if (!this->manager)
+    if (!priv->manager)
     {
         std::cerr << "Compositor doesn't support" <<
             " wlr-foreign-toplevel-management, exiting." << std::endl;
