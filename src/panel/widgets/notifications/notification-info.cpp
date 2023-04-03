@@ -57,18 +57,18 @@ Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase &variant)
 Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> &map)
 {
     action_icons = getHint<bool>(map, "actions-icons");
-    category = getHint<std::string>(map, "category");
-    desktop_entry = getHint<std::string>(map, "desktop-entry");
+    category = getHint<Glib::ustring>(map, "category");
+    desktop_entry = getHint<Glib::ustring>(map, "desktop-entry");
     if (map.count("image-data") != 0)
         image_data = pixbufFromVariant(map.at("image-data"));
     else if (map.count("icon_data") != 0)
         image_data = pixbufFromVariant(map.at("image_data"));
-    image_path = getHint<std::string>(map, "image-path");
+    image_path = getHint<Glib::ustring>(map, "image-path");
     if (image_path.empty())
-        image_path = getHint<std::string>(map, "image_path");
+        image_path = getHint<Glib::ustring>(map, "image_path");
     resident = getHint<bool>(map, "resident");
-    sound_file = getHint<std::string>(map, "sound-file");
-    sound_name = getHint<std::string>(map, "sound-name");
+    sound_file = getHint<Glib::ustring>(map, "sound-file");
+    sound_name = getHint<Glib::ustring>(map, "sound-name");
     suppress_sound = getHint<bool>(map, "suppress-sound");
     transient = getHint<bool>(map, "transient");
     x = getHint<gint32>(map, "x");
