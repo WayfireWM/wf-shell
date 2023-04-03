@@ -8,7 +8,7 @@
 #include <ctime>
 #include <string>
 
-const static std::string FILE_PREFIX = "file://";
+const static std::string FILE_URI_PREFIX = "file://";
 
 static bool begins_with(const std::string &str, const std::string &prefix)
 {
@@ -17,12 +17,12 @@ static bool begins_with(const std::string &str, const std::string &prefix)
 
 inline static bool is_file_uri(const std::string &str)
 {
-    return begins_with(str, FILE_PREFIX);
+    return begins_with(str, FILE_URI_PREFIX);
 }
 
 inline static std::string path_from_uri(const std::string &str)
 {
-    return str.substr(FILE_PREFIX.size());
+    return str.substr(FILE_URI_PREFIX.size());
 }
 
 static const int DAY_SEC = 24 * 60 * 60;
