@@ -50,7 +50,7 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id)
     vbox.pack_end(*widget);
     vbox.show_all();
     widget->set_reveal_child();
-    if (!dnd_enabled || (show_critical_in_dnd && Daemon::getNotifications().at(id).hints.urgency == 2))
+    if (!dnd_enabled || (show_critical_in_dnd && notification.hints.urgency == 2))
     {
         auto *popover = button->get_popover();
         if (timeout > 0 && (!popover_timeout.empty() || !popover->is_visible()))
