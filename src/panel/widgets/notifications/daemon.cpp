@@ -106,7 +106,7 @@ dbus_method(GetCapabilities)
     connection->flush();
 }
 
-dbus_method(Notify)
+dbus_method(Notify) try
 {
     const auto notification = Notification(parameters, sender);
     const auto id = notification.id;
@@ -130,6 +130,9 @@ dbus_method(Notify)
     {
         signal_notification_new.emit(id);
     }
+}
+catch (const std::invalid_argument& err) {
+    std::cerr << "Error at " << __PRETTY_FUNCTION__ << ": " << err.what() << std::endl;
 }
 
 dbus_method(CloseNotification)
