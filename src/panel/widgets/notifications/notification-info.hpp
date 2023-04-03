@@ -11,24 +11,24 @@
 struct Notification
 {
     using id_type = guint32;
-    std::string app_name;
+    Glib::ustring app_name;
     id_type id;
-    std::string app_icon;
-    std::string summary;
-    std::string body;
-    std::vector<std::string> actions;
+    Glib::ustring app_icon;
+    Glib::ustring summary;
+    Glib::ustring body;
+    std::vector<Glib::ustring> actions;
     gint32 expire_time;
 
     struct Hints
     {
         bool action_icons;
-        std::string category;
-        std::string desktop_entry;
+        Glib::ustring category;
+        Glib::ustring desktop_entry;
         Glib::RefPtr<Gdk::Pixbuf> image_data;
-        std::string image_path;
+        Glib::ustring image_path;
         bool resident;
-        std::string sound_file;
-        std::string sound_name;
+        Glib::ustring sound_file;
+        Glib::ustring sound_name;
         bool suppress_sound;
         bool transient;
         gint32 x, y;

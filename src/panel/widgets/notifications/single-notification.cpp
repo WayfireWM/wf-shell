@@ -88,12 +88,11 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
     {
         image.set(notification.hints.image_data);
     }
-    if (!notification.hints.image_path.empty())
+    else if (!notification.hints.image_path.empty())
     {
         if (is_file_uri(notification.hints.image_path))
         {
-            auto path = path_from_uri(notification.hints.image_path);
-            image.set_from_resource(path);
+            image.set(path_from_uri(notification.hints.image_path));
         }
         else
         {
