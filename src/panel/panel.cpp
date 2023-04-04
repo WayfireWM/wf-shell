@@ -16,6 +16,7 @@
 #include "../util/gtk-utils.hpp"
 
 #include "widgets/battery.hpp"
+#include "widgets/command-output.hpp"
 #include "widgets/menu.hpp"
 #include "widgets/clock.hpp"
 #include "widgets/launchers.hpp"
@@ -166,6 +167,8 @@ class WayfirePanel::impl
             return Widget(new WayfireNotificationCenter());
         if (name == "tray")
             return Widget(new WayfireStatusNotifier());
+        if (name == "command-output")
+            return Widget(new WfCommandOutputButtons());
 
         std::string spacing = "spacing";
         if (name.find(spacing) == 0)
