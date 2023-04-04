@@ -28,7 +28,7 @@ void stop();
 
 const std::map<Notification::id_type, const Notification> &getNotifications();
 void closeNotification(Notification::id_type id, CloseReason reason);
-void invokeAction(Notification::id_type id, const std::string &action_key);
+void invokeAction(Notification::id_type id, const Glib::ustring &action_key);
 }; // namespace Daemon
 
 #endif
