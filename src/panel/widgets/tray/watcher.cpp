@@ -5,9 +5,9 @@
 #include <iostream>
 
 static const auto introspection_data = Gio::DBus::NodeInfo::create_for_xml(R"(
-<?xml version="1.0" encoding="UTF-8"?>"
-<node name="/org/freedesktop/StatusNotifierWatcher">
-    <interface name="org.freedesktop.StatusNotifierWatcher">
+<?xml version="1.0" encoding="UTF-8"?>
+<node name="/StatusNotifierWatcher">
+    <interface name="org.kde.StatusNotifierWatcher">
         <method name="RegisterStatusNotifierItem">
             <arg direction="in" name="service" type="s"/>
         </method>
@@ -32,16 +32,20 @@ static const auto introspection_data = Gio::DBus::NodeInfo::create_for_xml(R"(
 
 Watcher::Watcher()
     : dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::BUS_TYPE_SESSION, SNW_NAME,
-                                       [this](auto... args) { on_bus_acquired(args...); }))
+                                       sigc::mem_fun(this, &Watcher::on_bus_acquired)))
 {
+    std::cout << "Watcher: init\n";
 }
 
-void Watcher::Launch()
+std::shared_ptr<Watcher> Watcher::Launch()
 {
-    if (!instance)
+    if (instance.expired())
     {
-        instance = std::unique_ptr<Watcher>(new Watcher());
+        auto watcher_ptr = std::shared_ptr<Watcher>(new Watcher());
+        instance = watcher_ptr;
+        return watcher_ptr;
     }
+    return instance.lock();
 }
 
 Watcher::~Watcher()
@@ -53,44 +57,47 @@ void Watcher::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connect
 {
     connection->register_object(SNW_PATH, introspection_data, interface_table);
     watcher_connection = connection;
+    std::cout << "Watcher: bus aqcuired\n";
 }
 
 void Watcher::register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                                            const Glib::ustring &service)
+                                            const Glib::ustring &sender, const Glib::ustring &path)
 {
-    Gio::DBus::Proxy::create(connection, service, "/StatusNotifierItem", "org.freedesktop.StatusNotifierItem",
-                             [&service, this](Glib::RefPtr<Gio::AsyncResult> &result) {
-                                 const auto proxy = Gio::DBus::Proxy::create_finish(result);
-                                 if (!proxy)
-                                 {
-                                     return;
-                                 }
-                                 emit_signal("StatusNotifierItemRegistered", service);
-                                 sn_items.insert(proxy);
-                                 proxy->get_connection()->signal_closed().connect(
-                                     [&proxy, this](bool remote_peer_vanished, const Glib::Error &error) {
-                                         emit_signal("StatusNotifierItemUnregistered", proxy->get_name());
-                                         sn_items.erase(proxy);
-                                     });
-                             });
+    std::cout << path << std::endl;
+    const auto full_obj_path = sender + path;
+    emit_signal("StatusNotifierItemRegistered", full_obj_path);
+    /*
+    watcher_connection->emit_signal(
+        Watcher::SNW_PATH, "org.freedesktop.DBus.Properties", "PropertiesChanged", {},
+        Glib::Variant<std::tuple<Glib::ustring, std::map<Glib::ustring, Glib::VariantBase>,
+                                 std::vector<Glib::ustring>>>::create({Watcher::SNW_IFACE,
+                                                                       {{"RegistredStatusNotifierItems",
+                                                                         get_registred_items()}},
+                                                                       {}}));
+   */
+    sn_items_id.emplace(full_obj_path, Gio::DBus::watch_name(
+                                           Gio::DBus::BUS_TYPE_SESSION, sender, {},
+                                           [this, full_obj_path](const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                                                                 const Glib::ustring &name) {
+                                               Gio::DBus::unwatch_name(sn_items_id.at(full_obj_path));
+                                               sn_items_id.erase(full_obj_path);
+                                               emit_signal("StatusNotifierItemUnregistred", full_obj_path);
+                                           }));
+    // watcher_connection->
 }
 
 void Watcher::register_status_notifier_host(const Glib::RefPtr<Gio::DBus::Connection> &connection,
                                             const Glib::ustring &service)
 {
-    Gio::DBus::Proxy::create(
-        connection, service, "/StatusNotifierHost", "org.freedesktop.StatusNotifierHost",
-        [&service, this](Glib::RefPtr<Gio::AsyncResult> &result) {
-            const auto proxy = Gio::DBus::Proxy::create_finish(result);
-            if (!proxy)
-            {
-                return;
-            }
-            emit_signal("StatusNotifierHostRegistered");
-            sn_hosts.insert(proxy);
-            proxy->get_connection()->signal_closed().connect(
-                [&proxy, this](bool remote_peer_vanished, const Glib::Error &error) { sn_hosts.erase(proxy); });
-        });
+    sn_hosts_id.emplace(service,
+                        Gio::DBus::watch_name(
+                            connection, service,
+                            [this](const Glib::RefPtr<Gio::DBus::Connection> &, const Glib::ustring &,
+                                   const Glib::ustring &) { emit_signal("StatusNotifierHostRegistred"); },
+                            [this](const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name) {
+                                Gio::DBus::unwatch_name(sn_hosts_id[name]);
+                                sn_hosts_id.erase(name);
+                            }));
 }
 
 void Watcher::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> &connection,
@@ -101,15 +108,16 @@ void Watcher::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection>
 {
     if (!parameters.is_of_type(Glib::VariantType("(s)")))
     {
-        std::cerr << "StatusNotifierWatcher: invalid argument type: expected 's', got " << parameters.get_type_string()
+        std::cerr << "StatusNotifierWatcher: invalid argument type: expected (s), got " << parameters.get_type_string()
                   << std::endl;
+        return;
     }
     Glib::Variant<Glib::ustring> service_variant;
     parameters.get_child(service_variant, 0);
     const auto service = service_variant.get();
     if (method_name == "RegisterStatusNotifierItem")
     {
-        register_status_notifier_item(connection, service);
+        register_status_notifier_item(connection, sender, service[0] == '/' ? service : "/StatusNotifierItem");
     }
     else if (method_name == "RegisterStatusNotifierHost")
     {
@@ -128,14 +136,11 @@ void Watcher::on_interface_get_property(Glib::VariantBase &property,
 {
     if (property_name == "RegisteredStatusNotifierItems")
     {
-        std::vector<Glib::ustring> sn_items_names(sn_items.size());
-        std::transform(sn_items.begin(), sn_items.end(), sn_items_names.begin(),
-                       [](const auto &proxy) { return proxy->get_name(); });
-        property = Glib::Variant<std::vector<Glib::ustring>>::create(sn_items_names);
+        property = get_registred_items();
     }
     else if (property_name == "IsStatusNotifierHostRegistered")
     {
-        property = Glib::Variant<bool>::create(!sn_hosts.empty());
+        property = Glib::Variant<bool>::create(!sn_hosts_id.empty());
     }
     else if (property_name == "ProtocolVersion")
     {
@@ -145,4 +150,15 @@ void Watcher::on_interface_get_property(Glib::VariantBase &property,
     {
         std::cerr << "StatusNotifierWatcher: Unknown property " << property_name << std::endl;
     }
+}
+
+Glib::Variant<std::vector<Glib::ustring>> Watcher::get_registred_items() const
+{
+    std::vector<Glib::ustring> sn_items_names;
+    sn_items_names.reserve(sn_items_id.size());
+    for (const auto &[service, id] : sn_items_id)
+    {
+        sn_items_names.push_back(service);
+    }
+    return Glib::Variant<std::vector<Glib::ustring>>::create(sn_items_names);
 }

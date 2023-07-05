@@ -1,10 +1,10 @@
 #ifndef TRAY_WATCHER_HPP
 #define TRAY_WATCHER_HPP
 
+#include <iostream>
 #include <memory>
 
 #include <giomm.h>
-#include <libdbusmenu-gtk/dbusmenu-gtk.h>
 
 /*
  * Singleton representing a StatusNotifierWatceher instance.
@@ -12,24 +12,29 @@
 class Watcher
 {
     public:
+    static constexpr auto SNW_PATH = "/StatusNotifierWatcher";
+    static constexpr auto SNW_NAME = "org.kde.StatusNotifierWatcher";
+    static constexpr auto SNW_IFACE = "org.kde.StatusNotifierWatcher";
+
     /*!
-     * Initializes and launches the watcher.
+     * Initializes and launches the watcher, if needed.
+     *
+     * Returns a shared pointer to the instance.
+     * Once there are no alive shared pointers to the instance,
+     * the Watcher is automatically destroyed.
      */
-    static void Launch();
+    static std::shared_ptr<Watcher> Launch();
 
     ~Watcher();
 
     private:
-    static constexpr auto SNW_PATH = "/org/freedesktop/StatusNotifierWatcher";
-    static constexpr auto SNW_NAME = "org.freedesktop.StatusNotifierWatcher";
-
-    inline static std::unique_ptr<Watcher> instance = nullptr;
+    inline static std::weak_ptr<Watcher> instance;
 
     guint dbus_name_id;
     Glib::RefPtr<Gio::DBus::Connection> watcher_connection;
 
-    std::set<Glib::RefPtr<Gio::DBus::Proxy>> sn_items;
-    std::set<Glib::RefPtr<Gio::DBus::Proxy>> sn_hosts;
+    std::map<Glib::ustring, guint> sn_items_id;
+    std::map<Glib::ustring, guint> sn_hosts_id;
 
     const Gio::DBus::InterfaceVTable interface_table = Gio::DBus::InterfaceVTable(
         [this](auto &&...args) { on_interface_method_call(std::forward<decltype(args)>(args)...); },
@@ -49,15 +54,19 @@ class Watcher
                                    const Glib::ustring &interface_name, const Glib::ustring &property_name);
 
     void register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                                       const Glib::ustring &service);
+                                       const Glib::ustring &sender, const Glib::ustring &path);
     void register_status_notifier_host(const Glib::RefPtr<Gio::DBus::Connection> &connection,
                                        const Glib::ustring &service);
+
+    Glib::Variant<std::vector<Glib::ustring>> get_registred_items() const;
 
     template <typename... Args>
     void emit_signal(const Glib::ustring &name, Args &&...args)
     {
+        std::cout << "Emitting " << name << " signal with args ";
+        (std::cout << ... << args) << std::endl;
         watcher_connection->emit_signal(
-            SNW_PATH, SNW_PATH, name, {},
+            SNW_PATH, SNW_NAME, name, {},
             Glib::Variant<std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...>>::create(
                 std::tuple(std::forward<Args>(args)...)));
     }

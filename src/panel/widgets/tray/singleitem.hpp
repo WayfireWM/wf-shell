@@ -1,4 +1,0 @@
-#ifndef TRAY_SINGLEITEM_HPP
-#define TRAY_SINGLEITEM_HPP
-
-#endif
