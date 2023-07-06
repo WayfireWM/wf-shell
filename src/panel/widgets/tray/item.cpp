@@ -70,7 +70,7 @@ Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(const Glib::VariantBase &variant)
     }
     auto *data_ptr = new auto(std::move(data));
     return Gdk::Pixbuf::create_from_data(data_ptr->data(), Gdk::Colorspace::COLORSPACE_RGB, true, 8, width, height,
-                                         4 * width, [](auto *data_ptr) { delete data_ptr; });
+                                         4 * width, [data_ptr](auto *) { delete data_ptr; });
 }
 
 void StatusNotifierItem::update_icon()
