@@ -81,7 +81,7 @@ void Watcher::register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connec
                                                                  const Glib::ustring &name) {
                                                Gio::DBus::unwatch_name(sn_items_id.at(full_obj_path));
                                                sn_items_id.erase(full_obj_path);
-                                               emit_signal("StatusNotifierItemUnregistred", full_obj_path);
+                                               emit_signal("StatusNotifierItemUnregistered", full_obj_path);
                                            }));
     // watcher_connection->
 }
@@ -93,7 +93,7 @@ void Watcher::register_status_notifier_host(const Glib::RefPtr<Gio::DBus::Connec
                         Gio::DBus::watch_name(
                             connection, service,
                             [this](const Glib::RefPtr<Gio::DBus::Connection> &, const Glib::ustring &,
-                                   const Glib::ustring &) { emit_signal("StatusNotifierHostRegistred"); },
+                                   const Glib::ustring &) { emit_signal("StatusNotifierHostRegistered"); },
                             [this](const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name) {
                                 Gio::DBus::unwatch_name(sn_hosts_id[name]);
                                 sn_hosts_id.erase(name);
