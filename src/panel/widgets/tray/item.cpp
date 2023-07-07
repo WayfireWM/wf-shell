@@ -27,16 +27,16 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring &service)
                                          init_widget();
                                          /*
                                          item_proxy->call(
-                                             "org.freedesktop.DBus.Properies.GetAll",
-                                             [this](const Glib::RefPtr<Gio::AsyncResult> &result) {
-                                                 const auto all_properties = item_proxy->call_finish(result);
-                                                 Glib::Variant<decltype(item_properties)> variant;
-                                                 all_properties.get_child(variant);
-                                                 item_properties = variant.get();
-                                                 init_widget();
-                                             },
-                                             Glib::Variant<std::tuple<Glib::ustring>>::create({"org.kde.StatusNotifierItem"}));
-                                             */
+                                         "org.freedesktop.DBus.Properies.GetAll",
+                                         [this](const Glib::RefPtr<Gio::AsyncResult> &result) {
+                                             const auto all_properties = item_proxy->call_finish(result);
+                                             Glib::Variant<decltype(item_properties)> variant;
+                                             all_properties.get_child(variant);
+                                             item_properties = variant.get();
+                                             init_widget();
+                                         },
+                                         Glib::Variant<std::tuple<Glib::ustring>>::create({"org.kde.StatusNotifierItem"}));
+                                         */
                                      });
 }
 
@@ -45,6 +45,7 @@ using IconData = std::vector<std::tuple<gint32, gint32, std::vector<guint8>>>;
 void StatusNotifierItem::init_widget()
 {
     add(icon);
+    icon.show();
     update_icon();
     init_menu();
 
@@ -74,7 +75,7 @@ void StatusNotifierItem::init_widget()
     });
 
     signal_scroll_event().connect([this](GdkEventScroll *ev) {
-        static constexpr auto SMOOTH_SCROLL_THRESHOLD = 5.0;
+        static constexpr auto SMOOTH_SCROLL_THRESHOLD = 5.0; // TODO(NamorNiradnug) make this value configurable
         int dx = 0;
         int dy = 0;
         switch (ev->direction)
@@ -94,7 +95,6 @@ void StatusNotifierItem::init_widget()
         case GDK_SCROLL_SMOOTH:
             distance_scrolled_x += ev->delta_x;
             distance_scrolled_y += ev->delta_y;
-            // check against the configured threshold and ensure that the absolute value >= 1
             if (std::abs(distance_scrolled_x) > SMOOTH_SCROLL_THRESHOLD)
             {
                 dx = std::lround(distance_scrolled_x);
@@ -155,8 +155,8 @@ Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(IconData &&pixbuf_data)
 
 void StatusNotifierItem::update_icon()
 {
-    const auto status = get_item_property<Glib::ustring>("Status");
-    const Glib::ustring icon_type_name = status == "NeedsAttention" ? "AttentionIcon" : "Icon";
+    const Glib::ustring icon_type_name =
+        get_item_property<Glib::ustring>("Status") == "NeedsAttention" ? "AttentionIcon" : "Icon";
     const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
     if (pixmap_data)
     {

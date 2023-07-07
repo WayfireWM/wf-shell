@@ -32,7 +32,7 @@ void StatusNotifierHost::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connectio
                             return;
                         }
                         Glib::Variant<Glib::ustring> item_path;
-                        params.get_child(item_path, 0);
+                        params.get_child(item_path);
                         if (signal_name == "StatusNotifierItemRegistered")
                         {
                             tray->add_item(item_path.get());
