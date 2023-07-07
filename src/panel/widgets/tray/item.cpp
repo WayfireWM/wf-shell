@@ -13,40 +13,27 @@ static std::pair<Glib::ustring, Glib::ustring> name_and_obj_path(const Glib::ust
 
 StatusNotifierItem::StatusNotifierItem(const Glib::ustring &service)
 {
+    add(icon);
+
     const auto &[name, path] = name_and_obj_path(service);
     dbus_name = name;
-    Gio::DBus::Proxy::create_for_bus(Gio::DBus::BUS_TYPE_SESSION, name, path, "org.kde.StatusNotifierItem",
-                                     [this](const Glib::RefPtr<Gio::AsyncResult> &result) {
-                                         item_proxy = Gio::DBus::Proxy::create_for_bus_finish(result);
-                                         for (const auto &property_name : item_proxy->get_cached_property_names())
-                                         {
-                                             Glib::VariantBase property_variant;
-                                             item_proxy->get_cached_property(property_variant, property_name);
-                                             item_properties.emplace(property_name, property_variant);
-                                         }
-                                         init_widget();
-                                         /*
-                                         item_proxy->call(
-                                         "org.freedesktop.DBus.Properies.GetAll",
-                                         [this](const Glib::RefPtr<Gio::AsyncResult> &result) {
-                                             const auto all_properties = item_proxy->call_finish(result);
-                                             Glib::Variant<decltype(item_properties)> variant;
-                                             all_properties.get_child(variant);
-                                             item_properties = variant.get();
-                                             init_widget();
-                                         },
-                                         Glib::Variant<std::tuple<Glib::ustring>>::create({"org.kde.StatusNotifierItem"}));
-                                         */
-                                     });
+    Gio::DBus::Proxy::create_for_bus(
+        Gio::DBus::BUS_TYPE_SESSION, name, path, "org.kde.StatusNotifierItem",
+        [this](const Glib::RefPtr<Gio::AsyncResult> &result) {
+            item_proxy = Gio::DBus::Proxy::create_for_bus_finish(result);
+            item_proxy->signal_signal().connect(
+                [this](const Glib::ustring &sender, const Glib::ustring &signal,
+                       const Glib::VariantContainerBase &params) { handle_signal(signal, params); });
+            init_widget();
+        });
 }
 
 using IconData = std::vector<std::tuple<gint32, gint32, std::vector<guint8>>>;
 
 void StatusNotifierItem::init_widget()
 {
-    add(icon);
-    icon.show();
     update_icon();
+    update_tooltip();
     init_menu();
 
     signal_button_press_event().connect([this](GdkEventButton *ev) -> bool {
@@ -118,7 +105,10 @@ void StatusNotifierItem::init_widget()
         }
         return true;
     });
+}
 
+void StatusNotifierItem::update_tooltip()
+{
     const auto &[tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
         get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
     if (!tooltip_text.empty())
@@ -183,4 +173,43 @@ void StatusNotifierItem::init_menu()
     }
     menu = std::move(*Glib::wrap(GTK_MENU(raw_menu)));
     menu->attach_to_widget(*this);
+}
+
+void StatusNotifierItem::handle_signal(const Glib::ustring &signal, const Glib::VariantContainerBase &params)
+{
+    if (signal.size() < 3)
+    {
+        return;
+    }
+    const auto property = signal.substr(3);
+    if (property == "ToolTip" || property == "Status")
+    {
+        fetch_property(property, [this] { update_tooltip(); });
+    }
+    else if (property.size() >= 4 && property.substr(property.size() - 4) == "Icon")
+    {
+        fetch_property(property + "Name",
+                       [this, property] { fetch_property(property + "Pixmap", [this] { update_icon(); }); });
+    }
+    else if (property == "Status" && params.is_of_type(Glib::VariantType("(s)")))
+    {
+        Glib::Variant<Glib::ustring> status;
+        params.get_child(status);
+        item_proxy->set_cached_property(property, status);
+        update_icon();
+    }
+}
+
+void StatusNotifierItem::fetch_property(const Glib::ustring &property_name, const sigc::slot<void> &callback)
+{
+    item_proxy->call(
+        "org.freedesktop.DBus.Properties.Get",
+        [this, property_name, callback](const Glib::RefPtr<Gio::AsyncResult> &res) {
+            auto value = Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::VariantBase>>(
+                             item_proxy->call_finish(res).get_child())
+                             .get();
+            item_proxy->set_cached_property(property_name, value);
+            callback();
+        },
+        Glib::Variant<std::tuple<Glib::ustring, Glib::ustring>>::create({"org.kde.StatusNotifierItem", property_name}));
 }

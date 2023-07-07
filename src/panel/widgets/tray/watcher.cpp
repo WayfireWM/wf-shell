@@ -34,7 +34,6 @@ Watcher::Watcher()
     : dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::BUS_TYPE_SESSION, SNW_NAME,
                                        sigc::mem_fun(this, &Watcher::on_bus_acquired)))
 {
-    std::cout << "Watcher: init\n";
 }
 
 std::shared_ptr<Watcher> Watcher::Launch()
@@ -66,15 +65,6 @@ void Watcher::register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connec
     std::cout << path << std::endl;
     const auto full_obj_path = sender + path;
     emit_signal("StatusNotifierItemRegistered", full_obj_path);
-    /*
-    watcher_connection->emit_signal(
-        Watcher::SNW_PATH, "org.freedesktop.DBus.Properties", "PropertiesChanged", {},
-        Glib::Variant<std::tuple<Glib::ustring, std::map<Glib::ustring, Glib::VariantBase>,
-                                 std::vector<Glib::ustring>>>::create({Watcher::SNW_IFACE,
-                                                                       {{"RegistredStatusNotifierItems",
-                                                                         get_registred_items()}},
-                                                                       {}}));
-   */
     sn_items_id.emplace(full_obj_path, Gio::DBus::watch_name(
                                            Gio::DBus::BUS_TYPE_SESSION, sender, {},
                                            [this, full_obj_path](const Glib::RefPtr<Gio::DBus::Connection> &connection,
@@ -83,7 +73,6 @@ void Watcher::register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connec
                                                sn_items_id.erase(full_obj_path);
                                                emit_signal("StatusNotifierItemUnregistered", full_obj_path);
                                            }));
-    // watcher_connection->
 }
 
 void Watcher::register_status_notifier_host(const Glib::RefPtr<Gio::DBus::Connection> &connection,

@@ -20,25 +20,25 @@ class StatusNotifierItem : public Gtk::EventBox
     gdouble distance_scrolled_x = 0;
     gdouble distance_scrolled_y = 0;
 
-    std::map<Glib::ustring, Glib::VariantBase> item_properties;
-
     template <typename T>
     T get_item_property(const Glib::ustring &name) const
     {
-        if (item_properties.count(name) == 0)
-        {
-            return {};
-        }
-        if (!item_properties.at(name).is_of_type(Glib::Variant<T>::variant_type()))
-        {
-            return {};
-        }
-        return Glib::VariantBase::cast_dynamic<Glib::Variant<T>>(item_properties.at(name)).get();
+        Glib::VariantBase variant;
+        item_proxy->get_cached_property(variant, name);
+        return variant && variant.is_of_type(Glib::Variant<T>::variant_type())
+                   ? Glib::VariantBase::cast_dynamic<Glib::Variant<T>>(variant).get()
+                   : T{};
     }
 
     void init_widget();
-    void update_icon();
     void init_menu();
+
+    void handle_signal(const Glib::ustring &signal, const Glib::VariantContainerBase &params);
+
+    void update_icon();
+    void update_tooltip();
+
+    void fetch_property(const Glib::ustring &property_name, const sigc::slot<void> &callback);
 
     public:
     explicit StatusNotifierItem(const Glib::ustring &service);
