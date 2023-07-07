@@ -4,6 +4,7 @@
 #include <gdkmm/pixbuf.h>
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
+#include <gtkmm/eventbox.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
 #include <gtkmm/revealer.h>
@@ -16,6 +17,9 @@ class WfSingleNotification : public Gtk::Revealer
     static const int WIDTH = 300;
 
     private:
+    Gtk::EventBox default_action_ev_box;
+
+    /// The revealer's child, containing all other widgets
     Gtk::VBox child;
 
     Gtk::HBox top_bar;

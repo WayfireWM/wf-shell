@@ -93,20 +93,21 @@ using DBusMethod = void (*)(const Glib::RefPtr<Gio::DBus::Connection> &connectio
                             const Glib::VariantContainerBase &parameters,
                             const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation);
 
-#define dbus_method(name)                                                                                            \
-    static void dbusMethod##name(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &sender, \
-                                 const Glib::VariantContainerBase &parameters,                                       \
+#define dbus_method(name)                                                                                              \
+    static void dbusMethod##name(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &sender,   \
+                                 const Glib::VariantContainerBase &parameters,                                         \
                                  const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation)
 
 dbus_method(GetCapabilities)
 {
     static const auto value = Glib::Variant<std::tuple<std::vector<Glib::ustring>>>::create(
-        {{"action-icons", "actions", "body", "body-images", "persistance"}});
+        {{"action-icons", "actions", "body", "body-hyperlinks", "body-markup", "body-images", "persistance"}});
     invocation->return_value(value);
     connection->flush();
 }
 
-dbus_method(Notify) try
+dbus_method(Notify)
+try
 {
     const auto notification = Notification(parameters, sender);
     const auto id = notification.id;
@@ -131,7 +132,8 @@ dbus_method(Notify) try
         signal_notification_new.emit(id);
     }
 }
-catch (const std::invalid_argument& err) {
+catch (const std::invalid_argument &err)
+{
     std::cerr << "Error at " << __PRETTY_FUNCTION__ << ": " << err.what() << std::endl;
 }
 
@@ -160,9 +162,9 @@ void on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> &connect
                               const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation)
 {
 
-#define DBUS_METHOD_PAIR(name)  \
-    {                           \
-#name, dbusMethod##name \
+#define DBUS_METHOD_PAIR(name)                                                                                         \
+    {                                                                                                                  \
+        #name, dbusMethod##name                                                                                        \
     }
 
     static const std::map<Glib::ustring, DBusMethod> methods = {
@@ -228,7 +230,6 @@ void closeNotification(Notification::id_type id, CloseReason reason)
     {
         auto body = Glib::Variant<std::tuple<guint32, guint32>>::create({id, reason});
         connection->emit_signal(FDN_PATH, FDN_NAME, "NotificationClosed", notification.additional_info.sender, body);
-        connection->flush();
     }
 }
 
@@ -240,7 +241,6 @@ void invokeAction(Notification::id_type id, const Glib::ustring &action_key)
     {
         auto body = Glib::Variant<std::tuple<guint32, Glib::ustring>>::create({id, action_key});
         connection->emit_signal(FDN_PATH, FDN_NAME, "ActionInvoked", notifications.at(id).additional_info.sender, body);
-        connection->flush();
     }
 }
 } // namespace Daemon
