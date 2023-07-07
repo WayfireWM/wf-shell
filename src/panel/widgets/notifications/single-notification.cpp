@@ -111,7 +111,6 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
     else
     {
         // NOTE: that is not a really right way to implement FDN markup feature, but the easiest one.
-        // TODO(NamorNiradnug): markup works exactly as it should by FDN spec.
         text.set_markup("<b>" + notification.summary + "</b>" + "\n" + notification.body);
     }
     content.pack_start(text);
@@ -122,15 +121,36 @@ WfSingleNotification::WfSingleNotification(const Notification &notification)
     {
         for (uint i = 0; i + 1 < notification.actions.size(); ++ ++i)
         {
-            auto action_button = Glib::RefPtr<Gtk::Button>(new Gtk::Button(notification.actions[i + 1]));
-            action_button->signal_clicked().connect(
-                [=] { Daemon::invokeAction(notification.id, notification.actions[i]); });
-            actions.add(*action_button.get());
+            if (const auto action_key = notification.actions[i]; action_key != "default")
+            {
+                auto action_button = Glib::RefPtr<Gtk::Button>(new Gtk::Button(notification.actions[i + 1]));
+                action_button->signal_clicked().connect(
+                    [id = notification.id, action_key] { Daemon::invokeAction(id, action_key); });
+                actions.add(*action_button.get());
+            }
+            else
+            {
+                default_action_ev_box.signal_button_press_event().connect(
+                    [id = notification.id, action_key](GdkEventButton *ev) {
+                        if (ev->button == GDK_BUTTON_PRIMARY)
+                        {
+                            Daemon::invokeAction(id, action_key);
+                            return false;
+                        }
+                        return true;
+                    });
+            }
         }
-        child.add(actions);
+        if (!actions.get_children().empty())
+        {
+            actions.set_spacing(5);
+            actions.set_homogeneous();
+            child.add(actions);
+        }
     }
 
-    add(child);
+    default_action_ev_box.add(child);
+    add(default_action_ev_box);
     set_transition_type(Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
 }
 
