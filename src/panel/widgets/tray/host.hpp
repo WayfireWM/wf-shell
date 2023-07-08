@@ -1,7 +1,7 @@
 #ifndef TRAY_HOST_HPP
 #define TRAY_HOST_HPP
 
-#include "widgets/tray/watcher.hpp"
+#include "watcher.hpp"
 
 #include <giomm.h>
 

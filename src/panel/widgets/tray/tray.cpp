@@ -2,6 +2,7 @@
 
 void WayfireStatusNotifier::init(Gtk::HBox *container)
 {
+    icons_hbox.set_spacing(5);
     container->add(icons_hbox);
 }
 

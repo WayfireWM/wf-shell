@@ -1,5 +1,7 @@
 #include "item.hpp"
 
+#include <gtk-utils.hpp>
+
 #include <gtkmm/icontheme.h>
 #include <gtkmm/tooltip.h>
 
@@ -88,8 +90,9 @@ void StatusNotifierItem::init_widget()
         return true;
     });
 
+    add_events(Gdk::SCROLL_MASK | Gdk::SMOOTH_SCROLL_MASK);
+
     signal_scroll_event().connect([this](GdkEventScroll *ev) {
-        static constexpr auto SMOOTH_SCROLL_THRESHOLD = 5.0; // TODO(NamorNiradnug) make this value configurable
         int dx = 0;
         int dy = 0;
         switch (ev->direction)
@@ -109,14 +112,15 @@ void StatusNotifierItem::init_widget()
         case GDK_SCROLL_SMOOTH:
             distance_scrolled_x += ev->delta_x;
             distance_scrolled_y += ev->delta_y;
-            if (std::abs(distance_scrolled_x) > SMOOTH_SCROLL_THRESHOLD)
+            if (std::abs(distance_scrolled_x) >= smooth_scolling_threshold)
             {
                 dx = std::lround(distance_scrolled_x);
                 distance_scrolled_x = 0;
             }
-            if (distance_scrolled_y > SMOOTH_SCROLL_THRESHOLD)
+            if (std::abs(distance_scrolled_y) >= smooth_scolling_threshold)
             {
                 dy = std::lround(distance_scrolled_y);
+                distance_scrolled_y = 0;
             }
             break;
         }
@@ -176,7 +180,7 @@ void StatusNotifierItem::update_icon()
     const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
     if (Gtk::IconTheme::get_default()->has_icon(icon_name))
     {
-        icon.set_from_icon_name(icon_name, Gtk::ICON_SIZE_LARGE_TOOLBAR);
+        set_image_icon(icon, icon_name, icon_size, {});
     }
     else if (pixmap_data)
     {

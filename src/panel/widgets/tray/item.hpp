@@ -7,10 +7,15 @@
 #include <gtkmm/image.h>
 #include <gtkmm/menu.h>
 
+#include <wf-option-wrap.hpp>
+
 #include <optional>
 
 class StatusNotifierItem : public Gtk::EventBox
 {
+    WfOption<int> smooth_scolling_threshold = WfOption<int>("panel/tray_smooth_scrolling_threshold");
+    WfOption<int> icon_size = WfOption<int>("panel/tray_icon_size");
+
     Glib::ustring dbus_name;
 
     Glib::RefPtr<Gio::DBus::Proxy> item_proxy;
