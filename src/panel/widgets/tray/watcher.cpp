@@ -115,7 +115,9 @@ void Watcher::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection>
     else
     {
         std::cerr << "StatusNotifierWatcher: unknown method " << method_name << std::endl;
+        return;
     }
+    invocation->return_value(Glib::VariantContainerBase());
 }
 
 void Watcher::on_interface_get_property(Glib::VariantBase &property,
