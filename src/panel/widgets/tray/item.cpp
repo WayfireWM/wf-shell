@@ -1,4 +1,8 @@
 #include "item.hpp"
+
+#include <gtkmm/icontheme.h>
+#include <gtkmm/tooltip.h>
+
 #include <libdbusmenu-gtk/dbusmenu-gtk.h>
 
 static std::pair<Glib::ustring, Glib::ustring> name_and_obj_path(const Glib::ustring &service)
@@ -9,6 +13,30 @@ static std::pair<Glib::ustring, Glib::ustring> name_and_obj_path(const Glib::ust
         return {service.substr(0, slash_ind), service.substr(slash_ind)};
     }
     return {service, "/StatusNotifierItem"};
+}
+
+using IconData = std::vector<std::tuple<gint32, gint32, std::vector<guint8>>>;
+
+static Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(IconData &&pixbuf_data)
+{
+    if (pixbuf_data.empty())
+    {
+        return {};
+    }
+    auto chosen_image = std::max_element(pixbuf_data.begin(), pixbuf_data.end());
+    auto &[width, height, data] = *chosen_image;
+    /* argb to rgba */
+    for (size_t i = 0; i + 3 < data.size(); i += 4)
+    {
+        const auto alpha = data[i];
+        data[i] = data[i + 1];
+        data[i + 1] = data[i + 2];
+        data[i + 2] = data[i + 3];
+        data[i + 3] = alpha;
+    }
+    auto *data_ptr = new auto(std::move(data));
+    return Gdk::Pixbuf::create_from_data(data_ptr->data(), Gdk::Colorspace::COLORSPACE_RGB, true, 8, width, height,
+                                         4 * width, [data_ptr](auto *) { delete data_ptr; });
 }
 
 StatusNotifierItem::StatusNotifierItem(const Glib::ustring &service)
@@ -28,8 +56,6 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring &service)
         });
 }
 
-using IconData = std::vector<std::tuple<gint32, gint32, std::vector<guint8>>>;
-
 void StatusNotifierItem::init_widget()
 {
     update_icon();
@@ -38,7 +64,8 @@ void StatusNotifierItem::init_widget()
 
     signal_button_press_event().connect([this](GdkEventButton *ev) -> bool {
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({ev->x, ev->y});
-        if (((get_item_property<bool>("ItemIsMenu") && ev->button == GDK_BUTTON_SECONDARY) ||
+        if (((get_item_property<bool>("ItemIsMenu") &&
+              (ev->button == GDK_BUTTON_PRIMARY || ev->button == GDK_BUTTON_SECONDARY)) ||
              ev->button == GDK_BUTTON_MIDDLE))
         {
             if (menu)
@@ -109,53 +136,51 @@ void StatusNotifierItem::init_widget()
 
 void StatusNotifierItem::update_tooltip()
 {
-    const auto &[tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
+    auto [tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
         get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
-    if (!tooltip_text.empty())
-    {
-        set_tooltip_markup(tooltip_text);
-    }
-    else if (!tooltip_title.empty())
-    {
-        set_tooltip_markup(tooltip_title);
-    }
-}
 
-Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(IconData &&pixbuf_data)
-{
-    if (pixbuf_data.empty())
-    {
-        return {};
-    }
-    auto chosen_image = std::max_element(pixbuf_data.begin(), pixbuf_data.end());
-    auto &[width, height, data] = *chosen_image;
-    /* argb to rgba */
-    for (size_t i = 0; i + 3 < data.size(); i += 4)
-    {
-        const auto alpha = data[i];
-        data[i] = data[i + 1];
-        data[i + 1] = data[i + 2];
-        data[i + 2] = data[i + 3];
-        data[i + 3] = alpha;
-    }
-    auto *data_ptr = new auto(std::move(data));
-    return Gdk::Pixbuf::create_from_data(data_ptr->data(), Gdk::Colorspace::COLORSPACE_RGB, true, 8, width, height,
-                                         4 * width, [data_ptr](auto *) { delete data_ptr; });
+    auto tooltip_label_text = !tooltip_text.empty() && !tooltip_title.empty()
+                                  ? "<b>" + tooltip_title + "</b>: " + tooltip_text
+                              : !tooltip_title.empty() ? tooltip_title
+                              : !tooltip_text.empty()  ? tooltip_text
+                                                       : "";
+
+    const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
+
+    set_has_tooltip();
+    signal_query_tooltip().connect([tooltip_icon_name = tooltip_icon_name, pixbuf,
+                                    tooltip_label_text](int, int, bool, const Glib::RefPtr<Gtk::Tooltip> &tooltip) {
+        bool icon_shown = true;
+        if (Gtk::IconTheme::get_default()->has_icon(tooltip_icon_name))
+        {
+            tooltip->set_icon_from_icon_name(tooltip_icon_name, Gtk::ICON_SIZE_LARGE_TOOLBAR);
+        }
+        else if (pixbuf)
+        {
+            tooltip->set_icon(pixbuf);
+        }
+        else
+        {
+            icon_shown = false;
+        }
+        tooltip->set_markup(tooltip_label_text);
+        return icon_shown || !tooltip_label_text.empty();
+    });
 }
 
 void StatusNotifierItem::update_icon()
 {
     const Glib::ustring icon_type_name =
         get_item_property<Glib::ustring>("Status") == "NeedsAttention" ? "AttentionIcon" : "Icon";
+    const auto icon_name = get_item_property<Glib::ustring>(icon_type_name + "Name");
     const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
-    if (pixmap_data)
+    if (Gtk::IconTheme::get_default()->has_icon(icon_name))
+    {
+        icon.set_from_icon_name(icon_name, Gtk::ICON_SIZE_LARGE_TOOLBAR);
+    }
+    else if (pixmap_data)
     {
         icon.set(pixmap_data);
-    }
-    else
-    {
-        icon.set_from_icon_name(get_item_property<Glib::ustring>(icon_type_name + "Name"),
-                                Gtk::ICON_SIZE_LARGE_TOOLBAR);
     }
 }
 

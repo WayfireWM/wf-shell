@@ -1,7 +1,6 @@
 #ifndef TRAY_WATCHER_HPP
 #define TRAY_WATCHER_HPP
 
-#include <iostream>
 #include <memory>
 
 #include <giomm.h>
@@ -36,9 +35,9 @@ class Watcher
     std::map<Glib::ustring, guint> sn_items_id;
     std::map<Glib::ustring, guint> sn_hosts_id;
 
-    const Gio::DBus::InterfaceVTable interface_table = Gio::DBus::InterfaceVTable(
-        [this](auto &&...args) { on_interface_method_call(std::forward<decltype(args)>(args)...); },
-        [this](auto &&...args) { on_interface_get_property(std::forward<decltype(args)>(args)...); });
+    const Gio::DBus::InterfaceVTable interface_table =
+        Gio::DBus::InterfaceVTable(sigc::mem_fun(*this, &Watcher::on_interface_method_call),
+                                   sigc::mem_fun(*this, &Watcher::on_interface_get_property));
 
     Watcher();
 
@@ -63,12 +62,15 @@ class Watcher
     template <typename... Args>
     void emit_signal(const Glib::ustring &name, Args &&...args)
     {
-        std::cout << "Emitting " << name << " signal with args ";
-        (std::cout << ... << args) << std::endl;
         watcher_connection->emit_signal(
-            SNW_PATH, SNW_NAME, name, {},
+            SNW_PATH, SNW_IFACE, name, {},
             Glib::Variant<std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...>>::create(
                 std::tuple(std::forward<Args>(args)...)));
+    }
+
+    void emit_signal(const Glib::ustring& name)
+    {
+        watcher_connection->emit_signal(SNW_PATH, SNW_IFACE, name);
     }
 }; // namespace Watcher
 

@@ -48,20 +48,6 @@ void StatusNotifierHost::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connectio
                     {
                         tray->add_item(service);
                     }
-                    /*
-                    watcher_proxy->call(
-                        "org.freedesktop.DBus.Properties.Get",
-                        [this](const Glib::RefPtr<Gio::AsyncResult> &result) {
-                            const auto items_var = watcher_proxy->call_finish(result);
-                            Glib::Variant<std::vector<Glib::ustring>> items;
-                            items_var.get_child(items);
-                            for (const auto &service : items.get())
-                            {
-                                tray->add_item(service);
-                            }
-                        },
-                        Glib::Variant<std::tuple<Glib::ustring>>::create({"RegistredStatusNotifierItems"}));
-                    */
                 });
         },
         [this](const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name) {

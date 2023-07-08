@@ -2,6 +2,7 @@
 #define TRAY_HOST_HPP
 
 #include "widgets/tray/watcher.hpp"
+
 #include <giomm.h>
 
 class WayfireStatusNotifier;

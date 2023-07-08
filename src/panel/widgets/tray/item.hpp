@@ -1,11 +1,12 @@
 #ifndef TRAY_ITEM_HPP
 #define TRAY_ITEM_HPP
 
-#include "gtkmm/eventbox.h"
-#include "gtkmm/image.h"
-#include "gtkmm/menu.h"
-
 #include <giomm.h>
+#include <gtkmm/eventbox.h>
+#include <gtkmm/hvbox.h>
+#include <gtkmm/image.h>
+#include <gtkmm/menu.h>
+
 #include <optional>
 
 class StatusNotifierItem : public Gtk::EventBox

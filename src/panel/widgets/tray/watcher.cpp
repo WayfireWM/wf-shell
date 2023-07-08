@@ -56,13 +56,11 @@ void Watcher::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connect
 {
     connection->register_object(SNW_PATH, introspection_data, interface_table);
     watcher_connection = connection;
-    std::cout << "Watcher: bus aqcuired\n";
 }
 
 void Watcher::register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connection> &connection,
                                             const Glib::ustring &sender, const Glib::ustring &path)
 {
-    std::cout << path << std::endl;
     const auto full_obj_path = sender + path;
     emit_signal("StatusNotifierItemRegistered", full_obj_path);
     sn_items_id.emplace(full_obj_path, Gio::DBus::watch_name(
