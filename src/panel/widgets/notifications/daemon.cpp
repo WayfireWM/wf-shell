@@ -141,6 +141,7 @@ dbus_method(CloseNotification)
 {
     Glib::VariantBase id_var;
     parameters.get_child(id_var, 0);
+    invocation->return_value(Glib::VariantContainerBase());
     closeNotification(Glib::VariantBase::cast_dynamic<Glib::Variant<Notification::id_type>>(id_var).get(),
                       CloseReason::MethodCalled);
 }
