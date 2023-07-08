@@ -61,6 +61,7 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring &service)
 void StatusNotifierItem::init_widget()
 {
     update_icon();
+    icon_size.set_callback([this] { update_icon(); });
     update_tooltip();
     init_menu();
 
