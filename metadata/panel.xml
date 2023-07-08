@@ -259,7 +259,7 @@
 	<option name="tray_icon_size" type="int">
 		<_short>Default Icon Size</_short>
 		<default>32</default>
-		<min>0</min>
+		<min>1</min>
 	</option>
 	</group>
 	</plugin>
