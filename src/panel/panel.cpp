@@ -181,10 +181,10 @@ class WayfirePanel::impl
     void init_layout()
     {
         content_box.pack_start(left_box, false, false);
-        std::vector<Gtk::Widget*> center_children = center_box.get_children();
-        if (center_children.size() > 0)
-            content_box.set_center_widget(center_box);
         content_box.pack_end(right_box, false, false);
+        if (!center_box.get_children().empty())
+            content_box.set_center_widget(center_box);
+        center_box.show_all();
         window->add(content_box);
         window->show_all();
     }
@@ -280,6 +280,10 @@ class WayfirePanel::impl
         });
         center_widgets_opt.set_callback([=] () {
             reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+            if (center_box.get_children().empty())
+                content_box.unset_center_widget();
+            else
+                content_box.set_center_widget(center_box);
         });
 
         reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
