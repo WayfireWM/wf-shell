@@ -148,7 +148,7 @@ void StatusNotifierItem::update_tooltip()
                                   ? "<b>" + tooltip_title + "</b>: " + tooltip_text
                               : !tooltip_title.empty() ? tooltip_title
                               : !tooltip_text.empty()  ? tooltip_text
-                                                       : "";
+                                                       : get_item_property<Glib::ustring>("Title");
 
     const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
 
