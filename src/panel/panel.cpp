@@ -73,8 +73,8 @@ class WayfirePanel::impl
 
     WayfireOutput *output;
 
-    int last_autohide_value = -1;
     WfOption<bool> autohide_opt{"panel/autohide"};
+    int last_autohide_value = autohide_opt;
     std::function<void()> autohide_opt_updated = [=] ()
     {
         if (autohide_opt == last_autohide_value)
@@ -137,7 +137,7 @@ class WayfirePanel::impl
 
     void create_window()
     {
-        window = std::make_unique<WayfireAutohidingWindow> (output, "panel");
+        window = std::make_unique<WayfireAutohidingWindow> (output, "panel", autohide_opt);
         window->set_size_request(1, minimal_panel_height);
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
@@ -149,7 +149,7 @@ class WayfirePanel::impl
         on_window_color_updated(); // set initial color
 
         autohide_opt.set_callback(autohide_opt_updated);
-        autohide_opt_updated(); // set initial autohide status
+        window->set_auto_exclusive_zone(!autohide_opt);
 
         if ((std::string)css_path != "")
         {

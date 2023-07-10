@@ -13,10 +13,12 @@
 #define AUTOHIDE_HIDE_DELAY 500
 
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
-    const std::string& section) :
+    const std::string& section, int autohide_counter) :
     position{section + "/position"},
     y_position{WfOption<int>{section + "/autohide_duration"}},
-    edge_offset{WfOption<int>{section + "/edge_offset"}}
+    edge_offset{WfOption<int>{section + "/edge_offset"}},
+    autohide_counter(autohide_counter)
+
 {
     this->output = output;
     this->set_decorated(false);
