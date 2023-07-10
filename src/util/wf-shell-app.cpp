@@ -65,7 +65,7 @@ static void registry_add_object(void *data, struct wl_registry *registry,
     auto app = static_cast<WayfireShellApp*> (data);
     if (strcmp(interface, zwf_shell_manager_v2_interface.name) == 0)
     {
-        app->manager = (zwf_shell_manager_v2*) wl_registry_bind(registry, name,
+        app->wf_shell_manager = (zwf_shell_manager_v2*) wl_registry_bind(registry, name,
             &zwf_shell_manager_v2_interface, std::min(version, 1u));
     }
 }
@@ -126,7 +126,7 @@ void WayfireShellApp::on_activate()
 void WayfireShellApp::add_output(GMonitor monitor)
 {
     monitors.push_back(
-        std::make_unique<WayfireOutput> (monitor, this->manager));
+        std::make_unique<WayfireOutput> (monitor, this->wf_shell_manager));
     handle_new_output(monitors.back().get());
 }
 

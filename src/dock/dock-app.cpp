@@ -37,7 +37,7 @@ class WfDockApp::impl
         std::unique_ptr<WfToplevel>> toplevels;
     std::map<WayfireOutput*, std::unique_ptr<WfDock>> docks;
 
-    zwlr_foreign_toplevel_manager_v1 *manager = NULL;
+    zwlr_foreign_toplevel_manager_v1 *toplevel_manager = NULL;
 };
 
 void WfDockApp::on_activate()
@@ -54,7 +54,7 @@ void WfDockApp::on_activate()
     wl_registry_add_listener(registry, &registry_listener, NULL);
     wl_display_roundtrip(display);
 
-    if (!this->manager)
+    if (!priv->toplevel_manager)
     {
         std::cerr << "Compositor doesn't support" <<
             " wlr-foreign-toplevel-management, exiting." << std::endl;
@@ -62,13 +62,13 @@ void WfDockApp::on_activate()
     }
 
     wl_registry_destroy(registry);
-    zwlr_foreign_toplevel_manager_v1_add_listener(priv->manager,
+    zwlr_foreign_toplevel_manager_v1_add_listener(priv->toplevel_manager,
         &toplevel_manager_v1_impl, NULL);
 }
 
 void WfDockApp::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager)
 {
-    priv->manager = manager;
+    priv->toplevel_manager = manager;
 }
 
 void WfDockApp::handle_new_output(WayfireOutput *output)
