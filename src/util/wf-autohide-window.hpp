@@ -31,7 +31,7 @@ class WayfireAutohidingWindow : public Gtk::Window
      * 3. section/edge_offset
      */
     WayfireAutohidingWindow(WayfireOutput *output,
-        const std::string& section, int autohide_counter = 0);
+        const std::string& section, int autohide_counter = 1);
 
     ~WayfireAutohidingWindow();
     wl_surface* get_wl_surface() const;
