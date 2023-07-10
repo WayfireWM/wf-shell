@@ -27,13 +27,13 @@ class StatusNotifierItem : public Gtk::EventBox
     gdouble distance_scrolled_y = 0;
 
     template <typename T>
-    T get_item_property(const Glib::ustring &name) const
+    T get_item_property(const Glib::ustring &name, const T &default_value = {}) const
     {
         Glib::VariantBase variant;
         item_proxy->get_cached_property(variant, name);
         return variant && variant.is_of_type(Glib::Variant<T>::variant_type())
                    ? Glib::VariantBase::cast_dynamic<Glib::Variant<T>>(variant).get()
-                   : T{};
+                   : default_value;
     }
 
     void init_widget();

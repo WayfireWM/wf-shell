@@ -67,7 +67,7 @@ void StatusNotifierItem::init_widget()
 
     signal_button_press_event().connect([this](GdkEventButton *ev) -> bool {
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({ev->x, ev->y});
-        if (((get_item_property<bool>("ItemIsMenu") &&
+        if (((get_item_property<bool>("ItemIsMenu", true) &&
               (ev->button == GDK_BUTTON_PRIMARY || ev->button == GDK_BUTTON_SECONDARY)) ||
              ev->button == GDK_BUTTON_MIDDLE))
         {
