@@ -76,15 +76,27 @@ void Watcher::register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connec
 void Watcher::register_status_notifier_host(const Glib::RefPtr<Gio::DBus::Connection> &connection,
                                             const Glib::ustring &service)
 {
-    sn_hosts_id.emplace(service,
-                        Gio::DBus::watch_name(
-                            connection, service,
-                            [this](const Glib::RefPtr<Gio::DBus::Connection> &, const Glib::ustring &,
-                                   const Glib::ustring &) { emit_signal("StatusNotifierHostRegistered"); },
-                            [this](const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name) {
-                                Gio::DBus::unwatch_name(sn_hosts_id[name]);
-                                sn_hosts_id.erase(name);
-                            }));
+    sn_hosts_id.emplace(
+        service, Gio::DBus::watch_name(
+                     connection, service,
+                     [this, is_host_registred_changed = sn_hosts_id.empty()](
+                         const Glib::RefPtr<Gio::DBus::Connection> &, const Glib::ustring &, const Glib::ustring &) {
+                         emit_signal("StatusNotifierHostRegistered");
+                         if (is_host_registred_changed)
+                         {
+                             watcher_connection->emit_signal(
+                                 SNW_PATH, "org.freedesktop.DBus.Properties", "PropertiesChanged", {},
+                                 Glib::Variant<std::tuple<Glib::ustring, std::map<Glib::ustring, Glib::VariantBase>,
+                                                          std::vector<Glib::ustring>>>::
+                                     create({SNW_IFACE,
+                                             {{"IsStatusNotifierHostRegistered", Glib::Variant<bool>::create(true)}},
+                                             {}}));
+                         }
+                     },
+                     [this](const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name) {
+                         Gio::DBus::unwatch_name(sn_hosts_id[name]);
+                         sn_hosts_id.erase(name);
+                     }));
 }
 
 void Watcher::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> &connection,
