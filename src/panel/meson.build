@@ -9,9 +9,13 @@ widget_sources = ['widgets/battery.cpp',
                   'widgets/notifications/daemon.cpp',
                   'widgets/notifications/single-notification.cpp',
                   'widgets/notifications/notification-info.cpp',
-                  'widgets/notifications/notification-center.cpp']
+                  'widgets/notifications/notification-center.cpp',
+                  'widgets/tray/watcher.cpp',
+                  'widgets/tray/tray.cpp',
+                  'widgets/tray/item.cpp',
+                  'widgets/tray/host.cpp']
 
-deps = [gtkmm, wayland_client, libutil, wf_protos, wfconfig, gtklayershell]
+deps = [gtkmm, wayland_client, libutil, wf_protos, wfconfig, gtklayershell, dbusmenu_gtk]
 
 if libpulse.found()
   widget_sources += 'widgets/volume.cpp'
