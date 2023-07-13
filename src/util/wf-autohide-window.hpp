@@ -29,9 +29,9 @@ class WayfireAutohidingWindow : public Gtk::Window
      * 1. section/position
      * 2. section/autohide_duration
      * 3. section/edge_offset
+     * 4. section/autohide
      */
-    WayfireAutohidingWindow(WayfireOutput *output,
-        const std::string& section, int autohide_counter = 1);
+    WayfireAutohidingWindow(WayfireOutput *output, const std::string& section);
 
     ~WayfireAutohidingWindow();
     wl_surface* get_wl_surface() const;
@@ -84,13 +84,17 @@ class WayfireAutohidingWindow : public Gtk::Window
     WfOption<int> edge_offset;
     int last_edge_offset = -1;
 
+    WfOption<bool> autohide_opt;
+    bool last_autohide_value = autohide_opt;
+    void update_autohide();
+
     bool has_auto_exclusive_zone = false;
     int last_zone = 0;
 
     sigc::connection pending_show, pending_hide;
     bool m_do_show();
     bool m_do_hide();
-    int autohide_counter = 0;
+    int autohide_counter = static_cast<int>(autohide_opt);
 
     /** Show the window but hide if no pointer input */
     void m_show_uncertain();

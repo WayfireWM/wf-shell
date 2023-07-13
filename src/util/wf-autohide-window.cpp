@@ -13,11 +13,11 @@
 #define AUTOHIDE_HIDE_DELAY 500
 
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
-    const std::string& section, int autohide_counter) :
+    const std::string& section) :
     position{section + "/position"},
     y_position{WfOption<int>{section + "/autohide_duration"}},
-    edge_offset{WfOption<int>{section + "/edge_offset"}},
-    autohide_counter(autohide_counter)
+    edge_offset{section + "/edge_offset"},
+    autohide_opt{section + "/autohide"}
 
 {
     this->output = output;
@@ -32,6 +32,9 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     this->update_position();
 
     this->edge_offset.set_callback([=] () { this->setup_hotspot(); });
+
+    this->autohide_opt.set_callback([=] { update_autohide(); });
+    set_auto_exclusive_zone(!autohide_opt);
 
     this->signal_draw().connect_notify(
         [=] (const Cairo::RefPtr<Cairo::Context>&) { update_margin(); });
@@ -337,4 +340,18 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
 
     if (should_autohide())
         schedule_hide(AUTOHIDE_HIDE_DELAY);
+}
+
+void WayfireAutohidingWindow::update_autohide()
+{
+    if (autohide_opt == last_autohide_value)
+        return;
+
+    if (autohide_opt)
+        increase_autohide();
+    else
+        decrease_autohide();
+
+    last_autohide_value = autohide_opt;
+    set_auto_exclusive_zone(!autohide_opt);
 }
