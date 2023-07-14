@@ -33,7 +33,6 @@ class WfDock::impl
 
         window->set_size_request(dock_height, dock_height);
         gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
-        window->increase_autohide();
 
         window->signal_size_allocate().connect_notify(
             sigc::mem_fun(this, &WfDock::impl::on_allocation));
