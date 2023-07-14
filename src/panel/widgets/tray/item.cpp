@@ -207,7 +207,7 @@ void StatusNotifierItem::init_menu()
 
 void StatusNotifierItem::handle_signal(const Glib::ustring &signal, const Glib::VariantContainerBase &params)
 {
-    if (signal.size() < 3)
+    if (signal.substr(0, 3) != "New")
     {
         return;
     }
@@ -235,10 +235,16 @@ void StatusNotifierItem::fetch_property(const Glib::ustring &property_name, cons
     item_proxy->call(
         "org.freedesktop.DBus.Properties.Get",
         [this, property_name, callback](const Glib::RefPtr<Gio::AsyncResult> &res) {
-            auto value = Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::VariantBase>>(
-                             item_proxy->call_finish(res).get_child())
-                             .get();
-            item_proxy->set_cached_property(property_name, value);
+            try
+            {
+                auto value = Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::VariantBase>>(
+                                 item_proxy->call_finish(res).get_child())
+                                 .get();
+                item_proxy->set_cached_property(property_name, value);
+            }
+            catch (const Glib::Error &)
+            {
+            }
             callback();
         },
         Glib::Variant<std::tuple<Glib::ustring, Glib::ustring>>::create({"org.kde.StatusNotifierItem", property_name}));
