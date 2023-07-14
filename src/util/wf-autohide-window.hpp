@@ -32,6 +32,10 @@ class WayfireAutohidingWindow : public Gtk::Window
      * 4. section/autohide
      */
     WayfireAutohidingWindow(WayfireOutput *output, const std::string& section);
+    WayfireAutohidingWindow(WayfireAutohidingWindow&&) = delete;
+    WayfireAutohidingWindow(const WayfireAutohidingWindow&) = delete;
+    WayfireAutohidingWindow& operator=(const WayfireAutohidingWindow&) = delete;
+    WayfireAutohidingWindow& operator=(WayfireAutohidingWindow&&) = delete;
 
     ~WayfireAutohidingWindow();
     wl_surface* get_wl_surface() const;
