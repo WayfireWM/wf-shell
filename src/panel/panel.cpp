@@ -29,37 +29,6 @@
 
 #include "wf-autohide-window.hpp"
 
-struct WayfirePanelZwfOutputCallbacks
-{
-    std::function<void()> enter_fullscreen;
-    std::function<void()> leave_fullscreen;
-};
-
-static void handle_zwf_output_enter_fullscreen(void* dd,
-    zwf_output_v2 *zwf_output_v2)
-{
-    auto data = (WayfirePanelZwfOutputCallbacks*)
-        zwf_output_v2_get_user_data(zwf_output_v2);
-
-    if (data)
-        data->enter_fullscreen();
-}
-
-static void handle_zwf_output_leave_fullscreen(void *,
-    zwf_output_v2 *zwf_output_v2)
-{
-    auto data = (WayfirePanelZwfOutputCallbacks*)
-        zwf_output_v2_get_user_data(zwf_output_v2);
-
-    if (data)
-        data->leave_fullscreen();
-}
-
-static struct zwf_output_v2_listener output_impl = {
-    .enter_fullscreen = handle_zwf_output_enter_fullscreen,
-    .leave_fullscreen = handle_zwf_output_leave_fullscreen,
-};
-
 class WayfirePanel::impl
 {
     std::unique_ptr<WayfireAutohidingWindow> window;
@@ -267,27 +236,10 @@ class WayfirePanel::impl
         reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
     }
 
-    WayfirePanelZwfOutputCallbacks callbacks;
-
     public:
-    impl(WayfireOutput *output)
+    impl(WayfireOutput *output) : output(output)
     {
-        this->output = output;
         create_window();
-
-        if (output->output)
-        {
-            callbacks.enter_fullscreen = [=]() { window->increase_autohide(); };
-            callbacks.leave_fullscreen = [=]() { window->decrease_autohide(); };
-            zwf_output_v2_add_listener(output->output, &output_impl, NULL);
-            zwf_output_v2_set_user_data(output->output, &callbacks);
-        }
-    }
-
-    ~impl()
-    {
-        if (output->output)
-            zwf_output_v2_set_user_data(output->output, NULL);
     }
 
     wl_surface *get_wl_surface()

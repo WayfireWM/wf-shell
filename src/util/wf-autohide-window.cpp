@@ -50,6 +50,15 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
             if (this->active_button)
                 unset_active_popover(*this->active_button);
         });
+
+    if (output->output)
+    {
+        const auto* listener = new zwf_output_v2_listener {
+            .enter_fullscreen = [](void* data, zwf_output_v2 *){ ((WayfireAutohidingWindow*)data)->increase_autohide(); },
+            .leave_fullscreen = [](void* data, zwf_output_v2 *){ ((WayfireAutohidingWindow*)data)->decrease_autohide(); }
+        };
+        zwf_output_v2_add_listener(output->output, listener, this);
+    }
 }
 
 WayfireAutohidingWindow::~WayfireAutohidingWindow()
