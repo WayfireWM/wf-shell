@@ -155,7 +155,7 @@ void StatusNotifierItem::setup_tooltip()
         const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
 
         bool icon_shown = true;
-        if (Gtk::IconTheme::get_default()->has_icon(tooltip_icon_name))
+        if (icon_theme->has_icon(tooltip_icon_name))
         {
             tooltip->set_icon_from_icon_name(tooltip_icon_name, Gtk::ICON_SIZE_LARGE_TOOLBAR);
         }
@@ -174,13 +174,22 @@ void StatusNotifierItem::setup_tooltip()
 
 void StatusNotifierItem::update_icon()
 {
+    if (const auto icon_theme_path = get_item_property<Glib::ustring>("IconThemePath"); !icon_theme_path.empty())
+    {
+        icon_theme = Gtk::IconTheme::create();
+        icon_theme->add_resource_path(icon_theme_path);
+    }
+    else
+    {
+        icon_theme = Gtk::IconTheme::get_default();
+    }
     const Glib::ustring icon_type_name =
         get_item_property<Glib::ustring>("Status") == "NeedsAttention" ? "AttentionIcon" : "Icon";
     const auto icon_name = get_item_property<Glib::ustring>(icon_type_name + "Name");
     const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
-    if (Gtk::IconTheme::get_default()->has_icon(icon_name))
+    if (icon_theme->lookup_icon(icon_name, icon_size))
     {
-        set_image_icon(icon, icon_name, icon_size, {});
+        set_image_icon(icon, icon_name, icon_size, {}, icon_theme);
     }
     else if (pixmap_data)
     {
@@ -214,6 +223,10 @@ void StatusNotifierItem::handle_signal(const Glib::ustring &signal, const Glib::
     if (property == "ToolTip")
     {
         fetch_property(property);
+    }
+    else if (property == "IconThemePath")
+    {
+        fetch_property(property, [this] { update_icon(); });
     }
     else if (property.size() >= 4 && property.substr(property.size() - 4) == "Icon")
     {
