@@ -42,9 +42,9 @@ class StatusNotifierItem : public Gtk::EventBox
     void handle_signal(const Glib::ustring &signal, const Glib::VariantContainerBase &params);
 
     void update_icon();
-    void update_tooltip();
+    void setup_tooltip();
 
-    void fetch_property(const Glib::ustring &property_name, const sigc::slot<void> &callback);
+    void fetch_property(const Glib::ustring &property_name, const sigc::slot<void> &callback = {});
 
     public:
     explicit StatusNotifierItem(const Glib::ustring &service);

@@ -62,7 +62,7 @@ void StatusNotifierItem::init_widget()
 {
     update_icon();
     icon_size.set_callback([this] { update_icon(); });
-    update_tooltip();
+    setup_tooltip();
     init_menu();
 
     signal_button_press_event().connect([this](GdkEventButton *ev) -> bool {
@@ -139,22 +139,21 @@ void StatusNotifierItem::init_widget()
     });
 }
 
-void StatusNotifierItem::update_tooltip()
+void StatusNotifierItem::setup_tooltip()
 {
-    auto [tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
-        get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
-
-    auto tooltip_label_text = !tooltip_text.empty() && !tooltip_title.empty()
-                                  ? "<b>" + tooltip_title + "</b>: " + tooltip_text
-                              : !tooltip_title.empty() ? tooltip_title
-                              : !tooltip_text.empty()  ? tooltip_text
-                                                       : get_item_property<Glib::ustring>("Title");
-
-    const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
-
     set_has_tooltip();
-    signal_query_tooltip().connect([tooltip_icon_name = tooltip_icon_name, pixbuf,
-                                    tooltip_label_text](int, int, bool, const Glib::RefPtr<Gtk::Tooltip> &tooltip) {
+    signal_query_tooltip().connect([this](int, int, bool, const Glib::RefPtr<Gtk::Tooltip> &tooltip) {
+        auto [tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
+            get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
+
+        auto tooltip_label_text = !tooltip_text.empty() && !tooltip_title.empty()
+                                      ? "<b>" + tooltip_title + "</b>: " + tooltip_text
+                                  : !tooltip_title.empty() ? tooltip_title
+                                  : !tooltip_text.empty()  ? tooltip_text
+                                                           : get_item_property<Glib::ustring>("Title");
+
+        const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
+
         bool icon_shown = true;
         if (Gtk::IconTheme::get_default()->has_icon(tooltip_icon_name))
         {
@@ -212,9 +211,9 @@ void StatusNotifierItem::handle_signal(const Glib::ustring &signal, const Glib::
         return;
     }
     const auto property = signal.substr(3);
-    if (property == "ToolTip" || property == "Status")
+    if (property == "ToolTip")
     {
-        fetch_property(property, [this] { update_tooltip(); });
+        fetch_property(property);
     }
     else if (property.size() >= 4 && property.substr(property.size() - 4) == "Icon")
     {
