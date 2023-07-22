@@ -184,7 +184,7 @@ void StatusNotifierItem::update_icon()
     }
     else if (pixmap_data)
     {
-        icon.set(pixmap_data);
+        icon.set(pixmap_data->scale_simple(icon_size, icon_size, Gdk::INTERP_BILINEAR));
     }
 }
 
