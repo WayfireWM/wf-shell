@@ -14,41 +14,24 @@
 #include "launchers.hpp"
 #include "wf-autohide-window.hpp"
 
-#define MAX_LAUNCHER_NAME_LENGTH 11
 const std::string default_icon = ICONDIR "/wayfire.png";
 
 WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
-    : Gtk::HBox(), menu(_menu), m_app_info(app)
+    : menu(_menu), m_app_info(app)
 {
-    m_image.set((const Glib::RefPtr<const Gio::Icon>&) app->get_icon(),
+    image.set((const Glib::RefPtr<const Gio::Icon>&) app->get_icon(),
         (Gtk::IconSize)Gtk::ICON_SIZE_LARGE_TOOLBAR);
-    m_image.set_pixel_size(48);
+    image.set_pixel_size(48);
 
-    Glib::ustring name = app->get_name();
-
-    if (name.length() > MAX_LAUNCHER_NAME_LENGTH)
-        name = name.substr(0, MAX_LAUNCHER_NAME_LENGTH - 2) + "..";
-
-    m_label.set_text(name);
-    m_button_box.pack_start(m_image, false, false);
-    m_button_box.pack_end(m_label, false, false);
-
-    m_button.add(m_button_box);
-    m_button.get_style_context()->add_class("flat");
-
-    /* Wrap the button box into a HBox, with left/right padding.
-     * This way, the button doesn't fill the whole area allocated for an entry
-     * in the flowbox */
-    this->pack_start(m_left_pad);
-    this->pack_start(m_button);
-    this->pack_start(m_right_pad);
+    label.set_text(app->get_name());
+    label.set_ellipsize(Pango::ELLIPSIZE_END);
+    pack_start(image, false, false);
+    pack_end(label, false, false);
 
     get_style_context()->add_class("flat");
-    m_button.signal_clicked().connect_notify(
-        sigc::mem_fun(this, &WfMenuMenuItem::on_click));
 }
 
-void WfMenuMenuItem::on_click()
+void WfMenuMenuItem::activate()
 {
     m_app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
     menu->hide_menu();
@@ -202,7 +185,7 @@ bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
     auto button = dynamic_cast<WfMenuMenuItem*> (child->get_child());
     assert(button);
 
-    auto text = search_box.get_text();
+    auto text = search_entry.get_text();
     bool does_match = this->fuzzy_filter ?
         button->fuzzy_match(text) : button->matches(text);
 
@@ -226,7 +209,7 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild* a, Gtk::FlowBoxChild* b)
 
 void WayfireMenu::on_popover_shown()
 {
-    flowbox.unselect_all();
+    search_entry.grab_focus();
 }
 
 bool WayfireMenu::update_icon()
@@ -270,6 +253,17 @@ void WayfireMenu::update_popover_layout()
 
         flowbox.set_valign(Gtk::ALIGN_START);
         flowbox.set_homogeneous(true);
+        // TODO(NamorNiradnug) make children per line number configurable
+        flowbox.set_min_children_per_line(4);
+        flowbox.set_min_children_per_line(4);
+        flowbox.set_selection_mode(Gtk::SELECTION_BROWSE);
+        flowbox.signal_child_activated().connect_notify([](Gtk::FlowBoxChild* child) {
+            auto* menu_item = dynamic_cast<WfMenuMenuItem *>(child->get_child());
+            if (menu_item != nullptr)
+            {
+                menu_item->activate();
+            }
+        });
         flowbox.set_sort_func(sigc::mem_fun(this, &WayfireMenu::on_sort));
         flowbox.set_filter_func(sigc::mem_fun(this, &WayfireMenu::on_filter));
 
@@ -280,29 +274,29 @@ void WayfireMenu::update_popover_layout()
         scrolled_window.set_min_content_height(int(menu_min_content_height));
         scrolled_window.add(flowbox_container);
 
-        search_box.property_margin().set_value(20);
-        search_box.set_icon_from_icon_name("search", Gtk::ENTRY_ICON_SECONDARY);
-        search_box.signal_changed().connect_notify(
+        search_entry.property_margin().set_value(20);
+        search_entry.signal_search_changed().connect_notify(
             sigc::mem_fun(this, &WayfireMenu::on_search_changed));
+        popover_layout_box.signal_key_press_event().connect(sigc::mem_fun(search_entry, &Gtk::SearchEntry::handle_event));
+
     } else
     {
         /* Layout was already initialized, make sure to remove widgets before
          * adding them again */
-        popover_layout_box.remove(search_box);
+        popover_layout_box.remove(search_entry);
         popover_layout_box.remove(scrolled_window);
     }
 
     if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {
-        popover_layout_box.pack_start(search_box);
+        popover_layout_box.pack_start(search_entry);
         popover_layout_box.pack_start(scrolled_window);
     } else
     {
         popover_layout_box.pack_start(scrolled_window);
-        popover_layout_box.pack_start(search_box);
+        popover_layout_box.pack_start(search_entry);
     }
 
-    popover_layout_box.set_focus_chain({&search_box});
     popover_layout_box.show_all();
 }
 
@@ -423,6 +417,9 @@ void WayfireMenu::init(Gtk::HBox *container)
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     button->get_popover()->signal_show().connect_notify(
         sigc::mem_fun(this, &WayfireMenu::on_popover_shown));
+    button->get_popover()->signal_hide().connect_notify([this] {
+        search_entry.set_text("");
+    });
 
     if (!update_icon())
         return;
