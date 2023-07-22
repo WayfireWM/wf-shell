@@ -36,13 +36,12 @@ class WfMenuMenuItem : public Gtk::HBox
     void on_click();
 };
 
-class WayfireLogoutUIButton
+class WayfireLogoutUIButton : public Gtk::Button
 {
     public:
     Gtk::VBox layout;
     Gtk::Image image;
     Gtk::Label label;
-    Gtk::Button button;
 };
 
 class WayfireLogoutUI
@@ -66,14 +65,8 @@ class WayfireLogoutUI
     WayfireLogoutUIButton cancel;
     Gtk::VBox main_layout, vspacing_layout;
     Gtk::HBox top_layout, middle_layout, bottom_layout, hspacing_layout;
-    void create_logout_ui_button(WayfireLogoutUIButton *button,
-        const char *icon, const char *label);
-    void on_logout_click();
-    void on_reboot_click();
-    void on_shutdown_click();
-    void on_suspend_click();
-    void on_hibernate_click();
-    void on_switchuser_click();
+    void create_logout_ui_button(WayfireLogoutUIButton& button,
+        const char *icon, const char *label, const WfOption<std::string>& command, Gtk::Box& layout);
     void on_cancel_click();
 };
 
