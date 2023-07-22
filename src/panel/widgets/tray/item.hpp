@@ -4,6 +4,7 @@
 #include <giomm.h>
 #include <gtkmm/eventbox.h>
 #include <gtkmm/hvbox.h>
+#include <gtkmm/icontheme.h>
 #include <gtkmm/image.h>
 #include <gtkmm/menu.h>
 
@@ -25,6 +26,8 @@ class StatusNotifierItem : public Gtk::EventBox
 
     gdouble distance_scrolled_x = 0;
     gdouble distance_scrolled_y = 0;
+
+    Glib::RefPtr<Gtk::IconTheme> icon_theme = Gtk::IconTheme::get_default();
 
     template <typename T>
     T get_item_property(const Glib::ustring &name, const T &default_value = {}) const
