@@ -7,6 +7,8 @@
 #include <gtkmm/image.h>
 #include <gtkmm/scrolledwindow.h>
 
+#include <wayfire/config/compound-option.hpp>
+
 class WfCommandOutputButtons : public WayfireWidget
 {
     struct CommandOutput : public Gtk::Button
@@ -22,10 +24,17 @@ class WfCommandOutputButtons : public WayfireWidget
         Gtk::Image icon;
         Gtk::Label output;
 
+        WfOption<int> max_chars_opt{"panel/commands_output_max_chars"};
+
         void init();
 
-        CommandOutput() = default;
-        CommandOutput(CommandOutput &&) = default;
+        CommandOutput(const std::string & name, const std::string & command,
+            const std::string & icon_name, int period);
+        CommandOutput(CommandOutput&&) = delete;
+        CommandOutput(const CommandOutput&) = delete;
+        CommandOutput& operator =(CommandOutput&&) = delete;
+        CommandOutput& operator =(const CommandOutput&) = delete;
+
         ~CommandOutput() override
         {
             timeout_connection.disconnect();
@@ -33,12 +42,14 @@ class WfCommandOutputButtons : public WayfireWidget
     };
 
     Gtk::HBox box;
-    std::vector<CommandOutput> buttons;
-    static std::vector<CommandOutput> get_buttons_from_config();
+    std::vector<std::unique_ptr<CommandOutput>> buttons;
 
-    public:
+    WfOption<wf::config::compound_list_t<std::string, std::string,
+        int>> commands_list_opt{"panel/commands"};
+
+  public:
     void init(Gtk::HBox *container) override;
-    void handle_config_reload() override;
+    void update_buttons();
 };
 
 #endif /* end of include guard: COMMAND_OUTPUT_HPP */
