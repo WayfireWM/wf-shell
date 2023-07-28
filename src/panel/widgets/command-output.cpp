@@ -126,10 +126,3 @@ void WfCommandOutputButtons::update_buttons()
 
     box.show_all();
 }
-
-inline static bool begins_with(const std::string & string,
-    const std::string & prefix)
-{
-    return string.size() >= prefix.size() &&
-           string.substr(0, prefix.size()) == prefix;
-}
