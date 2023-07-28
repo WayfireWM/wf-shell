@@ -24,6 +24,12 @@ class Watcher
      */
     static std::shared_ptr<Watcher> Launch();
 
+    /*!
+     * Returns a pointer to the Watcher's instance if it exists
+     * or an empty `shared_ptr` otherwise.
+     */
+    static std::shared_ptr<Watcher> Instance();
+
     ~Watcher();
 
     private:
