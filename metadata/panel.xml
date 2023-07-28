@@ -278,7 +278,7 @@
 		</entry>
 		<entry prefix="command_output_icon_" type="string" name="icon">
 			<_short>Icon</_short>
-			<_long>Icon name to show</_long>
+			<_long>Icon name to show. Left empty to hide icon.</_long>
 			<default>text-x-script</default>
 		</entry>
 		<entry prefix="command_output_period_" type="int" name="period">
@@ -290,6 +290,31 @@ Set to -1 to only run it by clicking the button.
 			</_long>
 			<default>0</default>
 			<min>0</min>
+		</entry>
+		<entry prefix="command_output_icon_size_" type="int" name="icon_size">
+			<_short>Icon Size</_short>
+			<default>32</default>
+			<min>1</min>
+		</entry>
+		<entry prefix="command_output_icon_position_" type="string" name="icon_position">
+			<_short>Icon Position</_short>
+			<desc>
+				<value>top</value>
+				<_name>Above Text</_name>
+			</desc>
+			<desc>
+				<value>bottom</value>
+				<_name>Below Text</_name>
+			</desc>
+			<desc>
+				<value>left</value>
+				<_name>Left</_name>
+			</desc>
+			<desc>
+				<value>right</value>
+				<_name>Right</_name>
+			</desc>
+			<default>left</default>
 		</entry>
 	</option>
 	</group>

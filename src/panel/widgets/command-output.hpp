@@ -13,14 +13,9 @@ class WfCommandOutputButtons : public WayfireWidget
 {
     struct CommandOutput : public Gtk::Button
     {
-        std::string name;
-        std::string command;
-        std::string icon_name = "text-x-script";
-        int period = 0;
-
         sigc::connection timeout_connection;
 
-        Gtk::VBox box;
+        Gtk::Box box;
         Gtk::Image icon;
         Gtk::Label output;
 
@@ -29,7 +24,8 @@ class WfCommandOutputButtons : public WayfireWidget
         void init();
 
         CommandOutput(const std::string & name, const std::string & command,
-            const std::string & icon_name, int period);
+            const std::string & icon_name, int period, int icon_size,
+            const std::string& icon_position);
         CommandOutput(CommandOutput&&) = delete;
         CommandOutput(const CommandOutput&) = delete;
         CommandOutput& operator =(CommandOutput&&) = delete;
@@ -45,7 +41,7 @@ class WfCommandOutputButtons : public WayfireWidget
     std::vector<std::unique_ptr<CommandOutput>> buttons;
 
     WfOption<wf::config::compound_list_t<std::string, std::string,
-        int>> commands_list_opt{"panel/commands"};
+        int, int, std::string>> commands_list_opt{"panel/commands"};
 
   public:
     void init(Gtk::HBox *container) override;
