@@ -64,9 +64,11 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
             int child_status)
         {
             FILE *file = fdopen(std_out, "r");
-            char buf[16];
-            std::fgets(buf, sizeof(buf), file);
+            // "times 4" to support Unicode symbols
+            auto *buf  = new char [max_chars_opt.value() * 4 + 1];
+            std::fgets(buf, max_chars_opt.value() * 4 + 1, file);
             Glib::ustring output_str(buf);
+            delete[] buf;
             std::fclose(file);
             Glib::spawn_close_pid(pid);
 
