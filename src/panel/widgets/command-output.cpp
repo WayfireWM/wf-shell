@@ -2,6 +2,7 @@
 
 #include <glibmm/main.h>
 #include <glibmm/spawn.h>
+#include <glibmm/shell.h>
 
 #include <gtk-utils.hpp>
 
@@ -26,26 +27,19 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
 
     box.set_spacing(5);
 
-    if (icon_position == "left")
+    box.set_orientation(
+        icon_position == "bottom" ||
+        icon_position ==
+        "top" ? Gtk::ORIENTATION_VERTICAL : Gtk::ORIENTATION_HORIZONTAL);
+
+    if ((icon_position == "right") || (icon_position == "bottom"))
     {
-        box.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-        box.pack_start(icon);
-        box.pack_start(output);
-    } else if (icon_position == "right")
-    {
-        box.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
         box.pack_start(output);
         box.pack_start(icon);
-    } else if (icon_position == "top")
-    {
-        box.set_orientation(Gtk::ORIENTATION_VERTICAL);
-        box.pack_start(icon);
-        box.pack_start(output);
     } else
     {
-        box.set_orientation(Gtk::ORIENTATION_VERTICAL);
-        box.pack_start(output);
         box.pack_start(icon);
+        box.pack_start(output);
     }
 
     if (icon_name.empty())
@@ -61,8 +55,8 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     {
         Glib::Pid pid;
         int std_out;
-        Glib::spawn_async_with_pipes("", std::vector<std::string>{"/bin/bash", "-c",
-            command}, Glib::SPAWN_DO_NOT_REAP_CHILD,
+        Glib::spawn_async_with_pipes("", Glib::shell_parse_argv(
+            command), Glib::SPAWN_DO_NOT_REAP_CHILD | Glib::SPAWN_SEARCH_PATH_FROM_ENVP,
             Glib::SlotSpawnChildSetup{},
             &pid, nullptr, &std_out, nullptr);
         Glib::signal_child_watch().connect([std_out, this] (
@@ -70,9 +64,8 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
             int child_status)
         {
             FILE *file = fdopen(std_out, "r");
-            char buf[20];
-            std::fill(std::begin(buf), std::end(buf), '\0');
-            std::fread(buf, sizeof(buf[0]), sizeof(buf) - 1, file);
+            char buf[16];
+            std::fgets(buf, sizeof(buf), file);
             Glib::ustring output_str(buf);
             std::fclose(file);
             Glib::spawn_close_pid(pid);

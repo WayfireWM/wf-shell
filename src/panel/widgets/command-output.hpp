@@ -2,9 +2,10 @@
 #define COMMAND_OUTPUT_HPP
 
 #include "../widget.hpp"
-#include "wf-popover.hpp"
 
+#include <gtkmm/button.h>
 #include <gtkmm/image.h>
+#include <gtkmm/label.h>
 #include <gtkmm/scrolledwindow.h>
 
 #include <wayfire/config/compound-option.hpp>
