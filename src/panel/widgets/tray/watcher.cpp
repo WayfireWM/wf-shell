@@ -44,6 +44,11 @@ std::shared_ptr<Watcher> Watcher::Launch()
         instance = watcher_ptr;
         return watcher_ptr;
     }
+    return Instance();
+}
+
+std::shared_ptr<Watcher> Watcher::Instance()
+{
     return instance.lock();
 }
 
