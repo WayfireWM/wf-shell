@@ -274,22 +274,27 @@
 		<short>Commands to run</short>
 		<entry prefix="command_output_" type="string" name="command">
 			<_short>Command</_short>
-			<_long>Command to run. Warning: if command is taking long to run it will freeze the entire panel.</_long>
+			<_long>Command to run</_long>
 		</entry>
-		<entry prefix="command_output_icon_" type="string" name="icon">
-			<_short>Icon</_short>
-			<_long>Icon name to show. Left empty to hide icon.</_long>
-			<default>text-x-script</default>
+		<entry prefix="command_output_tooltip_" type="string" name="tooltip_command">
+			<_short>Tooltip Command</_short>
+			<_long>The tooltip command is executed every time the tooltip is shown.</_long>
+			<default/>
 		</entry>
 		<entry prefix="command_output_period_" type="int" name="period">
 			<_short>Period</_short>
 			<_long>
-Command is launched periodically updating the label above the icon.
+The command is launched periodically, updating the text displayed on the panel.
 Set to 0 to only run the command once on startup.
 Set to -1 to only run it by clicking the button.
 			</_long>
 			<default>0</default>
 			<min>0</min>
+		</entry>
+		<entry prefix="command_output_icon_" type="string" name="icon">
+			<_short>Icon</_short>
+			<_long>Icon name to show. Leave empty to hide icon.</_long>
+			<default>text-x-script</default>
 		</entry>
 		<entry prefix="command_output_icon_size_" type="int" name="icon_size">
 			<_short>Icon Size</_short>

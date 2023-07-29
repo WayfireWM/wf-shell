@@ -18,15 +18,16 @@ class WfCommandOutputButtons : public WayfireWidget
 
         Gtk::Box box;
         Gtk::Image icon;
-        Gtk::Label output;
+        Gtk::Label main_label;
 
         WfOption<int> max_chars_opt{"panel/commands_output_max_chars"};
 
         void init();
 
         CommandOutput(const std::string & name, const std::string & command,
-            const std::string & icon_name, int period, int icon_size,
-            const std::string& icon_position);
+            const std::string & tooltip_command,
+            int period, const std::string & icon_name, int icon_size,
+            const std::string & icon_position);
         CommandOutput(CommandOutput&&) = delete;
         CommandOutput(const CommandOutput&) = delete;
         CommandOutput& operator =(CommandOutput&&) = delete;
@@ -41,8 +42,8 @@ class WfCommandOutputButtons : public WayfireWidget
     Gtk::HBox box;
     std::vector<std::unique_ptr<CommandOutput>> buttons;
 
-    WfOption<wf::config::compound_list_t<std::string, std::string,
-        int, int, std::string>> commands_list_opt{"panel/commands"};
+    WfOption<wf::config::compound_list_t<std::string, std::string, int, std::string,
+        int, std::string>> commands_list_opt{"panel/commands"};
 
   public:
     void init(Gtk::HBox *container) override;
