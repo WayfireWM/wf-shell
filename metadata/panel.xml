@@ -289,7 +289,7 @@ Set to 0 to only run the command once on startup.
 Set to -1 to only run it by clicking the button.
 			</_long>
 			<default>0</default>
-			<min>0</min>
+			<min>-1</min>
 		</entry>
 		<entry prefix="command_output_icon_" type="string" name="icon">
 			<_short>Icon</_short>

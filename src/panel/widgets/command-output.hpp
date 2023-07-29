@@ -20,6 +20,9 @@ class WfCommandOutputButtons : public WayfireWidget
         Gtk::Image icon;
         Gtk::Label main_label;
 
+        Gtk::Label tooltip_label;
+        time_t last_tooltip_update = 0;
+
         WfOption<int> max_chars_opt{"panel/commands_output_max_chars"};
 
         void init();
