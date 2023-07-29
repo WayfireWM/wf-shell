@@ -8,6 +8,37 @@
 
 #include <gtk-utils.hpp>
 
+static void label_set_from_command(const std::string & command_line,
+    Gtk::Label& label)
+{
+    Glib::Pid pid;
+    int output_fd;
+    Glib::spawn_async_with_pipes("", Glib::shell_parse_argv(command_line),
+        Glib::SPAWN_DO_NOT_REAP_CHILD | Glib::SPAWN_SEARCH_PATH_FROM_ENVP,
+        Glib::SlotSpawnChildSetup{}, &pid, nullptr, &output_fd, nullptr);
+    Glib::signal_child_watch().connect([=, &label] (Glib::Pid pid, int exit_status)
+    {
+        FILE *file = fdopen(output_fd, "r");
+        Glib::ustring output;
+        std::array<char, 16> buffer;
+
+        while (std::fgets(buffer.data(), buffer.size(), file))
+        {
+            output += buffer.data();
+        }
+
+        std::fclose(file);
+        Glib::spawn_close_pid(pid);
+
+        while (!output.empty() && std::isspace(*output.rbegin()))
+        {
+            output.erase(std::prev(output.end()));
+        }
+
+        label.set_markup(output);
+    }, pid);
+}
+
 WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     const std::string & command, const std::string & tooltip_command, int period,
     const std::string & icon_name, int icon_size,
@@ -58,31 +89,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
 
     const auto update_output = [=] ()
     {
-        Glib::Pid pid;
-        int output_fd;
-        Glib::spawn_async_with_pipes("", Glib::shell_parse_argv(command),
-            Glib::SPAWN_DO_NOT_REAP_CHILD | Glib::SPAWN_SEARCH_PATH_FROM_ENVP,
-            Glib::SlotSpawnChildSetup{}, &pid, nullptr, &output_fd, nullptr);
-        Glib::signal_child_watch().connect([=] (
-            Glib::Pid pid,
-            int child_status)
-        {
-            FILE *file = fdopen(output_fd, "r");
-            // "times 4" to support Unicode symbols
-            auto *buf = new char [max_chars_opt.value() * 4 + 1];
-            std::fgets(buf, max_chars_opt.value() * 4 + 1, file);
-            Glib::ustring output_str(buf);
-            delete[] buf;
-            std::fclose(file);
-            Glib::spawn_close_pid(pid);
-
-            while (!output_str.empty() && std::isspace(*output_str.rbegin()))
-            {
-                output_str.erase(std::prev(output_str.end()));
-            }
-
-            main_label.set_text(output_str);
-        }, pid);
+        label_set_from_command(command, main_label);
     };
 
     signal_clicked().connect(update_output);
@@ -108,33 +115,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
             return;
         }
 
-        std::time(&last_tooltip_update);
-        Glib::Pid pid;
-        int output_fd;
-        Glib::spawn_async_with_pipes("", Glib::shell_parse_argv(tooltip_command),
-            Glib::SPAWN_DO_NOT_REAP_CHILD | Glib::SPAWN_SEARCH_PATH_FROM_ENVP,
-            Glib::SlotSpawnChildSetup{}, &pid, nullptr, &output_fd, nullptr);
-        Glib::signal_child_watch().connect([=] (Glib::Pid pid, int exit_status)
-        {
-            FILE *file = fdopen(output_fd, "r");
-            Glib::ustring tooltip_text;
-            std::array<char, 16> buffer;
-
-            while (std::fgets(buffer.data(), buffer.size(), file))
-            {
-                tooltip_text += buffer.data();
-            }
-
-            std::fclose(file);
-            Glib::spawn_close_pid(pid);
-
-            while (!tooltip_text.empty() && std::isspace(*tooltip_text.rbegin()))
-            {
-                tooltip_text.erase(std::prev(tooltip_text.end()));
-            }
-
-            tooltip_label.set_markup(tooltip_text);
-        }, pid);
+        label_set_from_command(tooltip_command, tooltip_label);
     };
 
     if (!tooltip_command.empty())
