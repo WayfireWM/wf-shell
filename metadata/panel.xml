@@ -296,7 +296,7 @@
 		<entry prefix="command_output_period_" type="int" name="period">
 			<_short>Period</_short>
 			<_long>
-The command is launched periodically, updating the text displayed on the panel.
+The command is launched cyclically with given period in seconds, updating the text displayed on the panel.
 Set to 0 to only run the command once on startup.
 Set to -1 to only run it by clicking the button.
 			</_long>
