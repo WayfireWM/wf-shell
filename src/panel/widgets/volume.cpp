@@ -73,7 +73,7 @@ void WayfireVolume::update_icon()
 
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
-        main_image.set_from_icon_name("audio-volume-muted", Gtk::ICON_SIZE_MENU);
+        set_image_icon(main_image, "audio-volume-muted", icon_size);
         return;
     }
 
@@ -85,9 +85,7 @@ void WayfireVolume::update_icon()
         {VOLUME_LEVEL_OOR, "audio-volume-muted"},
     };
 
-    button->set_size_request(0, 0);
-    main_image.set_from_icon_name(icon_name_from_state[current],
-        Gtk::ICON_SIZE_MENU);
+    set_image_icon(main_image, icon_name_from_state.at(current), icon_size);
 }
 
 bool WayfireVolume::on_popover_timeout(int timer)
@@ -244,7 +242,7 @@ void WayfireVolume::on_volume_value_changed()
 
 void WayfireVolume::init(Gtk::HBox *container)
 {
-    volume_size.set_callback([=] () { update_icon(); });
+    icon_size.set_callback([=] () { update_icon(); });
 
     /* Setup button */
     button = std::make_unique<WayfireMenuButton> ("panel");

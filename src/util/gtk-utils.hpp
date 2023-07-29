@@ -24,7 +24,7 @@ void set_image_pixbuf(Gtk::Image &image, Glib::RefPtr<Gdk::Pixbuf> pixbuf, int s
 /* Sets the content of the image to the corresponding icon from the default theme,
  * using the given options */
 void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
-                    const WfIconLoadOptions& options,
+                    const WfIconLoadOptions& options = {},
                     const Glib::RefPtr<Gtk::IconTheme>& icon_theme
                         = Gtk::IconTheme::get_default());
 
