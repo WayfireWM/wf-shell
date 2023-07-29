@@ -28,6 +28,7 @@ class WayfireNotificationCenter : public WayfireWidget
     sigc::connection popover_timeout;
     WfOption<double> timeout{"panel/notifications_autohide_timeout"};
     WfOption<bool> show_critical_in_dnd{"panel/notifications_critical_in_dnd"};
+    WfOption<int> icon_size{"panel/notifications_icon_size"};
     bool dnd_enabled = false;
 
     public:

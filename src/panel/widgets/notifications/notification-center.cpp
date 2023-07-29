@@ -2,6 +2,8 @@
 
 #include <glibmm/main.h>
 
+#include <gtk-utils.hpp>
+
 #include "daemon.hpp"
 #include "single-notification.hpp"
 
@@ -103,7 +105,7 @@ void WayfireNotificationCenter::onDaemonStop()
 void WayfireNotificationCenter::updateIcon()
 {
     if (dnd_enabled)
-        icon.set_from_icon_name("notifications-disabled", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+        set_image_icon(icon, "notifications-disabled", icon_size);
     else
-        icon.set_from_icon_name("notifications", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+        set_image_icon(icon, "notifications", icon_size);
 }
