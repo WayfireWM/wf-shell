@@ -273,6 +273,11 @@
 		<default>32</default>
 		<min>1</min>
 	</option>
+	<option name="tray_menu_on_middle_click" type="bool">
+		<_short>Middle Button Activates Menu</_short>
+		<_long>Mouse right button activates a tray item's secondary action instead of the item's menu.</_long>
+		<default>false</default>
+	</option>
 	</group>
 	<group>
 	<_short>Command Output</_short>
