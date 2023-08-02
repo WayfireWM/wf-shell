@@ -17,9 +17,21 @@
 		<_short>Randomize</_short>
 		<default>false</default>
 	</option>
-	<option name="preserve_aspect" type="bool">
-		<_short>Preserve Aspect</_short>
-		<default>false</default>
+	<option name="fill_mode" type="string">
+		<_short>Fill mode</_short>
+		<default>fill_and_crop</default>
+		<desc>
+			<value>fill_and_crop</value>
+			<_name>Fill and Crop</_name>
+		</desc>
+		<desc>
+			<value>preserve_aspect</value>
+			<_name>Preserve Aspect</_name>
+		</desc>
+		<desc>
+			<value>stretch</value>
+			<_name>Stretch</_name>
+		</desc>
 	</option>
 	</plugin>
 </wf-shell>
