@@ -54,12 +54,22 @@ std::shared_ptr<Watcher> Watcher::Instance()
 
 Watcher::~Watcher()
 {
+    for (const auto& [_, host_id] : sn_hosts_id)
+    {
+        Gio::DBus::unwatch_name(host_id);
+    }
+    for (const auto& [_, item_id] : sn_items_id)
+    {
+        Gio::DBus::unwatch_name(item_id);
+    }
+
+    watcher_connection->unregister_object(dbus_object_id);
     Gio::DBus::unown_name(dbus_name_id);
 }
 
 void Watcher::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name)
 {
-    connection->register_object(SNW_PATH, introspection_data, interface_table);
+    dbus_object_id = connection->register_object(SNW_PATH, introspection_data, interface_table);
     watcher_connection = connection;
 }
 
