@@ -14,41 +14,24 @@
 #include "launchers.hpp"
 #include "wf-autohide-window.hpp"
 
-#define MAX_LAUNCHER_NAME_LENGTH 11
 const std::string default_icon = ICONDIR "/wayfire.png";
 
 WfMenuMenuItem::WfMenuMenuItem(WayfireMenu* _menu, AppInfo app)
-    : Gtk::HBox(), menu(_menu), m_app_info(app)
+    : menu(_menu), m_app_info(app)
 {
-    m_image.set((const Glib::RefPtr<const Gio::Icon>&) app->get_icon(),
+    image.set((const Glib::RefPtr<const Gio::Icon>&) app->get_icon(),
         (Gtk::IconSize)Gtk::ICON_SIZE_LARGE_TOOLBAR);
-    m_image.set_pixel_size(48);
+    image.set_pixel_size(48);
 
-    Glib::ustring name = app->get_name();
-
-    if (name.length() > MAX_LAUNCHER_NAME_LENGTH)
-        name = name.substr(0, MAX_LAUNCHER_NAME_LENGTH - 2) + "..";
-
-    m_label.set_text(name);
-    m_button_box.pack_start(m_image, false, false);
-    m_button_box.pack_end(m_label, false, false);
-
-    m_button.add(m_button_box);
-    m_button.get_style_context()->add_class("flat");
-
-    /* Wrap the button box into a HBox, with left/right padding.
-     * This way, the button doesn't fill the whole area allocated for an entry
-     * in the flowbox */
-    this->pack_start(m_left_pad);
-    this->pack_start(m_button);
-    this->pack_start(m_right_pad);
+    label.set_text(app->get_name());
+    label.set_ellipsize(Pango::ELLIPSIZE_END);
+    pack_start(image, false, false);
+    pack_end(label, false, false);
 
     get_style_context()->add_class("flat");
-    m_button.signal_clicked().connect_notify(
-        sigc::mem_fun(this, &WfMenuMenuItem::on_click));
 }
 
-void WfMenuMenuItem::on_click()
+void WfMenuMenuItem::activate()
 {
     m_app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
     menu->hide_menu();
@@ -202,7 +185,7 @@ bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
     auto button = dynamic_cast<WfMenuMenuItem*> (child->get_child());
     assert(button);
 
-    auto text = search_box.get_text();
+    auto text = search_entry.get_text();
     bool does_match = this->fuzzy_filter ?
         button->fuzzy_match(text) : button->matches(text);
 
@@ -226,7 +209,7 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild* a, Gtk::FlowBoxChild* b)
 
 void WayfireMenu::on_popover_shown()
 {
-    flowbox.unselect_all();
+    search_entry.grab_focus();
 }
 
 bool WayfireMenu::update_icon()
@@ -270,6 +253,17 @@ void WayfireMenu::update_popover_layout()
 
         flowbox.set_valign(Gtk::ALIGN_START);
         flowbox.set_homogeneous(true);
+        // TODO(NamorNiradnug) make children per line number configurable
+        flowbox.set_min_children_per_line(4);
+        flowbox.set_min_children_per_line(4);
+        flowbox.set_selection_mode(Gtk::SELECTION_BROWSE);
+        flowbox.signal_child_activated().connect_notify([](Gtk::FlowBoxChild* child) {
+            auto* menu_item = dynamic_cast<WfMenuMenuItem *>(child->get_child());
+            if (menu_item != nullptr)
+            {
+                menu_item->activate();
+            }
+        });
         flowbox.set_sort_func(sigc::mem_fun(this, &WayfireMenu::on_sort));
         flowbox.set_filter_func(sigc::mem_fun(this, &WayfireMenu::on_filter));
 
@@ -280,72 +274,30 @@ void WayfireMenu::update_popover_layout()
         scrolled_window.set_min_content_height(int(menu_min_content_height));
         scrolled_window.add(flowbox_container);
 
-        search_box.property_margin().set_value(20);
-        search_box.set_icon_from_icon_name("search", Gtk::ENTRY_ICON_SECONDARY);
-        search_box.signal_changed().connect_notify(
+        search_entry.property_margin().set_value(20);
+        search_entry.signal_search_changed().connect_notify(
             sigc::mem_fun(this, &WayfireMenu::on_search_changed));
+        popover_layout_box.signal_key_press_event().connect(sigc::mem_fun(search_entry, &Gtk::SearchEntry::handle_event));
+
     } else
     {
         /* Layout was already initialized, make sure to remove widgets before
          * adding them again */
-        popover_layout_box.remove(search_box);
+        popover_layout_box.remove(search_entry);
         popover_layout_box.remove(scrolled_window);
     }
 
     if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {
-        popover_layout_box.pack_start(search_box);
+        popover_layout_box.pack_start(search_entry);
         popover_layout_box.pack_start(scrolled_window);
     } else
     {
         popover_layout_box.pack_start(scrolled_window);
-        popover_layout_box.pack_start(search_box);
+        popover_layout_box.pack_start(search_entry);
     }
 
-    popover_layout_box.set_focus_chain({&search_box});
     popover_layout_box.show_all();
-}
-
-void WayfireLogoutUI::on_logout_click()
-{
-    ui.hide();
-    bg.hide();
-    g_spawn_command_line_async(std::string(logout_command).c_str(), NULL);
-}
-
-void WayfireLogoutUI::on_reboot_click()
-{
-    ui.hide();
-    bg.hide();
-    g_spawn_command_line_async(std::string(reboot_command).c_str(), NULL);
-}
-
-void WayfireLogoutUI::on_shutdown_click()
-{
-    ui.hide();
-    bg.hide();
-    g_spawn_command_line_async(std::string(shutdown_command).c_str(), NULL);
-}
-
-void WayfireLogoutUI::on_suspend_click()
-{
-    ui.hide();
-    bg.hide();
-    g_spawn_command_line_async(std::string(suspend_command).c_str(), NULL);
-}
-
-void WayfireLogoutUI::on_hibernate_click()
-{
-    ui.hide();
-    bg.hide();
-    g_spawn_command_line_async(std::string(hibernate_command).c_str(), NULL);
-}
-
-void WayfireLogoutUI::on_switchuser_click()
-{
-    ui.hide();
-    bg.hide();
-    g_spawn_command_line_async(std::string(switchuser_command).c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_cancel_click()
@@ -357,52 +309,37 @@ void WayfireLogoutUI::on_cancel_click()
 #define LOGOUT_BUTTON_SIZE  125
 #define LOGOUT_BUTTON_MARGIN 10
 
-void WayfireLogoutUI::create_logout_ui_button(WayfireLogoutUIButton *button, const char *icon, const char *label)
+void WayfireLogoutUI::create_logout_ui_button(WayfireLogoutUIButton& button, const char *icon, const char *label,
+    const WfOption<std::string>& command, Gtk::Box& layout)
 {
-    button->button.set_size_request(LOGOUT_BUTTON_SIZE, LOGOUT_BUTTON_SIZE);
-    button->image.set_from_icon_name(icon, Gtk::ICON_SIZE_DIALOG);
-    button->label.set_text(label);
-    button->layout.pack_start(button->image, true, false);
-    button->layout.pack_start(button->label, true, false);
-    button->button.add(button->layout);
+    button.set_size_request(LOGOUT_BUTTON_SIZE, LOGOUT_BUTTON_SIZE);
+    button.image.set_from_icon_name(icon, Gtk::ICON_SIZE_DIALOG);
+    button.label.set_text(label);
+    button.layout.pack_start(button.image, true, false);
+    button.layout.pack_start(button.label, true, false);
+    button.add(button.layout);
+    button.signal_clicked().connect([=, &command] {
+        bg.hide();
+        ui.hide();
+        Glib::spawn_command_line_async(command);
+    });
+    layout.pack_start(button, true, false);
 }
 
 WayfireLogoutUI::WayfireLogoutUI()
 {
-    create_logout_ui_button(&suspend, "emblem-synchronizing", "Suspend");
-    suspend.button.signal_clicked().connect_notify(
-        sigc::mem_fun(this, &WayfireLogoutUI::on_suspend_click));
-    top_layout.pack_start(suspend.button, true, false);
+    create_logout_ui_button(suspend, "emblem-synchronizing", "Suspend", suspend_command, top_layout);
+    create_logout_ui_button(hibernate, "weather-clear-night", "Hibernate", hibernate_command, top_layout);
+    create_logout_ui_button(switchuser, "system-users", "Switch User", switchuser_command, top_layout);
 
-    create_logout_ui_button(&hibernate, "weather-clear-night", "Hibernate");
-    hibernate.button.signal_clicked().connect_notify(
-        sigc::mem_fun(this, &WayfireLogoutUI::on_hibernate_click));
-    top_layout.pack_start(hibernate.button, true, false);
+    create_logout_ui_button(logout, "system-log-out", "Log Out", logout_command, middle_layout);
+    create_logout_ui_button(reboot, "system-reboot", "Reboot", reboot_command, middle_layout);
+    create_logout_ui_button(shutdown, "system-shutdown", "Shut Down", shutdown_command, middle_layout);
 
-    create_logout_ui_button(&switchuser, "system-users", "Switch User");
-    switchuser.button.signal_clicked().connect_notify(
-        sigc::mem_fun(this, &WayfireLogoutUI::on_switchuser_click));
-    top_layout.pack_start(switchuser.button, true, false);
-
-    create_logout_ui_button(&logout, "system-log-out", "Log Out");
-    logout.button.signal_clicked().connect_notify(
-        sigc::mem_fun(this, &WayfireLogoutUI::on_logout_click));
-    middle_layout.pack_start(logout.button, true, false);
-
-    create_logout_ui_button(&reboot, "system-reboot", "Reboot");
-    reboot.button.signal_clicked().connect_notify(
-        sigc::mem_fun(this, &WayfireLogoutUI::on_reboot_click));
-    middle_layout.pack_start(reboot.button, true, false);
-
-    create_logout_ui_button(&shutdown, "system-shutdown", "Shut Down");
-    shutdown.button.signal_clicked().connect_notify(
-        sigc::mem_fun(this, &WayfireLogoutUI::on_shutdown_click));
-    middle_layout.pack_start(shutdown.button, true, false);
-
-    cancel.button.set_size_request(100, 50);
-    cancel.button.set_label("Cancel");
-    bottom_layout.pack_start(cancel.button, true, false);
-    cancel.button.signal_clicked().connect_notify(
+    cancel.set_size_request(100, 50);
+    cancel.set_label("Cancel");
+    bottom_layout.pack_start(cancel, true, false);
+    cancel.signal_clicked().connect_notify(
         sigc::mem_fun(this, &WayfireLogoutUI::on_cancel_click));
 
     top_layout.set_spacing(LOGOUT_BUTTON_MARGIN);
@@ -480,6 +417,9 @@ void WayfireMenu::init(Gtk::HBox *container)
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     button->get_popover()->signal_show().connect_notify(
         sigc::mem_fun(this, &WayfireMenu::on_popover_shown));
+    button->get_popover()->signal_hide().connect_notify([this] {
+        search_entry.set_text("");
+    });
 
     if (!update_icon())
         return;
