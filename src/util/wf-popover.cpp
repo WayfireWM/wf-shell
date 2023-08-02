@@ -2,13 +2,14 @@
 #include "wf-autohide-window.hpp"
 #include <iostream>
 
-WayfireMenuButton::WayfireMenuButton(const std::string& section)
-    : panel_position{section + "/position"}
+WayfireMenuButton::WayfireMenuButton(const std::string& section) :
+    panel_position{section + "/position"}
 {
     get_style_context()->add_class("flat");
     m_popover.set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
 
-    auto cb = [=] () {
+    auto cb = [=] ()
+    {
         set_direction((std::string)panel_position == "top" ?
             Gtk::ARROW_DOWN : Gtk::ARROW_UP);
 
@@ -19,7 +20,8 @@ WayfireMenuButton::WayfireMenuButton(const std::string& section)
     panel_position.set_callback(cb);
     cb();
 
-    m_popover.signal_show().connect_notify([=] {
+    m_popover.signal_show().connect_notify([=]
+    {
         set_active_on_window();
     });
 }
@@ -48,11 +50,15 @@ void WayfireMenuButton::set_active_on_window()
 {
     auto window = this->get_parent();
     while (window && window->get_parent())
+    {
         window = window->get_parent();
+    }
 
-    auto autohide_window = dynamic_cast<WayfireAutohidingWindow*> (window);
+    auto autohide_window = dynamic_cast<WayfireAutohidingWindow*>(window);
     if (autohide_window)
+    {
         autohide_window->set_active_popover(*this);
+    }
 }
 
 void WayfireMenuButton::grab_focus()

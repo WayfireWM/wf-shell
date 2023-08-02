@@ -48,7 +48,7 @@ class WayfireVolume : public WayfireWidget
     GvcMixerStream *gvc_stream = NULL;
     gdouble max_norm; // maximal volume for current stream
 
-    gulong notify_volume_signal = 0;
+    gulong notify_volume_signal   = 0;
     gulong notify_is_muted_signal = 0;
     gulong notify_default_sink_changed = 0;
     sigc::connection popover_timeout;
@@ -76,7 +76,6 @@ class WayfireVolume : public WayfireWidget
      */
     void set_volume(pa_volume_t volume_level,
         set_volume_flags_t flags = VOLUME_FLAG_FULL);
-
 
   public:
     void init(Gtk::HBox *container) override;

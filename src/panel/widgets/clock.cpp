@@ -4,7 +4,7 @@
 
 void WayfireClock::init(Gtk::HBox *container)
 {
-    button = std::make_unique<WayfireMenuButton> ("panel");
+    button = std::make_unique<WayfireMenuButton>("panel");
     button->add(label);
     button->show();
     label.show();
@@ -48,8 +48,10 @@ bool WayfireClock::update_label()
      * format string, * but to remove the requirement that the user does
      * something fancy, we just remove any leading spaces. */
     int i = 0;
-    while(i < (int)text.length() && text[i] == ' ')
+    while (i < (int)text.length() && text[i] == ' ')
+    {
         i++;
+    }
 
     label.set_text(text.substr(i));
     return 1;
@@ -57,9 +59,11 @@ bool WayfireClock::update_label()
 
 void WayfireClock::set_font()
 {
-    if ((std::string)font == "default") {
+    if ((std::string)font == "default")
+    {
         label.unset_font();
-    } else {
+    } else
+    {
         label.override_font(Pango::FontDescription((std::string)font));
     }
 }

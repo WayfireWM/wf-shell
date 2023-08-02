@@ -8,14 +8,15 @@
 
 class WayfireNotificationCenter : public WayfireWidget
 {
-    private:
+  private:
     static const int WIDTH = 300, HEIGHT = 400;
     Gtk::Image icon;
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::ScrolledWindow scrolled_window;
     Gtk::VBox vbox;
 
-    Gtk::Label status_label = Gtk::Label("Cannot start notifications daemon. Probably another one is already running.");
+    Gtk::Label status_label = Gtk::Label(
+        "Cannot start notifications daemon. Probably another one is already running.");
 
     std::map<Notification::id_type, std::unique_ptr<WfSingleNotification>> notification_widgets = {};
 
@@ -31,7 +32,7 @@ class WayfireNotificationCenter : public WayfireWidget
     WfOption<int> icon_size{"panel/notifications_icon_size"};
     bool dnd_enabled = false;
 
-    public:
+  public:
     void init(Gtk::HBox *container) override;
     ~WayfireNotificationCenter() override = default;
 };

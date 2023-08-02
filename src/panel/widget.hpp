@@ -14,12 +14,14 @@
 class wayfire_config;
 class WayfireWidget
 {
-    public:
-        std::string widget_name; // for WayfirePanel use, widgets shouldn't change it
+  public:
+    std::string widget_name; // for WayfirePanel use, widgets shouldn't change it
 
-        virtual void init(Gtk::HBox *container) = 0;
-        virtual void handle_config_reload() {}
-        virtual ~WayfireWidget() {};
+    virtual void init(Gtk::HBox *container) = 0;
+    virtual void handle_config_reload()
+    {}
+    virtual ~WayfireWidget()
+    {}
 };
 
 #endif /* end of include guard: WIDGET_HPP */

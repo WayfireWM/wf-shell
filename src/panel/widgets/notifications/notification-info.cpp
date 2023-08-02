@@ -2,30 +2,35 @@
 
 #include <gdkmm.h>
 
-template <class T>
-static void iterTo(Glib::VariantIter &iter, T &to)
+template<class T>
+static void iterTo(Glib::VariantIter & iter, T & to)
 {
     Glib::Variant<T> var;
     iter.next_value(var);
     to = var.get();
 }
 
-template <class K>
-static K getHint(const std::map<std::string, Glib::VariantBase> &map, const std::string &key)
+template<class K>
+static K getHint(const std::map<std::string, Glib::VariantBase> & map, const std::string & key)
 {
     if (map.count(key) != 0)
     {
-        const auto &val = map.at(key);
+        const auto & val = map.at(key);
         if (val.is_of_type(Glib::Variant<K>::variant_type()))
+        {
             return Glib::VariantBase::cast_dynamic<Glib::Variant<K>>(map.at(key)).get();
+        }
     }
+
     return K();
 }
 
-Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase &variant)
+Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase & variant)
 {
     if (!variant.is_of_type(Glib::VariantType("iiibiiay")))
+    {
         throw std::invalid_argument("Cannot create pixbuf from variant.");
+    }
 
     auto iter = Glib::VariantIter(variant);
     gint32 width;
@@ -48,25 +53,36 @@ Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase &variant)
     // for integer positive A, floor((A + 7) / 8) = ceil(A / 8)
     ulong pixel_size = (channels * bits_per_sample + 7) / 8;
     if (data_var.get_size() != ((ulong)height - 1) * (ulong)rowstride + (ulong)width * pixel_size)
-        throw std::invalid_argument("Cannot create pixbuf from variant: expected data size doesn't equal actual one.");
-    const auto *data = (guint8 *)(g_memdup2(data_var.get_data(), data_var.get_size()));
+    {
+        throw std::invalid_argument(
+            "Cannot create pixbuf from variant: expected data size doesn't equal actual one.");
+    }
+
+    const auto *data = (guint8*)(g_memdup2(data_var.get_data(), data_var.get_size()));
     return Gdk::Pixbuf::create_from_data(data, Gdk::COLORSPACE_RGB, has_alpha, bits_per_sample, width, height,
-                                         rowstride);
+        rowstride);
 }
 
-Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> &map)
+Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> & map)
 {
     action_icons = getHint<bool>(map, "actions-icons");
-    category = getHint<Glib::ustring>(map, "category");
+    category     = getHint<Glib::ustring>(map, "category");
     desktop_entry = getHint<Glib::ustring>(map, "desktop-entry");
     if (map.count("image-data") != 0)
+    {
         image_data = pixbufFromVariant(map.at("image-data"));
-    else if (map.count("icon_data") != 0)
+    } else if (map.count("icon_data") != 0)
+    {
         image_data = pixbufFromVariant(map.at("image_data"));
+    }
+
     image_path = getHint<Glib::ustring>(map, "image-path");
     if (image_path.empty())
+    {
         image_path = getHint<Glib::ustring>(map, "image_path");
-    resident = getHint<bool>(map, "resident");
+    }
+
+    resident   = getHint<bool>(map, "resident");
     sound_file = getHint<Glib::ustring>(map, "sound-file");
     sound_name = getHint<Glib::ustring>(map, "sound-name");
     suppress_sound = getHint<bool>(map, "suppress-sound");
@@ -76,11 +92,13 @@ Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> &map)
     urgency = getHint<guint8>(map, "urgency");
 }
 
-Notification::Notification(const Glib::VariantContainerBase &parameters, const Glib::ustring &sender)
+Notification::Notification(const Glib::VariantContainerBase & parameters, const Glib::ustring & sender)
 {
     static const auto REQUIRED_TYPE = Glib::VariantType("(susssasa{sv}i)");
     if (!parameters.is_of_type(REQUIRED_TYPE))
+    {
         throw std::invalid_argument("NotificationInfo: parameters type must be (susssasa{sv}i)");
+    }
 
     Glib::VariantBase params_var;
     parameters.get_normal_form(params_var);
@@ -88,7 +106,10 @@ Notification::Notification(const Glib::VariantContainerBase &parameters, const G
     iterTo(iter, app_name);
     iterTo(iter, id);
     if (id == 0)
+    {
         id = ++Notification::notifications_count;
+    }
+
     iterTo(iter, app_icon);
     iterTo(iter, summary);
     iterTo(iter, body);
@@ -99,5 +120,5 @@ Notification::Notification(const Glib::VariantContainerBase &parameters, const G
     hints = Hints(hints_map);
 
     additional_info.recv_time = std::time(nullptr);
-    additional_info.sender = sender;
+    additional_info.sender    = sender;
 }

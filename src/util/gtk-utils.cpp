@@ -6,22 +6,18 @@
 
 Glib::RefPtr<Gdk::Pixbuf> load_icon_pixbuf_safe(std::string icon_path, int size)
 {
-    try
-    {
+    try {
         auto pb = Gdk::Pixbuf::create_from_file(icon_path, size, size);
         return pb;
-    }
-    catch(Glib::FileError&)
+    } catch (Glib::FileError&)
     {
         std::cerr << "Error loading file: " << icon_path << std::endl;
         return {};
-    }
-    catch(Gdk::PixbufError&)
+    } catch (Gdk::PixbufError&)
     {
         std::cerr << "Pixbuf error: " << icon_path << std::endl;
         return {};
-    }
-    catch(...)
+    } catch (...)
     {
         std::cerr << "Failed to load: " << icon_path << std::endl;
         return {};
@@ -30,18 +26,15 @@ Glib::RefPtr<Gdk::Pixbuf> load_icon_pixbuf_safe(std::string icon_path, int size)
 
 Glib::RefPtr<Gtk::CssProvider> load_css_from_path(std::string path)
 {
-    try
-    {
+    try {
         auto css = Gtk::CssProvider::create();
         css->load_from_path(path);
         return css;
-    }
-    catch(Glib::Error& err)
+    } catch (Glib::Error& err)
     {
         std::cerr << "Failed to load CSS: " << err.what() << std::endl;
         return {};
-    }
-    catch(...)
+    } catch (...)
     {
         std::cerr << "Failed to load CSS at: " << path << std::endl;
         return {};
@@ -54,8 +47,8 @@ void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff)
     int stride   = pbuff->get_rowstride();
 
     auto data = pbuff->get_pixels();
-    int w = pbuff->get_width();
-    int h = pbuff->get_height();
+    int w     = pbuff->get_width();
+    int h     = pbuff->get_height();
 
     for (int i = 0; i < w; i++)
     {
@@ -69,7 +62,7 @@ void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff)
     }
 }
 
-void set_image_pixbuf(Gtk::Image &image, Glib::RefPtr<Gdk::Pixbuf> pixbuf, int scale)
+void set_image_pixbuf(Gtk::Image & image, Glib::RefPtr<Gdk::Pixbuf> pixbuf, int scale)
 {
     auto pbuff = pixbuf->gobj();
     auto cairo_surface = gdk_cairo_surface_create_from_pixbuf(pbuff, scale, NULL);
@@ -79,11 +72,11 @@ void set_image_pixbuf(Gtk::Image &image, Glib::RefPtr<Gdk::Pixbuf> pixbuf, int s
 }
 
 void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
-                    const WfIconLoadOptions& options,
-                    const Glib::RefPtr<Gtk::IconTheme>& icon_theme)
+    const WfIconLoadOptions& options,
+    const Glib::RefPtr<Gtk::IconTheme>& icon_theme)
 {
     int scale = ((options.user_scale == -1) ?
-                 image.get_scale_factor() : options.user_scale);
+        image.get_scale_factor() : options.user_scale);
     int scaled_size = size * scale;
 
     if (!icon_theme->lookup_icon(icon_name, scaled_size))
@@ -96,7 +89,9 @@ void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
         ->scale_simple(scaled_size, scaled_size, Gdk::INTERP_BILINEAR);
 
     if (options.invert)
+    {
         invert_pixbuf(pbuff);
+    }
 
     set_image_pixbuf(image, pbuff, scale);
 }

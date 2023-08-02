@@ -7,8 +7,7 @@
 #include "panel.hpp"
 
 WayfireWindowListBox::WayfireWindowListBox() : Gtk::HBox()
-{
-}
+{}
 
 void WayfireWindowListBox::set_top_widget(Gtk::Widget *top)
 {
@@ -28,9 +27,14 @@ void WayfireWindowListBox::set_top_x(int x)
 {
     /* Make sure that the widget doesn't go outside of the box */
     if (this->top_widget)
+    {
         x = std::min(x, get_allocated_width() - top_widget->get_allocated_width());
+    }
+
     if (this->top_widget)
+    {
         x = std::max(x, 0);
+    }
 
     this->top_x = x;
 
@@ -43,7 +47,7 @@ void WayfireWindowListBox::set_top_x(int x)
 
 static void for_each_child_callback(GtkWidget *widget, gpointer data)
 {
-    auto v = (std::vector<GtkWidget*>*) data;
+    auto v = (std::vector<GtkWidget*>*)data;
     v->push_back(widget);
 }
 
@@ -54,7 +58,9 @@ std::vector<Gtk::Widget*> WayfireWindowListBox::get_unsorted_widgets()
 
     std::vector<Gtk::Widget*> result;
     for (auto& child : children)
+    {
         result.push_back(Glib::wrap(child));
+    }
 
     return result;
 }
@@ -72,7 +78,9 @@ void WayfireWindowListBox::forall_vfunc(gboolean value, GtkCallback callback, gp
     }
 
     for (auto& child : children)
+    {
         callback(child, callback_data);
+    }
 }
 
 void WayfireWindowListBox::on_size_allocate(Gtk::Allocation& alloc)
@@ -94,13 +102,13 @@ int WayfireWindowListBox::get_absolute_position(int x, Gtk::Widget& ref)
     {
         auto allocation = w->get_allocation();
         x += allocation.get_x();
-        w = w->get_parent();
+        w  = w->get_parent();
     }
 
     return x;
 }
 
-Gtk::Widget* WayfireWindowListBox::get_widget_at(int x)
+Gtk::Widget*WayfireWindowListBox::get_widget_at(int x)
 {
     Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
 
@@ -110,7 +118,9 @@ Gtk::Widget* WayfireWindowListBox::get_widget_at(int x)
     for (auto& child : children)
     {
         if (child->get_allocation().intersects(given_point))
+        {
             return child;
+        }
     }
 
     return nullptr;
@@ -121,13 +131,12 @@ Gtk::Widget* WayfireWindowListBox::get_widget_at(int x)
 static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager,
     zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
-    WayfireWindowList *window_list = (WayfireWindowList *) data;
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
     window_list->handle_new_toplevel(toplevel);
 }
 
 static void handle_manager_finished(void *data, zwlr_foreign_toplevel_manager_v1 *manager)
-{
-}
+{}
 
 zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
     .toplevel = handle_manager_toplevel,
@@ -135,20 +144,22 @@ zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
 };
 
 static void registry_add_object(void *data, wl_registry *registry, uint32_t name,
-        const char *interface, uint32_t version)
+    const char *interface, uint32_t version)
 {
-    WayfireWindowList *window_list = (WayfireWindowList *) data;
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
     if (strcmp(interface, zwlr_foreign_toplevel_manager_v1_interface.name) == 0)
     {
         auto zwlr_toplevel_manager = (zwlr_foreign_toplevel_manager_v1*)
             wl_registry_bind(registry, name,
-                &zwlr_foreign_toplevel_manager_v1_interface,
-                std::min(version, 3u));
+            &zwlr_foreign_toplevel_manager_v1_interface,
+            std::min(version, 3u));
 
         window_list->handle_toplevel_manager(zwlr_toplevel_manager);
     }
 }
-static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name) { }
+
+static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
+{}
 
 static struct wl_registry_listener registry_listener =
 {
@@ -159,7 +170,7 @@ static struct wl_registry_listener registry_listener =
 void WayfireWindowList::init(Gtk::HBox *container)
 {
     auto gdk_display = gdk_display_get_default();
-    auto display = gdk_wayland_display_get_wl_display(gdk_display);
+    auto display     = gdk_wayland_display_get_wl_display(gdk_display);
 
     wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
@@ -194,15 +205,17 @@ void WayfireWindowList::set_button_width(int width)
     for (auto& toplevel : toplevels)
     {
         if (toplevel.second)
+        {
             toplevel.second->set_width(width);
+        }
     }
 }
 
 int WayfireWindowList::get_default_button_width()
 {
     return DEFAULT_SIZE_PC *
-        WayfirePanelApp::get().panel_for_wl_output(output->wo)->get_window()
-        .get_allocated_width();
+           WayfirePanelApp::get().panel_for_wl_output(output->wo)->get_window()
+               .get_allocated_width();
 }
 
 int WayfireWindowList::get_target_button_width()
@@ -229,8 +242,10 @@ void WayfireWindowList::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
 
     /* We have changed the size/number of toplevels. On top of that, our list
      * is longer that the max size, so we need to re-layout the buttons */
-    if (preferred_width > allocated_width && toplevels.size() > 0)
+    if ((preferred_width > allocated_width) && (toplevels.size() > 0))
+    {
         set_button_width(get_target_button_width());
+    }
 }
 
 void WayfireWindowList::add_output(WayfireOutput *output)
@@ -245,7 +260,7 @@ void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1
 
 void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
 {
-    toplevels[handle] = std::unique_ptr<WayfireToplevel> (new WayfireToplevel(this, handle));
+    toplevels[handle] = std::unique_ptr<WayfireToplevel>(new WayfireToplevel(this, handle));
     /* The size will be updated in the next on_draw() if needed */
     toplevels[handle]->set_width(get_default_button_width());
 }
@@ -256,7 +271,9 @@ void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *
 
     /* No size adjustments necessary in this case */
     if (toplevels.size() == 0)
+    {
         return;
+    }
 
     /* Recalculate button size */
     set_button_width(get_target_button_width());

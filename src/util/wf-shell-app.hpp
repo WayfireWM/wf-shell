@@ -49,10 +49,12 @@ class WayfireShellApp
     /* The following functions can be overridden in the shell implementation to
      * handle the events */
     virtual void on_activate();
-    virtual bool parse_cfgfile(const Glib::ustring &option_name,
-        const Glib::ustring &value, bool has_value);
-    virtual void handle_new_output(WayfireOutput *output) {}
-    virtual void handle_output_removed(WayfireOutput *output) {}
+    virtual bool parse_cfgfile(const Glib::ustring & option_name,
+        const Glib::ustring & value, bool has_value);
+    virtual void handle_new_output(WayfireOutput *output)
+    {}
+    virtual void handle_output_removed(WayfireOutput *output)
+    {}
 
   public:
     int inotify_fd;
@@ -65,7 +67,8 @@ class WayfireShellApp
     virtual std::string get_config_file();
     virtual void run();
 
-    virtual void on_config_reload() {}
+    virtual void on_config_reload()
+    {}
 
     /**
      * WayfireShellApp is a singleton class.

@@ -17,9 +17,15 @@
 static std::string get_device_type_description(uint32_t type)
 {
     if (type == 2)
+    {
         return "Battery ";
+    }
+
     if (type == 3)
+    {
         return "UPS ";
+    }
+
     return "";
 }
 
@@ -32,26 +38,36 @@ void WayfireBatteryInfo::on_properties_changed(
     for (auto& prop : properties)
     {
         if (prop.first == ICON)
+        {
             invalid_icon = true;
+        }
 
-        if (prop.first == TYPE || prop.first == STATE || prop.first == PERCENTAGE ||
-            prop.first == TIMETOFULL || prop.first == TIMETOEMPTY)
+        if ((prop.first == TYPE) || (prop.first == STATE) || (prop.first == PERCENTAGE) ||
+            (prop.first == TIMETOFULL) || (prop.first == TIMETOEMPTY))
         {
             invalid_details = true;
         }
 
         if (prop.first == SHOULD_DISPLAY)
+        {
             invalid_state = true;
+        }
     }
 
     if (invalid_icon)
+    {
         update_icon();
+    }
 
     if (invalid_details)
+    {
         update_details();
+    }
 
     if (invalid_state)
+    {
         update_state();
+    }
 }
 
 void WayfireBatteryInfo::update_icon()
@@ -60,18 +76,18 @@ void WayfireBatteryInfo::update_icon()
     display_device->get_cached_property(icon_name, ICON);
 
     WfIconLoadOptions options;
-    options.invert = invert_opt;
+    options.invert     = invert_opt;
     options.user_scale = button.get_scale_factor();
     set_image_icon(icon, icon_name.get(), size_opt, options);
 }
 
 static std::string state_descriptions[] = {
-    "Unknown",           // 0
-    "Charging",          // 1
-    "Discharging",       // 2
-    "Empty",             // 3
-    "Fully charged",     // 4
-    "Pending charge",    // 5
+    "Unknown", // 0
+    "Charging", // 1
+    "Discharging", // 2
+    "Empty", // 3
+    "Fully charged", // 4
+    "Pending charge", // 5
     "Pending discharge", // 6
 };
 
@@ -88,7 +104,7 @@ static bool is_discharging(uint32_t state)
 static std::string format_digit(int digit)
 {
     return digit <= 9 ? ("0" + std::to_string(digit)) :
-        std::to_string(digit);
+           std::to_string(digit);
 }
 
 static std::string uint_to_time(int64_t time)
@@ -101,9 +117,11 @@ static std::string uint_to_time(int64_t time)
 
 void WayfireBatteryInfo::update_font()
 {
-    if ((std::string)font_opt == "default") {
+    if ((std::string)font_opt == "default")
+    {
         label.unset_font();
-    } else {
+    } else
+    {
         label.override_font(Pango::FontDescription((std::string)font_opt));
     }
 }
@@ -131,8 +149,7 @@ void WayfireBatteryInfo::update_details()
     if (is_charging(state))
     {
         description += ", " + uint_to_time(time_to_full.get()) + " until full";
-    }
-    else if (is_discharging(state))
+    } else if (is_discharging(state))
     {
         description += ", " + uint_to_time(time_to_empty.get()) + " remaining";
     }
@@ -143,16 +160,15 @@ void WayfireBatteryInfo::update_details()
     if (status_opt == BATTERY_STATUS_PERCENT)
     {
         label.set_text(percentage_string);
-    }
-    else if (status_opt == BATTERY_STATUS_FULL)
+    } else if (status_opt == BATTERY_STATUS_FULL)
     {
         label.set_text(description);
     }
+
     if (status_opt == BATTERY_STATUS_ICON)
     {
         label.hide();
-    }
-    else
+    } else
     {
         label.show();
     }
@@ -161,7 +177,7 @@ void WayfireBatteryInfo::update_details()
 void WayfireBatteryInfo::update_state()
 {
     std::cout << "unimplemented reached, in battery.cpp: "
-        "\n\tWayfireBatteryInfo::update_state()" << std::endl;
+                 "\n\tWayfireBatteryInfo::update_state()" << std::endl;
 }
 
 bool WayfireBatteryInfo::setup_dbus()
@@ -175,8 +191,8 @@ bool WayfireBatteryInfo::setup_dbus()
     }
 
     upower_proxy = Gio::DBus::Proxy::create_sync(connection, UPOWER_NAME,
-                                                 "/org/freedesktop/UPower",
-                                                 "org.freedesktop.UPower");
+        "/org/freedesktop/UPower",
+        "org.freedesktop.UPower");
     if (!upower_proxy)
     {
         std::cerr << "Failed to connect to UPower" << std::endl;
@@ -184,11 +200,13 @@ bool WayfireBatteryInfo::setup_dbus()
     }
 
     display_device = Gio::DBus::Proxy::create_sync(connection,
-                                                   UPOWER_NAME,
-                                                   DISPLAY_DEVICE,
-                                                   "org.freedesktop.UPower.Device");
+        UPOWER_NAME,
+        DISPLAY_DEVICE,
+        "org.freedesktop.UPower.Device");
     if (!display_device)
+    {
         return false;
+    }
 
     Glib::Variant<bool> present;
     display_device->get_cached_property(present, SHOULD_DISPLAY);
@@ -209,7 +227,9 @@ static const std::string default_font = "default";
 void WayfireBatteryInfo::init(Gtk::HBox *container)
 {
     if (!setup_dbus())
+    {
         return;
+    }
 
     button_box.add(icon);
     button.get_style_context()->add_class("flat");

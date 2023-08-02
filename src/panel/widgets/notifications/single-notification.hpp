@@ -13,10 +13,10 @@
 
 class WfSingleNotification : public Gtk::Revealer
 {
-    public:
+  public:
     static const int WIDTH = 300;
 
-    private:
+  private:
     Gtk::EventBox default_action_ev_box;
 
     /// The revealer's child, containing all other widgets
@@ -37,8 +37,8 @@ class WfSingleNotification : public Gtk::Revealer
 
     Gtk::Box actions;
 
-    public:
-    explicit WfSingleNotification(const Notification &notification);
+  public:
+    explicit WfSingleNotification(const Notification & notification);
     ~WfSingleNotification() override;
 };
 

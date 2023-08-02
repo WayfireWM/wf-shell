@@ -1,0 +1,36 @@
+name: CI
+
+on: [push, pull_request]
+jobs:
+  test_musl_gcc:
+    name: "Test with with GCC/musl/libstdc++/BFD on Alpine Linux"
+    runs-on: ubuntu-latest
+    container: alpine:edge
+    steps:
+    - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
+    - run: apk --no-cache add git g++ binutils pkgconf meson ninja musl-dev gtk+3.0-dev gtkmm3-dev wayland-protocols wayfire-dev gtk-layer-shell pulseaudio-dev libdbusmenu-glib
+    - name: wf-shell
+      uses: actions/checkout@v2
+      with:
+        repository: WayfireWM/wf-shell
+        path: wf-shell
+    - run: cd wf-shell && meson build --prefix=/usr && ninja -v -C build && ninja -v -C build install && cd ..
+  test_code_style:
+    name: "Check code style with uncrustify"
+    runs-on: ubuntu-latest
+    steps:
+    - run: sudo apt-get update
+    - run: sudo apt-get install -y git cmake gcc make
+    - name: Build Uncrustify
+      uses: actions/checkout@v2
+      with:
+        repository: ammen99/uncrustify
+        path: uncrustify
+    - run: cd uncrustify && mkdir build && cd build && cmake .. && make && cd ../..
+    - name: Run Uncrustify Check
+      uses: actions/checkout@v2
+      with:
+        path: wf-shell
+    - run: cd wf-shell && wget https://raw.githubusercontent.com/WayfireWM/wayfire/master/uncrustify.ini
+    - run: cd wf-shell && git ls-files | grep "hpp$\|cpp$" | xargs ../uncrustify/build/uncrustify -c uncrustify.ini --no-backup --replace
+    - run: cd wf-shell && git diff --exit-code

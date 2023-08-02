@@ -34,11 +34,11 @@ class WayfireAutohidingWindow : public Gtk::Window
     WayfireAutohidingWindow(WayfireOutput *output, const std::string& section);
     WayfireAutohidingWindow(WayfireAutohidingWindow&&) = delete;
     WayfireAutohidingWindow(const WayfireAutohidingWindow&) = delete;
-    WayfireAutohidingWindow& operator=(const WayfireAutohidingWindow&) = delete;
-    WayfireAutohidingWindow& operator=(WayfireAutohidingWindow&&) = delete;
+    WayfireAutohidingWindow& operator =(const WayfireAutohidingWindow&) = delete;
+    WayfireAutohidingWindow& operator =(WayfireAutohidingWindow&&) = delete;
 
     ~WayfireAutohidingWindow();
-    wl_surface* get_wl_surface() const;
+    wl_surface *get_wl_surface() const;
 
     /* Add one more autohide request */
     void increase_autohide();
@@ -104,8 +104,8 @@ class WayfireAutohidingWindow : public Gtk::Window
     void m_show_uncertain();
 
     int32_t last_hotspot_height = -1;
-    bool input_inside_panel = false;
-    zwf_hotspot_v2 *edge_hotspot = NULL;
+    bool input_inside_panel     = false;
+    zwf_hotspot_v2 *edge_hotspot  = NULL;
     zwf_hotspot_v2 *panel_hotspot = NULL;
     std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> edge_callbacks;
     std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> panel_callbacks;

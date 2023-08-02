@@ -10,9 +10,9 @@
  */
 class Watcher
 {
-    public:
-    static constexpr auto SNW_PATH = "/StatusNotifierWatcher";
-    static constexpr auto SNW_NAME = "org.kde.StatusNotifierWatcher";
+  public:
+    static constexpr auto SNW_PATH  = "/StatusNotifierWatcher";
+    static constexpr auto SNW_NAME  = "org.kde.StatusNotifierWatcher";
     static constexpr auto SNW_IFACE = "org.kde.StatusNotifierWatcher";
 
     /*!
@@ -32,7 +32,7 @@ class Watcher
 
     ~Watcher();
 
-    private:
+  private:
     inline static std::weak_ptr<Watcher> instance;
 
     guint dbus_name_id;
@@ -44,34 +44,36 @@ class Watcher
 
     const Gio::DBus::InterfaceVTable interface_table =
         Gio::DBus::InterfaceVTable(sigc::mem_fun(*this, &Watcher::on_interface_method_call),
-                                   sigc::mem_fun(*this, &Watcher::on_interface_get_property));
+            sigc::mem_fun(*this, &Watcher::on_interface_get_property));
 
     Watcher();
 
-    void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name);
+    void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
 
-    void on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &sender,
-                                  const Glib::ustring &object_path, const Glib::ustring &interface_name,
-                                  const Glib::ustring &method_name, const Glib::VariantContainerBase &parameters,
-                                  const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation);
+    void on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> & connection,
+        const Glib::ustring & sender,
+        const Glib::ustring & object_path, const Glib::ustring & interface_name,
+        const Glib::ustring & method_name, const Glib::VariantContainerBase & parameters,
+        const Glib::RefPtr<Gio::DBus::MethodInvocation> & invocation);
 
-    void on_interface_get_property(Glib::VariantBase &property, const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                                   const Glib::ustring &sender, const Glib::ustring &object_path,
-                                   const Glib::ustring &interface_name, const Glib::ustring &property_name);
+    void on_interface_get_property(Glib::VariantBase & property,
+        const Glib::RefPtr<Gio::DBus::Connection> & connection,
+        const Glib::ustring & sender, const Glib::ustring & object_path,
+        const Glib::ustring & interface_name, const Glib::ustring & property_name);
 
-    void register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                                       const Glib::ustring &sender, const Glib::ustring &path);
-    void register_status_notifier_host(const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                                       const Glib::ustring &service);
+    void register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connection> & connection,
+        const Glib::ustring & sender, const Glib::ustring & path);
+    void register_status_notifier_host(const Glib::RefPtr<Gio::DBus::Connection> & connection,
+        const Glib::ustring & service);
 
     Glib::Variant<std::vector<Glib::ustring>> get_registred_items() const;
 
-    template <typename... Args>
-    void emit_signal(const Glib::ustring &name, Args &&...args)
+    template<typename... Args>
+    void emit_signal(const Glib::ustring & name, Args &&... args)
     {
         watcher_connection->emit_signal(
             SNW_PATH, SNW_IFACE, name, {},
-            Glib::Variant<std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...>>::create(
+            Glib::Variant<std::tuple<std::remove_cv_t<std::remove_reference_t<Args>> ...>>::create(
                 std::tuple(std::forward<Args>(args)...)));
     }
 

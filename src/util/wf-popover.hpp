@@ -12,7 +12,7 @@
 class WayfireMenuButton : public Gtk::MenuButton
 {
     bool interactive = true;
-    bool has_focus = false;
+    bool has_focus   = false;
     WfOption<std::string> panel_position;
 
     /* Make the menu button active on its AutohideWindow */
@@ -26,7 +26,8 @@ class WayfireMenuButton : public Gtk::MenuButton
     Gtk::Popover m_popover;
 
     WayfireMenuButton(const std::string& config_section);
-    virtual ~WayfireMenuButton() {}
+    virtual ~WayfireMenuButton()
+    {}
 
     /**
      * Set whether the popup should grab input focus when opened
