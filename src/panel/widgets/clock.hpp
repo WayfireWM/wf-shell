@@ -19,7 +19,7 @@ class WayfireClock : public WayfireWidget
     void set_font();
     void on_calendar_shown();
 
-    public:
+  public:
     void init(Gtk::HBox *container) override;
     bool update_label();
     ~WayfireClock();

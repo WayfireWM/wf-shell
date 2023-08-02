@@ -37,7 +37,8 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
     to_image.y = offset_y / this->get_scale_factor();
     fade.animate(from_image.source ? 0.0 : 1.0, 1.0);
 
-    Glib::signal_idle().connect_once([=] () {
+    Glib::signal_idle().connect_once([=] ()
+    {
         this->queue_draw();
     });
 }
@@ -45,15 +46,21 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
 bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
     if (!to_image.source)
+    {
         return false;
+    }
 
     if (fade.running())
+    {
         queue_draw();
+    }
 
     cr->set_source(to_image.source, to_image.x, to_image.y);
     cr->paint_with_alpha(fade);
     if (!from_image.source)
+    {
         return false;
+    }
 
     cr->set_source(from_image.source, from_image.x, from_image.y);
     cr->paint_with_alpha(1.0 - fade);
@@ -65,18 +72,18 @@ BackgroundDrawingArea::BackgroundDrawingArea()
     fade.animate(0, 0);
 }
 
-Glib::RefPtr<Gdk::Pixbuf>
-WayfireBackground::create_from_file_safe(std::string path)
+Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string path)
 {
     Glib::RefPtr<Gdk::Pixbuf> pbuf;
-    int width = window.get_allocated_width() * scale;
+    int width  = window.get_allocated_width() * scale;
     int height = window.get_allocated_height() * scale;
 
     try {
         pbuf =
             Gdk::Pixbuf::create_from_file(path, width, height,
                 background_preserve_aspect);
-    } catch (...) {
+    } catch (...)
+    {
         return Glib::RefPtr<Gdk::Pixbuf>();
     }
 
@@ -85,8 +92,7 @@ WayfireBackground::create_from_file_safe(std::string path)
         bool eq_width = (width == pbuf->get_width());
         offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
         offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
-    }
-    else
+    } else
     {
         offset_x = offset_y = 0.0;
     }
@@ -100,7 +106,9 @@ bool WayfireBackground::change_background(int timer)
     std::string path;
 
     if (!load_next_background(pbuf, path))
+    {
         return false;
+    }
 
     std::cout << "Loaded " << path << std::endl;
     drawing_area.show_image(pbuf, offset_x, offset_y);
@@ -114,11 +122,15 @@ bool WayfireBackground::load_images_from_dir(std::string path)
     /* Expand path */
     wordexp(path.c_str(), &exp, 0);
     if (!exp.we_wordv)
+    {
         return false;
+    }
 
     auto dir = opendir(exp.we_wordv[0]);
     if (!dir)
+    {
         return false;
+    }
 
     /* Iterate over all files in the directory */
     dirent *file;
@@ -126,17 +138,21 @@ bool WayfireBackground::load_images_from_dir(std::string path)
     {
         /* Skip hidden files and folders */
         if (file->d_name[0] == '.')
+        {
             continue;
+        }
 
         auto fullpath = std::string(exp.we_wordv[0]) + "/" + file->d_name;
 
         struct stat next;
         if (stat(fullpath.c_str(), &next) == 0)
         {
-            if (S_ISDIR(next.st_mode)) {
+            if (S_ISDIR(next.st_mode))
+            {
                 /* Recursive search */
                 load_images_from_dir(fullpath);
-            } else {
+            } else
+            {
                 images.push_back(fullpath);
             }
         }
@@ -152,15 +168,15 @@ bool WayfireBackground::load_images_from_dir(std::string path)
     return true;
 }
 
-bool WayfireBackground::load_next_background(Glib::RefPtr<Gdk::Pixbuf> &pbuf,
-    std::string &path)
+bool WayfireBackground::load_next_background(Glib::RefPtr<Gdk::Pixbuf> & pbuf,
+    std::string & path)
 {
     while (!pbuf)
     {
         if (!images.size())
         {
-            std::cerr << "Failed to load background images from "
-                << (std::string)background_image << std::endl;
+            std::cerr << "Failed to load background images from " <<
+                    (std::string)background_image << std::endl;
             window.remove();
             return false;
         }
@@ -171,7 +187,9 @@ bool WayfireBackground::load_next_background(Glib::RefPtr<Gdk::Pixbuf> &pbuf,
         pbuf = create_from_file_safe(path);
 
         if (!pbuf)
+        {
             images.erase(images.begin() + current_background);
+        }
     }
 
     return true;
@@ -196,15 +214,18 @@ void WayfireBackground::set_background()
         if (load_images_from_dir(path) && images.size())
         {
             if (!load_next_background(pbuf, path))
+            {
                 throw std::exception();
+            }
 
             std::cout << "Loaded " << path << std::endl;
-        }
-        else
+        } else
         {
             pbuf = create_from_file_safe(path);
             if (!pbuf)
+            {
                 throw std::exception();
+            }
         }
     } catch (...)
     {
@@ -262,7 +283,7 @@ void WayfireBackground::setup_window()
 
 WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output)
 {
-    this->app = app;
+    this->app    = app;
     this->output = output;
 
     if (output->output)
@@ -275,32 +296,32 @@ WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output
 
     this->window.signal_size_allocate().connect_notify(
         [this, width = 0, height = 0] (Gtk::Allocation& alloc) mutable
+    {
+        if ((alloc.get_width() != width) || (alloc.get_height() != height))
         {
-            if (alloc.get_width() != width || alloc.get_height() != height)
-            {
-                this->set_background();
-                width = alloc.get_width();
-                height = alloc.get_height();
-            }
-        });
+            this->set_background();
+            width  = alloc.get_width();
+            height = alloc.get_height();
+        }
+    });
 }
 
 class WayfireBackgroundApp : public WayfireShellApp
 {
-    std::map<WayfireOutput*, std::unique_ptr<WayfireBackground> > backgrounds;
+    std::map<WayfireOutput*, std::unique_ptr<WayfireBackground>> backgrounds;
 
   public:
     using WayfireShellApp::WayfireShellApp;
     static void create(int argc, char **argv)
     {
         WayfireShellApp::instance =
-            std::make_unique<WayfireBackgroundApp> (argc, argv);
+            std::make_unique<WayfireBackgroundApp>(argc, argv);
         instance->run();
     }
 
     void handle_new_output(WayfireOutput *output) override
     {
-        backgrounds[output] = std::unique_ptr<WayfireBackground> (
+        backgrounds[output] = std::unique_ptr<WayfireBackground>(
             new WayfireBackground(this, output));
     }
 

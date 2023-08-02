@@ -17,7 +17,7 @@ std::string WayfireShellApp::get_config_file()
 
     std::string config_dir;
 
-    char* config_home = getenv("XDG_CONFIG_HOME");
+    char *config_home = getenv("XDG_CONFIG_HOME");
     if (config_home == NULL)
     {
         config_dir = std::string(getenv("HOME")) + "/.config";
@@ -29,8 +29,8 @@ std::string WayfireShellApp::get_config_file()
     return config_dir + "/wf-shell.ini";
 }
 
-bool WayfireShellApp::parse_cfgfile(const Glib::ustring &option_name,
-    const Glib::ustring &value, bool has_value)
+bool WayfireShellApp::parse_cfgfile(const Glib::ustring & option_name,
+    const Glib::ustring & value, bool has_value)
 {
     std::cout << "Using custom config file " << value << std::endl;
     cmdline_config = value;
@@ -62,15 +62,17 @@ static bool handle_inotify_event(WayfireShellApp *app, Glib::IOCondition cond)
 static void registry_add_object(void *data, struct wl_registry *registry,
     uint32_t name, const char *interface, uint32_t version)
 {
-    auto app = static_cast<WayfireShellApp*> (data);
+    auto app = static_cast<WayfireShellApp*>(data);
     if (strcmp(interface, zwf_shell_manager_v2_interface.name) == 0)
     {
-        app->wf_shell_manager = (zwf_shell_manager_v2*) wl_registry_bind(registry, name,
+        app->wf_shell_manager = (zwf_shell_manager_v2*)wl_registry_bind(registry, name,
             &zwf_shell_manager_v2_interface, std::min(version, 1u));
     }
 }
+
 static void registry_remove_object(void *data, struct wl_registry *registry,
-    uint32_t name) {}
+    uint32_t name)
+{}
 
 static struct wl_registry_listener registry_listener =
 {
@@ -84,11 +86,11 @@ void WayfireShellApp::on_activate()
 
     // load wf-shell if available
     auto gdk_display = gdk_display_get_default();
-    auto wl_display = gdk_wayland_display_get_wl_display(gdk_display);
+    auto wl_display  = gdk_wayland_display_get_wl_display(gdk_display);
     if (!wl_display)
     {
-        std::cerr << "Failed to connect to wayland display!"
-            << " Are you sure you are running a wayland compositor?" << std::endl;
+        std::cerr << "Failed to connect to wayland display!" <<
+            " Are you sure you are running a wayland compositor?" << std::endl;
         std::exit(-1);
     }
 
@@ -120,13 +122,15 @@ void WayfireShellApp::on_activate()
     // initial monitors
     int num_monitors = display->get_n_monitors();
     for (int i = 0; i < num_monitors; i++)
+    {
         add_output(display->get_monitor(i));
+    }
 }
 
 void WayfireShellApp::add_output(GMonitor monitor)
 {
     monitors.push_back(
-        std::make_unique<WayfireOutput> (monitor, this->wf_shell_manager));
+        std::make_unique<WayfireOutput>(monitor, this->wf_shell_manager));
     handle_new_output(monitors.back().get());
 }
 
@@ -153,12 +157,14 @@ WayfireShellApp::WayfireShellApp(int argc, char **argv)
         "config", 'c', "config file to use", "file");
 
     // Activate app after parsing command line
-    app->signal_command_line().connect_notify([=] (auto&) {
+    app->signal_command_line().connect_notify([=] (auto&)
+    {
         app->activate();
     });
 }
 
-WayfireShellApp::~WayfireShellApp() {}
+WayfireShellApp::~WayfireShellApp()
+{}
 
 std::unique_ptr<WayfireShellApp> WayfireShellApp::instance;
 WayfireShellApp& WayfireShellApp::get()
@@ -191,5 +197,7 @@ WayfireOutput::WayfireOutput(const GMonitor& monitor,
 WayfireOutput::~WayfireOutput()
 {
     if (this->output)
+    {
         zwf_output_v2_destroy(this->output);
+    }
 }

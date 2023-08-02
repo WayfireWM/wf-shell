@@ -49,7 +49,7 @@ class WayfireBatteryInfo : public WayfireWidget
         const Gio::DBus::Proxy::MapChangedProperties& properties,
         const std::vector<Glib::ustring>& invalidated);
 
-    public:
+  public:
     virtual void init(Gtk::HBox *container);
     virtual ~WayfireBatteryInfo() = default;
 };

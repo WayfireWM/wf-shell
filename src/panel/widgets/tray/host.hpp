@@ -20,10 +20,10 @@ class StatusNotifierHost
 
     WayfireStatusNotifier *tray;
 
-    void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name);
-    void register_host(const Glib::RefPtr<Gio::AsyncResult> &result);
+    void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
+    void register_host(const Glib::RefPtr<Gio::AsyncResult> & result);
 
-    public:
+  public:
     explicit StatusNotifierHost(WayfireStatusNotifier *tray);
     ~StatusNotifierHost();
 };

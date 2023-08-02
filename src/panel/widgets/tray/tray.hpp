@@ -8,17 +8,17 @@
 
 class WayfireStatusNotifier : public WayfireWidget
 {
-    private:
+  private:
     StatusNotifierHost host = StatusNotifierHost(this);
 
     Gtk::HBox icons_hbox;
     std::map<Glib::ustring, StatusNotifierItem> items;
 
-    public:
+  public:
     void init(Gtk::HBox *container) override;
 
-    void add_item(const Glib::ustring &service);
-    void remove_item(const Glib::ustring &service);
+    void add_item(const Glib::ustring & service);
+    void remove_item(const Glib::ustring & service);
 };
 
 #endif

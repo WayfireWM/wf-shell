@@ -63,7 +63,7 @@ class WayfireBackground
     bool background_transition_frame(int timer);
     bool change_background(int timer);
     bool load_images_from_dir(std::string path);
-    bool load_next_background(Glib::RefPtr<Gdk::Pixbuf> &pbuf, std::string &path);
+    bool load_next_background(Glib::RefPtr<Gdk::Pixbuf> & pbuf, std::string & path);
     void reset_background();
     void set_background();
     void reset_cycle_timeout();

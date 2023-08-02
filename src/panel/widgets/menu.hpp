@@ -17,15 +17,15 @@ using AppInfo = Glib::RefPtr<Gio::AppInfo>;
 
 class WfMenuMenuItem : public Gtk::HBox
 {
-    public:
-    WfMenuMenuItem(WayfireMenu* menu, AppInfo app);
+  public:
+    WfMenuMenuItem(WayfireMenu *menu, AppInfo app);
 
     bool matches(Glib::ustring text);
     bool fuzzy_match(Glib::ustring text);
-    bool operator < (const WfMenuMenuItem& other);
+    bool operator <(const WfMenuMenuItem& other);
 
-    private:
-    WayfireMenu* menu;
+  private:
+    WayfireMenu *menu;
     Gtk::Box m_left_pad, m_right_pad;
     Gtk::Button m_button;
     Gtk::VBox m_button_box;
@@ -38,7 +38,7 @@ class WfMenuMenuItem : public Gtk::HBox
 
 class WayfireLogoutUIButton
 {
-    public:
+  public:
     Gtk::VBox layout;
     Gtk::Image image;
     Gtk::Label label;
@@ -47,7 +47,7 @@ class WayfireLogoutUIButton
 
 class WayfireLogoutUI
 {
-    public:
+  public:
     WayfireLogoutUI();
     WfOption<std::string> logout_command{"panel/logout_command"};
     WfOption<std::string> reboot_command{"panel/reboot_command"};
@@ -98,11 +98,11 @@ class WayfireMenu : public WayfireWidget
 
     bool update_icon();
 
-    bool fuzzy_filter = false;
+    bool fuzzy_filter     = false;
     int32_t count_matches = 0;
 
     bool on_sort(Gtk::FlowBoxChild*, Gtk::FlowBoxChild*);
-    bool on_filter(Gtk::FlowBoxChild* child);
+    bool on_filter(Gtk::FlowBoxChild *child);
     void on_search_changed();
     void on_popover_shown();
 
@@ -122,7 +122,7 @@ class WayfireMenu : public WayfireWidget
     void create_logout_ui();
     void on_logout_click();
 
-    public:
+  public:
     void init(Gtk::HBox *container) override;
     void hide_menu();
     void refresh();

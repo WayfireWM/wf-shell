@@ -15,14 +15,15 @@ enum WfToplevelState
  * It displays the window icon on all outputs' docks that it is visible on */
 class WfToplevel
 {
-    public:
+  public:
     WfToplevel(zwlr_foreign_toplevel_handle_v1 *handle);
     ~WfToplevel();
 
     void handle_output_leave(wl_output *output);
 
     class impl;
-    private:
+
+  private:
     std::unique_ptr<impl> pimpl;
 };
 

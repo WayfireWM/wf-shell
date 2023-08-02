@@ -9,14 +9,14 @@
 
 class WayfirePanel
 {
-    public:
+  public:
     WayfirePanel(WayfireOutput *output);
 
     wl_surface *get_wl_surface();
     Gtk::Window& get_window();
     void handle_config_reload();
 
-    private:
+  private:
     class impl;
     std::unique_ptr<impl> pimpl;
 };
@@ -24,7 +24,7 @@ class WayfirePanel
 class WayfirePanelApp : public WayfireShellApp
 {
   public:
-    WayfirePanel* panel_for_wl_output(wl_output *output);
+    WayfirePanel *panel_for_wl_output(wl_output *output);
     static WayfirePanelApp& get();
 
     /* Starts the program. get() is valid afterward the first (and the only)
@@ -44,4 +44,3 @@ class WayfirePanelApp : public WayfireShellApp
 };
 
 #endif /* end of include guard: WF_PANEL_HPP */
-

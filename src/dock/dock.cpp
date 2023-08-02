@@ -24,11 +24,11 @@ class WfDock::impl
     WfOption<std::string> css_path{"dock/css_path"};
     WfOption<int> dock_height{"dock/dock_height"};
 
-    public:
+  public:
     impl(WayfireOutput *output)
     {
         this->output = output;
-        window = std::unique_ptr<WayfireAutohidingWindow> (
+        window = std::unique_ptr<WayfireAutohidingWindow>(
             new WayfireAutohidingWindow(output, "dock"));
 
         window->set_size_request(dock_height, dock_height);
@@ -66,7 +66,7 @@ class WfDock::impl
         this->box.remove(widget);
 
         /* We now need to resize the dock so it fits the remaining widgets. */
-        int total_width = 0;
+        int total_width  = 0;
         int total_height = last_height;
         box.foreach([&] (Gtk::Widget& child)
         {
@@ -82,7 +82,7 @@ class WfDock::impl
         this->window->set_size_request(total_width, total_height);
     }
 
-    wl_surface* get_wl_surface()
+    wl_surface *get_wl_surface()
     {
         return this->_wl_surface;
     }
@@ -90,19 +90,30 @@ class WfDock::impl
     int32_t last_width = 100, last_height = 100;
     void on_allocation(Gtk::Allocation& alloc)
     {
-        if (last_width != alloc.get_width() || last_height != alloc.get_height())
+        if ((last_width != alloc.get_width()) || (last_height != alloc.get_height()))
         {
-            last_width = alloc.get_width();
+            last_width  = alloc.get_width();
             last_height = alloc.get_height();
         }
     }
 };
 
-WfDock::WfDock(WayfireOutput *output)
-    : pimpl(new impl(output)) { }
+WfDock::WfDock(WayfireOutput *output) :
+    pimpl(new impl(output))
+{}
 WfDock::~WfDock() = default;
 
-void WfDock::add_child(Gtk::Widget& w) { return pimpl->add_child(w); }
-void WfDock::rem_child(Gtk::Widget& w) { return pimpl->rem_child(w); }
+void WfDock::add_child(Gtk::Widget& w)
+{
+    return pimpl->add_child(w);
+}
 
-wl_surface* WfDock::get_wl_surface() { return pimpl->get_wl_surface(); }
+void WfDock::rem_child(Gtk::Widget& w)
+{
+    return pimpl->rem_child(w);
+}
+
+wl_surface*WfDock::get_wl_surface()
+{
+    return pimpl->get_wl_surface();
+}

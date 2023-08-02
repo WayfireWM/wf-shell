@@ -29,28 +29,28 @@ class StatusNotifierItem : public Gtk::EventBox
 
     Glib::RefPtr<Gtk::IconTheme> icon_theme = Gtk::IconTheme::get_default();
 
-    template <typename T>
-    T get_item_property(const Glib::ustring &name, const T &default_value = {}) const
+    template<typename T>
+    T get_item_property(const Glib::ustring & name, const T & default_value = {}) const
     {
         Glib::VariantBase variant;
         item_proxy->get_cached_property(variant, name);
-        return variant && variant.is_of_type(Glib::Variant<T>::variant_type())
-                   ? Glib::VariantBase::cast_dynamic<Glib::Variant<T>>(variant).get()
-                   : default_value;
+        return variant && variant.is_of_type(Glib::Variant<T>::variant_type()) ?
+               Glib::VariantBase::cast_dynamic<Glib::Variant<T>>(variant).get() :
+               default_value;
     }
 
     void init_widget();
     void init_menu();
 
-    void handle_signal(const Glib::ustring &signal, const Glib::VariantContainerBase &params);
+    void handle_signal(const Glib::ustring & signal, const Glib::VariantContainerBase & params);
 
     void update_icon();
     void setup_tooltip();
 
-    void fetch_property(const Glib::ustring &property_name, const sigc::slot<void> &callback = {});
+    void fetch_property(const Glib::ustring & property_name, const sigc::slot<void> & callback = {});
 
-    public:
-    explicit StatusNotifierItem(const Glib::ustring &service);
+  public:
+    explicit StatusNotifierItem(const Glib::ustring & service);
 };
 
 #endif

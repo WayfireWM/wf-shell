@@ -35,10 +35,9 @@ struct Notification
         guint8 urgency;
         Hints() = default;
 
-        private:
-        explicit Hints(const std::map<std::string, Glib::VariantBase> &map);
+      private:
+        explicit Hints(const std::map<std::string, Glib::VariantBase> & map);
         friend Notification;
-
     } hints;
 
     struct AdditionalInfo
@@ -48,9 +47,9 @@ struct Notification
         Glib::ustring sender;
     } additional_info;
 
-    explicit Notification(const Glib::VariantContainerBase &parameters, const Glib::ustring &sender);
+    explicit Notification(const Glib::VariantContainerBase & parameters, const Glib::ustring & sender);
 
-    private:
+  private:
     inline static guint notifications_count = 0;
 };
 

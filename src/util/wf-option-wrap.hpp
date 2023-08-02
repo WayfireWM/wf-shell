@@ -17,8 +17,7 @@ class WfOption : public wf::base_option_wrapper_t<Type>
     }
 
   protected:
-    std::shared_ptr<wf::config::option_base_t>
-        load_raw_option(const std::string& name) override
+    std::shared_ptr<wf::config::option_base_t> load_raw_option(const std::string& name) override
     {
         return WayfireShellApp::get().config.get_option(name);
     }

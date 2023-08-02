@@ -45,7 +45,8 @@ struct NoConnectionInfo : public WfNetworkConnectionInfo
         return "127.0.0.1";
     }
 
-    virtual ~NoConnectionInfo() {}
+    virtual ~NoConnectionInfo()
+    {}
 };
 
 struct WifiConnectionInfo : public WfNetworkConnectionInfo
@@ -54,14 +55,15 @@ struct WifiConnectionInfo : public WfNetworkConnectionInfo
     DBusProxy ap;
 
     WifiConnectionInfo(const DBusConnection& connection, std::string path,
-                       WayfireNetworkInfo *widget)
+        WayfireNetworkInfo *widget)
     {
         this->widget = widget;
 
         ap = Gio::DBus::Proxy::create_sync(connection, NM_DBUS_NAME, path,
-                                           "org.freedesktop.NetworkManager.AccessPoint");
+            "org.freedesktop.NetworkManager.AccessPoint");
 
-        if (ap) {
+        if (ap)
+        {
             ap->signal_properties_changed().connect_notify(
                 sigc::mem_fun(this, &WifiConnectionInfo::on_properties_changed));
         }
@@ -73,7 +75,9 @@ struct WifiConnectionInfo : public WfNetworkConnectionInfo
         for (auto& prop : changed)
         {
             if (prop.first == STRENGTH)
+            {
                 needs_refresh = true;
+            }
         }
 
         if (needs_refresh)
@@ -98,36 +102,56 @@ struct WifiConnectionInfo : public WfNetworkConnectionInfo
         int value = get_strength();
 
         if (value > 80)
+        {
             return "excellent";
+        }
+
         if (value > 55)
+        {
             return "good";
+        }
+
         if (value > 30)
+        {
             return "ok";
+        }
+
         if (value > 5)
+        {
             return "weak";
+        }
+
         return "none";
     }
 
     virtual std::string get_icon_name(WfConnectionState state)
     {
-        if (state <= CSTATE_ACTIVATING || state == CSTATE_DEACTIVATING)
+        if ((state <= CSTATE_ACTIVATING) || (state == CSTATE_DEACTIVATING))
+        {
             return "network-wireless-acquiring-symbolic";
+        }
 
         if (state == CSTATE_DEACTIVATED)
+        {
             return "network-wireless-disconnected-symbolic";
+        }
 
-        if (ap) {
+        if (ap)
+        {
             return "network-wireless-signal-" + get_strength_str() + "-symbolic";
-        } else {
+        } else
+        {
             return "network-wireless-no-route-symbolic";
         }
     }
 
     virtual int get_connection_strength()
     {
-        if (ap) {
+        if (ap)
+        {
             return get_strength();
-        } else {
+        } else
+        {
             return 100;
         }
     }
@@ -137,22 +161,27 @@ struct WifiConnectionInfo : public WfNetworkConnectionInfo
         return "0.0.0.0";
     }
 
-    virtual ~WifiConnectionInfo() {}
+    virtual ~WifiConnectionInfo()
+    {}
 };
 
 struct EthernetConnectionInfo : public WfNetworkConnectionInfo
 {
     DBusProxy ap;
     EthernetConnectionInfo(const DBusConnection& connection, std::string path)
-    { }
+    {}
 
     virtual std::string get_icon_name(WfConnectionState state)
     {
-        if (state <= CSTATE_ACTIVATING || state == CSTATE_DEACTIVATING)
+        if ((state <= CSTATE_ACTIVATING) || (state == CSTATE_DEACTIVATING))
+        {
             return "network-wired-acquiring-symbolic";
+        }
 
         if (state == CSTATE_DEACTIVATED)
+        {
             return "network-wired-disconnected-symbolic";
+        }
 
         return "network-wired-symbolic";
     }
@@ -172,7 +201,8 @@ struct EthernetConnectionInfo : public WfNetworkConnectionInfo
         return "0.0.0.0";
     }
 
-    virtual ~EthernetConnectionInfo() {}
+    virtual ~EthernetConnectionInfo()
+    {}
 };
 
 
@@ -181,7 +211,9 @@ struct EthernetConnectionInfo : public WfNetworkConnectionInfo
 static WfConnectionState get_connection_state(DBusProxy connection)
 {
     if (!connection)
+    {
         return CSTATE_DEACTIVATED;
+    }
 
     Glib::Variant<guint32> state;
     connection->get_cached_property(state, "State");
@@ -193,7 +225,7 @@ void WayfireNetworkInfo::update_icon()
     auto icon_name = info->get_icon_name(
         get_connection_state(active_connection_proxy));
     WfIconLoadOptions options;
-    options.invert = icon_invert_opt;
+    options.invert     = icon_invert_opt;
     options.user_scale = icon.get_scale_factor();
     set_image_icon(icon, icon_name, icon_size_opt, options);
 }
@@ -220,12 +252,13 @@ static Gdk::RGBA get_color_for_pc(int pc)
             auto& r1 = status_colors[i].rgba;
             auto& r2 = status_colors[i + 1].rgba;
 
-            double a = 1.0 * (pc - status_colors[i].point) / (status_colors[i + 1].point - status_colors[i].point);
+            double a = 1.0 * (pc - status_colors[i].point) /
+                (status_colors[i + 1].point - status_colors[i].point);
             Gdk::RGBA result;
             result.set_rgba(
-                r1.get_red  () * (1 - a) + r2.get_red  () * a,
+                r1.get_red() * (1 - a) + r2.get_red() * a,
                 r1.get_green() * (1 - a) + r2.get_green() * a,
-                r1.get_blue () * (1 - a) + r2.get_blue () * a,
+                r1.get_blue() * (1 - a) + r2.get_blue() * a,
                 r1.get_alpha() * (1 - a) + r2.get_alpha() * a);
 
             return result;
@@ -242,9 +275,11 @@ void WayfireNetworkInfo::update_status()
     status.set_text(description);
     button.set_tooltip_text(description);
 
-    if (status_color_opt) {
+    if (status_color_opt)
+    {
         status.override_color(get_color_for_pc(info->get_connection_strength()));
-    } else {
+    } else
+    {
         status.unset_color();
     }
 }
@@ -254,39 +289,40 @@ void WayfireNetworkInfo::update_active_connection()
     Glib::Variant<Glib::ustring> active_conn_path;
     nm_proxy->get_cached_property(active_conn_path, ACTIVE_CONNECTION);
 
-    if (active_conn_path && active_conn_path.get() != "/")
+    if (active_conn_path && (active_conn_path.get() != "/"))
     {
         active_connection_proxy = Gio::DBus::Proxy::create_sync(
             connection, NM_DBUS_NAME, active_conn_path.get(),
             "org.freedesktop.NetworkManager.Connection.Active");
-    } else {
+    } else
+    {
         active_connection_proxy = DBusProxy();
     }
 
     auto set_no_connection = [=] ()
     {
-        info = std::unique_ptr<WfNetworkConnectionInfo> (new NoConnectionInfo());
+        info = std::unique_ptr<WfNetworkConnectionInfo>(new NoConnectionInfo());
         info->connection_name = "No connection";
     };
 
     if (!active_connection_proxy)
     {
         set_no_connection();
-    } else {
+    } else
+    {
         Glib::Variant<Glib::ustring> vtype, vobject;
         active_connection_proxy->get_cached_property(vtype, "Type");
         active_connection_proxy->get_cached_property(vobject, "SpecificObject");
-        auto type = vtype.get();
+        auto type   = vtype.get();
         auto object = vobject.get();
 
         if (type.find("wireless") != type.npos)
         {
-            info = std::unique_ptr<WfNetworkConnectionInfo> (
+            info = std::unique_ptr<WfNetworkConnectionInfo>(
                 new WifiConnectionInfo(connection, object, this));
-        }
-        else if (type.find("ethernet") != type.npos)
+        } else if (type.find("ethernet") != type.npos)
         {
-            info = std::unique_ptr<WfNetworkConnectionInfo> (
+            info = std::unique_ptr<WfNetworkConnectionInfo>(
                 new EthernetConnectionInfo(connection, object));
         } else if (type.find("bluetooth"))
         {
@@ -313,10 +349,12 @@ void WayfireNetworkInfo::on_nm_properties_changed(
     const Gio::DBus::Proxy::MapChangedProperties& properties,
     const std::vector<Glib::ustring>& invalidated)
 {
-    for (auto &prop : properties)
+    for (auto & prop : properties)
     {
         if (prop.first == ACTIVE_CONNECTION)
+        {
             update_active_connection();
+        }
     }
 }
 
@@ -331,12 +369,12 @@ bool WayfireNetworkInfo::setup_dbus()
     }
 
     nm_proxy = Gio::DBus::Proxy::create_sync(connection, NM_DBUS_NAME,
-                                             "/org/freedesktop/NetworkManager",
-                                             "org.freedesktop.NetworkManager");
+        "/org/freedesktop/NetworkManager",
+        "org.freedesktop.NetworkManager");
     if (!nm_proxy)
     {
-        std::cerr << "Failed to connect to network manager, "
-            << "are you sure it is running?" << std::endl;
+        std::cerr << "Failed to connect to network manager, " <<
+            "are you sure it is running?" << std::endl;
         return false;
     }
 
@@ -351,8 +389,7 @@ void WayfireNetworkInfo::on_click()
     if ((std::string)click_command_opt != "default")
     {
         Glib::spawn_command_line_async((std::string)click_command_opt);
-    }
-    else
+    } else
     {
         info->spawn_control_center(nm_proxy);
     }
@@ -388,9 +425,11 @@ void WayfireNetworkInfo::init(Gtk::HBox *container)
 
 void WayfireNetworkInfo::handle_config_reload()
 {
-    if ((std::string)status_font_opt == "default") {
+    if ((std::string)status_font_opt == "default")
+    {
         status.unset_font();
-    } else {
+    } else
+    {
         status.override_font(
             Pango::FontDescription((std::string)status_font_opt));
     }
@@ -398,7 +437,9 @@ void WayfireNetworkInfo::handle_config_reload()
     if (status_opt < NETWORK_STATUS_CONN_NAME)
     {
         if (status.get_parent())
+        {
             button_content.remove(status);
+        }
     } else
     {
         if (!status.get_parent())
@@ -413,5 +454,4 @@ void WayfireNetworkInfo::handle_config_reload()
 }
 
 WayfireNetworkInfo::~WayfireNetworkInfo()
-{
-}
+{}
