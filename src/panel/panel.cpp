@@ -20,6 +20,7 @@
 #include "widgets/menu.hpp"
 #include "widgets/clock.hpp"
 #include "widgets/launchers.hpp"
+#include "widgets/customizables.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
 #ifdef HAVE_PULSE
@@ -146,6 +147,8 @@ class WayfirePanel::impl
             return Widget(new WayfireMenu());
         if (name == "launchers")
             return Widget(new WayfireLaunchers());
+        if (name == "custom")
+            return Widget(new WayfireCustomizables());
         if (name == "clock")
             return Widget(new WayfireClock());
         if (name == "network")
