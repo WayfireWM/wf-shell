@@ -36,6 +36,7 @@ class Watcher
     inline static std::weak_ptr<Watcher> instance;
 
     guint dbus_name_id;
+    guint dbus_object_id;
     Glib::RefPtr<Gio::DBus::Connection> watcher_connection;
 
     std::map<Glib::ustring, guint> sn_items_id;
