@@ -260,6 +260,7 @@ class WayfirePanel::impl
         Gtk::HBox& box)
     {
         const auto lock_sn_watcher = Watcher::Instance();
+        const auto lock_notification_daemon = Daemon::Instance();
         container.clear();
         auto widgets = tokenize(list);
         for (auto widget_name : widgets)
