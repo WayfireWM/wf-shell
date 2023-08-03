@@ -16,7 +16,7 @@ void WayfireClock::init(Gtk::HBox *container)
     button->get_popover()->signal_show().connect_notify(
         sigc::mem_fun(this, &WayfireClock::on_calendar_shown));
 
-    container->pack_end(*button, false, false);
+    container->pack_start(*button, false, false);
 
     timeout = Glib::signal_timeout().connect_seconds(
         sigc::mem_fun(this, &WayfireClock::update_label), 1);
