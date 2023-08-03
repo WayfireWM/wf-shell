@@ -139,7 +139,7 @@ void Watcher::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection>
     const auto service = service_variant.get();
     if (method_name == "RegisterStatusNotifierItem")
     {
-        register_status_notifier_item(connection, sender,
+        register_status_notifier_item(connection, service[0] == '/' ? sender : service,
             service[0] == '/' ? service : "/StatusNotifierItem");
     } else if (method_name == "RegisterStatusNotifierHost")
     {
