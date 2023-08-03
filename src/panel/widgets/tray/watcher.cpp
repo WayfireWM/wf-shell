@@ -59,6 +59,7 @@ Watcher::~Watcher()
     {
         Gio::DBus::unwatch_name(host_id);
     }
+
     for (const auto& [_, item_id] : sn_items_id)
     {
         Gio::DBus::unwatch_name(item_id);
@@ -71,7 +72,7 @@ Watcher::~Watcher()
 void Watcher::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection,
     const Glib::ustring & name)
 {
-    dbus_object_id = connection->register_object(SNW_PATH, introspection_data, interface_table);
+    dbus_object_id     = connection->register_object(SNW_PATH, introspection_data, interface_table);
     watcher_connection = connection;
 }
 
@@ -128,7 +129,7 @@ void Watcher::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection>
     if (!parameters.is_of_type(Glib::VariantType("(s)")))
     {
         std::cerr << "StatusNotifierWatcher: invalid argument type: expected (s), got " <<
-        parameters.get_type_string() <<
+            parameters.get_type_string() <<
             std::endl;
         return;
     }
