@@ -75,7 +75,7 @@ void StatusNotifierItem::init_widget()
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({ev->x, ev->y});
         const guint menu_btn = menu_on_middle_click ? GDK_BUTTON_MIDDLE : GDK_BUTTON_SECONDARY;
         const guint secondary_activate_btn = menu_on_middle_click ? GDK_BUTTON_SECONDARY : GDK_BUTTON_MIDDLE;
-        if (get_item_property<bool>("ItemIsMenu", true) || ev->button == menu_btn)
+        if (get_item_property<bool>("ItemIsMenu", true) || (ev->button == menu_btn))
         {
             if (menu)
             {
@@ -87,8 +87,7 @@ void StatusNotifierItem::init_widget()
         } else if (ev->button == GDK_BUTTON_PRIMARY)
         {
             item_proxy->call("Activate", ev_coords);
-        }
-        else if (ev->button == secondary_activate_btn)
+        } else if (ev->button == secondary_activate_btn)
         {
             item_proxy->call("SecondaryActivate", ev_coords);
         }
