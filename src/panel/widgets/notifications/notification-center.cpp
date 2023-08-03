@@ -33,29 +33,32 @@ void WayfireNotificationCenter::init(Gtk::HBox *container)
         }
     });
 
-    for (const auto &[id, _] : daemon->getNotifications())
+    for (const auto & [id, _] : daemon->getNotifications())
     {
         newNotification(id, false);
     }
 
     notification_new_conn =
-        daemon->signalNotificationNew().connect([=](Notification::id_type id) { newNotification(id); });
+        daemon->signalNotificationNew().connect([=] (Notification::id_type id) { newNotification(id); });
     notification_replace_conn =
-        daemon->signalNotificationReplaced().connect([=](Notification::id_type id) { replaceNotification(id); });
+        daemon->signalNotificationReplaced().connect([=] (Notification::id_type id)
+    {
+        replaceNotification(id);
+    });
     notification_close_conn =
-        daemon->signalNotificationClosed().connect([=](Notification::id_type id) { closeNotification(id); });
+        daemon->signalNotificationClosed().connect([=] (Notification::id_type id) { closeNotification(id); });
 }
 
 void WayfireNotificationCenter::newNotification(Notification::id_type id, bool show_popup)
 {
-    const auto &notification = daemon->getNotifications().at(id);
+    const auto & notification = daemon->getNotifications().at(id);
     g_assert(notification_widgets.count(id) == 0);
     notification_widgets.insert({id, std::make_unique<WfSingleNotification>(notification)});
     auto & widget = notification_widgets.at(id);
     vbox.pack_end(*widget);
     vbox.show_all();
     widget->set_reveal_child();
-    if (show_popup && !dnd_enabled || (show_critical_in_dnd && notification.hints.urgency == 2))
+    if (show_popup && !dnd_enabled || (show_critical_in_dnd && (notification.hints.urgency == 2)))
     {
         auto *popover = button->get_popover();
         if ((timeout > 0) && (!popover_timeout.empty() || !popover->is_visible()))

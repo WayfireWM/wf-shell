@@ -8,20 +8,20 @@
 #include <set>
 
 #define dbus_method(name)                                                                                              \
-    void name##dbus_method(const Glib::ustring &sender, const Glib::VariantContainerBase &parameters,                  \
-                           const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation)
+    void name ## dbus_method(const Glib::ustring & sender, const Glib::VariantContainerBase & parameters,                  \
+    const Glib::RefPtr<Gio::DBus::MethodInvocation> & invocation)
 class Daemon
 {
-    public:
+  public:
     enum CloseReason : guint32
     {
-        Expired = 1,
-        Dismissed = 2,
+        Expired      = 1,
+        Dismissed    = 2,
         MethodCalled = 3,
-        Undefined = 4,
+        Undefined    = 4,
     };
 
-    using notification_signal = sigc::signal<void(Notification::id_type)>;
+    using notification_signal = sigc::signal<void (Notification::id_type)>;
 
     notification_signal signalNotificationNew()
     {
@@ -55,11 +55,11 @@ class Daemon
 
     ~Daemon();
 
-    const std::map<Notification::id_type, const Notification> &getNotifications() const;
+    const std::map<Notification::id_type, const Notification> & getNotifications() const;
     void closeNotification(Notification::id_type id, CloseReason reason);
-    void invokeAction(Notification::id_type id, const Glib::ustring &action_key);
+    void invokeAction(Notification::id_type id, const Glib::ustring & action_key);
 
-    private:
+  private:
     inline static std::weak_ptr<Daemon> instance;
 
     std::map<Notification::id_type, const Notification> notifications;
@@ -76,17 +76,18 @@ class Daemon
 
     Daemon();
 
-    void on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &sender,
-                                  const Glib::ustring &object_path, const Glib::ustring &interface_name,
-                                  const Glib::ustring &method_name, const Glib::VariantContainerBase &parameters,
-                                  const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation);
+    void on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> & connection,
+        const Glib::ustring & sender,
+        const Glib::ustring & object_path, const Glib::ustring & interface_name,
+        const Glib::ustring & method_name, const Glib::VariantContainerBase & parameters,
+        const Glib::RefPtr<Gio::DBus::MethodInvocation> & invocation);
 
     dbus_method(GetCapabilities);
     dbus_method(Notify);
     dbus_method(CloseNotification);
     dbus_method(GetServerInformation);
 
-    void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name);
+    void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
 };
 
 #endif

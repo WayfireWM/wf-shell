@@ -135,14 +135,16 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
             } else
             {
                 default_action_ev_box.signal_button_press_event().connect(
-                    [id = notification.id, action_key](GdkEventButton *ev) {
-                        if (ev->button == GDK_BUTTON_PRIMARY)
-                        {
-                            Daemon::Instance()->invokeAction(id, action_key);
-                            return false;
-                        }
-                        return true;
-                    });
+                    [id = notification.id, action_key] (GdkEventButton *ev)
+                {
+                    if (ev->button == GDK_BUTTON_PRIMARY)
+                    {
+                        Daemon::Instance()->invokeAction(id, action_key);
+                        return false;
+                    }
+
+                    return true;
+                });
             }
         }
 

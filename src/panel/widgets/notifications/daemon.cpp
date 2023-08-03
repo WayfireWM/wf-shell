@@ -63,8 +63,7 @@ dbus_method(Daemon::GetCapabilities)
 }
 
 dbus_method(Daemon::Notify)
-try
-{
+try {
     const auto notification = Notification(parameters, sender);
     const auto id     = notification.id;
     const auto id_var =
@@ -110,16 +109,15 @@ dbus_method(Daemon::GetServerInformation)
     invocation->return_value(info);
 }
 
-void Daemon::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                                      const Glib::ustring &sender, const Glib::ustring &object_path,
-                                      const Glib::ustring &interface_name, const Glib::ustring &method_name,
-                                      const Glib::VariantContainerBase &parameters,
-                                      const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation)
+void Daemon::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> & connection,
+    const Glib::ustring & sender, const Glib::ustring & object_path,
+    const Glib::ustring & interface_name, const Glib::ustring & method_name,
+    const Glib::VariantContainerBase & parameters,
+    const Glib::RefPtr<Gio::DBus::MethodInvocation> & invocation)
 {
-
 #define try_invoke_method(_name)                                                                                       \
     if (method_name == #_name)                                                                                         \
-    _name##dbus_method(sender, parameters, invocation)
+    _name ## dbus_method(sender, parameters, invocation)
 
     try_invoke_method(GetCapabilities);
     try_invoke_method(Notify);
@@ -127,7 +125,8 @@ void Daemon::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> 
     try_invoke_method(GetServerInformation);
 }
 
-void Daemon::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> &connection, const Glib::ustring &name)
+void Daemon::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection,
+    const Glib::ustring & name)
 {
     object_id = connection->register_object(FDN_PATH, introspection_data, interface_vtable);
     daemon_connection = connection;
@@ -141,6 +140,7 @@ std::shared_ptr<Daemon> Daemon::Launch()
         instance = new_instance;
         return new_instance;
     }
+
     return Instance();
 }
 
@@ -149,11 +149,11 @@ std::shared_ptr<Daemon> Daemon::Instance()
     return instance.lock();
 }
 
-Daemon::Daemon()
-    : owner_id(Gio::DBus::own_name(Gio::DBus::BUS_TYPE_SESSION, FDN_NAME, sigc::mem_fun(this, &Daemon::on_bus_acquired),
-                                   {}, {}, Gio::DBus::BUS_NAME_OWNER_FLAGS_REPLACE))
-{
-}
+Daemon::Daemon() :
+    owner_id(Gio::DBus::own_name(Gio::DBus::BUS_TYPE_SESSION, FDN_NAME,
+        sigc::mem_fun(this, &Daemon::on_bus_acquired),
+        {}, {}, Gio::DBus::BUS_NAME_OWNER_FLAGS_REPLACE))
+{}
 
 Daemon::~Daemon()
 {
@@ -161,7 +161,7 @@ Daemon::~Daemon()
     Gio::DBus::unown_name(owner_id);
 }
 
-const std::map<Notification::id_type, const Notification> &Daemon::getNotifications() const
+const std::map<Notification::id_type, const Notification>& Daemon::getNotifications() const
 {
     return notifications;
 }
@@ -174,12 +174,13 @@ void Daemon::closeNotification(Notification::id_type id, CloseReason reason)
     }
 
     signal_notification_closed.emit(id);
-    const auto &notification = notifications.at(id);
+    const auto & notification = notifications.at(id);
     const auto body = Glib::Variant<std::tuple<guint32, guint32>>::create({id, reason});
-    daemon_connection->emit_signal(FDN_PATH, FDN_NAME, "NotificationClosed", notification.additional_info.sender, body);
+    daemon_connection->emit_signal(FDN_PATH, FDN_NAME, "NotificationClosed",
+        notification.additional_info.sender, body);
 }
 
-void Daemon::invokeAction(Notification::id_type id, const Glib::ustring &action_key)
+void Daemon::invokeAction(Notification::id_type id, const Glib::ustring & action_key)
 {
     if (notifications.count(id) == 0)
     {
@@ -187,6 +188,7 @@ void Daemon::invokeAction(Notification::id_type id, const Glib::ustring &action_
     }
 
     const auto body = Glib::Variant<std::tuple<guint32, Glib::ustring>>::create({id, action_key});
-    daemon_connection->emit_signal(FDN_PATH, FDN_NAME, "ActionInvoked", notifications.at(id).additional_info.sender,
-                                   body);
+    daemon_connection->emit_signal(FDN_PATH, FDN_NAME, "ActionInvoked", notifications.at(
+        id).additional_info.sender,
+        body);
 }
