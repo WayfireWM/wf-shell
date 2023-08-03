@@ -92,6 +92,9 @@ class WayfireMenu : public WayfireWidget
     std::unique_ptr<WayfireMenuButton> button;
     std::unique_ptr<WayfireLogoutUI> logout_ui;
 
+    GAppInfoMonitor *app_info_monitor = g_app_info_monitor_get();
+    guint app_info_monitor_changed_handler_id;
+
     void load_menu_item(AppInfo app_info);
     void load_menu_items_from_dir(std::string directory);
     void load_menu_items_all();
@@ -126,7 +129,10 @@ class WayfireMenu : public WayfireWidget
     void init(Gtk::HBox *container) override;
     void hide_menu();
     void refresh();
-    virtual ~WayfireMenu() = default;
+    ~WayfireMenu() override
+    {
+        g_signal_handler_disconnect(app_info_monitor, app_info_monitor_changed_handler_id);
+    }
 };
 
 #endif /* end of include guard: WIDGETS_MENU_HPP */
