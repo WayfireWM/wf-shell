@@ -104,21 +104,19 @@
 	</group>
 	<group>
 	<_short>Battery</_short>
-	<option name="battery_status" type="int">
+	<option name="battery_status" type="string">
 		<_short>Battery Status</_short>
-		<default>1</default>
-		<min>0</min>
-		<max>2</max>
+		<default>percentage</default>
 		<desc>
-			<value>0</value>
+			<value>icon</value>
 			<_name>Icon</_name>
 		</desc>
 		<desc>
-			<value>1</value>
+			<value>percentage</value>
 			<_name>Icon with Percentage</_name>
 		</desc>
 		<desc>
-			<value>2</value>
+			<value>full</value>
 			<_name>Full Information</_name>
 		</desc>
 	</option>
@@ -138,21 +136,19 @@
 	</group>
 	<group>
 	<_short>Network</_short>
-	<option name="network_status" type="int">
+	<option name="network_status" type="string">
 		<_short>Network Status</_short>
-		<default>1</default>
-		<min>0</min>
-		<max>2</max>
+		<default>connection</default>
 		<desc>
-			<value>0</value>
+			<value>none</value>
 			<_name>None</_name>
 		</desc>
 		<desc>
-			<value>1</value>
+			<value>connection</value>
 			<_name>Connection</_name>
 		</desc>
 		<desc>
-			<value>2</value>
+			<value>full</value>
 			<_name>Connection with IP</_name>
 		</desc>
 	</option>

@@ -434,7 +434,7 @@ void WayfireNetworkInfo::handle_config_reload()
             Pango::FontDescription((std::string)status_font_opt));
     }
 
-    if (status_opt < NETWORK_STATUS_CONN_NAME)
+    if (status_opt.value() == NETWORK_STATUS_ICON)
     {
         if (status.get_parent())
         {

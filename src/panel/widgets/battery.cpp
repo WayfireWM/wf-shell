@@ -157,15 +157,15 @@ void WayfireBatteryInfo::update_details()
     button.set_tooltip_text(
         get_device_type_description(type.get()) + description);
 
-    if (status_opt == BATTERY_STATUS_PERCENT)
+    if (status_opt.value() == BATTERY_STATUS_PERCENT)
     {
         label.set_text(percentage_string);
-    } else if (status_opt == BATTERY_STATUS_FULL)
+    } else if (status_opt.value() == BATTERY_STATUS_FULL)
     {
         label.set_text(description);
     }
 
-    if (status_opt == BATTERY_STATUS_ICON)
+    if (status_opt.value() == BATTERY_STATUS_ICON)
     {
         label.hide();
     } else
