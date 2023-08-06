@@ -4,22 +4,16 @@
 
 #include <gtk-utils.hpp>
 
-#include "daemon.hpp"
 #include "single-notification.hpp"
 
 void WayfireNotificationCenter::init(Gtk::HBox *container)
 {
-    Daemon::start();
-    Daemon::signalNotificationNew().connect([=] (Notification::id_type id) { newNotification(id); });
-    Daemon::signalNotificationReplaced().connect([=] (Notification::id_type id) { replaceNotification(id); });
-    Daemon::signalNotificationClosed().connect([=] (Notification::id_type id) { closeNotification(id); });
-    Daemon::signalDaemonStopped().connect([=] { onDaemonStop(); });
-
     button = std::make_unique<WayfireMenuButton>("panel");
 
     updateIcon();
     button->add(icon);
     container->add(*button);
+    button->show_all();
 
     auto *popover = button->get_popover();
     popover->set_size_request(WIDTH, HEIGHT);
@@ -28,10 +22,6 @@ void WayfireNotificationCenter::init(Gtk::HBox *container)
     scrolled_window.add(vbox);
     scrolled_window.show_all();
     popover->add(scrolled_window);
-
-    status_label.show();
-    status_label.set_line_wrap();
-    status_label.set_line_wrap_mode(Pango::WRAP_WORD);
 
     button->set_tooltip_text("Middle click to toggle DND mode.");
     button->signal_button_press_event().connect_notify([=] (GdkEventButton *ev)
@@ -42,18 +32,33 @@ void WayfireNotificationCenter::init(Gtk::HBox *container)
             updateIcon();
         }
     });
+
+    for (const auto & [id, _] : daemon->getNotifications())
+    {
+        newNotification(id, false);
+    }
+
+    notification_new_conn =
+        daemon->signalNotificationNew().connect([=] (Notification::id_type id) { newNotification(id); });
+    notification_replace_conn =
+        daemon->signalNotificationReplaced().connect([=] (Notification::id_type id)
+    {
+        replaceNotification(id);
+    });
+    notification_close_conn =
+        daemon->signalNotificationClosed().connect([=] (Notification::id_type id) { closeNotification(id); });
 }
 
-void WayfireNotificationCenter::newNotification(Notification::id_type id)
+void WayfireNotificationCenter::newNotification(Notification::id_type id, bool show_popup)
 {
-    const auto & notification = Daemon::getNotifications().at(id);
+    const auto & notification = daemon->getNotifications().at(id);
     g_assert(notification_widgets.count(id) == 0);
     notification_widgets.insert({id, std::make_unique<WfSingleNotification>(notification)});
     auto & widget = notification_widgets.at(id);
     vbox.pack_end(*widget);
     vbox.show_all();
     widget->set_reveal_child();
-    if (!dnd_enabled || (show_critical_in_dnd && (notification.hints.urgency == 2)))
+    if (show_popup && !dnd_enabled || (show_critical_in_dnd && (notification.hints.urgency == 2)))
     {
         auto *popover = button->get_popover();
         if ((timeout > 0) && (!popover_timeout.empty() || !popover->is_visible()))
@@ -102,12 +107,6 @@ void WayfireNotificationCenter::closeNotification(Notification::id_type id)
     auto & widget = notification_widgets.at(id);
     widget->property_child_revealed().signal_changed().connect([=] { notification_widgets.erase(id); });
     widget->set_reveal_child(false);
-}
-
-void WayfireNotificationCenter::onDaemonStop()
-{
-    button->get_popover()->remove();
-    button->get_popover()->add(status_label);
 }
 
 void WayfireNotificationCenter::updateIcon()
