@@ -300,8 +300,7 @@ void WayfireVolume::init(Gtk::HBox *container)
     container->pack_start(*button, false, false);
     button->add(main_image);
     button->show_all();
-    button->get_popover()->show_all();
-    button->get_popover()->hide(); // do not show the popover initially
+    volume_scale.show_all();
 }
 
 WayfireVolume::~WayfireVolume()
