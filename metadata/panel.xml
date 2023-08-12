@@ -242,6 +242,10 @@
 		<default>32</default>
 		<min>1</min>
 	</option>
+	<option name="volume_scroll_sensitivity" type="double">
+		<_short>Volume Scroll Sensitivity</_short>
+		<default>0.05</default>
+	</option>
 	</group>
 	<group>
 	<_short>Notifications</_short>
