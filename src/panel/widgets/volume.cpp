@@ -4,8 +4,6 @@
 #include "launchers.hpp"
 #include "gtk-utils.hpp"
 
-#define INCREMENT_STEP_PC 0.05
-
 WayfireVolumeScale::WayfireVolumeScale()
 {
     this->signal_draw().connect_notify(
@@ -135,21 +133,8 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
 
 void WayfireVolume::on_volume_scroll(GdkEventScroll *event)
 {
-    int32_t current_volume = volume_scale.get_target_value();
-    const int32_t adjustment_step = max_norm * INCREMENT_STEP_PC;
-
-    /* Adjust volume on button scroll */
-    if ((event->direction == GDK_SCROLL_UP) ||
-        ((event->direction == GDK_SCROLL_SMOOTH) && (event->delta_y < 0)))
-    {
-        set_volume(std::min(current_volume + adjustment_step, (int32_t)max_norm));
-    }
-
-    if ((event->direction == GDK_SCROLL_DOWN) ||
-        ((event->direction == GDK_SCROLL_SMOOTH) && (event->delta_y > 0)))
-    {
-        set_volume(std::max(current_volume - adjustment_step, 0));
-    }
+    set_volume(std::clamp(volume_scale.get_target_value() - event->delta_y * max_norm * scroll_sensitivity,
+        0.0, max_norm));
 
     button->grab_focus();
     check_set_popover_timeout();
@@ -238,8 +223,8 @@ void WayfireVolume::on_default_sink_changed()
     /* Update the scale attributes */
     max_norm = gvc_mixer_control_get_vol_max_norm(gvc_control);
     volume_scale.set_range(0.0, max_norm);
-    volume_scale.set_increments(max_norm * INCREMENT_STEP_PC,
-        max_norm * INCREMENT_STEP_PC * 2);
+    volume_scale.set_increments(max_norm * scroll_sensitivity,
+        max_norm * scroll_sensitivity * 2);
 
     /* Finally, update the displayed volume. However, do not show the
      * popup */
