@@ -147,10 +147,6 @@
 			<value>connection</value>
 			<_name>Connection</_name>
 		</desc>
-		<desc>
-			<value>full</value>
-			<_name>Connection with IP</_name>
-		</desc>
 	</option>
 	<option name="network_status_font" type="string">
 		<_short>Clock Font</_short>
