@@ -14,17 +14,14 @@
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
 using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
 
-enum WfBatteryStatusDescription
-{
-    BATTERY_STATUS_ICON    = 0, // icon
-    BATTERY_STATUS_PERCENT = 1, // icon + percentage
-    BATTERY_STATUS_FULL    = 2, // icon + percentage + TimeToFull/TimeToEmpty
-};
+static const std::string BATTERY_STATUS_ICON    = "icon"; // icon
+static const std::string BATTERY_STATUS_PERCENT = "percentage"; // icon + percentage
+static const std::string BATTERY_STATUS_FULL    = "full"; // icon + percentage + TimeToFull/TimeToEmpty
 
 class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
-    WfOption<int> status_opt{"panel/battery_status"};
+    WfOption<std::string> status_opt{"panel/battery_status"};
     WfOption<std::string> font_opt{"panel/battery_font"};
     WfOption<int> size_opt{"panel/battery_icon_size"};
     WfOption<bool> invert_opt{"panel/battery_icon_invert"};

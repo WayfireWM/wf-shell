@@ -8,10 +8,6 @@
 #define ACTIVE_CONNECTION "PrimaryConnection"
 #define STRENGTH "Strength"
 
-// status options
-#define STATUS_CONN_ICON "icon_only"
-#define STATUS_CONN_NAME "connection_name"
-
 std::string WfNetworkConnectionInfo::get_control_center_section(DBusProxy& nm)
 {
     Glib::Variant<bool> wifi;
@@ -434,7 +430,7 @@ void WayfireNetworkInfo::handle_config_reload()
             Pango::FontDescription((std::string)status_font_opt));
     }
 
-    if (status_opt < NETWORK_STATUS_CONN_NAME)
+    if (status_opt.value() == NETWORK_STATUS_ICON)
     {
         if (status.get_parent())
         {
@@ -448,6 +444,8 @@ void WayfireNetworkInfo::handle_config_reload()
             button_content.show_all();
         }
     }
+
+    // TODO: show IP for "full" status
 
     update_icon();
     update_status();

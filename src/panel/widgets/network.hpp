@@ -44,12 +44,9 @@ struct WfNetworkConnectionInfo
     {}
 };
 
-enum WfNetworkStatusDescription
-{
-    NETWORK_STATUS_ICON      = 0,
-    NETWORK_STATUS_CONN_NAME = 1,
-    NETWORK_STATUS_NAME_IP   = 2,
-};
+static const std::string NETWORK_STATUS_ICON = "none";
+static const std::string NETWORK_STATUS_CONN_NAME = "connection";
+static const std::string NETWORK_STATUS_NAME_IP   = "full";
 
 class WayfireNetworkInfo : public WayfireWidget
 {
@@ -64,7 +61,7 @@ class WayfireNetworkInfo : public WayfireWidget
     Gtk::Label status;
 
     bool enabled = true;
-    WfOption<int> status_opt{"panel/network_status"};
+    WfOption<std::string> status_opt{"panel/network_status"};
     WfOption<int> icon_size_opt{"panel/network_icon_size"};
     WfOption<bool> icon_invert_opt{"panel/network_icon_invert_color"};
     WfOption<bool> status_color_opt{"panel/network_status_use_color"};
