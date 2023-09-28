@@ -25,7 +25,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
 
     gtk_layer_init_for_window(this->gobj());
     gtk_layer_set_monitor(this->gobj(), output->monitor->gobj());
-    gtk_layer_set_namespace(this->gobj(), "$unfocus panel");
+    gtk_layer_set_namespace(this->gobj(), "panel");
 
     this->position.set_callback([=] () { this->update_position(); });
     this->update_position();
@@ -379,8 +379,18 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
                 [this, &button] () { unset_active_popover(button); });
     }
 
-    bool should_grab_focus = this->active_button->is_keyboard_interactive();
-    gtk_layer_set_keyboard_interactivity(this->gobj(), should_grab_focus);
+    const bool should_grab_focus = this->active_button->is_keyboard_interactive();
+
+    if (should_grab_focus)
+    {
+        // First, set exclusive mode to grab input
+        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+        wl_surface_commit(get_wl_surface());
+
+        // Next, allow releasing of focus when clicking outside of the panel
+        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+    }
+
     this->active_button->set_has_focus(should_grab_focus);
     schedule_show(0);
 }
@@ -398,7 +408,7 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
     this->active_button = nullptr;
     this->popover_hide.disconnect();
 
-    gtk_layer_set_keyboard_interactivity(this->gobj(), false);
+    gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
 
     if (should_autohide())
     {
