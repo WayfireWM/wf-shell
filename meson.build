@@ -18,7 +18,7 @@ wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols')
 gtkmm          = dependency('gtkmm-3.0', version: '>=3.24')
 wfconfig       = dependency('wf-config', version: '>=0.7.0') #TODO fallback submodule
-gtklayershell  = dependency('gtk-layer-shell-0', version: '>= 0.1', fallback: ['gtk-layer-shell', 'gtk_layer_shell_dep'])
+gtklayershell  = dependency('gtk-layer-shell-0', version: '>= 0.6', fallback: ['gtk-layer-shell', 'gtk_layer_shell'])
 libpulse       = dependency('libpulse', required : get_option('pulse'))
 dbusmenu_gtk   = dependency('dbusmenu-gtk3-0.4')
 libgvc         = subproject('gvc', default_options: ['static=true'], required : get_option('pulse'))
