@@ -8,9 +8,11 @@
 
 #include <gtk-utils.hpp>
 
-static void label_set_from_command(const std::string & command_line,
+static void label_set_from_command(std::string command_line,
     Gtk::Label& label)
 {
+    command_line = "/bin/sh -c \"" + command_line + "\"";
+
     Glib::Pid pid;
     int output_fd;
     Glib::spawn_async_with_pipes("", Glib::shell_parse_argv(command_line),
