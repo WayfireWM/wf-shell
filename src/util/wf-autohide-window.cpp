@@ -30,20 +30,8 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     this->position.set_callback([=] () { this->update_position(); });
     this->update_position();
 
-    this->edge_offset.set_callback([=] () { this->setup_hotspot(); });
-
-    this->autohide_opt.set_callback([=] { update_autohide(); });
-    set_auto_exclusive_zone(!autohide_opt);
-
     this->signal_draw().connect_notify(
         [=] (const Cairo::RefPtr<Cairo::Context>&) { update_margin(); });
-
-    this->signal_size_allocate().connect_notify(
-        [=] (Gtk::Allocation&)
-    {
-        this->set_auto_exclusive_zone(this->has_auto_exclusive_zone);
-        this->setup_hotspot();
-    });
 
     this->signal_focus_out_event().connect_notify(
         [=] (const GdkEventFocus*)
@@ -54,20 +42,38 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         }
     });
 
-    if (output->output)
+    set_auto_exclusive_zone(!autohide_opt);
+
+    if (!output->output)
     {
-        static const zwf_output_v2_listener listener = {
-            .enter_fullscreen = [] (void *data, zwf_output_v2*)
-            {
-                ((WayfireAutohidingWindow*)data)->increase_autohide();
-            },
-            .leave_fullscreen = [] (void *data, zwf_output_v2*)
-            {
-                ((WayfireAutohidingWindow*)data)->decrease_autohide();
-            }
-        };
-        zwf_output_v2_add_listener(output->output, &listener, this);
+        std::cerr << "WARNING: Compositor does not support zwf_shell_manager_v2 " << \
+            "disabling hotspot and autohide features " << \
+            "(is wayfire-shell plugin enabled?)" << std::endl;
+        return;
     }
+
+    this->signal_size_allocate().connect_notify(
+        [=] (Gtk::Allocation&)
+    {
+        this->set_auto_exclusive_zone(this->has_auto_exclusive_zone);
+        this->setup_hotspot();
+    });
+
+    this->edge_offset.set_callback([=] () { this->setup_hotspot(); });
+
+    this->autohide_opt.set_callback([=] { update_autohide(); });
+
+    static const zwf_output_v2_listener listener = {
+        .enter_fullscreen = [] (void *data, zwf_output_v2*)
+        {
+            ((WayfireAutohidingWindow*)data)->increase_autohide();
+        },
+        .leave_fullscreen = [] (void *data, zwf_output_v2*)
+        {
+            ((WayfireAutohidingWindow*)data)->decrease_autohide();
+        }
+    };
+    zwf_output_v2_add_listener(output->output, &listener, this);
 }
 
 WayfireAutohidingWindow::~WayfireAutohidingWindow()
@@ -146,10 +152,15 @@ void WayfireAutohidingWindow::update_position()
     GtkLayerShellEdge anchor = get_anchor_edge(position);
     gtk_layer_set_anchor(this->gobj(), anchor, true);
 
+    if (!this->output->output)
+    {
+        return;
+    }
+
     /* When the position changes, show an animation from the new edge. */
     y_position.animate(-this->get_allocated_height(), -this->get_allocated_height());
-    setup_hotspot();
     m_show_uncertain();
+    setup_hotspot();
 }
 
 struct WayfireAutohidingWindowHotspotCallbacks
@@ -186,11 +197,6 @@ static zwf_hotspot_v2_listener hotspot_listener = {
 
 void WayfireAutohidingWindow::setup_hotspot()
 {
-    if (!this->output->output)
-    {
-        return;
-    }
-
     /* No need to recreate hotspots if the height didn't change */
     if ((this->get_allocated_height() == last_hotspot_height) && (edge_offset == last_edge_offset))
     {
