@@ -6,6 +6,8 @@
 
 #include <gtkmm/tooltip.h>
 
+#include <array>
+
 #include <gtk-utils.hpp>
 
 static void label_set_from_command(std::string command_line,

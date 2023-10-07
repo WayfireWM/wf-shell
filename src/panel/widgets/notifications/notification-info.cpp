@@ -51,8 +51,8 @@ Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase & variant)
     iter.next_value(data_var);
 
     // for integer positive A, floor((A + 7) / 8) = ceil(A / 8)
-    ulong pixel_size = (channels * bits_per_sample + 7) / 8;
-    if (data_var.get_size() != ((ulong)height - 1) * (ulong)rowstride + (ulong)width * pixel_size)
+    gulong pixel_size = (channels * bits_per_sample + 7) / 8;
+    if (data_var.get_size() != ((gulong)height - 1) * (gulong)rowstride + (gulong)width * pixel_size)
     {
         throw std::invalid_argument(
             "Cannot create pixbuf from variant: expected data size doesn't equal actual one.");
