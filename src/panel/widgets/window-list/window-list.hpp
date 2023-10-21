@@ -62,7 +62,7 @@ class WayfireWindowList : public WayfireWidget
     std::map<zwlr_foreign_toplevel_handle_v1*,
         std::unique_ptr<WayfireToplevel>> toplevels;
 
-    zwlr_foreign_toplevel_manager_v1 *manager;
+    zwlr_foreign_toplevel_manager_v1 *manager = NULL;
     WayfireOutput *output;
     WayfireWindowListBox box;
     Gtk::ScrolledWindow scrolled_window;
