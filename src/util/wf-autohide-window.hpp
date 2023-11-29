@@ -89,11 +89,15 @@ class WayfireAutohidingWindow : public Gtk::Window
     int last_edge_offset = -1;
 
     WfOption<bool> autohide_opt;
+    bool autohide_enabled = autohide_opt;
     bool last_autohide_value = autohide_opt;
+    void setup_autohide();
     void update_autohide();
 
-    bool has_auto_exclusive_zone = false;
-    int last_zone = 0;
+    bool auto_exclusive_zone = !autohide_enabled;
+    int auto_exclusive_zone_size = 0;
+    void setup_auto_exclusive_zone();
+    void update_auto_exclusive_zone();
 
     sigc::connection pending_show, pending_hide;
     bool m_do_show();
@@ -107,6 +111,7 @@ class WayfireAutohidingWindow : public Gtk::Window
     bool input_inside_panel     = false;
     zwf_hotspot_v2 *edge_hotspot  = NULL;
     zwf_hotspot_v2 *panel_hotspot = NULL;
+    bool zwf_support = false;
     std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> edge_callbacks;
     std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> panel_callbacks;
     void setup_hotspot();
