@@ -42,17 +42,13 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         }
     });
 
-    if (output->output)
-    {
-        zwf_support = true;
-    }
     this->setup_autohide();
 
     this->edge_offset.set_callback([=] () { this->setup_hotspot(); });
 
     this->autohide_opt.set_callback([=] { setup_autohide(); });
 
-    if (!this->zwf_support)
+    if (!output->output)
     {
         std::cerr << "WARNING: Compositor does not support zwf_shell_manager_v2 " << \
             "disabling hotspot and autohide features " << \
@@ -149,7 +145,7 @@ void WayfireAutohidingWindow::update_position()
     GtkLayerShellEdge anchor = get_anchor_edge(position);
     gtk_layer_set_anchor(this->gobj(), anchor, true);
 
-    if (!this->zwf_support)
+    if (!output->output)
     {
         return;
     }
@@ -443,14 +439,14 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
 
 void WayfireAutohidingWindow::setup_autohide()
 {
-    if (!zwf_support && autohide_opt)
+    if (!output->output && autohide_opt)
     {
         std::cerr << "WARNING: Attempting to enable autohide, but the " <<
             "compositor does not support zwf_shell_manager_v2; ignoring" <<
             "autohide (is compositor's wayfire-shell plugin enabled?)" <<
             std::endl;
     }
-    autohide_enabled = zwf_support && autohide_opt;
+    autohide_enabled = output->output && autohide_opt;
 
     this->set_auto_exclusive_zone(!autohide_enabled);
     this->update_autohide();
@@ -462,7 +458,7 @@ void WayfireAutohidingWindow::setup_autohide()
         this->update_auto_exclusive_zone();
 
         // We have to check here as well, otherwise it enables hotspot when it shouldn't
-        if (!this->zwf_support || !autohide_enabled)
+        if (!output->output|| !autohide_enabled)
         {
             return;
         }
