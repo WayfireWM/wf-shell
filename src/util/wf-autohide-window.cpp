@@ -284,7 +284,7 @@ void WayfireAutohidingWindow::update_auto_exclusive_zone()
 
 void  WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
 {
-    if (has_zone && autohide_enabled)
+    if (has_zone && (output->output && autohide_opt))
     {
         std::cerr << "WARNING: Trying to enable auto_exclusive_zone with " <<
             "autohide enabled might look jarring; preventing it." << std::endl;
@@ -446,9 +446,8 @@ void WayfireAutohidingWindow::setup_autohide()
             "autohide (is compositor's wayfire-shell plugin enabled?)" <<
             std::endl;
     }
-    autohide_enabled = output->output && autohide_opt;
 
-    this->set_auto_exclusive_zone(!autohide_enabled);
+    this->set_auto_exclusive_zone(!(output->output && autohide_opt));
     this->update_autohide();
 
     this->signal_size_allocate().connect_notify(
@@ -458,7 +457,7 @@ void WayfireAutohidingWindow::setup_autohide()
         this->update_auto_exclusive_zone();
 
         // We have to check here as well, otherwise it enables hotspot when it shouldn't
-        if (!output->output|| !autohide_enabled)
+        if (!output->output|| !(output->output && autohide_opt))
         {
             return;
         }
@@ -469,12 +468,12 @@ void WayfireAutohidingWindow::setup_autohide()
 
 void WayfireAutohidingWindow::update_autohide()
 {
-    if (autohide_enabled == last_autohide_value)
+    if ((output->output && autohide_opt) == last_autohide_value)
     {
         return;
     }
 
-    if (autohide_enabled)
+    if (output->output && autohide_opt)
     {
         increase_autohide();
     } else
@@ -482,6 +481,6 @@ void WayfireAutohidingWindow::update_autohide()
         decrease_autohide();
     }
 
-    last_autohide_value = autohide_enabled;
+    last_autohide_value = output->output && autohide_opt;
     setup_auto_exclusive_zone();
 }
