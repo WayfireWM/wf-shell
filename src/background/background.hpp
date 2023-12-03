@@ -18,10 +18,9 @@ class BackgroundImage
 
 class BackgroundDrawingArea : public Gtk::DrawingArea
 {
-    wf::animation::simple_animation_t fade{
-        wf::create_option(1000),
-        wf::animation::smoothing::linear
-    };
+    wf::animation::simple_animation_t fade;
+    WfOption<int> fade_duration{"background/fade_duration"};
+
     /* These two pixbufs are used for fading one background
      * image to the next when changing backgrounds or when
      * automatically cycling through a directory of images.
