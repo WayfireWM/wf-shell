@@ -13,6 +13,10 @@
 		<_short>Cycle Timeout</_short>
 		<default>150</default>
 	</option>
+	<option name="fade_duration" type="int">
+		<_short>Fade Duration</_short>
+		<default>1000</default>
+	</option>
 	<option name="randomize" type="bool">
 		<_short>Randomize</_short>
 		<default>false</default>
