@@ -15,6 +15,7 @@
 
 #include <gtk-utils.hpp>
 #include <gtk-layer-shell.h>
+#include <glib-unix.h>
 
 #include "background.hpp"
 
@@ -330,6 +331,7 @@ class WayfireBackgroundApp : public WayfireShellApp
     {
         WayfireShellApp::instance =
             std::make_unique<WayfireBackgroundApp>(argc, argv);
+        g_unix_signal_add(SIGUSR1, sigusr1_handler, (void*)instance.get());
         instance->run();
     }
 
@@ -342,6 +344,16 @@ class WayfireBackgroundApp : public WayfireShellApp
     void handle_output_removed(WayfireOutput *output) override
     {
         backgrounds.erase(output);
+    }
+
+    static gboolean sigusr1_handler(void *instance)
+    {
+        for (const auto& [_, bg] : ((WayfireBackgroundApp*)instance)->backgrounds)
+        {
+            bg->change_background();
+        }
+
+        return TRUE;
     }
 };
 

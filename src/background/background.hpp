@@ -60,7 +60,6 @@ class WayfireBackground
 
     Glib::RefPtr<Gdk::Pixbuf> create_from_file_safe(std::string path);
     bool background_transition_frame(int timer);
-    bool change_background();
     bool load_images_from_dir(std::string path);
     bool load_next_background(Glib::RefPtr<Gdk::Pixbuf> & pbuf, std::string & path);
     void reset_background();
@@ -71,4 +70,5 @@ class WayfireBackground
 
   public:
     WayfireBackground(WayfireShellApp *app, WayfireOutput *output);
+    bool change_background();
 };
