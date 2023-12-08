@@ -100,7 +100,7 @@ Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string p
     return pbuf;
 }
 
-bool WayfireBackground::change_background(int timer)
+bool WayfireBackground::change_background()
 {
     Glib::RefPtr<Gdk::Pixbuf> pbuf;
     std::string path;
@@ -248,8 +248,8 @@ void WayfireBackground::reset_cycle_timeout()
     change_bg_conn.disconnect();
     if (images.size())
     {
-        change_bg_conn = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(
-            this, &WayfireBackground::change_background), 0), cycle_timeout);
+        change_bg_conn = Glib::signal_timeout().connect(sigc::mem_fun(
+            this, &WayfireBackground::change_background), cycle_timeout);
     }
 }
 
