@@ -120,8 +120,7 @@ bool WayfireBackground::load_images_from_dir(std::string path)
     wordexp_t exp;
 
     /* Expand path */
-    wordexp(path.c_str(), &exp, 0);
-    if (!exp.we_wordv)
+    if (wordexp(path.c_str(), &exp, 0) || !exp.we_wordv)
     {
         return false;
     }
@@ -129,6 +128,7 @@ bool WayfireBackground::load_images_from_dir(std::string path)
     auto dir = opendir(exp.we_wordv[0]);
     if (!dir)
     {
+        wordfree(&exp);
         return false;
     }
 
@@ -157,6 +157,8 @@ bool WayfireBackground::load_images_from_dir(std::string path)
             }
         }
     }
+
+    wordfree(&exp);
 
     if (background_randomize && images.size())
     {
