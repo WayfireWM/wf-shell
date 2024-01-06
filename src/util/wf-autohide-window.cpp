@@ -44,6 +44,16 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
 
     set_auto_exclusive_zone(!autohide_opt);
 
+    this->signal_size_allocate().connect_notify(
+        [=] (Gtk::Allocation&)
+    {
+        this->set_auto_exclusive_zone(this->has_auto_exclusive_zone);
+        if (output->output)
+        {
+            this->setup_hotspot();
+        }
+    });
+
     if (!output->output)
     {
         std::cerr << "WARNING: Compositor does not support zwf_shell_manager_v2 " << \
@@ -51,13 +61,6 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
             "(is wayfire-shell plugin enabled?)" << std::endl;
         return;
     }
-
-    this->signal_size_allocate().connect_notify(
-        [=] (Gtk::Allocation&)
-    {
-        this->set_auto_exclusive_zone(this->has_auto_exclusive_zone);
-        this->setup_hotspot();
-    });
 
     this->edge_offset.set_callback([=] () { this->setup_hotspot(); });
 
