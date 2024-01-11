@@ -42,26 +42,19 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         }
     });
 
-    set_auto_exclusive_zone(!autohide_opt);
+    this->setup_autohide();
+
+    this->edge_offset.set_callback([=] () { this->setup_hotspot(); });
+
+    this->autohide_opt.set_callback([=] { setup_autohide(); });
 
     if (!output->output)
     {
         std::cerr << "WARNING: Compositor does not support zwf_shell_manager_v2 " << \
             "disabling hotspot and autohide features " << \
             "(is wayfire-shell plugin enabled?)" << std::endl;
-        return;
+            return;
     }
-
-    this->signal_size_allocate().connect_notify(
-        [=] (Gtk::Allocation&)
-    {
-        this->set_auto_exclusive_zone(this->has_auto_exclusive_zone);
-        this->setup_hotspot();
-    });
-
-    this->edge_offset.set_callback([=] () { this->setup_hotspot(); });
-
-    this->autohide_opt.set_callback([=] { update_autohide(); });
 
     static const zwf_output_v2_listener listener = {
         .enter_fullscreen = [] (void *data, zwf_output_v2*)
@@ -152,7 +145,7 @@ void WayfireAutohidingWindow::update_position()
     GtkLayerShellEdge anchor = get_anchor_edge(position);
     gtk_layer_set_anchor(this->gobj(), anchor, true);
 
-    if (!this->output->output)
+    if (!output->output)
     {
         return;
     }
@@ -267,16 +260,38 @@ void WayfireAutohidingWindow::setup_hotspot()
         panel_callbacks.get());
 }
 
-void WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
+void WayfireAutohidingWindow::setup_auto_exclusive_zone()
 {
-    this->has_auto_exclusive_zone = has_zone;
-    int target_zone = has_zone ? get_allocated_height() : 0;
-
-    if (this->last_zone != target_zone)
+    if (!auto_exclusive_zone && auto_exclusive_zone == 0)
     {
-        gtk_layer_set_exclusive_zone(this->gobj(), target_zone);
-        last_zone = target_zone;
+        return;
     }
+
+    this->update_auto_exclusive_zone();
+}
+
+void WayfireAutohidingWindow::update_auto_exclusive_zone()
+{
+    int allocated_height = get_allocated_height();
+    int new_zone_size = this->auto_exclusive_zone ? allocated_height : 0;
+
+    if (new_zone_size != this->auto_exclusive_zone_size)
+    {
+        gtk_layer_set_exclusive_zone(this->gobj(), new_zone_size);
+        this->auto_exclusive_zone_size = new_zone_size;
+    }
+}
+
+void  WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
+{
+    if (has_zone && (output->output && autohide_opt))
+    {
+        std::cerr << "WARNING: Trying to enable auto_exclusive_zone with " <<
+            "autohide enabled might look jarring; preventing it." << std::endl;
+        return;
+    }
+
+    auto_exclusive_zone = has_zone;
 }
 
 void WayfireAutohidingWindow::increase_autohide()
@@ -422,14 +437,43 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
     }
 }
 
+void WayfireAutohidingWindow::setup_autohide()
+{
+    if (!output->output && autohide_opt)
+    {
+        std::cerr << "WARNING: Attempting to enable autohide, but the " <<
+            "compositor does not support zwf_shell_manager_v2; ignoring" <<
+            "autohide (is compositor's wayfire-shell plugin enabled?)" <<
+            std::endl;
+    }
+
+    this->set_auto_exclusive_zone(!(output->output && autohide_opt));
+    this->update_autohide();
+
+    this->signal_size_allocate().connect_notify(
+        [=] (Gtk::Allocation&)
+    {
+        //std::cerr << "set_auto_exclusive_zone: " << this->auto_exclusive_zone << std::endl;
+        this->update_auto_exclusive_zone();
+
+        // We have to check here as well, otherwise it enables hotspot when it shouldn't
+        if (!output->output|| !(output->output && autohide_opt))
+        {
+            return;
+        }
+
+        this->setup_hotspot();
+    });
+}
+
 void WayfireAutohidingWindow::update_autohide()
 {
-    if (autohide_opt == last_autohide_value)
+    if ((output->output && autohide_opt) == last_autohide_value)
     {
         return;
     }
 
-    if (autohide_opt)
+    if (output->output && autohide_opt)
     {
         increase_autohide();
     } else
@@ -437,6 +481,6 @@ void WayfireAutohidingWindow::update_autohide()
         decrease_autohide();
     }
 
-    last_autohide_value = autohide_opt;
-    set_auto_exclusive_zone(!autohide_opt);
+    last_autohide_value = output->output && autohide_opt;
+    setup_auto_exclusive_zone();
 }
