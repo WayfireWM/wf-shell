@@ -162,7 +162,7 @@ class WayfirePanel::impl
     {
         if (name == "menu")
         {
-            return Widget(new WayfireMenu());
+            return Widget(new WayfireMenu(output));
         }
 
         if (name == "launchers")

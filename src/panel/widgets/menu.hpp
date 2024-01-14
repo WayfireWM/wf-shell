@@ -79,6 +79,8 @@ class WayfireLogoutUI
 
 class WayfireMenu : public WayfireWidget
 {
+    WayfireOutput *output;
+
     Gtk::Box flowbox_container;
     Gtk::HBox hbox, hbox_bottom;
     Gtk::VBox bottom_pad;
@@ -127,8 +129,14 @@ class WayfireMenu : public WayfireWidget
 
   public:
     void init(Gtk::HBox *container) override;
+    void toggle_menu();
     void hide_menu();
     void refresh();
+    WayfireMenu(WayfireOutput *output)
+    {
+        this->output = output;
+    }
+
     ~WayfireMenu() override
     {
         g_signal_handler_disconnect(app_info_monitor, app_info_monitor_changed_handler_id);

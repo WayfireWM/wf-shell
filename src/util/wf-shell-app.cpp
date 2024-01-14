@@ -201,3 +201,8 @@ WayfireOutput::~WayfireOutput()
         zwf_output_v2_destroy(this->output);
     }
 }
+
+sigc::signal<void()> WayfireOutput::toggle_menu_signal()
+{
+    return m_toggle_menu_signal;
+}
