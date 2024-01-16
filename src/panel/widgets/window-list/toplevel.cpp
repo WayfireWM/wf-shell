@@ -189,7 +189,7 @@ class WayfireToplevel::impl
             {
                 menu.popup(event->button, event->time);
                 return true; // It has been handled.
-            } else if (event->button == 2 && middle_click_close)
+            } else if ((event->button == 2) && middle_click_close)
             {
                 zwlr_foreign_toplevel_handle_v1_close(handle);
                 return true;
