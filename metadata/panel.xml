@@ -74,6 +74,10 @@
 		<_short>Background Color</_short>
 		<default>gtk_headerbar</default>
 	</option>
+	<option name="middle_click_close" type="bool">
+		<_short>Middle Click Closes Windows</_short>
+		<default>false</default>
+	</option>
 	</group>
 	<group>
 	<_short>Launchers</_short>
