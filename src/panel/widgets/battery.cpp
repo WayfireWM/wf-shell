@@ -2,6 +2,8 @@
 #include <gtk-utils.hpp>
 #include <iostream>
 #include <algorithm>
+#include <fstream>
+#include <filesystem>
 
 #define UPOWER_NAME "org.freedesktop.UPower"
 #define DISPLAY_DEVICE "/org/freedesktop/UPower/devices/DisplayDevice"
@@ -13,6 +15,13 @@
 #define TIMETOFULL     "TimeToFull"
 #define TIMETOEMPTY    "TimeToEmpty"
 #define SHOULD_DISPLAY "IsPresent"
+
+std::string backlight = std::filesystem::directory_iterator{"/sys/class/backlight"}->path().string();
+
+int max_brightness;
+std::string brightness_file = backlight + "/brightness";
+std::string max_brightness_file = backlight + "/max_brightness";
+std::ifstream max_brightness_stream(max_brightness_file);
 
 static std::string get_device_type_description(uint32_t type)
 {
@@ -28,6 +37,35 @@ static std::string get_device_type_description(uint32_t type)
 
     return "";
 }
+
+// this works as long as the owner of the wf-panel process is in the video group
+// sudo usermod -a -G video USER
+void change_brightness(int change) {
+    std::ifstream brightness_stream(brightness_file);
+    int current_brightness;
+
+    if (brightness_stream >> current_brightness)
+    {
+        int new_brightness = current_brightness + (change*max_brightness)/100.0; // change by change%
+        if (new_brightness > max_brightness)
+        {
+            new_brightness = max_brightness;
+        }
+        else if (new_brightness <= 0)
+        {
+            new_brightness = 1;
+        }
+        std::cout << new_brightness << "\n";
+
+        std::ofstream brightness_output(brightness_file);
+        brightness_output << new_brightness;
+
+        return;
+    }
+
+    std::cerr << "battery.cpp: Failed to change brightness\n";
+}
+
 
 void WayfireBatteryInfo::on_properties_changed(
     const Gio::DBus::Proxy::MapChangedProperties& properties,
@@ -174,6 +212,18 @@ void WayfireBatteryInfo::update_details()
     }
 }
 
+void WayfireBatteryInfo::on_battery_scroll(GdkEventScroll *event)
+{
+    if (event->delta_y < 0)
+    {
+        change_brightness(sensitivity_opt);
+    }
+    else if (0 < event->delta_y)
+    {
+        change_brightness(-sensitivity_opt);
+    }
+}
+
 void WayfireBatteryInfo::update_state()
 {
     std::cout << "unimplemented reached, in battery.cpp: "
@@ -226,6 +276,8 @@ bool WayfireBatteryInfo::setup_dbus()
 static const std::string default_font = "default";
 void WayfireBatteryInfo::init(Gtk::HBox *container)
 {
+    max_brightness_stream >> max_brightness;
+
     if (!setup_dbus())
     {
         return;
@@ -233,6 +285,10 @@ void WayfireBatteryInfo::init(Gtk::HBox *container)
 
     button_box.add(icon);
     button.get_style_context()->add_class("flat");
+
+    button.set_events(Gdk::SCROLL_MASK | Gdk::SMOOTH_SCROLL_MASK);
+    button.signal_scroll_event().connect_notify(
+        sigc::mem_fun(this, &WayfireBatteryInfo::on_battery_scroll));
 
     status_opt.set_callback([=] () { update_details(); });
     font_opt.set_callback([=] () { update_font(); });

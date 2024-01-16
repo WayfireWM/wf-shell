@@ -24,6 +24,7 @@ class WayfireBatteryInfo : public WayfireWidget
     WfOption<std::string> status_opt{"panel/battery_status"};
     WfOption<std::string> font_opt{"panel/battery_font"};
     WfOption<int> size_opt{"panel/battery_icon_size"};
+    WfOption<double> sensitivity_opt{"panel/battery_scroll_sensitivity"};
     WfOption<bool> invert_opt{"panel/battery_icon_invert"};
 
     Gtk::Button button;
@@ -41,6 +42,7 @@ class WayfireBatteryInfo : public WayfireWidget
     void update_icon();
     void update_details();
     void update_state();
+    void on_battery_scroll(GdkEventScroll *event);
 
     void on_properties_changed(
         const Gio::DBus::Proxy::MapChangedProperties& properties,
