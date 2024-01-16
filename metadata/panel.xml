@@ -125,11 +125,6 @@
 		<default>32</default>
 		<min>1</min>
 	</option>
-	<option name="battery_scroll_sensitivity" type="double">
-		<_short>Battery Scroll Sensitivity</_short>
-		<default>1.8</default>
-		<min>0</min>
-	</option>
 	<option name="battery_icon_invert" type="bool">
 		<_short>Battery Icon Invert Color</_short>
 		<default>true</default>
@@ -137,6 +132,14 @@
 	<option name="battery_font" type="string">
 		<_short>Battery Font</_short>
 		<default>default</default>
+	</option>
+	<option name="battery_scrollup_command" type="string">
+		<_short>Battery Scroll Up Command</_short>
+		<default>brightnessctl -q set 10%+</default>
+	</option>
+	<option name="battery_scrolldown_command" type="string">
+		<_short>Battery Scroll Down Command</_short>
+		<default>brightnessctl -q set 10%-</default>
 	</option>
 	</group>
 	<group>
