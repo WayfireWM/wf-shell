@@ -19,6 +19,8 @@ struct WayfireOutput
     GMonitor monitor;
     wl_output *wo;
     zwf_output_v2 *output;
+    sigc::signal<void()> toggle_menu_signal();
+    sigc::signal<void()> m_toggle_menu_signal;
 
     WayfireOutput(const GMonitor& monitor, zwf_shell_manager_v2 *zwf_manager);
     ~WayfireOutput();

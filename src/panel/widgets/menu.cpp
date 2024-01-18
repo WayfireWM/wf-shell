@@ -494,6 +494,8 @@ static void app_info_changed(GAppInfoMonitor *gappinfomonitor, gpointer user_dat
 
 void WayfireMenu::init(Gtk::HBox *container)
 {
+    output->toggle_menu_signal().connect(sigc::mem_fun(this, &WayfireMenu::toggle_menu));
+
     menu_icon.set_callback([=] () { update_icon(); });
     menu_size.set_callback([=] () { update_icon(); });
     panel_position.set_callback([=] () { update_popover_layout(); });
@@ -535,6 +537,17 @@ void WayfireMenu::init(Gtk::HBox *container)
     hbox.show();
     main_image.show();
     button->show();
+}
+
+void WayfireMenu::toggle_menu()
+{
+    if (button->get_active())
+    {
+        button->set_active(false);
+    } else
+    {
+        button->set_active(true);
+    }
 }
 
 void WayfireMenu::hide_menu()

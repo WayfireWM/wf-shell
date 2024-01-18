@@ -53,7 +53,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         std::cerr << "WARNING: Compositor does not support zwf_shell_manager_v2 " << \
             "disabling hotspot and autohide features " << \
             "(is wayfire-shell plugin enabled?)" << std::endl;
-            return;
+        return;
     }
 
     static const zwf_output_v2_listener listener = {
@@ -64,7 +64,11 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         .leave_fullscreen = [] (void *data, zwf_output_v2*)
         {
             ((WayfireAutohidingWindow*)data)->decrease_autohide();
-        }
+        },
+        .toggle_menu = [] (void *data, zwf_output_v2*)
+        {
+            ((WayfireAutohidingWindow*)data)->output->toggle_menu_signal().emit();
+        },
     };
     zwf_output_v2_add_listener(output->output, &listener, this);
 }
@@ -262,7 +266,7 @@ void WayfireAutohidingWindow::setup_hotspot()
 
 void WayfireAutohidingWindow::setup_auto_exclusive_zone()
 {
-    if (!auto_exclusive_zone && auto_exclusive_zone == 0)
+    if (!auto_exclusive_zone && (auto_exclusive_zone == 0))
     {
         return;
     }
@@ -273,7 +277,7 @@ void WayfireAutohidingWindow::setup_auto_exclusive_zone()
 void WayfireAutohidingWindow::update_auto_exclusive_zone()
 {
     int allocated_height = get_allocated_height();
-    int new_zone_size = this->auto_exclusive_zone ? allocated_height : 0;
+    int new_zone_size    = this->auto_exclusive_zone ? allocated_height : 0;
 
     if (new_zone_size != this->auto_exclusive_zone_size)
     {
@@ -282,7 +286,7 @@ void WayfireAutohidingWindow::update_auto_exclusive_zone()
     }
 }
 
-void  WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
+void WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
 {
     if (has_zone && (output->output && autohide_opt))
     {
@@ -453,11 +457,11 @@ void WayfireAutohidingWindow::setup_autohide()
     this->signal_size_allocate().connect_notify(
         [=] (Gtk::Allocation&)
     {
-        //std::cerr << "set_auto_exclusive_zone: " << this->auto_exclusive_zone << std::endl;
+        // std::cerr << "set_auto_exclusive_zone: " << this->auto_exclusive_zone << std::endl;
         this->update_auto_exclusive_zone();
 
         // We have to check here as well, otherwise it enables hotspot when it shouldn't
-        if (!output->output|| !(output->output && autohide_opt))
+        if (!output->output || !(output->output && autohide_opt))
         {
             return;
         }

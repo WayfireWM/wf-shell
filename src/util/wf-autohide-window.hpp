@@ -93,7 +93,7 @@ class WayfireAutohidingWindow : public Gtk::Window
     void setup_autohide();
     void update_autohide();
 
-    bool auto_exclusive_zone = !autohide_opt;
+    bool auto_exclusive_zone     = !autohide_opt;
     int auto_exclusive_zone_size = 0;
     void setup_auto_exclusive_zone();
     void update_auto_exclusive_zone();
