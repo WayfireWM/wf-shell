@@ -11,7 +11,6 @@
 #include <gdk/gdkwayland.h>
 #include <cmath>
 
-
 #include "toplevel.hpp"
 #include "gtk-utils.hpp"
 #include "panel.hpp"
@@ -43,6 +42,8 @@ class WayfireToplevel::impl
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
 
     Glib::ustring app_id, title;
+
+    WfOption<bool> middle_click_close{"panel/middle_click_close"};
 
   public:
     WayfireWindowList *window_list;
@@ -182,14 +183,20 @@ class WayfireToplevel::impl
 
     bool on_button_press_event(GdkEventButton *event)
     {
-        if ((event->type == GDK_BUTTON_PRESS) && (event->button == 3))
+        if (event->type == GDK_BUTTON_PRESS)
         {
-            menu.popup(event->button, event->time);
-            return true; // It has been handled.
-        } else
-        {
-            return false;
+            if (event->button == 3)
+            {
+                menu.popup(event->button, event->time);
+                return true; // It has been handled.
+            } else if ((event->button == 2) && middle_click_close)
+            {
+                zwlr_foreign_toplevel_handle_v1_close(handle);
+                return true;
+            }
         }
+
+        return false;
     }
 
     void on_menu_minimize()
