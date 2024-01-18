@@ -66,7 +66,7 @@ static void registry_add_object(void *data, struct wl_registry *registry,
     if (strcmp(interface, zwf_shell_manager_v2_interface.name) == 0)
     {
         app->wf_shell_manager = (zwf_shell_manager_v2*)wl_registry_bind(registry, name,
-            &zwf_shell_manager_v2_interface, std::min(version, 1u));
+            &zwf_shell_manager_v2_interface, std::min(version, 2u));
     }
 }
 
@@ -200,4 +200,9 @@ WayfireOutput::~WayfireOutput()
     {
         zwf_output_v2_destroy(this->output);
     }
+}
+
+sigc::signal<void()> WayfireOutput::toggle_menu_signal()
+{
+    return m_toggle_menu_signal;
 }
