@@ -298,9 +298,10 @@ class WayfireToplevel::impl
 
     void set_app_id(std::string app_id)
     {
+        WfOption<int> minimal_panel_height{"panel/minimal_height"};
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image, app_id,
-            24, button.get_scale_factor());
+            std::min(int(minimal_panel_height), 24), button.get_scale_factor());
     }
 
     void send_rectangle_hint()
@@ -734,7 +735,7 @@ void set_image_from_icon(Gtk::Image& image,
         {
             /* Perhaps no desktop app info, but we might still be able to
              * get an icon directly from the icon theme */
-            if (Gtk::IconTheme::get_default()->lookup_icon(app_id, 24))
+            if (Gtk::IconTheme::get_default()->lookup_icon(app_id, size))
             {
                 icon_name = app_id;
             }
