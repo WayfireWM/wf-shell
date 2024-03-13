@@ -71,4 +71,5 @@ class WayfireBackground
   public:
     WayfireBackground(WayfireShellApp *app, WayfireOutput *output);
     bool change_background();
+    ~WayfireBackground();
 };
