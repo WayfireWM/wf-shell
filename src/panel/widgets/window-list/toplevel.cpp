@@ -307,27 +307,17 @@ class WayfireToplevel::impl
     void send_rectangle_hint()
     {
         Gtk::Widget *widget = &this->button;
-
-        int x = 0, y = 0;
-        int width = button.get_allocated_width();
-        int height = button.get_allocated_height();
-
-        while (widget)
+        auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
+        if (panel)
         {
-            x += widget->get_allocation().get_x();
-            y += widget->get_allocation().get_y();
-            widget = widget->get_parent();
-        }
+            int x, y;
+            widget->translate_coordinates(panel->get_window(), 0, 0, x, y);
 
-        auto panel =
-            WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
-        if (!panel)
-        {
-            return;
+            int width  = button.get_allocated_width();
+            int height = button.get_allocated_height();
+            zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
+                panel->get_wl_surface(), x, y, width, height);
         }
-
-        zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
-            panel->get_wl_surface(), x, y, width, height);
     }
 
     int32_t max_width = 0;
