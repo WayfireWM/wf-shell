@@ -321,6 +321,11 @@ WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output
     });
 }
 
+WayfireBackground::~WayfireBackground()
+{
+    reset_background();
+}
+
 class WayfireBackgroundApp : public WayfireShellApp
 {
     std::map<WayfireOutput*, std::unique_ptr<WayfireBackground>> backgrounds;
