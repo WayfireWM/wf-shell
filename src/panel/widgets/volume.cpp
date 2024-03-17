@@ -133,10 +133,10 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
 
 void WayfireVolume::on_volume_scroll(GdkEventScroll *event)
 {
+    button->set_keyboard_interactive(false);
     set_volume(std::clamp(volume_scale.get_target_value() - event->delta_y * max_norm * scroll_sensitivity,
         0.0, max_norm));
-
-    button->grab_focus();
+    button->set_keyboard_interactive();
     check_set_popover_timeout();
 }
 
