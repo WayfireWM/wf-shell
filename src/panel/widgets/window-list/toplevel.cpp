@@ -665,11 +665,7 @@ Icon get_from_desktop_app_info(std::string app_id)
 
     std::vector<std::string> prefixes = {
         "",
-        "/usr/share/applications/",
-        "/usr/share/applications/kde/",
-        "/usr/share/applications/org.kde.",
-        "/usr/local/share/applications/",
-        "/usr/local/share/applications/org.kde.",
+        "org.kde.",
     };
 
     std::vector<std::string> app_id_variations = {
@@ -690,8 +686,7 @@ Icon get_from_desktop_app_info(std::string app_id)
             {
                 if (!app_info)
                 {
-                    app_info = Gio::DesktopAppInfo
-                        ::create_from_filename(prefix + id + suffix);
+                    app_info = Gio::DesktopAppInfo::create(prefix + id + suffix);
                 }
             }
         }
