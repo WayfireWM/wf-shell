@@ -51,7 +51,7 @@ class WayfireBackground
     int scale;
     double offset_x, offset_y;
     double image_scale = 1.0;
-    bool inhibited = false;
+    bool inhibited     = false;
     uint current_background;
     sigc::connection change_bg_conn;
 
