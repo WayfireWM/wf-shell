@@ -122,9 +122,9 @@ Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string p
 
     if (!fill_and_crop_string.compare(background_fill_mode))
     {
-        float screen_aspect_ratio = (float) width / height;
-        float image_aspect_ratio  = (float) pbuf->get_width() / pbuf->get_height();
-		bool should_fill_width    = (screen_aspect_ratio > image_aspect_ratio);
+        float screen_aspect_ratio = (float)width / height;
+        float image_aspect_ratio  = (float)pbuf->get_width() / pbuf->get_height();
+        bool should_fill_width    = (screen_aspect_ratio > image_aspect_ratio);
         if (should_fill_width)
         {
             image_scale = (double)width / pbuf->get_width();
@@ -139,9 +139,9 @@ Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string p
     } else
     {
         bool eq_width = (width == pbuf->get_width());
-        image_scale=1.0;
-        offset_x   = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
-        offset_y   = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
+        image_scale = 1.0;
+        offset_x    = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
+        offset_y    = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
     }
 
     return pbuf;
