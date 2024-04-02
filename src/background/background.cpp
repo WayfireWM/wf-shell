@@ -34,8 +34,8 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
     to_image.source = Gdk::Cairo::create_surface_from_pixbuf(image,
         this->get_scale_factor());
 
-    to_image.x = offset_x / this->get_scale_factor();
-    to_image.y = offset_y / this->get_scale_factor();
+    to_image.x     = offset_x / this->get_scale_factor();
+    to_image.y     = offset_y / this->get_scale_factor();
     to_image.scale = image_scale;
 
     fade = {
@@ -105,11 +105,12 @@ Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string p
         {
             return Glib::RefPtr<Gdk::Pixbuf>();
         }
-        offset_x = offset_y = 0.0;
+
+        offset_x    = offset_y = 0.0;
         image_scale = 1.0;
         return pbuf;
     }
-    
+
     try {
         pbuf =
             Gdk::Pixbuf::create_from_file(path, width, height,
@@ -118,29 +119,31 @@ Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string p
     {
         return Glib::RefPtr<Gdk::Pixbuf>();
     }
+
     if (!fill_and_crop_string.compare(background_fill_mode))
     {
         float screen_aspect_ratio = (float) width / height;
-        float image_aspect_ratio = (float) pbuf->get_width() / pbuf->get_height();
-		bool should_fill_width = (screen_aspect_ratio > image_aspect_ratio);
-        if (should_fill_width){
-            image_scale = (double) width / pbuf->get_width();
-            offset_y = ( ( height / image_scale ) - pbuf->get_height()) * 0.5;
-            offset_x = 0;
+        float image_aspect_ratio  = (float) pbuf->get_width() / pbuf->get_height();
+		bool should_fill_width    = (screen_aspect_ratio > image_aspect_ratio);
+        if (should_fill_width)
+        {
+            image_scale = (double)width / pbuf->get_width();
+            offset_y    = ((height / image_scale) - pbuf->get_height()) * 0.5;
+            offset_x    = 0;
         } else
         {
             image_scale = (double)height / pbuf->get_height();
-            offset_x = ( ( width / image_scale )- pbuf->get_width()) * 0.5;
-            offset_y = 0;
+            offset_x    = ((width / image_scale) - pbuf->get_width()) * 0.5;
+            offset_y    = 0;
         }
     } else
     {
         bool eq_width = (width == pbuf->get_width());
         image_scale=1.0;
-        offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
-        offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
+        offset_x   = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
+        offset_y   = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
     }
-    
+
     return pbuf;
 }
 
