@@ -86,40 +86,21 @@ Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string p
     int height = window.get_allocated_height() * scale;
 
     float screen_aspect_ratio = (float) width / height;
-    float image_aspect_ratio;
 
     std::string fill_and_crop_string = "fill_and_crop";
     std::string preserve_aspect_string = "preserve_aspect";
-    std::string stretch_string = "stretch";
-
-    enum FillMode { fill_and_crop, preserve_aspect, stretch};
-    FillMode current_mode;
 
     if(! fill_and_crop_string.compare(background_fill_mode))
     {
-        current_mode = fill_and_crop;
-    } else
-    {
-        if (! preserve_aspect_string.compare(background_fill_mode))
+        try {
+            pbuf =
+                Gdk::Pixbuf::create_from_file(path, width, height,
+                    true);
+        } catch (...)
         {
-            current_mode = preserve_aspect;
-        }else
-        {
-            current_mode = stretch;
+            return Glib::RefPtr<Gdk::Pixbuf>();
         }
-    }
-
-    try {
-        pbuf =
-            Gdk::Pixbuf::create_from_file(path, width, height,
-                current_mode != stretch);
-    } catch (...)
-    {
-        return Glib::RefPtr<Gdk::Pixbuf>();
-    }
-
-    if (current_mode == fill_and_crop) {
-	    image_aspect_ratio = (float) pbuf->get_width() / pbuf->get_height();
+        float image_aspect_ratio = (float) pbuf->get_width() / pbuf->get_height();
 		bool should_fill_width = (screen_aspect_ratio > image_aspect_ratio);
 	    try {
 	        pbuf =
@@ -129,24 +110,33 @@ Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string p
 	    } catch (...) {
 	        return Glib::RefPtr<Gdk::Pixbuf>();
 	    }
+        offset_x = (width - pbuf->get_width()) * 0.5;
+        offset_y = (height - pbuf->get_height()) * 0.5;
+    } else if (! preserve_aspect_string.compare(background_fill_mode))
+    {
+        try {
+            pbuf =
+                Gdk::Pixbuf::create_from_file(path, width, height,
+                    true);
+        } catch (...)
+        {
+            return Glib::RefPtr<Gdk::Pixbuf>();
+        }
+        bool eq_width = (width == pbuf->get_width());
+	    offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
+	    offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
+    } else
+    {
+        try {
+            pbuf =
+                Gdk::Pixbuf::create_from_file(path, width, height,
+                    false);
+        } catch (...)
+        {
+            return Glib::RefPtr<Gdk::Pixbuf>();
+        }
+        offset_x = offset_y = 0.0;
     }
-    if (current_mode == stretch)
-	{
-		offset_x = offset_y = 0.0;
-	}else
-	{
-		if (current_mode == preserve_aspect) 
-		{
-		    bool eq_width = (width == pbuf->get_width());
-	        offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
-	        offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
-		} else
-		{
-			offset_x = (width - pbuf->get_width()) * 0.5;
-        	offset_y = (height - pbuf->get_height()) * 0.5;
-		}
-	}
-
     return pbuf;
 }
 
