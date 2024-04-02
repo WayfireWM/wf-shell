@@ -21,7 +21,7 @@
 
 
 void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
-    double offset_x, double offset_y)
+    double offset_x, double offset_y, double image_scale)
 {
     if (!image)
     {
@@ -36,6 +36,7 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
 
     to_image.x = offset_x / this->get_scale_factor();
     to_image.y = offset_y / this->get_scale_factor();
+    to_image.scale = image_scale;
 
     fade = {
         fade_duration,
@@ -62,15 +63,21 @@ bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         queue_draw();
     }
 
+    cr->save();
+    cr->scale(to_image.scale, to_image.scale);
     cr->set_source(to_image.source, to_image.x, to_image.y);
     cr->paint_with_alpha(fade);
+    cr->restore();
     if (!from_image.source)
     {
         return false;
     }
 
+    cr->save();
+    cr->scale(from_image.scale, from_image.scale);
     cr->set_source(from_image.source, from_image.x, from_image.y);
     cr->paint_with_alpha(1.0 - fade);
+    cr->restore();
     return false;
 }
 
@@ -85,47 +92,10 @@ Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string p
     int width  = window.get_allocated_width() * scale;
     int height = window.get_allocated_height() * scale;
 
-    float screen_aspect_ratio = (float) width / height;
-
     std::string fill_and_crop_string = "fill_and_crop";
-    std::string preserve_aspect_string = "preserve_aspect";
+    std::string stretch_string = "stretch";
 
-    if(! fill_and_crop_string.compare(background_fill_mode))
-    {
-        try {
-            pbuf =
-                Gdk::Pixbuf::create_from_file(path, width, height,
-                    true);
-        } catch (...)
-        {
-            return Glib::RefPtr<Gdk::Pixbuf>();
-        }
-        float image_aspect_ratio = (float) pbuf->get_width() / pbuf->get_height();
-		bool should_fill_width = (screen_aspect_ratio > image_aspect_ratio);
-	    try {
-	        pbuf =
-	            Gdk::Pixbuf::create_from_file(path, 
-	                should_fill_width ? width : -1, 
-	                should_fill_width ? -1 : height, true);
-	    } catch (...) {
-	        return Glib::RefPtr<Gdk::Pixbuf>();
-	    }
-        offset_x = (width - pbuf->get_width()) * 0.5;
-        offset_y = (height - pbuf->get_height()) * 0.5;
-    } else if (! preserve_aspect_string.compare(background_fill_mode))
-    {
-        try {
-            pbuf =
-                Gdk::Pixbuf::create_from_file(path, width, height,
-                    true);
-        } catch (...)
-        {
-            return Glib::RefPtr<Gdk::Pixbuf>();
-        }
-        bool eq_width = (width == pbuf->get_width());
-	    offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
-	    offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
-    } else
+    if (!stretch_string.compare(background_fill_mode))
     {
         try {
             pbuf =
@@ -136,7 +106,41 @@ Glib::RefPtr<Gdk::Pixbuf> WayfireBackground::create_from_file_safe(std::string p
             return Glib::RefPtr<Gdk::Pixbuf>();
         }
         offset_x = offset_y = 0.0;
+        image_scale = 1.0;
+        return pbuf;
     }
+    
+    try {
+        pbuf =
+            Gdk::Pixbuf::create_from_file(path, width, height,
+                true);
+    } catch (...)
+    {
+        return Glib::RefPtr<Gdk::Pixbuf>();
+    }
+    if (!fill_and_crop_string.compare(background_fill_mode))
+    {
+        float screen_aspect_ratio = (float) width / height;
+        float image_aspect_ratio = (float) pbuf->get_width() / pbuf->get_height();
+		bool should_fill_width = (screen_aspect_ratio > image_aspect_ratio);
+        if(should_fill_width){
+            image_scale = (double) width / pbuf->get_width();
+            offset_y = ( ( height / image_scale ) - pbuf->get_height()) * 0.5;
+            offset_x = 0;
+        } else
+        {
+            image_scale = (double)height / pbuf->get_height();
+            offset_x = ( ( width / image_scale )- pbuf->get_width()) * 0.5;
+            offset_y = 0;
+        }
+    } else
+    {
+        bool eq_width = (width == pbuf->get_width());
+        image_scale=1.0;
+	    offset_x = eq_width ? 0 : (width - pbuf->get_width()) * 0.5;
+	    offset_y = eq_width ? (height - pbuf->get_height()) * 0.5 : 0;
+    }
+    
     return pbuf;
 }
 
@@ -151,7 +155,7 @@ bool WayfireBackground::change_background()
     }
 
     std::cout << "Loaded " << path << std::endl;
-    drawing_area.show_image(pbuf, offset_x, offset_y);
+    drawing_area.show_image(pbuf, offset_x, offset_y, image_scale);
     return true;
 }
 
@@ -281,7 +285,7 @@ void WayfireBackground::set_background()
     }
 
     reset_cycle_timeout();
-    drawing_area.show_image(pbuf, offset_x, offset_y);
+    drawing_area.show_image(pbuf, offset_x, offset_y, image_scale);
 
     if (inhibited && output->output)
     {
