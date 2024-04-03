@@ -12,6 +12,7 @@ class WayfireBackground;
 class BackgroundImage
 {
   public:
+    double scale;
     double x, y;
     Cairo::RefPtr<Cairo::Surface> source;
 };
@@ -32,7 +33,7 @@ class BackgroundDrawingArea : public Gtk::DrawingArea
   public:
     BackgroundDrawingArea();
     void show_image(Glib::RefPtr<Gdk::Pixbuf> image,
-        double offset_x, double offset_y);
+        double offset_x, double offset_y, double image_scale);
 
   protected:
     bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr) override;
@@ -49,14 +50,15 @@ class WayfireBackground
 
     int scale;
     double offset_x, offset_y;
-    bool inhibited = false;
+    double image_scale = 1.0;
+    bool inhibited     = false;
     uint current_background;
     sigc::connection change_bg_conn;
 
     WfOption<std::string> background_image{"background/image"};
     WfOption<int> background_cycle_timeout{"background/cycle_timeout"};
     WfOption<bool> background_randomize{"background/randomize"};
-    WfOption<bool> background_preserve_aspect{"background/preserve_aspect"};
+    WfOption<std::string> background_fill_mode{"background/fill_mode"};
 
     Glib::RefPtr<Gdk::Pixbuf> create_from_file_safe(std::string path);
     bool background_transition_frame(int timer);
