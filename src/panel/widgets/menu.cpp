@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <sstream>
 
 #include <cassert>
 #include <giomm/icon.h>
@@ -16,6 +17,45 @@
 
 #define MAX_LAUNCHER_NAME_LENGTH 11
 const std::string default_icon = ICONDIR "/wayfire.png";
+
+WfMenuCategoryDefinition::WfMenuCategoryDefinition(std::string _name, std::string _icon_name):
+    name(_name), icon_name(_icon_name)
+{
+
+}
+
+std::string WfMenuCategoryDefinition::get_name(){
+    return name;
+}
+
+std::string WfMenuCategoryDefinition::get_icon_name(){
+    return icon_name;
+}
+
+WfMenuCategoryButton::WfMenuCategoryButton(WayfireMenu *_menu, std::string _category, std::string _label, std::string _icon_name) :
+    Gtk::Button(), menu(_menu), category(_category), label(_label), icon_name(_icon_name)
+{
+    m_image.set_from_icon_name(icon_name,
+        (Gtk::IconSize)Gtk::ICON_SIZE_LARGE_TOOLBAR);
+    m_image.set_pixel_size(32);
+    m_label.set_text(label);
+    m_label.set_xalign(0.0);
+
+    m_box.pack_start(m_image, false, false, 2);
+    m_box.pack_end(m_label, true, true, 2);
+    m_box.set_homogeneous(false);
+
+    this->add(m_box);
+    this->get_style_context()->add_class("flat");
+
+    this->signal_clicked().connect_notify(
+        sigc::mem_fun(this, &WfMenuCategoryButton::on_click));
+}
+
+void WfMenuCategoryButton::on_click()
+{
+    menu->set_category(category);
+}
 
 WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, AppInfo app) :
     Gtk::HBox(), menu(_menu), m_app_info(app)
@@ -148,9 +188,74 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
 
     loaded_apps.insert({name, exec});
 
-    items.push_back(std::unique_ptr<WfMenuMenuItem>(
-        new WfMenuMenuItem(this, app_info)));
-    flowbox.add(*items.back());
+    /* Check if this has a 'OnlyShownIn' for a different desktop env 
+       If so, we throw it in a pile at the bottom just to be safe */
+    if (!desktop_app_info->get_show_in("wayfire")){
+        add_category_app("Hidden", desktop_app_info);
+        return;
+    }
+    add_category_app("All", desktop_app_info);
+
+    /* Split the Categories, iterate to place into submenus */
+    std::stringstream categories_stream(desktop_app_info->get_categories());
+    std::string segment;
+
+    while(std::getline(categories_stream, segment, ';'))
+    {
+        add_category_app(segment, desktop_app_info);
+    }
+}
+
+void WayfireMenu::add_category_app(std::string category, Glib::RefPtr<Gio::DesktopAppInfo> app)
+{
+    // Filter for allowed categories
+    bool allowed = false;
+    for (const auto& [key, value]: category_definitions)
+    {
+        if(key == category){
+            allowed = true;
+        }
+    }
+    if (!allowed){
+        return;
+    }
+    items[category].push_back(app);
+}
+
+void WayfireMenu::populate_menu_categories(){
+    // Ensure the category list is empty
+    for (auto child : category_box.get_children())
+    {
+        gtk_widget_destroy(GTK_WIDGET(child->gobj()));
+    }
+    // Iterate allowed categories in order
+    for (auto category: category_order){
+        if (category_definitions.count(category) == 1){
+            if (items[category].size() > 0 ){
+                auto icon_name = category_definitions[category]->get_icon_name();
+                auto name = category_definitions[category]->get_name();
+                auto category_button = new WfMenuCategoryButton(this, category, name, icon_name);
+                category_box.pack_start(*category_button);
+            }
+        } else {
+            std::cerr << "Category in order without Category Definition : " << category << std::endl;
+        }
+    }
+    category_box.show_all();
+}
+
+void WayfireMenu::populate_menu_items(std::string category)
+{
+    // Ensure the flowbox is empty
+    for (auto child : flowbox.get_children())
+    {
+        gtk_widget_destroy(GTK_WIDGET(child->gobj()));
+    }
+    for (auto app_info: items[category]){
+        auto app = new WfMenuMenuItem(this, app_info);
+        flowbox.add(*app);
+    }
+    flowbox.show_all();
 }
 
 static bool ends_with(std::string text, std::string pattern)
@@ -205,6 +310,19 @@ void WayfireMenu::load_menu_items_all()
 
 void WayfireMenu::on_search_changed()
 {
+    auto value = search_box.get_text();
+    if(value.length() == 0){
+        /* Text has been unset, show categories again */
+        populate_menu_items(category);
+        category_scrolled_window.show();
+        app_scrolled_window.set_min_content_width(int(menu_min_content_width));
+    }else{
+        /* User is filtering, hide categories, ignore chosen category */
+        populate_menu_items("All");
+        category_scrolled_window.hide();
+        app_scrolled_window.set_min_content_width(int(menu_min_content_width) + int(menu_min_category_width));
+    }
+
     fuzzy_filter  = false;
     count_matches = 0;
     flowbox.invalidate_filter();
@@ -246,6 +364,7 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild *a, Gtk::FlowBoxChild *b)
 
 void WayfireMenu::on_popover_shown()
 {
+    search_box.set_text("");
     flowbox.unselect_all();
 }
 
@@ -297,9 +416,17 @@ void WayfireMenu::update_popover_layout()
         flowbox_container.add(bottom_pad);
         flowbox_container.add(flowbox);
 
-        scrolled_window.set_min_content_width(int(menu_min_content_width));
-        scrolled_window.set_min_content_height(int(menu_min_content_height));
-        scrolled_window.add(flowbox_container);
+        scroll_pair.add(category_scrolled_window);
+        scroll_pair.add(app_scrolled_window);
+        scroll_pair.set_homogeneous(false);
+
+        app_scrolled_window.set_min_content_width(int(menu_min_content_width));
+        app_scrolled_window.set_min_content_height(int(menu_min_content_height));
+        app_scrolled_window.add(flowbox_container);
+
+        category_scrolled_window.set_min_content_width(int(menu_min_category_width));
+        category_scrolled_window.set_min_content_height(int(menu_min_content_height));
+        category_scrolled_window.add(category_box);
 
         search_box.property_margin().set_value(20);
         search_box.set_icon_from_icon_name("search", Gtk::ENTRY_ICON_SECONDARY);
@@ -310,16 +437,16 @@ void WayfireMenu::update_popover_layout()
         /* Layout was already initialized, make sure to remove widgets before
          * adding them again */
         popover_layout_box.remove(search_box);
-        popover_layout_box.remove(scrolled_window);
+        popover_layout_box.remove(scroll_pair);
     }
 
     if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {
         popover_layout_box.pack_start(search_box);
-        popover_layout_box.pack_start(scrolled_window);
+        popover_layout_box.pack_start(scroll_pair);
     } else
     {
-        popover_layout_box.pack_start(scrolled_window);
+        popover_layout_box.pack_start(scroll_pair);
         popover_layout_box.pack_start(search_box);
     }
 
@@ -482,6 +609,8 @@ void WayfireMenu::refresh()
     }
 
     load_menu_items_all();
+    populate_menu_categories();
+    populate_menu_items("All");
     flowbox.show_all();
 }
 
@@ -494,6 +623,24 @@ static void app_info_changed(GAppInfoMonitor *gappinfomonitor, gpointer user_dat
 
 void WayfireMenu::init(Gtk::HBox *container)
 {
+
+    /* https://specifications.freedesktop.org/menu-spec/latest/apa.html#main-category-registry
+     * Using the 'Main' categories, with names and icons assigned
+     * Any Categories in .desktop files that are not in this list are ignored */
+    category_definitions["All"] = std::make_unique<WfMenuCategoryDefinition>("All", "applications-other");
+    category_definitions["Network"] = std::make_unique<WfMenuCategoryDefinition>("Internet", "applications-internet");
+    category_definitions["Education"] = std::make_unique<WfMenuCategoryDefinition>("Education", "applications-education");
+    category_definitions["Office"] = std::make_unique<WfMenuCategoryDefinition>("Office", "applications-office");
+    category_definitions["Development"] = std::make_unique<WfMenuCategoryDefinition>("Development", "applications-development");
+    category_definitions["Graphics"] = std::make_unique<WfMenuCategoryDefinition>("Graphics", "applications-graphics");
+    category_definitions["AudioVideo"] = std::make_unique<WfMenuCategoryDefinition>("Multimedia", "applications-multimedia");
+    category_definitions["Game"] = std::make_unique<WfMenuCategoryDefinition>("Games", "applications-games");
+    category_definitions["Science"] = std::make_unique<WfMenuCategoryDefinition>("Science", "applications-science");
+    category_definitions["Settings"] = std::make_unique<WfMenuCategoryDefinition>("Settings", "preferences-desktop");
+    category_definitions["System"] = std::make_unique<WfMenuCategoryDefinition>("System", "applications-system");
+    category_definitions["Utility"] = std::make_unique<WfMenuCategoryDefinition>("Accessories", "applications-utilities");
+    category_definitions["Hidden"] = std::make_unique<WfMenuCategoryDefinition>("Other Desktops", "user-desktop");
+
     output->toggle_menu_signal().connect(sigc::mem_fun(this, &WayfireMenu::toggle_menu));
 
     menu_icon.set_callback([=] () { update_icon(); });
@@ -530,6 +677,8 @@ void WayfireMenu::init(Gtk::HBox *container)
 
     load_menu_items_all();
     update_popover_layout();
+    populate_menu_categories();
+    populate_menu_items("All");
 
     app_info_monitor_changed_handler_id =
         g_signal_connect(app_info_monitor, "changed", G_CALLBACK(app_info_changed), this);
@@ -553,4 +702,10 @@ void WayfireMenu::toggle_menu()
 void WayfireMenu::hide_menu()
 {
     button->set_active(false);
+}
+
+void WayfireMenu::set_category(std::string in_category)
+{
+    category = in_category;
+    populate_menu_items(in_category);
 }

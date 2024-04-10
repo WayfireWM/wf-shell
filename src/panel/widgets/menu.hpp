@@ -15,6 +15,35 @@
 class WayfireMenu;
 using AppInfo = Glib::RefPtr<Gio::AppInfo>;
 
+class WfMenuCategoryDefinition 
+{
+  public:
+    WfMenuCategoryDefinition(std::string name, std::string icon_name);
+    std::string get_name();
+    std::string get_icon_name();
+
+  private:
+    std::string name;
+    std::string icon_name;
+};
+
+class WfMenuCategoryButton : public Gtk::Button
+{
+  public:
+    WfMenuCategoryButton(WayfireMenu *menu, std::string category, std::string label, std::string icon_name);
+
+  private:
+    WayfireMenu *menu;
+    Gtk::HBox  m_box;
+    Gtk::Label m_label;
+    Gtk::Image m_image;
+
+    std::string category;
+    std::string label;
+    std::string icon_name;
+    void on_click();
+};
+
 class WfMenuMenuItem : public Gtk::HBox
 {
   public:
@@ -82,15 +111,16 @@ class WayfireMenu : public WayfireWidget
     WayfireOutput *output;
 
     Gtk::Box flowbox_container;
-    Gtk::HBox hbox, hbox_bottom;
+    Gtk::HBox hbox, hbox_bottom, scroll_pair;
     Gtk::VBox bottom_pad;
     Gtk::VBox popover_layout_box;
+    Gtk::VBox category_box;
     Gtk::Separator separator;
     Gtk::Image main_image;
     Gtk::Entry search_box;
     Gtk::FlowBox flowbox;
     Gtk::Button logout_button;
-    Gtk::ScrolledWindow scrolled_window;
+    Gtk::ScrolledWindow app_scrolled_window, category_scrolled_window;
     std::unique_ptr<WayfireMenuButton> button;
     std::unique_ptr<WayfireLogoutUI> logout_ui;
 
@@ -100,6 +130,8 @@ class WayfireMenu : public WayfireWidget
     void load_menu_item(AppInfo app_info);
     void load_menu_items_from_dir(std::string directory);
     void load_menu_items_all();
+
+    void add_category_app(std::string category, Glib::RefPtr<Gio::DesktopAppInfo>);
 
     bool update_icon();
 
@@ -111,16 +143,22 @@ class WayfireMenu : public WayfireWidget
     void on_search_changed();
     void on_popover_shown();
 
-    std::vector<std::unique_ptr<WfMenuMenuItem>> items;
     /* loaded_apps is a list of the already-opened applications + their execs,
      * so that we don't show duplicate entries */
     std::set<std::pair<std::string, std::string>> loaded_apps;
+    std::unordered_map<std::string, std::vector<Glib::RefPtr<Gio::DesktopAppInfo>>> items;
+    std::unordered_map<std::string, std::unique_ptr<WfMenuCategoryDefinition>> category_definitions;
+    std::string category="All";
+    std::vector<std::string> category_order = {
+      "All", "Network", "Education", "Office", "Development", "Graphics", "AudioVideo", "Game", "Science", "Settings", "System", "Utility", "Hidden"
+    };
 
     WfOption<std::string> menu_logout_command{"panel/menu_logout_command"};
     WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
     WfOption<std::string> panel_position{"panel/position"};
     WfOption<std::string> menu_icon{"panel/menu_icon"};
     WfOption<int> menu_size{"panel/launchers_size"};
+    WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
     WfOption<int> menu_min_content_width{"panel/menu_min_content_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     void update_popover_layout();
@@ -129,9 +167,12 @@ class WayfireMenu : public WayfireWidget
 
   public:
     void init(Gtk::HBox *container) override;
+    void populate_menu_items(std::string category);
+    void populate_menu_categories();
     void toggle_menu();
     void hide_menu();
     void refresh();
+    void set_category(std::string category);
     WayfireMenu(WayfireOutput *output)
     {
         this->output = output;
