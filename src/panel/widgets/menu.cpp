@@ -24,11 +24,13 @@ WfMenuCategoryDefinition::WfMenuCategoryDefinition(std::string _name, std::strin
 
 }
 
-std::string WfMenuCategoryDefinition::get_name(){
+std::string WfMenuCategoryDefinition::get_name()
+{
     return name;
 }
 
-std::string WfMenuCategoryDefinition::get_icon_name(){
+std::string WfMenuCategoryDefinition::get_icon_name()
+{
     return icon_name;
 }
 
@@ -57,37 +59,100 @@ void WfMenuCategoryButton::on_click()
     menu->set_category(category);
 }
 
-WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, AppInfo app) :
-    Gtk::HBox(), menu(_menu), m_app_info(app)
+WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app) :
+    Gtk::FlowBoxChild(), menu(_menu), m_app_info(app)
 {
     m_image.set((const Glib::RefPtr<const Gio::Icon>&)app->get_icon(),
         (Gtk::IconSize)Gtk::ICON_SIZE_LARGE_TOOLBAR);
     m_image.set_pixel_size(48);
+    m_label.set_text(app->get_name());
+    auto event_box = new Gtk::EventBox();
 
-    Glib::ustring name = app->get_name();
+    m_has_actions = app->list_actions().size() > 0;
 
-    if (name.length() > MAX_LAUNCHER_NAME_LENGTH)
+    if (menu->menu_list)
     {
-        name = name.substr(0, MAX_LAUNCHER_NAME_LENGTH - 2) + "..";
+        this->set_size_request(menu->menu_min_content_width, 48);
+        m_list_box.pack_start(m_image, false, false);
+        m_list_box.pack_start(m_label, true, true);
+        m_label.set_xalign(0.0);
+        event_box->add(m_list_box);
+        m_padding_box.pack_start(*event_box);
+
+        if (m_has_actions)
+        {
+            auto action_button = new Gtk::Button();
+            action_button->set_image_from_icon_name("pan-end");
+            action_button->get_style_context()->add_class("flat");
+            m_padding_box.pack_start(*action_button, false, false);
+
+            action_button->signal_clicked().connect(
+                [this] () {
+                    m_action_menu.popup_at_widget(this, Gdk::GRAVITY_NORTH_EAST, Gdk::GRAVITY_NORTH_WEST, NULL);
+                }
+            );
+        }
+    } else
+    {
+        m_label.set_max_width_chars(MAX_LAUNCHER_NAME_LENGTH);
+        m_label.set_ellipsize(Pango::EllipsizeMode::ELLIPSIZE_END);
+        m_button_box.pack_start(m_image, false, false);
+        m_button_box.pack_end(m_label, false, false);
+
+        event_box->add(m_button_box);
+
+        /* Wrap the button box into a HBox, with left/right padding.
+         * This way, the button doesn't fill the whole area allocated for an entry
+         * in the flowbox */
+        m_padding_box.pack_start(m_left_pad);
+        m_padding_box.pack_start(*event_box);
+        m_padding_box.pack_start(m_right_pad);
     }
 
-    m_label.set_text(name);
-    m_button_box.pack_start(m_image, false, false);
-    m_button_box.pack_end(m_label, false, false);
+    for(auto action : app->list_actions())
+    {
+        auto menu_item = new Gtk::MenuItem();
+        menu_item->set_label(m_app_info->get_action_name(action));
+        menu_item->show();
+        menu_item->signal_activate().connect(
+            [this, action] () {
+                m_app_info->launch_action(action);
+                menu->hide_menu();
+            }
+        );
+        m_action_menu.append(*menu_item);
+    }
+    add(m_padding_box);
+    /* Can accept Enter/Return from search_box */
+    set_can_default(true);
 
-    m_button.add(m_button_box);
-    m_button.get_style_context()->add_class("flat");
-
-    /* Wrap the button box into a HBox, with left/right padding.
-     * This way, the button doesn't fill the whole area allocated for an entry
-     * in the flowbox */
-    this->pack_start(m_left_pad);
-    this->pack_start(m_button);
-    this->pack_start(m_right_pad);
-
-    get_style_context()->add_class("flat");
-    m_button.signal_clicked().connect_notify(
+    /* Called when activated by Enter/Return */
+    this->signal_activate().connect_notify(
         sigc::mem_fun(this, &WfMenuMenuItem::on_click));
+    /* Click doesn't automatically result in activate, here we get it ourselves
+     * Doubles up as a right-click catcher for action menu popup */
+    event_box->signal_button_release_event().connect(
+        [this] (GdkEventButton *ev) -> bool
+        {
+            if (ev->button == GDK_BUTTON_PRIMARY && ev->type == GDK_BUTTON_RELEASE)
+            {
+                on_click();
+            }
+            if (m_has_actions && ev->button == GDK_BUTTON_SECONDARY && ev->type == GDK_BUTTON_RELEASE)
+            {
+                if(menu->menu_list)
+                {
+                    m_action_menu.popup_at_widget(this, Gdk::GRAVITY_NORTH_EAST, Gdk::GRAVITY_NORTH_WEST, NULL);
+                } else
+                {
+                    m_action_menu.popup_at_widget(this, Gdk::GRAVITY_SOUTH, Gdk::GRAVITY_NORTH, NULL);
+                }
+                return true;
+            }
+            return false;
+        }
+    );
+
 }
 
 void WfMenuMenuItem::on_click()
@@ -311,33 +376,42 @@ void WayfireMenu::load_menu_items_all()
 void WayfireMenu::on_search_changed()
 {
     auto value = search_box.get_text();
-    if(value.length() == 0){
-        /* Text has been unset, show categories again */
-        populate_menu_items(category);
-        category_scrolled_window.show();
-        app_scrolled_window.set_min_content_width(int(menu_min_content_width));
-    }else{
-        /* User is filtering, hide categories, ignore chosen category */
-        populate_menu_items("All");
-        category_scrolled_window.hide();
-        app_scrolled_window.set_min_content_width(int(menu_min_content_width) + int(menu_min_category_width));
+    if(menu_show_categories)
+    {
+        if(value.length() == 0)
+        {
+            /* Text has been unset, show categories again */
+            populate_menu_items(category);
+            category_scrolled_window.show();
+            app_scrolled_window.set_min_content_width(int(menu_min_content_width));
+        } else
+        {
+            /* User is filtering, hide categories, ignore chosen category */
+            populate_menu_items("All");
+            category_scrolled_window.hide();
+            app_scrolled_window.set_min_content_width(int(menu_min_content_width) + int(menu_min_category_width));
+        }
     }
 
     fuzzy_filter  = false;
     count_matches = 0;
+    flowbox.unselect_all();
     flowbox.invalidate_filter();
 
     /* We got no matches, try to fuzzy-match */
     if ((count_matches <= 0) && fuzzy_search_enabled)
     {
         fuzzy_filter = true;
+        flowbox.unselect_all();
         flowbox.invalidate_filter();
     }
+
+    select_first_flowbox_item();
 }
 
 bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
 {
-    auto button = dynamic_cast<WfMenuMenuItem*>(child->get_child());
+    auto button = dynamic_cast<WfMenuMenuItem*>(child);
     assert(button);
 
     auto text = search_box.get_text();
@@ -355,8 +429,8 @@ bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
 
 bool WayfireMenu::on_sort(Gtk::FlowBoxChild *a, Gtk::FlowBoxChild *b)
 {
-    auto b1 = dynamic_cast<WfMenuMenuItem*>(a->get_child());
-    auto b2 = dynamic_cast<WfMenuMenuItem*>(b->get_child());
+    auto b1 = dynamic_cast<WfMenuMenuItem*>(a);
+    auto b2 = dynamic_cast<WfMenuMenuItem*>(b);
     assert(b1 && b2);
 
     return *b2 < *b1;
@@ -365,6 +439,7 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild *a, Gtk::FlowBoxChild *b)
 void WayfireMenu::on_popover_shown()
 {
     search_box.set_text("");
+    set_category("All");
     flowbox.unselect_all();
 }
 
@@ -408,6 +483,8 @@ void WayfireMenu::update_popover_layout()
     {
         button->get_popover()->add(popover_layout_box);
 
+        flowbox.set_selection_mode(Gtk::SelectionMode::SELECTION_SINGLE);
+        flowbox.set_activate_on_single_click(true);
         flowbox.set_valign(Gtk::ALIGN_START);
         flowbox.set_homogeneous(true);
         flowbox.set_sort_func(sigc::mem_fun(this, &WayfireMenu::on_sort));
@@ -428,8 +505,16 @@ void WayfireMenu::update_popover_layout()
         category_scrolled_window.set_min_content_height(int(menu_min_content_height));
         category_scrolled_window.add(category_box);
 
+
+        search_box.set_can_default(false);
+        search_box.set_activates_default(true);
         search_box.property_margin().set_value(20);
         search_box.set_icon_from_icon_name("search", Gtk::ENTRY_ICON_SECONDARY);
+
+        /* Cursor moved in flowbox */
+        flowbox.signal_selected_children_changed().connect_notify(
+            sigc::mem_fun(this, &WayfireMenu::set_default_to_selection));
+        /* Search value changed */
         search_box.signal_changed().connect_notify(
             sigc::mem_fun(this, &WayfireMenu::on_search_changed));
     } else
@@ -450,8 +535,12 @@ void WayfireMenu::update_popover_layout()
         popover_layout_box.pack_start(search_box);
     }
 
-    popover_layout_box.set_focus_chain({&search_box});
     popover_layout_box.show_all();
+
+    if (!menu_show_categories)
+    {
+        category_scrolled_window.hide();
+    }
 }
 
 void WayfireLogoutUI::on_logout_click()
@@ -646,6 +735,8 @@ void WayfireMenu::init(Gtk::HBox *container)
     menu_icon.set_callback([=] () { update_icon(); });
     menu_size.set_callback([=] () { update_icon(); });
     panel_position.set_callback([=] () { update_popover_layout(); });
+    menu_show_categories.set_callback([=] () { update_popover_layout(); });
+    menu_list.set_callback([=] () { update_popover_layout(); });
 
     button = std::make_unique<WayfireMenuButton>("panel");
     button->add(main_image);
@@ -680,6 +771,22 @@ void WayfireMenu::init(Gtk::HBox *container)
     populate_menu_categories();
     populate_menu_items("All");
 
+    /* Catch keypresses on menu popover, forward to Entry */
+    button->get_popover()->signal_key_press_event().connect(
+        [this] (GdkEventKey *ev) -> bool
+        {
+            /* It has string value, send it to searchbox 
+             * This quickly filters navigation keys out*/
+            std::string input = ev->string;
+            if (input.length() > 0)
+            {
+                return this->search_box.inject(ev);
+            }
+            /* Continue with normal event processing */
+            return false;
+        }
+    );
+
     app_info_monitor_changed_handler_id =
         g_signal_connect(app_info_monitor, "changed", G_CALLBACK(app_info_changed), this);
 
@@ -708,4 +815,35 @@ void WayfireMenu::set_category(std::string in_category)
 {
     category = in_category;
     populate_menu_items(in_category);
+}
+
+void WayfireMenu::set_default_to_selection()
+{
+    auto children = flowbox.get_selected_children();
+    if (children.size() == 1)
+    {
+            children[0]->grab_default();
+            children[0]->grab_focus();
+    }
+}
+
+void WayfireMenu::select_first_flowbox_item()
+{
+    for (auto child : flowbox.get_children())
+    {
+        if (child->get_mapped())
+        {
+            Gtk::FlowBoxChild* cast_child = dynamic_cast<Gtk::FlowBoxChild*>(child);
+            if (cast_child)
+            {
+                flowbox.select_child(*cast_child);
+                return;
+            }
+        }
+    }
+}
+
+bool WayfireMenuInjectionEntry::inject(GdkEventKey *ev)
+{
+    return on_key_press_event(ev);
 }

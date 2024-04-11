@@ -44,10 +44,10 @@ class WfMenuCategoryButton : public Gtk::Button
     void on_click();
 };
 
-class WfMenuMenuItem : public Gtk::HBox
+class WfMenuMenuItem : public Gtk::FlowBoxChild
 {
   public:
-    WfMenuMenuItem(WayfireMenu *menu, AppInfo app);
+    WfMenuMenuItem(WayfireMenu *menu, Glib::RefPtr<Gio::DesktopAppInfo> app);
 
     bool matches(Glib::ustring text);
     bool fuzzy_match(Glib::ustring text);
@@ -56,12 +56,16 @@ class WfMenuMenuItem : public Gtk::HBox
   private:
     WayfireMenu *menu;
     Gtk::Box m_left_pad, m_right_pad;
-    Gtk::Button m_button;
+    Gtk::HBox m_padding_box;
     Gtk::VBox m_button_box;
+    Gtk::HBox m_list_box;
     Gtk::Image m_image;
     Gtk::Label m_label;
+    Gtk::Menu m_action_menu;
 
-    AppInfo m_app_info;
+    bool m_has_actions = false;
+
+    Glib::RefPtr<Gio::DesktopAppInfo> m_app_info;
     void on_click();
 };
 
@@ -106,6 +110,12 @@ class WayfireLogoutUI
     void on_cancel_click();
 };
 
+class WayfireMenuInjectionEntry: public Gtk::Entry
+{
+  public:
+  bool inject(GdkEventKey *ev);
+};
+
 class WayfireMenu : public WayfireWidget
 {
     WayfireOutput *output;
@@ -117,7 +127,7 @@ class WayfireMenu : public WayfireWidget
     Gtk::VBox category_box;
     Gtk::Separator separator;
     Gtk::Image main_image;
-    Gtk::Entry search_box;
+    WayfireMenuInjectionEntry search_box;
     Gtk::FlowBox flowbox;
     Gtk::Button logout_button;
     Gtk::ScrolledWindow app_scrolled_window, category_scrolled_window;
@@ -159,11 +169,14 @@ class WayfireMenu : public WayfireWidget
     WfOption<std::string> menu_icon{"panel/menu_icon"};
     WfOption<int> menu_size{"panel/launchers_size"};
     WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
-    WfOption<int> menu_min_content_width{"panel/menu_min_content_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
+    WfOption<bool> menu_show_categories{"panel/menu_show_categories"};
     void update_popover_layout();
     void create_logout_ui();
     void on_logout_click();
+    void key_press_search();
+    void select_first_flowbox_item();
+    void set_default_to_selection();
 
   public:
     void init(Gtk::HBox *container) override;
@@ -173,6 +186,9 @@ class WayfireMenu : public WayfireWidget
     void hide_menu();
     void refresh();
     void set_category(std::string category);
+    WfOption<bool> menu_list{"panel/menu_list"};
+    WfOption<int> menu_min_content_width{"panel/menu_min_content_width"};
+
     WayfireMenu(WayfireOutput *output)
     {
         this->output = output;

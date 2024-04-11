@@ -199,6 +199,14 @@
 		<min>100</min>
 		<max>5000</max>
 	</option>
+	<option name="menu_list" type="bool">
+		<_short>Show Menu Applications as a List</_short>
+		<default>false</default>
+	</option>
+	<option name="menu_show_categories" type="bool">
+		<_short>Show Application Categories</_short>
+		<default>false</default>
+	</option>
 	<option name="menu_logout_command" type="string">
 		<_short>Menu Logout Command</_short>
 		<_long>If not specified, a default logout interface will be used.</_long>
