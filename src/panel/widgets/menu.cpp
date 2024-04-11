@@ -114,7 +114,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
         menu_item->set_label(m_app_info->get_action_name(action));
         menu_item->show();
         menu_item->signal_activate().connect(
-            [this, action] () 
+            [this, action] ()
         {
             m_app_info->launch_action(action);
             menu->hide_menu();
@@ -134,25 +134,25 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     event_box->signal_button_release_event().connect(
         [this] (GdkEventButton *ev) -> bool
     {
-        if (ev->button == GDK_BUTTON_PRIMARY && ev->type == GDK_BUTTON_RELEASE)
+        if ((ev->button == GDK_BUTTON_PRIMARY) && (ev->type == GDK_BUTTON_RELEASE))
         {
             on_click();
         }
-        if (m_has_actions && ev->button == GDK_BUTTON_SECONDARY && ev->type == GDK_BUTTON_RELEASE)
+        if (m_has_actions && (ev->button == GDK_BUTTON_SECONDARY) && (ev->type == GDK_BUTTON_RELEASE))
         {
-            if(menu->menu_list)
+            if (menu->menu_list)
             {
                 m_action_menu.popup_at_widget(this, Gdk::GRAVITY_NORTH_EAST, Gdk::GRAVITY_NORTH_WEST, NULL);
             } else
             {
                 m_action_menu.popup_at_widget(this, Gdk::GRAVITY_SOUTH, Gdk::GRAVITY_NORTH, NULL);
             }
+
             return true;
         }
 
         return false;
     });
-
 }
 
 void WfMenuMenuItem::on_click()
@@ -254,7 +254,7 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
     loaded_apps.insert({name, exec});
 
     /* Check if this has a 'OnlyShownIn' for a different desktop env
-     *  If so, we throw it in a pile at the bottom just to be safe */
+    *  If so, we throw it in a pile at the bottom just to be safe */
     if (!desktop_app_info->get_show_in("wayfire"))
     {
         add_category_app("Hidden", desktop_app_info);
@@ -284,6 +284,7 @@ void WayfireMenu::add_category_app(std::string category, Glib::RefPtr<Gio::Deskt
             allowed = true;
         }
     }
+
     if (!allowed)
     {
         return;
@@ -301,7 +302,7 @@ void WayfireMenu::populate_menu_categories()
     }
 
     // Iterate allowed categories in order
-    for (auto category: category_order)
+    for (auto category : category_order)
     {
         if (category_definitions.count(category) == 1)
         {
@@ -323,7 +324,7 @@ void WayfireMenu::populate_menu_categories()
 
 void WayfireMenu::populate_menu_items(std::string category)
 {
-    // Ensure the flowbox is empty
+    /* Ensure the flowbox is empty */
     for (auto child : flowbox.get_children())
     {
         gtk_widget_destroy(GTK_WIDGET(child->gobj()));
@@ -802,12 +803,13 @@ void WayfireMenu::init(Gtk::HBox *container)
         [this] (GdkEventKey *ev) -> bool
     {
         /* It has string value, send it to searchbox
-         * This quickly filters navigation keys out*/
+        *  This quickly filters navigation keys out*/
         std::string input = ev->string;
         if (input.length() > 0)
         {
             return this->search_box.inject(ev);
         }
+
         /* Continue with normal event processing */
         return false;
     });
