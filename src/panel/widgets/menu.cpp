@@ -18,7 +18,7 @@
 #define MAX_LAUNCHER_NAME_LENGTH 11
 const std::string default_icon = ICONDIR "/wayfire.png";
 
-WfMenuCategoryDefinition::WfMenuCategoryDefinition(std::string _name, std::string _icon_name):
+WfMenuCategoryDefinition::WfMenuCategoryDefinition(std::string _name, std::string _icon_name) :
     name(_name), icon_name(_icon_name)
 {}
 
@@ -138,6 +138,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
         {
             on_click();
         }
+
         if (m_has_actions && (ev->button == GDK_BUTTON_SECONDARY) && (ev->type == GDK_BUTTON_RELEASE))
         {
             if (menu->menu_list)
@@ -306,7 +307,7 @@ void WayfireMenu::populate_menu_categories()
     {
         if (category_definitions.count(category) == 1)
         {
-            if (items[category].size() > 0 )
+            if (items[category].size() > 0)
             {
                 auto icon_name = category_definitions[category]->get_icon_name();
                 auto name = category_definitions[category]->get_name();
@@ -803,7 +804,7 @@ void WayfireMenu::init(Gtk::HBox *container)
         [this] (GdkEventKey *ev) -> bool
     {
         /* It has string value, send it to searchbox
-        *  This quickly filters navigation keys out*/
+         * This quickly filters navigation keys out */
         std::string input = ev->string;
         if (input.length() > 0)
         {
