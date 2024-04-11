@@ -15,7 +15,7 @@
 class WayfireMenu;
 using AppInfo = Glib::RefPtr<Gio::AppInfo>;
 
-class WfMenuCategoryDefinition 
+class WfMenuCategoryDefinition
 {
   public:
     WfMenuCategoryDefinition(std::string name, std::string icon_name);
@@ -34,7 +34,7 @@ class WfMenuCategoryButton : public Gtk::Button
 
   private:
     WayfireMenu *menu;
-    Gtk::HBox  m_box;
+    Gtk::HBox m_box;
     Gtk::Label m_label;
     Gtk::Image m_image;
 
@@ -110,10 +110,10 @@ class WayfireLogoutUI
     void on_cancel_click();
 };
 
-class WayfireMenuInjectionEntry: public Gtk::Entry
+class WayfireMenuInjectionEntry : public Gtk::Entry
 {
   public:
-  bool inject(GdkEventKey *ev);
+    bool inject(GdkEventKey *ev);
 };
 
 class WayfireMenu : public WayfireWidget
@@ -158,9 +158,10 @@ class WayfireMenu : public WayfireWidget
     std::set<std::pair<std::string, std::string>> loaded_apps;
     std::unordered_map<std::string, std::vector<Glib::RefPtr<Gio::DesktopAppInfo>>> items;
     std::unordered_map<std::string, std::unique_ptr<WfMenuCategoryDefinition>> category_definitions;
-    std::string category="All";
+    std::string category = "All";
     std::vector<std::string> category_order = {
-      "All", "Network", "Education", "Office", "Development", "Graphics", "AudioVideo", "Game", "Science", "Settings", "System", "Utility", "Hidden"
+        "All", "Network", "Education", "Office", "Development", "Graphics", "AudioVideo", "Game", "Science",
+        "Settings", "System", "Utility", "Hidden"
     };
 
     WfOption<std::string> menu_logout_command{"panel/menu_logout_command"};
