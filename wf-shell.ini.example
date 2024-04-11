@@ -99,10 +99,19 @@ network_icon_invert_color = 1
 # whether to colour the wifi signal strength
 network_status_use_color = yes
 
+# Show a list of application categories in menu
+menu_show_categories = false
+
+# Show application icons in a list view
+# false shows them as a grid
+menu_list = false
 
 # Configuration for the menu widget
 # whether to enable fuzzy search in the menu
 menu_fuzzy_search = 1
+
+# Minimum width for category list. Shares height with content Below
+menu_min_category_width = 200
 
 # Minimum width and height for the contents of the menu.
 # Can be useful for small screens and/or high DPI scaling.
