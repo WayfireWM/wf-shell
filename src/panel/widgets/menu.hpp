@@ -21,6 +21,7 @@ class WfMenuCategoryDefinition
     WfMenuCategoryDefinition(std::string name, std::string icon_name);
     std::string get_name();
     std::string get_icon_name();
+    std::vector<Glib::RefPtr<Gio::DesktopAppInfo>> items;
 
   private:
     std::string name;
@@ -156,7 +157,6 @@ class WayfireMenu : public WayfireWidget
     /* loaded_apps is a list of the already-opened applications + their execs,
      * so that we don't show duplicate entries */
     std::set<std::pair<std::string, std::string>> loaded_apps;
-    std::unordered_map<std::string, std::vector<Glib::RefPtr<Gio::DesktopAppInfo>>> items;
     std::unordered_map<std::string, std::unique_ptr<WfMenuCategoryDefinition>> category_definitions;
     std::string category = "All";
     std::vector<std::string> category_order = {

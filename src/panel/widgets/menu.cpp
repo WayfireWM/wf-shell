@@ -276,22 +276,11 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
 
 void WayfireMenu::add_category_app(std::string category, Glib::RefPtr<Gio::DesktopAppInfo> app)
 {
-    // Filter for allowed categories
-    bool allowed = false;
-    for (const auto& [key, value] : category_definitions)
+    /* Filter for allowed categories */
+    if (category_definitions.count(category) == 1)
     {
-        if (key == category)
-        {
-            allowed = true;
-        }
+        category_definitions[category]->items.push_back(app);
     }
-
-    if (!allowed)
-    {
-        return;
-    }
-
-    items[category].push_back(app);
 }
 
 void WayfireMenu::populate_menu_categories()
@@ -307,10 +296,11 @@ void WayfireMenu::populate_menu_categories()
     {
         if (category_definitions.count(category) == 1)
         {
-            if (items[category].size() > 0)
+            auto& category_definition = category_definitions[category];
+            if (category_definition->items.size() > 0)
             {
-                auto icon_name = category_definitions[category]->get_icon_name();
-                auto name = category_definitions[category]->get_name();
+                auto icon_name = category_definition->get_icon_name();
+                auto name = category_definition->get_name();
                 auto category_button = new WfMenuCategoryButton(this, category, name, icon_name);
                 category_box.pack_start(*category_button);
             }
@@ -331,7 +321,7 @@ void WayfireMenu::populate_menu_items(std::string category)
         gtk_widget_destroy(GTK_WIDGET(child->gobj()));
     }
 
-    for (auto app_info : items[category])
+    for (auto app_info : category_definitions[category]->items)
     {
         auto app = new WfMenuMenuItem(this, app_info);
         flowbox.add(*app);
@@ -708,7 +698,10 @@ void WayfireMenu::on_logout_click()
 void WayfireMenu::refresh()
 {
     loaded_apps.clear();
-    items.clear();
+    for (auto& [key, category_definition] : category_definitions)
+    {
+        category_definition->items.clear();
+    }
     for (auto child : flowbox.get_children())
     {
         gtk_widget_destroy(GTK_WIDGET(child->gobj()));
