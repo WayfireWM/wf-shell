@@ -702,6 +702,7 @@ void WayfireMenu::refresh()
     {
         category_definition->items.clear();
     }
+
     for (auto child : flowbox.get_children())
     {
         gtk_widget_destroy(GTK_WIDGET(child->gobj()));
