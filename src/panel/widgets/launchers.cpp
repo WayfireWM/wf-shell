@@ -34,7 +34,13 @@ struct DesktopLauncherInfo : public LauncherInfo
 
     Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size)
     {
-        auto icon  = app_info->get_icon()->to_string();
+        auto icon = app_info->get_icon()->to_string();
+        std::string absolute_path = "/";
+        if (!icon.compare(0, absolute_path.size(), absolute_path))
+        {
+            return Gdk::Pixbuf::create_from_file(icon, size, size);
+        }
+
         auto theme = Gtk::IconTheme::get_default();
 
         if (!theme->lookup_icon(icon, size))
