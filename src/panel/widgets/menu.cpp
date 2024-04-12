@@ -256,7 +256,7 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
 
     /* Check if this has a 'OnlyShownIn' for a different desktop env
     *  If so, we throw it in a pile at the bottom just to be safe */
-    if (!desktop_app_info->get_show_in("wayfire"))
+    if (!desktop_app_info->should_show())
     {
         add_category_app("Hidden", desktop_app_info);
         return;
