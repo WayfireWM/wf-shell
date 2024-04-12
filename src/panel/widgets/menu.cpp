@@ -18,16 +18,16 @@
 #define MAX_LAUNCHER_NAME_LENGTH 11
 const std::string default_icon = ICONDIR "/wayfire.png";
 
-WfMenuCategoryDefinition::WfMenuCategoryDefinition(std::string _name, std::string _icon_name) :
+WfMenuCategory::WfMenuCategory(std::string _name, std::string _icon_name) :
     name(_name), icon_name(_icon_name)
 {}
 
-std::string WfMenuCategoryDefinition::get_name()
+std::string WfMenuCategory::get_name()
 {
     return name;
 }
 
-std::string WfMenuCategoryDefinition::get_icon_name()
+std::string WfMenuCategory::get_icon_name()
 {
     return icon_name;
 }
@@ -277,9 +277,9 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
 void WayfireMenu::add_category_app(std::string category, Glib::RefPtr<Gio::DesktopAppInfo> app)
 {
     /* Filter for allowed categories */
-    if (category_definitions.count(category) == 1)
+    if (category_list.count(category) == 1)
     {
-        category_definitions[category]->items.push_back(app);
+        category_list[category]->items.push_back(app);
     }
 }
 
@@ -292,21 +292,21 @@ void WayfireMenu::populate_menu_categories()
     }
 
     // Iterate allowed categories in order
-    for (auto category : category_order)
+    for (auto category_name : category_order)
     {
-        if (category_definitions.count(category) == 1)
+        if (category_list.count(category_name) == 1)
         {
-            auto& category_definition = category_definitions[category];
-            if (category_definition->items.size() > 0)
+            auto& category = category_list[category_name];
+            if (category->items.size() > 0)
             {
-                auto icon_name = category_definition->get_icon_name();
-                auto name = category_definition->get_name();
-                auto category_button = new WfMenuCategoryButton(this, category, name, icon_name);
+                auto icon_name = category->get_icon_name();
+                auto name = category->get_name();
+                auto category_button = new WfMenuCategoryButton(this, category_name, name, icon_name);
                 category_box.pack_start(*category_button);
             }
         } else
         {
-            std::cerr << "Category in order without Category Definition : " << category << std::endl;
+            std::cerr << "Category in orderlist without Category object : " << category << std::endl;
         }
     }
 
@@ -321,7 +321,7 @@ void WayfireMenu::populate_menu_items(std::string category)
         gtk_widget_destroy(GTK_WIDGET(child->gobj()));
     }
 
-    for (auto app_info : category_definitions[category]->items)
+    for (auto app_info : category_list[category]->items)
     {
         auto app = new WfMenuMenuItem(this, app_info);
         flowbox.add(*app);
@@ -698,9 +698,9 @@ void WayfireMenu::on_logout_click()
 void WayfireMenu::refresh()
 {
     loaded_apps.clear();
-    for (auto& [key, category_definition] : category_definitions)
+    for (auto& [key, category] : category_list)
     {
-        category_definition->items.clear();
+        category->items.clear();
     }
 
     for (auto child : flowbox.get_children())
@@ -726,30 +726,30 @@ void WayfireMenu::init(Gtk::HBox *container)
     /* https://specifications.freedesktop.org/menu-spec/latest/apa.html#main-category-registry
      * Using the 'Main' categories, with names and icons assigned
      * Any Categories in .desktop files that are not in this list are ignored */
-    category_definitions["All"]     = std::make_unique<WfMenuCategoryDefinition>("All", "applications-other");
-    category_definitions["Network"] = std::make_unique<WfMenuCategoryDefinition>("Internet",
+    category_list["All"]     = std::make_unique<WfMenuCategory>("All", "applications-other");
+    category_list["Network"] = std::make_unique<WfMenuCategory>("Internet",
         "applications-internet");
-    category_definitions["Education"] = std::make_unique<WfMenuCategoryDefinition>("Education",
+    category_list["Education"] = std::make_unique<WfMenuCategory>("Education",
         "applications-education");
-    category_definitions["Office"] = std::make_unique<WfMenuCategoryDefinition>("Office",
+    category_list["Office"] = std::make_unique<WfMenuCategory>("Office",
         "applications-office");
-    category_definitions["Development"] = std::make_unique<WfMenuCategoryDefinition>("Development",
+    category_list["Development"] = std::make_unique<WfMenuCategory>("Development",
         "applications-development");
-    category_definitions["Graphics"] = std::make_unique<WfMenuCategoryDefinition>("Graphics",
+    category_list["Graphics"] = std::make_unique<WfMenuCategory>("Graphics",
         "applications-graphics");
-    category_definitions["AudioVideo"] = std::make_unique<WfMenuCategoryDefinition>("Multimedia",
+    category_list["AudioVideo"] = std::make_unique<WfMenuCategory>("Multimedia",
         "applications-multimedia");
-    category_definitions["Game"] = std::make_unique<WfMenuCategoryDefinition>("Games",
+    category_list["Game"] = std::make_unique<WfMenuCategory>("Games",
         "applications-games");
-    category_definitions["Science"] = std::make_unique<WfMenuCategoryDefinition>("Science",
+    category_list["Science"] = std::make_unique<WfMenuCategory>("Science",
         "applications-science");
-    category_definitions["Settings"] = std::make_unique<WfMenuCategoryDefinition>("Settings",
+    category_list["Settings"] = std::make_unique<WfMenuCategory>("Settings",
         "preferences-desktop");
-    category_definitions["System"] = std::make_unique<WfMenuCategoryDefinition>("System",
+    category_list["System"] = std::make_unique<WfMenuCategory>("System",
         "applications-system");
-    category_definitions["Utility"] = std::make_unique<WfMenuCategoryDefinition>("Accessories",
+    category_list["Utility"] = std::make_unique<WfMenuCategory>("Accessories",
         "applications-utilities");
-    category_definitions["Hidden"] = std::make_unique<WfMenuCategoryDefinition>("Other Desktops",
+    category_list["Hidden"] = std::make_unique<WfMenuCategory>("Other Desktops",
         "user-desktop");
 
     output->toggle_menu_signal().connect(sigc::mem_fun(this, &WayfireMenu::toggle_menu));
