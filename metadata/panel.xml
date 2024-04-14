@@ -181,6 +181,12 @@
 		<hint>file</hint>
 		<default></default>
 	</option>
+	<option name="menu_min_category_width" type="int">
+		<_short>Menu Minimum Category Width</_short>
+		<default>200</default>
+		<min>50</min>
+		<max>400</max>
+	</option>
 	<option name="menu_min_content_width" type="int">
 		<_short>Menu Minimum Content Width</_short>
 		<default>500</default>
@@ -192,6 +198,14 @@
 		<default>500</default>
 		<min>100</min>
 		<max>5000</max>
+	</option>
+	<option name="menu_list" type="bool">
+		<_short>Show Menu Applications as a List</_short>
+		<default>false</default>
+	</option>
+	<option name="menu_show_categories" type="bool">
+		<_short>Show Application Categories</_short>
+		<default>false</default>
 	</option>
 	<option name="menu_logout_command" type="string">
 		<_short>Menu Logout Command</_short>
