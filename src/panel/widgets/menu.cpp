@@ -162,6 +162,16 @@ void WfMenuMenuItem::on_click()
     menu->hide_menu();
 }
 
+void WfMenuMenuItem::set_search_value(uint32_t value)
+{
+    m_search_value = value;
+}
+
+uint32_t WfMenuMenuItem::get_search_value()
+{
+    return m_search_value;
+}
+
 /* Fuzzy search for pattern in text. We use a greedy algorithm as follows:
  * As long as the pattern isn't matched, try to match the leftmost unmatched
  * character in pattern with the first occurence of this character after the
@@ -191,31 +201,75 @@ static bool fuzzy_match(Glib::ustring text, Glib::ustring pattern)
     return i == pattern.length();
 }
 
-bool WfMenuMenuItem::fuzzy_match(Glib::ustring pattern)
+uint32_t WfMenuMenuItem::fuzzy_match(Glib::ustring pattern)
 {
-    Glib::ustring name = m_app_info->get_name();
+    uint32_t match_score = 0;
+    Glib::ustring name   = m_app_info->get_name();
     Glib::ustring long_name = m_app_info->get_display_name();
     Glib::ustring progr     = m_app_info->get_executable();
 
-    pattern = pattern.lowercase();
+    auto name_lower = name.lowercase();
+    auto long_name_lower = long_name.lowercase();
+    auto progr_lower     = progr.lowercase();
+    auto pattern_lower   = pattern.lowercase();
 
-    return ::fuzzy_match(progr.lowercase(), pattern) ||
-           ::fuzzy_match(name.lowercase(), pattern) ||
-           ::fuzzy_match(long_name.lowercase(), pattern);
+    if (::fuzzy_match(progr_lower, pattern_lower))
+    {
+        match_score += 100;
+    }
+
+    if (::fuzzy_match(name_lower, pattern_lower))
+    {
+        match_score += 100;
+    }
+
+    if (::fuzzy_match(long_name_lower, pattern_lower))
+    {
+        match_score += 10;
+    }
+
+    return match_score;
 }
 
-bool WfMenuMenuItem::matches(Glib::ustring pattern)
+uint32_t WfMenuMenuItem::matches(Glib::ustring pattern)
 {
-    Glib::ustring name = m_app_info->get_name();
+    uint32_t match_score    = 0;
     Glib::ustring long_name = m_app_info->get_display_name();
-    Glib::ustring progr     = m_app_info->get_executable();
-    Glib::ustring descr     = m_app_info->get_description();
+    Glib::ustring name  = m_app_info->get_name();
+    Glib::ustring progr = m_app_info->get_executable();
+    Glib::ustring descr = m_app_info->get_description();
 
-    Glib::ustring text = name.lowercase() + "$" +
-        long_name.lowercase() + "$" + progr.lowercase() + "$" +
-        descr.lowercase();
+    auto name_lower = name.lowercase();
+    auto long_name_lower = long_name.lowercase();
+    auto progr_lower     = progr.lowercase();
+    auto descr_lower     = descr.lowercase();
+    auto pattern_lower   = pattern.lowercase();
 
-    return text.find(pattern.lowercase()) != text.npos;
+    auto pos = name_lower.find(pattern_lower);
+    if (pos != name_lower.npos)
+    {
+        match_score += 1000 - pos;
+    }
+
+    pos = progr_lower.find(pattern_lower);
+    if (pos != progr_lower.npos)
+    {
+        match_score += 1000 - pos;
+    }
+
+    pos = long_name_lower.find(pattern_lower);
+    if (pos != long_name_lower.npos)
+    {
+        match_score += 500 - pos;
+    }
+
+    pos = descr_lower.find(pattern_lower);
+    if (pos != descr_lower.npos)
+    {
+        match_score += 300 - pos;
+    }
+
+    return match_score;
 }
 
 bool WfMenuMenuItem::operator <(const WfMenuMenuItem& other)
@@ -401,10 +455,12 @@ void WayfireMenu::on_search_changed()
         }
     }
 
+    m_sort_names  = value.length() == 0;
     fuzzy_filter  = false;
     count_matches = 0;
     flowbox.unselect_all();
     flowbox.invalidate_filter();
+    flowbox.invalidate_sort();
 
     /* We got no matches, try to fuzzy-match */
     if ((count_matches <= 0) && fuzzy_search_enabled)
@@ -412,6 +468,7 @@ void WayfireMenu::on_search_changed()
         fuzzy_filter = true;
         flowbox.unselect_all();
         flowbox.invalidate_filter();
+        flowbox.invalidate_sort();
     }
 
     select_first_flowbox_item();
@@ -423,10 +480,11 @@ bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
     assert(button);
 
     auto text = search_box.get_text();
-    bool does_match = this->fuzzy_filter ?
+    uint32_t match_score = this->fuzzy_filter ?
         button->fuzzy_match(text) : button->matches(text);
 
-    if (does_match)
+    button->set_search_value(match_score);
+    if (match_score > 0)
     {
         this->count_matches++;
         return true;
@@ -441,7 +499,12 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild *a, Gtk::FlowBoxChild *b)
     auto b2 = dynamic_cast<WfMenuMenuItem*>(b);
     assert(b1 && b2);
 
-    return *b2 < *b1;
+    if (m_sort_names)
+    {
+        return *b2 < *b1;
+    }
+
+    return b2->get_search_value() > b1->get_search_value();
 }
 
 void WayfireMenu::on_popover_shown()
