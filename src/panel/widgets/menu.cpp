@@ -534,13 +534,6 @@ bool WayfireMenu::update_icon()
         auto ptr_pbuff = load_icon_pixbuf_safe(icon,
             size * main_image.get_scale_factor());
 
-        if (!ptr_pbuff.get())
-        {
-            std::cout << "Loading default icon: " << default_icon << std::endl;
-            ptr_pbuff = load_icon_pixbuf_safe(default_icon,
-                size * main_image.get_scale_factor());
-        }
-
         if (ptr_pbuff)
         {
             set_image_pixbuf(main_image, ptr_pbuff, main_image.get_scale_factor());
@@ -557,6 +550,15 @@ bool WayfireMenu::update_icon()
             set_image_pixbuf(main_image, theme_icon, main_image.get_scale_factor());
             return true;
         }
+    }
+
+    std::cout << "Loading default icon: " << default_icon << std::endl;
+    auto ptr_pbuff = load_icon_pixbuf_safe(default_icon,
+        size * main_image.get_scale_factor());
+    if (ptr_pbuff)
+    {
+        set_image_pixbuf(main_image, ptr_pbuff, main_image.get_scale_factor());
+        return true;
     }
 
     return false;
