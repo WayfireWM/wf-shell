@@ -50,9 +50,11 @@ class WfMenuMenuItem : public Gtk::FlowBoxChild
   public:
     WfMenuMenuItem(WayfireMenu *menu, Glib::RefPtr<Gio::DesktopAppInfo> app);
 
-    bool matches(Glib::ustring text);
-    bool fuzzy_match(Glib::ustring text);
+    uint32_t matches(Glib::ustring text);
+    uint32_t fuzzy_match(Glib::ustring text);
     bool operator <(const WfMenuMenuItem& other);
+    void set_search_value(uint32_t value);
+    uint32_t get_search_value();
 
   private:
     WayfireMenu *menu;
@@ -64,7 +66,8 @@ class WfMenuMenuItem : public Gtk::FlowBoxChild
     Gtk::Label m_label;
     Gtk::Menu m_action_menu;
 
-    bool m_has_actions = false;
+    bool m_has_actions      = false;
+    uint32_t m_search_value = 0;
 
     Glib::RefPtr<Gio::DesktopAppInfo> m_app_info;
     void on_click();
@@ -146,6 +149,7 @@ class WayfireMenu : public WayfireWidget
 
     bool update_icon();
 
+    bool m_sort_names     = true;
     bool fuzzy_filter     = false;
     int32_t count_matches = 0;
 
