@@ -204,7 +204,7 @@ static bool fuzzy_match(Glib::ustring text, Glib::ustring pattern)
 uint32_t WfMenuMenuItem::fuzzy_match(Glib::ustring pattern)
 {
     uint32_t match_score = 0;
-    Glib::ustring name      = m_app_info->get_name();
+    Glib::ustring name   = m_app_info->get_name();
     Glib::ustring long_name = m_app_info->get_display_name();
     Glib::ustring progr     = m_app_info->get_executable();
 
@@ -268,7 +268,7 @@ uint32_t WfMenuMenuItem::matches(Glib::ustring pattern)
     {
         match_score += 300 - pos;
     }
-    
+
     return match_score;
 }
 
@@ -503,6 +503,7 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild *a, Gtk::FlowBoxChild *b)
     {
         return *b2 < *b1;
     }
+
     return b2->get_search_value() > b1->get_search_value();
 }
 
