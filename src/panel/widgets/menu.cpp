@@ -553,7 +553,7 @@ bool WayfireMenu::update_icon()
         if (theme->lookup_icon(icon, size))
         {
             auto theme_icon = theme->load_icon(icon, size)
-               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+                ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
             set_image_pixbuf(main_image, theme_icon, main_image.get_scale_factor());
             return true;
         }
