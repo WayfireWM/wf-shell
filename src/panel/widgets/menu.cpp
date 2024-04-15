@@ -208,7 +208,7 @@ uint32_t WfMenuMenuItem::fuzzy_match(Glib::ustring pattern)
     Glib::ustring long_name = m_app_info->get_display_name();
     Glib::ustring progr     = m_app_info->get_executable();
 
-    auto name_lower      = name.lowercase();
+    auto name_lower = name.lowercase();
     auto long_name_lower = long_name.lowercase();
     auto progr_lower     = progr.lowercase();
     auto pattern_lower   = pattern.lowercase();
@@ -217,10 +217,12 @@ uint32_t WfMenuMenuItem::fuzzy_match(Glib::ustring pattern)
     {
         match_score += 100;
     }
+
     if (::fuzzy_match(name_lower, pattern_lower))
     {
         match_score += 100;
     }
+
     if (::fuzzy_match(long_name_lower, pattern_lower))
     {
         match_score += 10;
@@ -231,38 +233,42 @@ uint32_t WfMenuMenuItem::fuzzy_match(Glib::ustring pattern)
 
 uint32_t WfMenuMenuItem::matches(Glib::ustring pattern)
 {
-    uint32_t match_score = 0;
+    uint32_t match_score    = 0;
     Glib::ustring long_name = m_app_info->get_display_name();
-    Glib::ustring name      = m_app_info->get_name();
-    Glib::ustring progr     = m_app_info->get_executable();
-    Glib::ustring descr     = m_app_info->get_description();
+    Glib::ustring name  = m_app_info->get_name();
+    Glib::ustring progr = m_app_info->get_executable();
+    Glib::ustring descr = m_app_info->get_description();
 
     auto name_lower = name.lowercase();
     auto long_name_lower = long_name.lowercase();
-    auto progr_lower = progr.lowercase();
-    auto descr_lower = descr.lowercase();
-    auto pattern_lower = pattern.lowercase();
+    auto progr_lower     = progr.lowercase();
+    auto descr_lower     = descr.lowercase();
+    auto pattern_lower   = pattern.lowercase();
 
     auto pos = name_lower.find(pattern_lower);
     if (pos != name_lower.npos)
     {
         match_score += 1000 - pos;
     }
+
     pos = progr_lower.find(pattern_lower);
     if (pos != progr_lower.npos)
     {
         match_score += 1000 - pos;
     }
+
     pos = long_name_lower.find(pattern_lower);
     if (pos != long_name_lower.npos)
     {
         match_score += 500 - pos;
     }
+
     pos = descr_lower.find(pattern_lower);
     if (pos != descr_lower.npos)
     {
         match_score += 300 - pos;
     }
+    
     return match_score;
 }
 
