@@ -11,7 +11,6 @@ class WayfireSpacing : public WayfireWidget
 
     void update_visible();
 
-
   public:
     WayfireSpacing(int pixels);
 

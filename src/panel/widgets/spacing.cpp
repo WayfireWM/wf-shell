@@ -11,16 +11,17 @@ WayfireSpacing::WayfireSpacing(int pixels)
         {
             return false;
         }
+
         auto style = box.get_style_context();
         auto color = style->get_color(Gtk::STATE_FLAG_NORMAL);
 
-        auto width = box.get_allocated_width();
+        auto width  = box.get_allocated_width();
         auto height = box.get_allocated_height();
 
-        context->translate(width/2, height/8);
+        context->translate(width / 2, height / 8);
         context->set_line_width(1.0);
-        context->move_to(0,0);
-        context->line_to(0,height - (height/4));
+        context->move_to(0, 0);
+        context->line_to(0, height - (height/4));
 
         context->set_source_rgba(color.get_red(), color.get_green(), color.get_blue(), color.get_alpha());
         context->stroke();
