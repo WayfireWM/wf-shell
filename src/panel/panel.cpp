@@ -169,8 +169,10 @@ class WayfirePanel::impl
             {
                 return output;
             }
+
             std::cerr << "Invalid widget value: " << value << std::endl;
         }
+        
         return {};
     }
 
@@ -231,7 +233,6 @@ class WayfirePanel::impl
         {
             return Widget(new WfCommandOutputButtons());
         }
-
 
         if (auto pixel = widget_with_value(name, "spacing"))
         {
