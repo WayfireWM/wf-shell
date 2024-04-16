@@ -225,7 +225,7 @@ class WayfirePanel::impl
 
             if (pixel <= 0)
             {
-                std::cerr << "Invalid spacing, " << pixel << std::endl;
+                std::cerr << "Invalid spacing, " << pixel_str << std::endl;
                 return nullptr;
             }
 
@@ -240,7 +240,7 @@ class WayfirePanel::impl
 
             if (pixel <= 0)
             {
-                std::cerr << "Invalid separator, " << pixel << std::endl;
+                std::cerr << "Invalid separator, " << pixel_str << std::endl;
                 return nullptr;
             }
 
