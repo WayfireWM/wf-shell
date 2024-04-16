@@ -15,9 +15,9 @@ randomize = 0
 # widgets_* is a space-separated list of widgets to be displayed
 # at the corresponding part of the panel
 # Supported widgets are: launchers clock network battery window-list volume menu notifications tray command-output
-# A special widgets is spacing widgets, it can be used to add padding everywhere on the panel
-# To use it, just append the amount of pixels you want as a padding
-# to the word "spacing" and use it as a plugin
+# Special widgets are "spacing" and "separator" widgets, they can be used to add padding everywhere on the panel
+# To use them, just append the amount of pixels you want as a padding
+# to the word "spacing" or "separator" and use it as a plugin
 widgets_left = menu spacing4 launchers window-list
 widgets_center = none
 widgets_right = command-output tray notifications volume network battery clock

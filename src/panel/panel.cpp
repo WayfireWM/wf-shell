@@ -22,6 +22,7 @@
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
+#include "widgets/separator.hpp"
 #ifdef HAVE_PULSE
     #include "widgets/volume.hpp"
 #endif
@@ -229,6 +230,20 @@ class WayfirePanel::impl
             }
 
             return Widget(new WayfireSpacing(pixel));
+        }
+        std::string separator = "separator";
+        if (name.find(separator) == 0)
+        {
+            auto pixel_str = name.substr(separator.size());
+            int pixel = std::atoi(pixel_str.c_str());
+
+            if (pixel <= 0)
+            {
+                std::cerr << "Invalid separator, " << pixel << std::endl;
+                return nullptr;
+            }
+
+            return Widget(new WayfireSeparator(pixel));
         }
 
         if (name != "none")
