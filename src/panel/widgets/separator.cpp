@@ -29,4 +29,3 @@ void WayfireSeparator::init(Gtk::HBox *container)
     container->pack_start(box);
     box.show_all();
 }
-
