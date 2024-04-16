@@ -2,10 +2,15 @@
 #define WIDGET_SPACING_HPP
 
 #include "../widget.hpp"
+#include <gtkmm/eventbox.h>
 
 class WayfireSpacing : public WayfireWidget
 {
-    Gtk::HBox box;
+    Gtk::EventBox box;
+    WfOption<bool> visible{"panel/spacing_visible"};
+
+    void update_visible();
+
 
   public:
     WayfireSpacing(int pixels);

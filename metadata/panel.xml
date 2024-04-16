@@ -357,5 +357,12 @@ Set to -1 to only run it by clicking the button.
 		<default>false</default>
 	</option>
 	</group>
+	<group>
+	<_short>Spacing</_short>
+	<option name="spacing_visible" type="bool">
+		<_short>Show a separator in spacing</_short>
+		<default>false</default>
+	</option>
+	</group>
 	</plugin>
 </wf-shell>
