@@ -231,7 +231,7 @@ class WayfirePanel::impl
 
             return Widget(new WayfireSpacing(pixel));
         }
-        
+
         std::string separator = "separator";
         if (name.find(separator) == 0)
         {
