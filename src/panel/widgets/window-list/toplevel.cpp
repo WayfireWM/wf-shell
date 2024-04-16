@@ -480,6 +480,10 @@ class WayfireToplevel::impl
 
     ~impl()
     {
+        if (m_drag_timeout)
+        {
+            m_drag_timeout.disconnect();
+        }
         zwlr_foreign_toplevel_handle_v1_destroy(handle);
     }
 
