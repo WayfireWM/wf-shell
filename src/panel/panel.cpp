@@ -159,6 +159,21 @@ class WayfirePanel::impl
         window->show_all();
     }
 
+    std::optional<int> widget_with_value(std::string value, std::string prefix)
+    {
+        if (value.find(prefix) == 0)
+        {
+            auto output_str = value.substr(prefix.size());
+            int output = std::atoi(output_str.c_str());
+            if (output > 0)
+            {
+                return output;
+            }
+            std::cerr << "Invalid widget value: " << value << std::endl;
+        }
+        return {};
+    }
+
     Widget widget_from_name(std::string name)
     {
         if (name == "menu")
@@ -217,34 +232,15 @@ class WayfirePanel::impl
             return Widget(new WfCommandOutputButtons());
         }
 
-        std::string spacing = "spacing";
-        if (name.find(spacing) == 0)
+
+        if (auto pixel = widget_with_value(name, "spacing"))
         {
-            auto pixel_str = name.substr(spacing.size());
-            int pixel = std::atoi(pixel_str.c_str());
-
-            if (pixel <= 0)
-            {
-                std::cerr << "Invalid spacing, " << pixel_str << std::endl;
-                return nullptr;
-            }
-
-            return Widget(new WayfireSpacing(pixel));
+            return Widget(new WayfireSpacing(*pixel));
         }
 
-        std::string separator = "separator";
-        if (name.find(separator) == 0)
+        if (auto pixel = widget_with_value(name, "separator"))
         {
-            auto pixel_str = name.substr(separator.size());
-            int pixel = std::atoi(pixel_str.c_str());
-
-            if (pixel <= 0)
-            {
-                std::cerr << "Invalid separator, " << pixel_str << std::endl;
-                return nullptr;
-            }
-
-            return Widget(new WayfireSeparator(pixel));
+            return Widget(new WayfireSeparator(*pixel));
         }
 
         if (name != "none")
