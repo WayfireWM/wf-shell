@@ -11,6 +11,7 @@
 #include <gdk/gdkwayland.h>
 #include <cmath>
 
+#include <glibmm.h>
 #include "toplevel.hpp"
 #include "gtk-utils.hpp"
 #include "panel.hpp"
@@ -40,6 +41,7 @@ class WayfireToplevel::impl
     Gtk::Menu menu;
     Gtk::MenuItem minimize, maximize, close;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
+    sigc::connection m_drag_timeout;
 
     Glib::ustring app_id, title;
 
@@ -86,6 +88,29 @@ class WayfireToplevel::impl
         menu.attach_to_widget(button);
         menu.show_all();
 
+        button.drag_dest_set(Gtk::DEST_DEFAULT_MOTION & Gtk::DEST_DEFAULT_HIGHLIGHT, Gdk::DragAction(0));
+
+        button.signal_drag_motion().connect(
+            [this] (const Glib::RefPtr<Gdk::DragContext>, gint x, gint y, guint time) -> bool
+        {
+            if (!m_drag_timeout)
+            {
+                m_drag_timeout = Glib::signal_timeout().connect(sigc::mem_fun(this,
+                    &WayfireToplevel::impl::drag_paused), 700);
+            }
+
+            return true;
+        });
+
+        button.signal_drag_leave().connect(
+            [this] (const Glib::RefPtr<Gdk::DragContext>, guint time)
+        {
+            if (m_drag_timeout)
+            {
+                m_drag_timeout.disconnect();
+            }
+        });
+
         drag_gesture = Gtk::GestureDrag::create(button);
         drag_gesture->signal_drag_begin().connect_notify(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_begin));
@@ -101,6 +126,14 @@ class WayfireToplevel::impl
     double grab_start_x, grab_start_y;
     double grab_abs_start_x;
     bool drag_exceeds_threshold;
+
+    bool drag_paused()
+    {
+        auto gseat = Gdk::Display::get_default()->get_default_seat();
+        auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
+        zwlr_foreign_toplevel_handle_v1_activate(handle, seat);
+        return false;
+    }
 
     void on_drag_begin(double _x, double _y)
     {
@@ -447,6 +480,11 @@ class WayfireToplevel::impl
 
     ~impl()
     {
+        if (m_drag_timeout)
+        {
+            m_drag_timeout.disconnect();
+        }
+
         zwlr_foreign_toplevel_handle_v1_destroy(handle);
     }
 
