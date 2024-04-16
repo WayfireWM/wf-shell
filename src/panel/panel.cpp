@@ -172,7 +172,7 @@ class WayfirePanel::impl
 
             std::cerr << "Invalid widget value: " << value << std::endl;
         }
-        
+
         return {};
     }
 
