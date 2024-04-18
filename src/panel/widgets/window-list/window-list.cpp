@@ -1,5 +1,7 @@
 #include <iostream>
 #include <glibmm.h>
+#include <gtkmm/cssprovider.h>
+#include <gtkmm/stylecontext.h>
 #include <gdk/gdkwayland.h>
 
 #include "toplevel.hpp"
@@ -185,6 +187,16 @@ void WayfireWindowList::init(Gtk::HBox *container)
         return;
     }
 
+    auto css_provider  = Gtk::CssProvider::create();
+    auto style_context = Gtk::StyleContext::create();
+    css_provider->load_from_data("#nopadding { padding: 0; }");
+    style_context->add_provider_for_screen(Gdk::Screen::get_default(),
+        css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+    set_reduced_padding();
+
+    reduced_padding.set_callback([=] () { set_reduced_padding(); });
+
     wl_registry_destroy(registry);
     zwlr_foreign_toplevel_manager_v1_add_listener(manager,
         &toplevel_manager_v1_impl, this);
@@ -198,6 +210,19 @@ void WayfireWindowList::init(Gtk::HBox *container)
     scrolled_window.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_NEVER);
     container->pack_start(scrolled_window, true, true);
     scrolled_window.show_all();
+}
+
+void WayfireWindowList::set_reduced_padding()
+{
+    if (reduced_padding)
+    {
+        scrolled_window.set_name("nopadding");
+        box.set_name("nopadding");
+    } else
+    {
+        scrolled_window.set_name("");
+        box.set_name("");
+    }
 }
 
 void WayfireWindowList::set_button_width(int width)

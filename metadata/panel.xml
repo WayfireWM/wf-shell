@@ -356,6 +356,14 @@ Set to -1 to only run it by clicking the button.
 		<_short>Middle Click Closes Windows</_short>
 		<default>false</default>
 	</option>
+	<option name="window_list_font" type="string">
+		<_short>Button Font</_short>
+		<default>default</default>
+	</option>
+	<option name="window_list_small" type="bool">
+		<_short>Remove padding to allow smaller window list</_short>
+		<default>false</default>
+	</option>
 	</group>
 	</plugin>
 </wf-shell>

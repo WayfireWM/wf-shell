@@ -46,6 +46,8 @@ class WayfireToplevel::impl
     Glib::ustring app_id, title;
 
     WfOption<bool> middle_click_close{"panel/middle_click_close"};
+    WfOption<std::string> font{"panel/window_list_font"};
+    WfOption<bool> reduced_padding{"panel/window_list_small"};
 
   public:
     WayfireWindowList *window_list;
@@ -57,10 +59,12 @@ class WayfireToplevel::impl
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
             &toplevel_handle_v1_impl, this);
 
+        update_font();
+        set_reduced_padding();
+
         button_contents.add(image);
         button_contents.add(label);
         button_contents.set_halign(Gtk::ALIGN_START);
-        button_contents.set_spacing(5);
         button.add(button_contents);
         button.set_tooltip_text("none");
 
@@ -87,6 +91,9 @@ class WayfireToplevel::impl
         menu.attach(close, 0, 1, 2, 3);
         menu.attach_to_widget(button);
         menu.show_all();
+
+        font.set_callback([=] () { update_font(); });
+        reduced_padding.set_callback([=] () { set_reduced_padding(); });
 
         button.drag_dest_set(Gtk::DEST_DEFAULT_MOTION & Gtk::DEST_DEFAULT_HIGHLIGHT, Gdk::DragAction(0));
 
@@ -126,6 +133,36 @@ class WayfireToplevel::impl
     double grab_start_x, grab_start_y;
     double grab_abs_start_x;
     bool drag_exceeds_threshold;
+
+    void set_reduced_padding()
+    {
+        if (reduced_padding)
+        {
+            label.set_name("nopadding");
+            image.set_name("nopadding");
+            button_contents.set_name("nopadding");
+            button.set_name("nopadding");
+            button_contents.set_spacing(0);
+        } else
+        {
+            label.set_name("");
+            image.set_name("");
+            button_contents.set_name("");
+            button.set_name("");
+            button_contents.set_spacing(5);
+        }
+    }
+
+    void update_font()
+    {
+        if ((std::string)font == "default")
+        {
+            label.unset_font();
+        } else
+        {
+            label.override_font(Pango::FontDescription((std::string)font));
+        }
+    }
 
     bool drag_paused()
     {
