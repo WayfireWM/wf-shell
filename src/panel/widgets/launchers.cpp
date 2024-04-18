@@ -3,6 +3,7 @@
 #include <glibmm/spawn.h>
 #include <gdkmm/pixbuf.h>
 #include <gdkmm/general.h>
+#include <gdkmm/general.h>
 #include <gtkmm/icontheme.h>
 #include <gdk/gdkcairo.h>
 #include <cassert>
@@ -52,11 +53,11 @@ struct DesktopLauncherInfo : public LauncherInfo
         {
             std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
             return theme->load_icon("image-missing", size)
-               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+                ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
         }
 
         return theme->load_icon(icon, size)
-               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+            ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
     }
 
     std::string get_text()
@@ -112,7 +113,7 @@ struct FileLauncherInfo : public LauncherInfo
         }
 
         return theme->load_icon(icon, size)
-               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+            ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
     }
 
     std::string get_text()
@@ -162,28 +163,30 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
     evbox.signal_draw().connect(
         [this] (const Cairo::RefPtr<Cairo::Context> context) -> bool
     {
-        if (image){
+        if (image)
+        {
             auto width  = evbox.get_allocated_width();
             auto height = evbox.get_allocated_height();
 
             /* Center in widget space */
             double offset_x = (width - current_size) / 2;
             double offset_y = (height - current_size) / 2;
-            context->translate(offset_x,offset_y);
+            context->translate(offset_x, offset_y);
 
             /* Scale to image space */
             context->scale(current_size / size, current_size / size);
 
             Gdk::Cairo::set_source_pixbuf(context, image, 0, 0);
-            context->rectangle(0,0,size,size);
+            context->rectangle(0, 0, size, size);
             context->fill();
-            if (current_size.running()){
+            if (current_size.running())
+            {
                 evbox.queue_draw();
             }
         }
+
         return false;
     });
-
 
     size.set_callback([=] () { update_size(); });
 
@@ -233,7 +236,7 @@ static int get_animation_duration(int start, int end, int scale)
 
 bool WfLauncherButton::on_enter(GdkEventCrossing *ev)
 {
-    int duration    = get_animation_duration(
+    int duration = get_animation_duration(
         current_size, size, evbox.get_scale_factor());
 
     evbox.queue_draw();
@@ -300,8 +303,7 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
             auto icon_option = section->get_option_or(file_icon_prefix + launcher_name);
             if (icon_option)
             {
-                /* bingo, found command + icon
-                 * now look for the corresponding label  */
+                /* bingo, found command + icon now look for the corresponding label  */
                 auto label_option = section->get_option_or(file_label_prefix + launcher_name);
                 if (label_option)
                 {
@@ -315,8 +317,8 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
             }
         }
 
-        /* an entry is a deskop-file entry if the it has the desktop prefix
-         * but not the file_icon, file_cmd or file_label prefix */
+        /* an entry is a deskop-file entry if the it has the desktop prefix but not the file_icon, file_cmd or
+         * file_label prefix */
         if (begins_with(opt->get_name(), desktop_prefix) &&
             !begins_with(opt->get_name(), file_icon_prefix) &&
             !begins_with(opt->get_name(), file_cmd_prefix) &&
