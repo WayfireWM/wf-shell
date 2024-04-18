@@ -53,11 +53,11 @@ struct DesktopLauncherInfo : public LauncherInfo
         {
             std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
             return theme->load_icon("image-missing", size)
-                ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+                   ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
         }
 
         return theme->load_icon(icon, size)
-            ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
     }
 
     std::string get_text()
@@ -113,7 +113,7 @@ struct FileLauncherInfo : public LauncherInfo
         }
 
         return theme->load_icon(icon, size)
-            ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
     }
 
     std::string get_text()
