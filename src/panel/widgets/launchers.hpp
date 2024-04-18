@@ -40,10 +40,11 @@ struct WfLauncherButton
     std::string launcher_name;
     int32_t base_size;
 
-    Gtk::Image image;
+    Glib::RefPtr<Gdk::Pixbuf> image;
     Gtk::EventBox evbox;
     LauncherInfo *info = NULL;
     LauncherAnimation current_size{wf::create_option(1000), 0, 0};
+    WfOption<int> size{"panel/launchers_size"};
 
     WfLauncherButton();
     WfLauncherButton(const WfLauncherButton& other) = delete;
@@ -55,10 +56,8 @@ struct WfLauncherButton
     bool on_click(GdkEventButton *ev);
     bool on_enter(GdkEventCrossing *ev);
     bool on_leave(GdkEventCrossing *ev);
-    bool on_draw(const Cairo::RefPtr<Cairo::Context>& ctx);
-    void on_scale_update();
 
-    void set_size(int size);
+    void update_size();
 };
 
 using launcher_container = std::vector<std::unique_ptr<WfLauncherButton>>;

@@ -2,6 +2,7 @@
 #include <giomm/file.h>
 #include <glibmm/spawn.h>
 #include <gdkmm/pixbuf.h>
+#include <gdkmm/general.h>
 #include <gtkmm/icontheme.h>
 #include <gdk/gdkcairo.h>
 #include <cassert>
@@ -38,7 +39,11 @@ struct DesktopLauncherInfo : public LauncherInfo
         std::string absolute_path = "/";
         if (!icon.compare(0, absolute_path.size(), absolute_path))
         {
-            return Gdk::Pixbuf::create_from_file(icon, size, size);
+            auto image = Gdk::Pixbuf::create_from_file(icon, size, size);
+            if (image)
+            {
+                return image;
+            }
         }
 
         auto theme = Gtk::IconTheme::get_default();
@@ -46,7 +51,8 @@ struct DesktopLauncherInfo : public LauncherInfo
         if (!theme->lookup_icon(icon, size))
         {
             std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
-            return Glib::RefPtr<Gdk::Pixbuf>();
+            return theme->load_icon("image-missing", size)
+               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
         }
 
         return theme->load_icon(icon, size)
@@ -91,7 +97,22 @@ struct FileLauncherInfo : public LauncherInfo
 
     Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size)
     {
-        return Gdk::Pixbuf::create_from_file(icon, size, size);
+        std::string absolute_path = "/";
+        if (!icon.compare(0, absolute_path.size(), absolute_path))
+        {
+            return Gdk::Pixbuf::create_from_file(icon, size, size);
+        }
+
+        auto theme = Gtk::IconTheme::get_default();
+
+        if (!theme->lookup_icon(icon, size))
+        {
+            std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
+            return Glib::RefPtr<Gdk::Pixbuf>();
+        }
+
+        return theme->load_icon(icon, size)
+               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
     }
 
     std::string get_text()
@@ -108,25 +129,9 @@ struct FileLauncherInfo : public LauncherInfo
     {}
 };
 
-void WfLauncherButton::set_size(int size)
-{
-    int full_size = base_size * LAUNCHERS_ICON_SCALE;
-
-    /* set button spacing */
-    evbox.set_margin_top((full_size - size) / 2);
-    evbox.set_margin_bottom((full_size - size + 1) / 2);
-
-    evbox.set_margin_left((full_size - size) / 2);
-    evbox.set_margin_right((full_size - size + 1) / 2);
-
-    // initial scale
-    on_scale_update();
-}
-
 bool WfLauncherButton::initialize(std::string name, std::string icon, std::string label)
 {
     launcher_name = name;
-    base_size     = WfOption<int>{"panel/launchers_size"} / LAUNCHERS_ICON_SCALE;
     if (icon == "none")
     {
         auto dl = new DesktopLauncherInfo();
@@ -149,24 +154,52 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         info = fl;
     }
 
-    evbox.add(image);
     evbox.signal_button_press_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
     evbox.signal_button_release_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
     evbox.signal_enter_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_enter));
     evbox.signal_leave_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_leave));
 
-    evbox.signal_draw().connect(sigc::mem_fun(this, &WfLauncherButton::on_draw));
-    evbox.signal_map().connect([=] ()
+    evbox.signal_draw().connect(
+        [this] (const Cairo::RefPtr<Cairo::Context> context) -> bool
     {
-        set_size(base_size);
+        if (image){
+            auto width  = evbox.get_allocated_width();
+            auto height = evbox.get_allocated_height();
+
+            /* Center in widget space */
+            double offset_x = (width - current_size) / 2;
+            double offset_y = (height - current_size) / 2;
+            context->translate(offset_x,offset_y);
+
+            /* Scale to image space */
+            context->scale(current_size / size, current_size / size);
+
+            Gdk::Cairo::set_source_pixbuf(context, image, 0, 0);
+            context->rectangle(0,0,size,size);
+            context->fill();
+            if (current_size.running()){
+                evbox.queue_draw();
+            }
+        }
+        return false;
     });
 
-    current_size.set(base_size, base_size);
-    evbox.property_scale_factor().signal_changed()
-        .connect(sigc::mem_fun(this, &WfLauncherButton::on_scale_update));
+
+    size.set_callback([=] () { update_size(); });
+
+    update_size();
 
     evbox.set_tooltip_text(info->get_text());
     return true;
+}
+
+void WfLauncherButton::update_size()
+{
+    base_size = size / LAUNCHERS_ICON_SCALE;
+    image     = info->get_pixbuf(size);
+
+    current_size.set(base_size, base_size);
+    evbox.set_size_request(size);
 }
 
 bool WfLauncherButton::on_click(GdkEventButton *ev)
@@ -200,13 +233,12 @@ static int get_animation_duration(int start, int end, int scale)
 
 bool WfLauncherButton::on_enter(GdkEventCrossing *ev)
 {
-    int target_size = base_size * LAUNCHERS_ICON_SCALE;
     int duration    = get_animation_duration(
-        current_size, target_size, image.get_scale_factor());
+        current_size, size, evbox.get_scale_factor());
 
     evbox.queue_draw();
     current_size = LauncherAnimation{wf::create_option(duration),
-        (int)current_size, target_size};
+        (int)current_size, size};
     return false;
 }
 
@@ -214,43 +246,12 @@ bool WfLauncherButton::on_leave(GdkEventCrossing *ev)
 {
     evbox.queue_draw();
     int duration = get_animation_duration(
-        current_size, base_size, image.get_scale_factor());
+        current_size, base_size, evbox.get_scale_factor());
 
     current_size = LauncherAnimation{wf::create_option(duration),
         (int)current_size, base_size};
 
     return false;
-}
-
-bool WfLauncherButton::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
-{
-    if (current_size.running())
-    {
-        set_size(current_size);
-    }
-
-    return false;
-}
-
-/* Because icons can have different sizes, we need to use a Gdk::Pixbuf
- * to convert them to the appropriate size. However, Gdk::Pixbuf operates
- * in absolute pixel size, so this doesn't work nicely with scaled outputs.
- *
- * To get around the problem, we first create the Pixbuf with a scaled size,
- * then convert it to a cairo_surface with the appropriate scale, and use this
- * cairo surface as the source for the Gtk::Image */
-void WfLauncherButton::on_scale_update()
-{
-    int scale = image.get_scale_factor();
-
-    // hold a reference to the RefPtr
-    auto ptr_pbuff = info->get_pixbuf(current_size * image.get_scale_factor());
-    if (!ptr_pbuff)
-    {
-        return;
-    }
-
-    set_image_pixbuf(image, ptr_pbuff, scale);
 }
 
 WfLauncherButton::WfLauncherButton()
