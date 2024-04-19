@@ -14,8 +14,8 @@
 
 struct LauncherInfo
 {
-    virtual Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size) = 0;
     virtual std::string get_text() = 0;
+    virtual std::string get_icon() = 0;
     virtual void execute() = 0;
     virtual ~LauncherInfo()
     {}
@@ -53,6 +53,7 @@ struct WfLauncherButton
 
     bool initialize(std::string name, std::string icon = "none", std::string label = "");
 
+    Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(std::string icon, int32_t size);
     bool on_click(GdkEventButton *ev);
     bool on_enter(GdkEventCrossing *ev);
     bool on_leave(GdkEventCrossing *ev);

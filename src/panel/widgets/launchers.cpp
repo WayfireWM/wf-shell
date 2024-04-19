@@ -3,7 +3,6 @@
 #include <glibmm/spawn.h>
 #include <gdkmm/pixbuf.h>
 #include <gdkmm/general.h>
-#include <gdkmm/general.h>
 #include <gtkmm/icontheme.h>
 #include <gdk/gdkcairo.h>
 #include <cassert>
@@ -34,30 +33,9 @@ struct DesktopLauncherInfo : public LauncherInfo
         return true;
     }
 
-    Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size)
+    std::string get_icon()
     {
-        auto icon = app_info->get_icon()->to_string();
-        std::string absolute_path = "/";
-        if (!icon.compare(0, absolute_path.size(), absolute_path))
-        {
-            auto image = Gdk::Pixbuf::create_from_file(icon, size, size);
-            if (image)
-            {
-                return image;
-            }
-        }
-
-        auto theme = Gtk::IconTheme::get_default();
-
-        if (!theme->lookup_icon(icon, size))
-        {
-            std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
-            return theme->load_icon("image-missing", size)
-                   ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
-        }
-
-        return theme->load_icon(icon, size)
-               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+        return app_info->get_icon()->to_string();
     }
 
     std::string get_text()
@@ -96,24 +74,9 @@ struct FileLauncherInfo : public LauncherInfo
         return load_icon_pixbuf_safe(icon, 24).get() != nullptr;
     }
 
-    Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size)
+    std::string get_icon()
     {
-        std::string absolute_path = "/";
-        if (!icon.compare(0, absolute_path.size(), absolute_path))
-        {
-            return Gdk::Pixbuf::create_from_file(icon, size, size);
-        }
-
-        auto theme = Gtk::IconTheme::get_default();
-
-        if (!theme->lookup_icon(icon, size))
-        {
-            std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
-            return Glib::RefPtr<Gdk::Pixbuf>();
-        }
-
-        return theme->load_icon(icon, size)
-               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+        return icon;
     }
 
     std::string get_text()
@@ -173,11 +136,14 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
             double offset_y = (height - current_size) / 2;
             context->translate(offset_x, offset_y);
 
+            auto pix_width  = image->get_width();
+            auto pix_height = image->get_height();
+
             /* Scale to image space */
-            context->scale(current_size / size, current_size / size);
+            context->scale(current_size / pix_width, current_size / pix_height);
 
             Gdk::Cairo::set_source_pixbuf(context, image, 0, 0);
-            context->rectangle(0, 0, size, size);
+            context->rectangle(0, 0, pix_width, pix_height);
             context->fill();
             if (current_size.running())
             {
@@ -187,6 +153,9 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
 
         return false;
     });
+
+    evbox.property_scale_factor().signal_changed().connect(
+        [=] () { update_size(); });
 
     size.set_callback([=] () { update_size(); });
 
@@ -199,7 +168,7 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
 void WfLauncherButton::update_size()
 {
     base_size = size / LAUNCHERS_ICON_SCALE;
-    image     = info->get_pixbuf(size);
+    image     = get_pixbuf(info->get_icon(), size);
 
     current_size.set(base_size, base_size);
     evbox.set_size_request(size);
@@ -227,6 +196,36 @@ bool WfLauncherButton::on_click(GdkEventButton *ev)
     }
 
     return true;
+}
+
+Glib::RefPtr<Gdk::Pixbuf> WfLauncherButton::get_pixbuf(std::string icon, int32_t size)
+{
+    size = size * evbox.get_scale_factor();
+    std::string absolute_path = "/";
+    if (!icon.compare(0, absolute_path.size(), absolute_path))
+    {
+        auto image = Gdk::Pixbuf::create_from_file(icon, size, size);
+        if (image)
+        {
+            return image;
+        }
+    }
+
+    auto theme = Gtk::IconTheme::get_default();
+    if (theme->lookup_icon(icon, size))
+    {
+        return theme->load_icon(icon, size)
+            ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+    }
+
+    std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
+    if (theme->lookup_icon(icon, size))
+    {
+        return theme->load_icon("image-missing", size)
+            ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+    }
+
+    return Glib::RefPtr<Gdk::Pixbuf>();
 }
 
 static int get_animation_duration(int start, int end, int scale)
