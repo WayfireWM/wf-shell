@@ -2,11 +2,11 @@
 #define WIDGET_SEPARATORG_HPP
 
 #include "../widget.hpp"
-#include <gtkmm/eventbox.h>
+#include <gtkmm/separator.h>
 
 class WayfireSeparator : public WayfireWidget
 {
-    Gtk::EventBox box;
+    Gtk::Separator separator;
 
   public:
     WayfireSeparator(int pixels);
