@@ -215,14 +215,14 @@ Glib::RefPtr<Gdk::Pixbuf> WfLauncherButton::get_pixbuf(std::string icon, int32_t
     if (theme->lookup_icon(icon, size))
     {
         return theme->load_icon(icon, size)
-            ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
     }
 
     std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
     if (theme->lookup_icon(icon, size))
     {
         return theme->load_icon("image-missing", size)
-            ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
     }
 
     return Glib::RefPtr<Gdk::Pixbuf>();
