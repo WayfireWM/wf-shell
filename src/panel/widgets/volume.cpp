@@ -252,9 +252,8 @@ void WayfireVolume::init(Gtk::HBox *container)
     /* Setup button */
     button = std::make_unique<WayfireMenuButton>("panel");
     auto style = button->get_style_context();
-    style->context_save();
-    style->set_state(Gtk::STATE_FLAG_NORMAL & ~Gtk::STATE_FLAG_PRELIGHT);
-    button->reset_style();
+    style->add_class("volume");
+    style->add_class("flat");
     button->set_events(Gdk::SCROLL_MASK | Gdk::SMOOTH_SCROLL_MASK | Gdk::BUTTON_PRESS_MASK);
     button->signal_scroll_event().connect_notify(
         sigc::mem_fun(this, &WayfireVolume::on_volume_scroll));

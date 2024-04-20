@@ -108,6 +108,7 @@ class WayfirePanel::impl
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
         window->set_size_request(1, minimal_panel_height);
+        window->get_style_context()->add_class("wf-panel");
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
 
@@ -146,6 +147,9 @@ class WayfirePanel::impl
 
     void init_layout()
     {
+        left_box.get_style_context()->add_class("left");
+        center_box.get_style_context()->add_class("center");
+        right_box.get_style_context()->add_class("right");
         content_box.pack_start(left_box, false, false);
         content_box.pack_end(right_box, false, false);
         if (!center_box.get_children().empty())
