@@ -845,7 +845,7 @@ void WayfireMenu::init(Gtk::HBox *container)
     button = std::make_unique<WayfireMenuButton>("panel");
     button->add(main_image);
     auto style = button->get_style_context();
-    style->add_class("menu");
+    style->add_class("menu-button");
     style->add_class("flat");
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     button->get_popover()->signal_show().connect_notify(
