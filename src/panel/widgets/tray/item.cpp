@@ -98,6 +98,7 @@ void StatusNotifierItem::init_widget()
         {
             return true;
         }
+
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({ev->x, ev->y});
         const guint menu_btn = menu_on_middle_click ? GDK_BUTTON_MIDDLE : GDK_BUTTON_SECONDARY;
         const guint secondary_activate_btn = menu_on_middle_click ? GDK_BUTTON_SECONDARY : GDK_BUTTON_MIDDLE;
