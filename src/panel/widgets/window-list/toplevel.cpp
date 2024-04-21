@@ -143,7 +143,7 @@ class WayfireToplevel::impl
         grab_start_x = _x;
         grab_start_y = _y;
 
-        set_flat_class(false);
+        set_classes(state);
         window_list->box.set_top_widget(&button);
 
         /* Find the distance between pointer X and button origin */
@@ -195,7 +195,7 @@ class WayfireToplevel::impl
         int height = button.get_allocated_height();
 
         window_list->box.set_top_widget(nullptr);
-        set_flat_class(!(state & WF_TOPLEVEL_STATE_ACTIVATED));
+        set_classes(state);
 
         /* When a button is dropped after dnd, we ignore the unclick
          * event so action doesn't happen in addition to dropping.
@@ -461,21 +461,39 @@ class WayfireToplevel::impl
         }
     }
 
-    void set_flat_class(bool on)
+    void set_classes(uint32_t state)
     {
-        if (on)
+        if (state & WF_TOPLEVEL_STATE_ACTIVATED)
         {
-            button.get_style_context()->add_class("flat");
+            button.get_style_context()->add_class("activated");
+            button.get_style_context()->remove_class("flat");
         } else
         {
-            button.get_style_context()->remove_class("flat");
+            button.get_style_context()->add_class("flat");
+            button.get_style_context()->remove_class("activated");
+        }
+
+        if (state & WF_TOPLEVEL_STATE_MINIMIZED)
+        {
+            button.get_style_context()->add_class("minimized");
+        } else
+        {
+            button.get_style_context()->remove_class("minimized");
+        }
+
+        if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
+        {
+            button.get_style_context()->add_class("maximized");
+        } else
+        {
+            button.get_style_context()->remove_class("maximized");
         }
     }
 
     void set_state(uint32_t state)
     {
         this->state = state;
-        set_flat_class(!(state & WF_TOPLEVEL_STATE_ACTIVATED));
+        set_classes(state);
         update_menu_item_text();
     }
 
