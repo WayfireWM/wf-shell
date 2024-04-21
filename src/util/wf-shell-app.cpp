@@ -77,7 +77,9 @@ char buf[INOT_BUF_SIZE];
 static void do_reload_css(WayfireShellApp *app)
 {
     app->on_css_reload();
-    inotify_add_watch(app->inotify_css_fd, app->get_css_config_dir().c_str(), IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
+    inotify_add_watch(app->inotify_css_fd,
+        app->get_css_config_dir().c_str(),
+        IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
 }
 
 /* Reload file and add next inotify watch */

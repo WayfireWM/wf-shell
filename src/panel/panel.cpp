@@ -366,17 +366,19 @@ void WayfirePanelApp::on_css_reload()
     clear_css_rules();
     /* Add user directory */
     std::string ext(".css");
-    for (auto &p : std::filesystem::directory_iterator(get_css_config_dir()))
+    for (auto & p : std::filesystem::directory_iterator(get_css_config_dir()))
     {
         if (p.path().extension() == ext)
         {
             add_css_file(p.path().string());
         }
     }
+
     /* Add one user file */
-    auto custom_css_config = WfOption<std::string> {"panel/css_path"};
+    auto custom_css_config = WfOption<std::string>{"panel/css_path"};
     std::string custom_css = custom_css_config;
-    if (custom_css!=""){
+    if (custom_css!="")
+    {
         add_css_file(custom_css);
     }
 }
@@ -385,10 +387,11 @@ void WayfirePanelApp::clear_css_rules()
 {
     auto screen = Gdk::Screen::get_default();
     auto style_context = Gtk::StyleContext::create();
-    for(auto css_provider : css_rules)
+    for (auto css_provider : css_rules)
     {
         style_context->remove_provider_for_screen(screen, css_provider);
     }
+    
     css_rules.clear();
 }
 
