@@ -221,7 +221,7 @@ class WayfireToplevel::impl
         {
             if (event->button == 3)
             {
-                menu.popup(event->button, event->time);
+                menu.popup_at_widget(&button, Gdk::GRAVITY_NORTH, Gdk::GRAVITY_SOUTH, NULL);
                 return true; // It has been handled.
             } else if ((event->button == 2) && middle_click_close)
             {
