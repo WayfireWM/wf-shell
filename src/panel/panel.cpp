@@ -22,6 +22,7 @@
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
+#include "widgets/separator.hpp"
 #ifdef HAVE_PULSE
     #include "widgets/volume.hpp"
 #endif
@@ -158,6 +159,23 @@ class WayfirePanel::impl
         window->show_all();
     }
 
+    std::optional<int> widget_with_value(std::string value, std::string prefix)
+    {
+        if (value.find(prefix) == 0)
+        {
+            auto output_str = value.substr(prefix.size());
+            int output = std::atoi(output_str.c_str());
+            if (output > 0)
+            {
+                return output;
+            }
+
+            std::cerr << "Invalid widget value: " << value << std::endl;
+        }
+
+        return {};
+    }
+
     Widget widget_from_name(std::string name)
     {
         if (name == "menu")
@@ -216,19 +234,14 @@ class WayfirePanel::impl
             return Widget(new WfCommandOutputButtons());
         }
 
-        std::string spacing = "spacing";
-        if (name.find(spacing) == 0)
+        if (auto pixel = widget_with_value(name, "spacing"))
         {
-            auto pixel_str = name.substr(spacing.size());
-            int pixel = std::atoi(pixel_str.c_str());
+            return Widget(new WayfireSpacing(*pixel));
+        }
 
-            if (pixel <= 0)
-            {
-                std::cerr << "Invalid spacing, " << pixel << std::endl;
-                return nullptr;
-            }
-
-            return Widget(new WayfireSpacing(pixel));
+        if (auto pixel = widget_with_value(name, "separator"))
+        {
+            return Widget(new WayfireSeparator(*pixel));
         }
 
         if (name != "none")
