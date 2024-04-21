@@ -60,6 +60,7 @@ std::string WayfireShellApp::get_css_config_dir()
             std::filesystem::copy(default_css, destination);
         }
     }
+
     return css_directory;
 }
 
