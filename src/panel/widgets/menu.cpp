@@ -524,6 +524,7 @@ bool WayfireMenu::update_icon()
     {
         icon = menu_icon;
     }
+
     set_image_icon(main_image, icon, menu_size);
     return true;
 }
