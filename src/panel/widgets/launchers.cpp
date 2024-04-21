@@ -50,6 +50,8 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
     style->add_class("launcher");
 
     button.signal_clicked().connect([=] () { launch(); });
+    button.property_scale_factor().signal_changed()
+        .connect([=] () {update_icon(); });
     icon_size.set_callback([=] () { update_icon(); });
 
     update_icon();
