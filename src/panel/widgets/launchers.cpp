@@ -31,6 +31,7 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         {
             label = name;
         }
+
         keyfile.set_string("Desktop Entry", "Name", label);
 
         // Hand off to have a custom launcher
@@ -64,7 +65,8 @@ void WfLauncherButton::update_icon()
 
 void WfLauncherButton::launch()
 {
-    if (app_info){
+    if (app_info)
+    {
         app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
     }
 }
