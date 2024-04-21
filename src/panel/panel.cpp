@@ -377,7 +377,7 @@ void WayfirePanelApp::on_css_reload()
     /* Add one user file */
     auto custom_css_config = WfOption<std::string>{"panel/css_path"};
     std::string custom_css = custom_css_config;
-    if (custom_css!="")
+    if (custom_css != "")
     {
         add_css_file(custom_css);
     }
@@ -391,7 +391,7 @@ void WayfirePanelApp::clear_css_rules()
     {
         style_context->remove_provider_for_screen(screen, css_provider);
     }
-    
+
     css_rules.clear();
 }
 
