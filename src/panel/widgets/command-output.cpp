@@ -53,6 +53,8 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
         set_image_icon(icon, icon_name, icon_size, {});
     }
 
+    get_style_context()->add_class("command-output");
+
     main_label.set_ellipsize(Pango::ELLIPSIZE_END);
     main_label.set_max_width_chars(max_chars_opt);
     max_chars_opt.set_callback([=]
@@ -138,6 +140,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
 
 void WfCommandOutputButtons::init(Gtk::HBox *container)
 {
+    box.get_style_context()->add_class("command-output-box");
     container->pack_start(box, false, false);
     update_buttons();
     commands_list_opt.set_callback([=] { update_buttons(); });
