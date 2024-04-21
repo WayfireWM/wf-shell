@@ -21,6 +21,10 @@ ninja -C build && sudo ninja -C build install
 To configure the panel and the dock, wf-shell uses a config file located (by default) in `~/.config/wf-shell.ini`
 An example configuration can be found in the file `wf-shell.ini.example`, alongside with comments what each option does.
 
+# Style & Theme
+
+Style and theme can be altered with [CSS](/data/css/)
+
 # Screenshots
 
 ![Panel & Background demo](/screenshot.png)

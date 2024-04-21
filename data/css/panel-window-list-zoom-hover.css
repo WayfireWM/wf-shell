@@ -1,0 +1,23 @@
+/* Default size not-selected not-hovered */
+.wf-panel .window-button.flat image {
+    transition: 500ms linear;
+    -gtk-icon-transform: scale(1.0);
+}
+
+/* Double size not-selected hovered */
+.wf-panel .window-button.flat:hover image {
+    transition: 100ms linear;
+    -gtk-icon-transform: scale(2.0);
+}
+
+/* +50% size selected not-hovered */
+.wf-panel .window-button image {
+    transition: 100ms linear;
+    -gtk-icon-transform: scale(1.5);
+}
+
+/* Double size selected hovered */
+.wf-panel .window-button:hover image {
+    transition: 100ms linear;
+    -gtk-icon-transform: scale(2.0);
+}
