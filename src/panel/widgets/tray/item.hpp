@@ -2,7 +2,7 @@
 #define TRAY_ITEM_HPP
 
 #include <giomm.h>
-#include <gtkmm/eventbox.h>
+#include <gtkmm/button.h>
 #include <gtkmm/hvbox.h>
 #include <gtkmm/icontheme.h>
 #include <gtkmm/image.h>
@@ -12,7 +12,7 @@
 
 #include <optional>
 
-class StatusNotifierItem : public Gtk::EventBox
+class StatusNotifierItem : public Gtk::Button
 {
     WfOption<int> smooth_scolling_threshold{"panel/tray_smooth_scrolling_threshold"};
     WfOption<int> icon_size{"panel/tray_icon_size"};
