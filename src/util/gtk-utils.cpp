@@ -77,16 +77,26 @@ void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
 {
     int scale = ((options.user_scale == -1) ?
         image.get_scale_factor() : options.user_scale);
+
+    /* Create surface above necessary scale to allow zoom effects */
+    scale = scale * 2;
     int scaled_size = size * scale;
 
-    if (!icon_theme->lookup_icon(icon_name, scaled_size))
+    Glib::RefPtr<Gdk::Pixbuf> pbuff = {};
+    /* Get from theme if possible */
+    if (icon_theme->lookup_icon(icon_name, scaled_size))
     {
-        std::cerr << "Failed to load icon \"" << icon_name << "\"" << std::endl;
-        return;
+        pbuff = icon_theme->load_icon(icon_name, scaled_size, Gtk::ICON_LOOKUP_FORCE_SIZE)
+            ->scale_simple(scaled_size, scaled_size, Gdk::INTERP_BILINEAR);
+    }
+    /* Get from filesystem if necessary */
+    if (!pbuff){
+        pbuff = load_icon_pixbuf_safe(icon_name, scaled_size);
     }
 
-    auto pbuff = icon_theme->load_icon(icon_name, scaled_size, Gtk::ICON_LOOKUP_FORCE_SIZE)
-        ->scale_simple(scaled_size, scaled_size, Gdk::INTERP_BILINEAR);
+    if (!pbuff){
+        return;
+    }
 
     if (options.invert)
     {
