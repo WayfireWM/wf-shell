@@ -517,7 +517,7 @@ void WayfireMenu::on_popover_shown()
 bool WayfireMenu::update_icon()
 {
     std::string icon;
-    int size = menu_size / LAUNCHERS_ICON_SCALE;
+    int size = menu_size;
     if (((std::string)menu_icon).empty())
     {
         icon = default_icon;

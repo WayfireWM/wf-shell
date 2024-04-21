@@ -10,6 +10,7 @@
 #include <gtkmm/flowbox.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/separator.h>
+#include <gtkmm/eventbox.h>
 #include <set>
 
 class WayfireMenu;
