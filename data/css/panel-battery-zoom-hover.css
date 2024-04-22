@@ -1,0 +1,9 @@
+.battery:hover image {
+    transition: 500ms linear;
+    -gtk-icon-transform: scale(1.4);
+}
+
+.battery image {
+    transition: 500ms linear;
+    -gtk-icon-transform: scale(0.9);
+}
