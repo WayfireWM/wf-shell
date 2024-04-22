@@ -69,6 +69,9 @@ void StatusNotifierItem::init_widget()
     icon_size.set_callback([this] { update_icon(); });
     setup_tooltip();
     init_menu();
+    auto style = get_style_context();
+    style->add_class("tray-box");
+    style->add_class("flat");
 
     signal_button_press_event().connect([this] (GdkEventButton *ev) -> bool
     {

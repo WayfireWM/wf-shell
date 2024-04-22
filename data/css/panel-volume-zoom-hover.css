@@ -1,0 +1,9 @@
+.volume:hover image {
+    transition: 500ms linear;
+    -gtk-icon-transform: scale(1.4);
+}
+
+.volume image {
+    transition: 500ms linear;
+    -gtk-icon-transform: scale(0.9);
+}

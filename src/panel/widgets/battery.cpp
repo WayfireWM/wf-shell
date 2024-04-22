@@ -232,6 +232,7 @@ void WayfireBatteryInfo::init(Gtk::HBox *container)
     }
 
     button_box.add(icon);
+    button.get_style_context()->add_class("battery");
     button.get_style_context()->add_class("flat");
 
     status_opt.set_callback([=] () { update_details(); });
