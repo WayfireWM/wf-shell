@@ -1,4 +1,36 @@
-.wf-panel .launcher image {
+.wf-panel .launcher {
+    background: unset;
+    border: unset;
+    box-shadow: unset;
+    padding-left: unset;
+    padding-right: unset;
+}
+
+.wf-panel .launcher:hover {
+    background: unset;
+    border: unset;
+    box-shadow: unset;
+    padding-left: unset;
+    padding-right: unset;
+}
+
+.wf-panel .tray-button {
+    background: unset;
+    border: unset;
+    box-shadow: unset;
+    padding-left: unset;
+    padding-right: unset;
+}
+
+.wf-panel .tray-button:hover {
+    background: unset;
+    border: unset;
+    box-shadow: unset;
+    padding-left: unset;
+    padding-right: unset;
+}
+
+.wf-panel .tray .wf-panel .launcher image {
     transition: 500ms linear;
     -gtk-icon-transform: scale(0.8);
 }
