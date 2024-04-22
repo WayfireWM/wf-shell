@@ -11,3 +11,5 @@ install_data(join_paths('icons', '192x192', 'wayfire.png'), install_dir: join_pa
 install_data(join_paths('icons', '256x256', 'wayfire.png'), install_dir: join_paths(get_option('prefix'), 'share', 'icons', 'hicolor', '256x256', 'apps'))
 install_data(join_paths('icons', '512x512', 'wayfire.png'), install_dir: join_paths(get_option('prefix'), 'share', 'icons', 'hicolor', '512x512', 'apps'))
 install_data(join_paths('icons', 'scalable', 'wayfire.svg'), install_dir: join_paths(get_option('prefix'), 'share', 'icons', 'hicolor', 'scalable', 'apps'))
+
+subdir('css')
