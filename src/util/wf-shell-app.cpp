@@ -3,6 +3,7 @@
 #include <sys/inotify.h>
 #include <gdk/gdkwayland.h>
 #include <iostream>
+#include <filesystem>
 #include <memory>
 #include <wayfire/config/file.hpp>
 
@@ -29,6 +30,40 @@ std::string WayfireShellApp::get_config_file()
     return config_dir + "/wf-shell.ini";
 }
 
+std::string WayfireShellApp::get_css_config_dir()
+{
+    if (cmdline_css.has_value())
+    {
+        return cmdline_config.value();
+    }
+
+    std::string config_dir;
+
+    char *config_home = getenv("XDG_CONFIG_HOME");
+    if (config_home == NULL)
+    {
+        config_dir = std::string(getenv("HOME")) + "/.config";
+    } else
+    {
+        config_dir = std::string(config_home);
+    }
+
+    auto css_directory = config_dir + "/wf-shell/css/";
+    /* Ensure it exists */
+    bool created = std::filesystem::create_directories(css_directory);
+    if (created)
+    {
+        std::string default_css = (std::string)RESOURCEDIR + "/css/default.css";
+        std::string destination = css_directory + "default.css";
+        if (std::filesystem::exists(default_css))
+        {
+            std::filesystem::copy(default_css, destination);
+        }
+    }
+
+    return css_directory;
+}
+
 bool WayfireShellApp::parse_cfgfile(const Glib::ustring & option_name,
     const Glib::ustring & value, bool has_value)
 {
@@ -37,8 +72,24 @@ bool WayfireShellApp::parse_cfgfile(const Glib::ustring & option_name,
     return true;
 }
 
+bool WayfireShellApp::parse_cssfile(const Glib::ustring & option_name,
+    const Glib::ustring & value, bool has_value)
+{
+    std::cout << "Using custom css directory " << value << std::endl;
+    cmdline_css = value;
+    return true;
+}
+
 #define INOT_BUF_SIZE (1024 * sizeof(inotify_event))
 char buf[INOT_BUF_SIZE];
+
+static void do_reload_css(WayfireShellApp *app)
+{
+    app->on_css_reload();
+    inotify_add_watch(app->inotify_css_fd,
+        app->get_css_config_dir().c_str(),
+        IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
+}
 
 /* Reload file and add next inotify watch */
 static void do_reload_config(WayfireShellApp *app)
@@ -55,6 +106,15 @@ static bool handle_inotify_event(WayfireShellApp *app, Glib::IOCondition cond)
     /* read, but don't use */
     read(app->inotify_fd, buf, INOT_BUF_SIZE);
     do_reload_config(app);
+
+    return true;
+}
+
+static bool handle_css_inotify_event(WayfireShellApp *app, Glib::IOCondition cond)
+{
+    /* read, but don't use */
+    read(app->inotify_css_fd, buf, INOT_BUF_SIZE);
+    do_reload_css(app);
 
     return true;
 }
@@ -107,10 +167,15 @@ void WayfireShellApp::on_activate()
 
     inotify_fd = inotify_init();
     do_reload_config(this);
+    inotify_css_fd = inotify_init();
+    do_reload_css(this);
 
     Glib::signal_io().connect(
         sigc::bind<0>(&handle_inotify_event, this),
         inotify_fd, Glib::IO_IN | Glib::IO_HUP);
+    Glib::signal_io().connect(
+        sigc::bind<0>(&handle_css_inotify_event, this),
+        inotify_css_fd, Glib::IO_IN | Glib::IO_HUP);
 
     // Hook up monitor tracking
     auto display = Gdk::Display::get_default();
@@ -155,6 +220,9 @@ WayfireShellApp::WayfireShellApp(int argc, char **argv)
     app->add_main_option_entry(
         sigc::mem_fun(this, &WayfireShellApp::parse_cfgfile),
         "config", 'c', "config file to use", "file");
+    app->add_main_option_entry(
+        sigc::mem_fun(this, &WayfireShellApp::parse_cssfile),
+        "css", 's', "css style directory to use", "directory");
 
     // Activate app after parsing command line
     app->signal_command_line().connect_notify([=] (auto&)

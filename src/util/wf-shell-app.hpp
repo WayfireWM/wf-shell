@@ -42,6 +42,7 @@ class WayfireShellApp
      * wf-shell-app */
     static std::unique_ptr<WayfireShellApp> instance;
     std::optional<std::string> cmdline_config;
+    std::optional<std::string> cmdline_css;
 
     Glib::RefPtr<Gtk::Application> app;
 
@@ -53,6 +54,8 @@ class WayfireShellApp
     virtual void on_activate();
     virtual bool parse_cfgfile(const Glib::ustring & option_name,
         const Glib::ustring & value, bool has_value);
+    virtual bool parse_cssfile(const Glib::ustring & option_name,
+        const Glib::ustring & value, bool has_value);
     virtual void handle_new_output(WayfireOutput *output)
     {}
     virtual void handle_output_removed(WayfireOutput *output)
@@ -60,6 +63,7 @@ class WayfireShellApp
 
   public:
     int inotify_fd;
+    int inotify_css_fd;
     wf::config::config_manager_t config;
     zwf_shell_manager_v2 *wf_shell_manager = nullptr;
 
@@ -67,9 +71,13 @@ class WayfireShellApp
     virtual ~WayfireShellApp();
 
     virtual std::string get_config_file();
+    virtual std::string get_css_config_dir();
     virtual void run();
 
     virtual void on_config_reload()
+    {}
+
+    virtual void on_css_reload()
     {}
 
     /**

@@ -43,6 +43,7 @@ sysconf_dir = join_paths(get_option('prefix'), get_option('sysconfdir'))
 
 icon_dir = join_paths(get_option('prefix'), 'share', 'wayfire', 'icons')
 add_project_arguments('-DICONDIR="' + icon_dir + '"', language : 'cpp')
+add_project_arguments('-DRESOURCEDIR="' + resource_dir + '"', language : 'cpp')
 add_project_arguments('-DMETADATA_DIR="' + metadata_dir + '"', language : 'cpp')
 add_project_arguments('-DSYSCONF_DIR="' + sysconf_dir + '"', language : 'cpp')
 

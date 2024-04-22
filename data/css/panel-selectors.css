@@ -1,0 +1,39 @@
+/* Examples of ways CSS selectors can be used */
+
+/* Sections of the panel can be selected */
+.wf-panel .left,
+.wf-panel .right,
+.wf-panel .center {
+    background-color: black;
+}
+
+/* Individual plugins can be selected */
+.wf-panel .battery,
+.wf-panel .menu,
+.wf-panel .clock,
+.wf-panel .command-output,
+.wf-panel .launchers,
+.wf-panel .menu,
+.wf-panel .network,
+.wf-panel .spacing,
+.wf-panel .volume,
+.wf-panel .window-list {
+    font: monospace;
+}
+
+/* Plugin popovers can be selected */
+.menu-popover,
+.clock-popover {
+    font: monospace;
+}
+
+/* animations for hover are possible */
+.wf-panel .launcher image {
+    transition: 500ms linear;
+    -gtk-icon-transform: scale(0.8);
+}
+
+.wf-panel .launcher:hover image {
+    transition: 500ms linear;
+    -gtk-icon-transform: scale(1.2);
+}

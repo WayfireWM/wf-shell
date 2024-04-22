@@ -1,0 +1,13 @@
+.tray-box:hover image {
+    transition: 500ms linear;
+    -gtk-icon-transform: scale(1.4);
+}
+
+.tray-box image {
+    transition: 500ms linear;
+    -gtk-icon-transform: scale(0.9);
+}
+
+.tray-box {
+    padding: 0px 0px 0px 0px;
+}
