@@ -70,7 +70,7 @@ void StatusNotifierItem::init_widget()
     setup_tooltip();
     init_menu();
     auto style = get_style_context();
-    style->add_class("tray-box");
+    style->add_class("tray-button");
     style->add_class("flat");
 
     signal_clicked().connect([this] () -> void
