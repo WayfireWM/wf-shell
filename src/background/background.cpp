@@ -61,6 +61,9 @@ bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     if (fade.running())
     {
         queue_draw();
+    } else
+    {
+        from_image.source.clear();
     }
 
     cr->save();
