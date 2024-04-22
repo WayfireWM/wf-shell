@@ -98,7 +98,14 @@ void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
 
     if (!pbuff)
     {
-        return;
+        if (icon_theme->lookup_icon("image-missing", scaled_size))
+        {
+            pbuff = icon_theme->load_icon("image-missing", scaled_size, Gtk::ICON_LOOKUP_FORCE_SIZE)
+                ->scale_simple(scaled_size, scaled_size, Gdk::INTERP_BILINEAR);
+        } else
+        {
+            return;
+        }
     }
 
     if (options.invert)
