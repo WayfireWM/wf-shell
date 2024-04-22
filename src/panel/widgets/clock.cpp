@@ -5,6 +5,7 @@
 void WayfireClock::init(Gtk::HBox *container)
 {
     button = std::make_unique<WayfireMenuButton>("panel");
+    button->get_style_context()->add_class("clock");
     button->add(label);
     button->show();
     label.show();
@@ -12,6 +13,7 @@ void WayfireClock::init(Gtk::HBox *container)
     update_label();
 
     calendar.show();
+    button->get_popover()->get_style_context()->add_class("clock-popover");
     button->get_popover()->add(calendar);
     button->get_popover()->signal_show().connect_notify(
         sigc::mem_fun(this, &WayfireClock::on_calendar_shown));

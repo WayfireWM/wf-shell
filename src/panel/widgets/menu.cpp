@@ -16,7 +16,7 @@
 #include "wf-autohide-window.hpp"
 
 #define MAX_LAUNCHER_NAME_LENGTH 11
-const std::string default_icon = ICONDIR "/wayfire.png";
+const std::string default_icon = "wayfire";
 
 WfMenuCategory::WfMenuCategory(std::string _name, std::string _icon_name) :
     name(_name), icon_name(_icon_name)
@@ -832,6 +832,8 @@ void WayfireMenu::init(Gtk::HBox *container)
     category_list["Hidden"] = std::make_unique<WfMenuCategory>("Other Desktops",
         "user-desktop");
 
+    main_image.get_style_context()->add_class("menu-icon");
+
     output->toggle_menu_signal().connect(sigc::mem_fun(this, &WayfireMenu::toggle_menu));
 
     menu_icon.set_callback([=] () { update_icon(); });
@@ -842,6 +844,9 @@ void WayfireMenu::init(Gtk::HBox *container)
 
     button = std::make_unique<WayfireMenuButton>("panel");
     button->add(main_image);
+    auto style = button->get_style_context();
+    style->add_class("menu-button");
+    style->add_class("flat");
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     button->get_popover()->signal_show().connect_notify(
         sigc::mem_fun(this, &WayfireMenu::on_popover_shown));
