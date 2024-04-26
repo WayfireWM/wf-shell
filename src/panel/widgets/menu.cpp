@@ -517,7 +517,6 @@ void WayfireMenu::on_popover_shown()
 bool WayfireMenu::update_icon()
 {
     std::string icon;
-    int size = menu_size / LAUNCHERS_ICON_SCALE;
     if (((std::string)menu_icon).empty())
     {
         icon = default_icon;
@@ -526,42 +525,8 @@ bool WayfireMenu::update_icon()
         icon = menu_icon;
     }
 
-    button->set_size_request(size, 0);
-
-    std::string absolute_path = "/";
-    if (!icon.compare(0, absolute_path.size(), absolute_path))
-    {
-        auto ptr_pbuff = load_icon_pixbuf_safe(icon,
-            size * main_image.get_scale_factor());
-
-        if (ptr_pbuff)
-        {
-            set_image_pixbuf(main_image, ptr_pbuff, main_image.get_scale_factor());
-            return true;
-        }
-    } else
-    {
-        auto theme = Gtk::IconTheme::get_default();
-
-        if (theme->lookup_icon(icon, size))
-        {
-            auto theme_icon = theme->load_icon(icon, size)
-                ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
-            set_image_pixbuf(main_image, theme_icon, main_image.get_scale_factor());
-            return true;
-        }
-    }
-
-    std::cout << "Loading default icon: " << default_icon << std::endl;
-    auto ptr_pbuff = load_icon_pixbuf_safe(default_icon,
-        size * main_image.get_scale_factor());
-    if (ptr_pbuff)
-    {
-        set_image_pixbuf(main_image, ptr_pbuff, main_image.get_scale_factor());
-        return true;
-    }
-
-    return false;
+    set_image_icon(main_image, icon, menu_size);
+    return true;
 }
 
 void WayfireMenu::update_popover_layout()

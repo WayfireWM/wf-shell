@@ -1,7 +1,7 @@
 #include "launchers.hpp"
 #include <giomm/file.h>
 #include <glibmm/spawn.h>
-#include <gdkmm/pixbuf.h>
+#include <glibmm/keyfile.h>
 #include <gtkmm/icontheme.h>
 #include <gdk/gdkcairo.h>
 #include <cassert>
@@ -9,256 +9,74 @@
 #include <gtk-utils.hpp>
 #include <wf-shell-app.hpp>
 
-// create launcher from a .desktop file or app-id
-struct DesktopLauncherInfo : public LauncherInfo
+bool WfLauncherButton::initialize(std::string name, std::string icon, std::string label)
 {
-    Glib::RefPtr<Gio::DesktopAppInfo> app_info;
-    bool load(std::string name)
+    app_info = Gio::DesktopAppInfo::create(name);
+
+    if (icon == "none")
     {
-        // attempt from App-ID
-        app_info = Gio::DesktopAppInfo::create(name);
         if (!app_info)
         {
             // attempt to interpret it as a .desktop file
             app_info = Gio::DesktopAppInfo::create_from_filename(name);
         }
-
-        // neither interpretation succeeded
-        if (!app_info)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size)
+    } else
     {
-        auto icon = app_info->get_icon()->to_string();
-        std::string absolute_path = "/";
-        if (!icon.compare(0, absolute_path.size(), absolute_path))
+        // Generate a .desktop file in memory
+        auto keyfile = Glib::KeyFile();
+        keyfile.set_string("Desktop Entry", "Type", "Application");
+        keyfile.set_string("Desktop Entry", "Exec", "/bin/sh -c \"" + name + "\"");
+        keyfile.set_string("Desktop Entry", "Icon", icon);
+        if (label == "")
         {
-            return Gdk::Pixbuf::create_from_file(icon, size, size);
+            label = name;
         }
 
-        auto theme = Gtk::IconTheme::get_default();
+        keyfile.set_string("Desktop Entry", "Name", label);
 
-        if (!theme->lookup_icon(icon, size))
-        {
-            std::cerr << "Failed to load icon \"" << icon << "\"" << std::endl;
-            return Glib::RefPtr<Gdk::Pixbuf>();
-        }
-
-        return theme->load_icon(icon, size)
-               ->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+        // Hand off to have a custom launcher
+        app_info = Gio::DesktopAppInfo::create_from_keyfile(keyfile);
     }
 
-    std::string get_text()
+    /* Failed to get a launcher */
+    if (!app_info)
     {
-        return app_info->get_name();
+        return false;
     }
 
-    void execute()
+    button.set_image(m_icon);
+    auto style = button.get_style_context();
+    style->add_class("flat");
+    style->add_class("launcher");
+
+    button.signal_clicked().connect([=] () { launch(); });
+    button.property_scale_factor().signal_changed()
+        .connect([=] () {update_icon(); });
+    icon_size.set_callback([=] () { update_icon(); });
+
+    update_icon();
+
+    button.set_tooltip_text(app_info->get_name());
+    return true;
+}
+
+void WfLauncherButton::update_icon()
+{
+    set_image_icon(m_icon, app_info->get_icon()->to_string(), icon_size);
+}
+
+void WfLauncherButton::launch()
+{
+    if (app_info)
     {
         app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
     }
-
-    virtual ~DesktopLauncherInfo()
-    {}
-};
-
-// create a launcher from a command + icon
-struct FileLauncherInfo : public LauncherInfo
-{
-    std::string command;
-    std::string icon;
-    std::string label;
-
-    bool load(std::string command, std::string icon, std::string label)
-    {
-        this->command = command;
-        this->icon    = icon;
-        if (label == "")
-        {
-            this->label = command;
-        } else
-        {
-            this->label = label;
-        }
-
-        return load_icon_pixbuf_safe(icon, 24).get() != nullptr;
-    }
-
-    Glib::RefPtr<Gdk::Pixbuf> get_pixbuf(int32_t size)
-    {
-        return Gdk::Pixbuf::create_from_file(icon, size, size);
-    }
-
-    std::string get_text()
-    {
-        return label;
-    }
-
-    void execute()
-    {
-        Glib::spawn_command_line_async("/bin/bash -c \'" + command + "\'");
-    }
-
-    virtual ~FileLauncherInfo()
-    {}
-};
-
-void WfLauncherButton::set_size(int size)
-{
-    int full_size = base_size * LAUNCHERS_ICON_SCALE;
-
-    /* set button spacing */
-    evbox.set_margin_top((full_size - size) / 2);
-    evbox.set_margin_bottom((full_size - size + 1) / 2);
-
-    evbox.set_margin_left((full_size - size) / 2);
-    evbox.set_margin_right((full_size - size + 1) / 2);
-
-    // initial scale
-    on_scale_update();
-}
-
-bool WfLauncherButton::initialize(std::string name, std::string icon, std::string label)
-{
-    launcher_name = name;
-    base_size     = WfOption<int>{"panel/launchers_size"} / LAUNCHERS_ICON_SCALE;
-    if (icon == "none")
-    {
-        auto dl = new DesktopLauncherInfo();
-        if (!dl->load(name))
-        {
-            std::cerr << "Failed to load info for " << name << std::endl;
-            return false;
-        }
-
-        info = dl;
-    } else
-    {
-        auto fl = new FileLauncherInfo();
-        if (!fl->load(name, icon, label))
-        {
-            std::cerr << "Failed to load icon " << icon << std::endl;
-            return false;
-        }
-
-        info = fl;
-    }
-
-    evbox.add(image);
-    evbox.signal_button_press_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
-    evbox.signal_button_release_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_click));
-    evbox.signal_enter_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_enter));
-    evbox.signal_leave_notify_event().connect(sigc::mem_fun(this, &WfLauncherButton::on_leave));
-
-    evbox.signal_draw().connect(sigc::mem_fun(this, &WfLauncherButton::on_draw));
-    evbox.signal_map().connect([=] ()
-    {
-        set_size(base_size);
-    });
-
-    current_size.set(base_size, base_size);
-    evbox.property_scale_factor().signal_changed()
-        .connect(sigc::mem_fun(this, &WfLauncherButton::on_scale_update));
-
-    evbox.set_tooltip_text(info->get_text());
-    return true;
-}
-
-bool WfLauncherButton::on_click(GdkEventButton *ev)
-{
-    assert(info);
-    if ((ev->button == 1) && (ev->type == GDK_BUTTON_RELEASE))
-    {
-        info->execute();
-        if (!current_size.running())
-        {
-            on_leave(NULL);
-        }
-    }
-
-    if ((ev->button == 1) && (ev->type == GDK_BUTTON_PRESS))
-    {
-        /* touch will generate button_press, but not enter notify */
-        if (!current_size.running())
-        {
-            on_enter(NULL);
-        }
-    }
-
-    return true;
-}
-
-static int get_animation_duration(int start, int end, int scale)
-{
-    return WfOption<int>{"panel/launchers_animation_duration"}.value();
-}
-
-bool WfLauncherButton::on_enter(GdkEventCrossing *ev)
-{
-    int target_size = base_size * LAUNCHERS_ICON_SCALE;
-    int duration    = get_animation_duration(
-        current_size, target_size, image.get_scale_factor());
-
-    evbox.queue_draw();
-    current_size = LauncherAnimation{wf::create_option(duration),
-        (int)current_size, target_size};
-    return false;
-}
-
-bool WfLauncherButton::on_leave(GdkEventCrossing *ev)
-{
-    evbox.queue_draw();
-    int duration = get_animation_duration(
-        current_size, base_size, image.get_scale_factor());
-
-    current_size = LauncherAnimation{wf::create_option(duration),
-        (int)current_size, base_size};
-
-    return false;
-}
-
-bool WfLauncherButton::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
-{
-    if (current_size.running())
-    {
-        set_size(current_size);
-    }
-
-    return false;
-}
-
-/* Because icons can have different sizes, we need to use a Gdk::Pixbuf
- * to convert them to the appropriate size. However, Gdk::Pixbuf operates
- * in absolute pixel size, so this doesn't work nicely with scaled outputs.
- *
- * To get around the problem, we first create the Pixbuf with a scaled size,
- * then convert it to a cairo_surface with the appropriate scale, and use this
- * cairo surface as the source for the Gtk::Image */
-void WfLauncherButton::on_scale_update()
-{
-    int scale = image.get_scale_factor();
-
-    // hold a reference to the RefPtr
-    auto ptr_pbuff = info->get_pixbuf(current_size * image.get_scale_factor());
-    if (!ptr_pbuff)
-    {
-        return;
-    }
-
-    set_image_pixbuf(image, ptr_pbuff, scale);
 }
 
 WfLauncherButton::WfLauncherButton()
 {}
 WfLauncherButton::~WfLauncherButton()
-{
-    delete info;
-}
+{}
 
 static bool begins_with(const std::string& string, const std::string& prefix)
 {
@@ -330,6 +148,7 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
 
 void WayfireLaunchers::init(Gtk::HBox *container)
 {
+    box.get_style_context()->add_class("launchers");
     container->pack_start(box, false, false);
     handle_config_reload();
 }
@@ -341,7 +160,7 @@ void WayfireLaunchers::handle_config_reload()
     launchers = get_launchers_from_config();
     for (auto& l : launchers)
     {
-        box.pack_start(l->evbox, false, false);
+        box.pack_start(l->button, false, false);
     }
 
     box.show_all();

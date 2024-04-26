@@ -85,11 +85,6 @@
 		<_short>Launchers Size</_short>
 		<default>42</default>
 	</option>
-	<option name="launchers_animation_duration" type="int">
-		<_short>Animation Duration</_short>
-		<_long>High values may cause jittery animations</_long>
-		<default>200</default>
-	</option>
 	</group>
 	<group>
 	<_short>Clock</_short>
