@@ -25,8 +25,7 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         // Generate a .desktop file in memory
         auto keyfile = Glib::KeyFile();
         keyfile.set_string("Desktop Entry", "Type", "Application");
-        keyfile.set_string("Desktop Entry", "Exec", name);
-        keyfile.set_string("Desktop Entry", "Icon", icon);
+        keyfile.set_string("Desktop Entry", "Exec", "/bin/sh -c \"" + name + "\"");        keyfile.set_string("Desktop Entry", "Icon", icon);
         if (label == "")
         {
             label = name;
