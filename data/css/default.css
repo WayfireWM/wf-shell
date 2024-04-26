@@ -1,9 +1,22 @@
+.wf-panel .launcher,
+.wf-panel .launcher:hover,
+.wf-panel .tray-button,
+.wf-panel .tray-button:hover {
+    background: unset;
+    border: unset;
+    box-shadow: unset;
+    padding-left: unset;
+    padding-right: unset;
+}
+
+.wf-panel .tray-button image,
 .wf-panel .launcher image {
     transition: 500ms linear;
     -gtk-icon-transform: scale(0.8);
 }
 
-.wf-panel .launcher:hover image {
+.wf-panel .launcher:hover image,
+.wf-panel .tray-button:hover image {
     transition: 500ms linear;
     -gtk-icon-transform: scale(1.2);
 }
