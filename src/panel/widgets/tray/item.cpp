@@ -47,7 +47,7 @@ static Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(IconData && pixbuf_data)
 
 StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
 {
-    add(icon);
+    set_image(icon);
 
     const auto & [name, path] = name_and_obj_path(service);
     dbus_name = name;
@@ -70,11 +70,35 @@ void StatusNotifierItem::init_widget()
     setup_tooltip();
     init_menu();
     auto style = get_style_context();
-    style->add_class("tray-box");
+    style->add_class("tray-button");
     style->add_class("flat");
+
+    signal_clicked().connect([this] () -> void
+    {
+        const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({0, 0});
+        if (get_item_property<bool>("ItemIsMenu", true))
+        {
+            if (menu)
+            {
+                /* Under all tests I tried this places sensibly */
+                menu->popup_at_widget(&icon, Gdk::GRAVITY_NORTH_EAST, Gdk::GRAVITY_SOUTH_EAST, NULL);
+            } else
+            {
+                item_proxy->call("ContextMenu", ev_coords);
+            }
+        } else
+        {
+            item_proxy->call("Activate", ev_coords);
+        }
+    });
 
     signal_button_press_event().connect([this] (GdkEventButton *ev) -> bool
     {
+        if (ev->button == GDK_BUTTON_PRIMARY)
+        {
+            return true;
+        }
+
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({ev->x, ev->y});
         const guint menu_btn = menu_on_middle_click ? GDK_BUTTON_MIDDLE : GDK_BUTTON_SECONDARY;
         const guint secondary_activate_btn = menu_on_middle_click ? GDK_BUTTON_SECONDARY : GDK_BUTTON_MIDDLE;
@@ -82,14 +106,11 @@ void StatusNotifierItem::init_widget()
         {
             if (menu)
             {
-                menu->popup_at_pointer((GdkEvent*)ev);
+                menu->popup_at_widget(&icon, Gdk::GRAVITY_NORTH_EAST, Gdk::GRAVITY_SOUTH_EAST, NULL);
             } else
             {
                 item_proxy->call("ContextMenu", ev_coords);
             }
-        } else if (ev->button == GDK_BUTTON_PRIMARY)
-        {
-            item_proxy->call("Activate", ev_coords);
         } else if (ev->button == secondary_activate_btn)
         {
             item_proxy->call("SecondaryActivate", ev_coords);
