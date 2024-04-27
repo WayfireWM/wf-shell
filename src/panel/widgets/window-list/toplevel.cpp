@@ -397,6 +397,7 @@ class WayfireToplevel::impl
         {
             return;
         }
+
         this->max_width = width;
         if (max_width == 0)
         {
