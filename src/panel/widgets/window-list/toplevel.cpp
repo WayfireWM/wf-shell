@@ -392,7 +392,8 @@ class WayfireToplevel::impl
         return preferred_width;
     }
 
-    void refresh_contents(){
+    void refresh_contents()
+    {
         if (max_width == 0)
         {
             this->button.set_size_request(-1, -1);
