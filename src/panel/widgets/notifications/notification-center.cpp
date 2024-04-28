@@ -18,6 +18,7 @@ void WayfireNotificationCenter::init(Gtk::HBox *container)
 
     auto *popover = button->get_popover();
     popover->set_size_request(WIDTH, HEIGHT);
+    popover->get_style_context()->add_class("notification-popover");
 
     vbox.set_valign(Gtk::ALIGN_START);
     scrolled_window.add(vbox);
