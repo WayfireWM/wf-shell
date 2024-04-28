@@ -397,7 +397,7 @@ class WayfireToplevel::impl
 
     void set_max_width(int width)
     {
-        if (width > 0 && width == this->max_width)
+        if ((width > 0) && (width == this->max_width))
         {
             return;
         }
