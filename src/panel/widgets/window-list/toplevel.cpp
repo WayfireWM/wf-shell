@@ -119,7 +119,7 @@ class WayfireToplevel::impl
             sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_update));
         drag_gesture->signal_drag_end().connect_notify(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_end));
-
+        button.show_all();
         this->window_list = window_list;
     }
 
@@ -359,8 +359,12 @@ class WayfireToplevel::impl
     {
         this->title = title;
         button.set_tooltip_text(title);
+        label.set_text(title);
 
-        set_max_width(max_width);
+        /* Force a refresh for new title contents */
+        int size = max_width;
+        max_width = 0;
+        set_max_width(size);
     }
 
     Glib::ustring shorten_title(int show_chars)
@@ -393,7 +397,7 @@ class WayfireToplevel::impl
 
     void set_max_width(int width)
     {
-        if (width == this->max_width)
+        if (width > 0 && width == this->max_width)
         {
             return;
         }
