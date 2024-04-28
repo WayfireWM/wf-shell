@@ -266,6 +266,7 @@ void WayfireVolume::init(Gtk::HBox *container)
     auto popover = button->get_popover();
     popover->add(volume_scale);
     popover->set_modal(false);
+    popover->get_style_context()->add_class("volume-popover");
 
     volume_scale.set_draw_value(false);
     volume_scale.set_size_request(300, 0);

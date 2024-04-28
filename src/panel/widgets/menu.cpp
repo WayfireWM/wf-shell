@@ -48,6 +48,7 @@ WfMenuCategoryButton::WfMenuCategoryButton(WayfireMenu *_menu, std::string _cate
 
     this->add(m_box);
     this->get_style_context()->add_class("flat");
+    this->get_style_context()->add_class("app-category");
 
     this->signal_clicked().connect_notify(
         sigc::mem_fun(this, &WfMenuCategoryButton::on_click));
@@ -83,6 +84,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
             auto action_button = new Gtk::Button();
             action_button->set_image_from_icon_name("pan-end");
             action_button->get_style_context()->add_class("flat");
+            action_button->get_style_context()->add_class("app-button-extras");
             m_padding_box.pack_start(*action_button, false, false);
 
             action_button->signal_clicked().connect(
@@ -123,6 +125,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     }
 
     add(m_padding_box);
+    get_style_context()->add_class("app-button");
     /* Can accept Enter/Return from search_box */
     set_can_default(true);
 
@@ -542,6 +545,7 @@ void WayfireMenu::update_popover_layout()
         flowbox.set_homogeneous(true);
         flowbox.set_sort_func(sigc::mem_fun(this, &WayfireMenu::on_sort));
         flowbox.set_filter_func(sigc::mem_fun(this, &WayfireMenu::on_filter));
+        flowbox.get_style_context()->add_class("app-list");
 
         flowbox_container.add(bottom_pad);
         flowbox_container.add(flowbox);
@@ -553,15 +557,20 @@ void WayfireMenu::update_popover_layout()
         app_scrolled_window.set_min_content_width(int(menu_min_content_width));
         app_scrolled_window.set_min_content_height(int(menu_min_content_height));
         app_scrolled_window.add(flowbox_container);
+        app_scrolled_window.get_style_context()->add_class("app-list-scroll");
+
+        category_box.get_style_context()->add_class("category-list");
 
         category_scrolled_window.set_min_content_width(int(menu_min_category_width));
         category_scrolled_window.set_min_content_height(int(menu_min_content_height));
         category_scrolled_window.add(category_box);
+        category_scrolled_window.get_style_context()->add_class("categtory-list-scroll");
 
         search_box.set_can_default(false);
         search_box.set_activates_default(true);
         search_box.property_margin().set_value(20);
         search_box.set_icon_from_icon_name("search", Gtk::ENTRY_ICON_SECONDARY);
+        search_box.get_style_context()->add_class("app-search");
 
         /* Cursor moved in flowbox */
         flowbox.signal_selected_children_changed().connect_notify(
@@ -813,6 +822,7 @@ void WayfireMenu::init(Gtk::HBox *container)
     style->add_class("menu-button");
     style->add_class("flat");
     button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
+    button->get_popover()->get_style_context()->add_class("menu-popover");
     button->get_popover()->signal_show().connect_notify(
         sigc::mem_fun(this, &WayfireMenu::on_popover_shown));
 
