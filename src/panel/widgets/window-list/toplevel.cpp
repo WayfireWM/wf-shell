@@ -361,10 +361,7 @@ class WayfireToplevel::impl
         button.set_tooltip_text(title);
         label.set_text(title);
 
-        /* Force a refresh for new title contents */
-        int size = max_width;
-        max_width = 0;
-        set_max_width(size);
+        refresh_contents();
     }
 
     Glib::ustring shorten_title(int show_chars)
@@ -395,14 +392,7 @@ class WayfireToplevel::impl
         return preferred_width;
     }
 
-    void set_max_width(int width)
-    {
-        if ((width > 0) && (width == this->max_width))
-        {
-            return;
-        }
-
-        this->max_width = width;
+    void refresh_contents(){
         if (max_width == 0)
         {
             this->button.set_size_request(-1, -1);
@@ -410,7 +400,7 @@ class WayfireToplevel::impl
             return;
         }
 
-        this->button.set_size_request(width, -1);
+        this->button.set_size_request(max_width, -1);
 
         int show_chars = 0;
         for (show_chars = title.length(); show_chars > 0; show_chars--)
@@ -423,6 +413,17 @@ class WayfireToplevel::impl
         }
 
         label.set_text(shorten_title(show_chars));
+    }
+
+    void set_max_width(int width)
+    {
+        if ((width > 0) && (width == this->max_width))
+        {
+            return;
+        }
+
+        this->max_width = width;
+        refresh_contents();
     }
 
     uint32_t get_state()
