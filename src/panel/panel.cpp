@@ -392,6 +392,7 @@ void WayfirePanelApp::on_css_reload()
             {
                 priority = GTK_STYLE_PROVIDER_PRIORITY_APPLICATION;
             }
+
             add_css_file(p.path().string(), priority);
         }
     }
