@@ -20,3 +20,43 @@
     transition: 500ms linear;
     -gtk-icon-transform: scale(1.2);
 }
+
+.wf-panel .battery label,
+.wf-panel .battery:hover label,
+.wf-panel .window-button label,
+.wf-panel .window-button:hover label,
+.wf-panel .tray-button,
+.wf-panel .tray-button:hover,
+.wf-panel .notification button {
+    padding-left: 5px;
+}
+
+.wf-panel .notification .time {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.wf-panel .tray .tray-button:first-child,
+.wf-panel .notification button:first-child {
+    padding-left: 0px;
+}
+
+.wf-panel .network label {
+    padding-left: 6px;
+}
+
+.wf-panel .command-output.icon-left label {
+    padding-left: 5px;
+}
+
+.wf-panel .command-output.icon-right label {
+    padding-right: 5px;
+}
+
+.wf-panel .command-output.icon-top label {
+    padding-top: 5px;
+}
+
+.wf-panel .command-output.icon-bottom label {
+    padding-bottom: 5px;
+}
