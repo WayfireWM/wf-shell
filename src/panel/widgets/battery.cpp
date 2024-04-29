@@ -246,7 +246,6 @@ void WayfireBatteryInfo::init(Gtk::HBox *container)
 
     container->pack_start(button, Gtk::PACK_SHRINK);
     button_box.add(label);
-    button_box.set_spacing(5);
 
     button.add(button_box);
     button.property_scale_factor().signal_changed()

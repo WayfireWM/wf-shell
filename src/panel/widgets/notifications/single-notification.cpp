@@ -61,15 +61,22 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
         app_icon.set_from_icon_name("dialog-information", Gtk::ICON_SIZE_LARGE_TOOLBAR);
     }
 
+    get_style_context()->add_class("notification");
+
+    app_icon.get_style_context()->add_class("app-icon");
+
+    top_bar.get_style_context()->add_class("top-bar");
     top_bar.pack_start(app_icon, false, true);
 
     app_name.set_label(notification.app_name);
     app_name.set_halign(Gtk::ALIGN_START);
     app_name.set_ellipsize(Pango::ELLIPSIZE_END);
+    app_name.get_style_context()->add_class("app-name");
     top_bar.pack_start(app_name);
 
     time_label.set_sensitive(false);
     time_label.set_label(format_recv_time(notification.additional_info.recv_time));
+    time_label.get_style_context()->add_class("time");
     time_label_update = Glib::signal_timeout().connect(
         [=]
     {
@@ -83,10 +90,10 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
     close_image.set_from_icon_name("window-close", Gtk::ICON_SIZE_LARGE_TOOLBAR);
     close_button.add(close_image);
     close_button.get_style_context()->add_class("flat");
+    close_button.get_style_context()->add_class("close");
     close_button.signal_clicked().connect(
         [=] { Daemon::Instance()->closeNotification(notification.id, Daemon::CloseReason::Dismissed); });
     top_bar.pack_start(close_button, false, true);
-    top_bar.set_spacing(5);
 
     child.add(top_bar);
 
@@ -104,6 +111,7 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
         }
     }
 
+    content.get_style_context()->add_class("notification-contents");
     content.pack_end(image);
 
     text.set_halign(Gtk::ALIGN_START);
@@ -121,6 +129,8 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
     content.pack_start(text);
 
     child.add(content);
+
+    actions.get_style_context()->add_class("actions");
 
     if (!notification.actions.empty())
     {
@@ -150,7 +160,6 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
 
         if (!actions.get_children().empty())
         {
-            actions.set_spacing(5);
             actions.set_homogeneous();
             child.add(actions);
         }

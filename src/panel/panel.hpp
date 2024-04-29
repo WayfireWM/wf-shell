@@ -42,7 +42,7 @@ class WayfirePanelApp : public WayfireShellApp
     WayfirePanelApp(int argc, char **argv);
 
     void clear_css_rules();
-    void add_css_file(std::string file);
+    void add_css_file(std::string file, int priority);
 
     class impl;
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;

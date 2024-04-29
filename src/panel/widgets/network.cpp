@@ -413,7 +413,6 @@ void WayfireNetworkInfo::init(Gtk::HBox *container)
     button_content.set_valign(Gtk::ALIGN_CENTER);
     button_content.pack_start(icon, Gtk::PACK_SHRINK);
     button_content.pack_start(status, Gtk::PACK_SHRINK);
-    button_content.set_spacing(6);
 
     icon.set_valign(Gtk::ALIGN_CENTER);
     icon.property_scale_factor().signal_changed().connect(
