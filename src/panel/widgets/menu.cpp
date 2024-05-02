@@ -812,6 +812,9 @@ void WayfireMenu::init(Gtk::HBox *container)
 
     menu_icon.set_callback([=] () { update_icon(); });
     menu_size.set_callback([=] () { update_icon(); });
+    menu_min_category_width.set_callback([=] () { update_category_width(); });
+    menu_min_content_height.set_callback([=] () { update_content_height(); });
+    menu_min_content_width.set_callback([=] () { update_content_width(); });
     panel_position.set_callback([=] () { update_popover_layout(); });
     menu_show_categories.set_callback([=] () { update_popover_layout(); });
     menu_list.set_callback([=] () { update_popover_layout(); });
@@ -875,6 +878,22 @@ void WayfireMenu::init(Gtk::HBox *container)
     hbox.show();
     main_image.show();
     button->show();
+}
+
+void WayfireMenu::update_category_width()
+{
+    category_scrolled_window.set_min_content_width(int(menu_min_category_width));
+}
+
+void WayfireMenu::update_content_height()
+{
+    category_scrolled_window.set_min_content_height(int(menu_min_content_height));
+    app_scrolled_window.set_min_content_height(int(menu_min_content_height));
+}
+
+void WayfireMenu::update_content_width()
+{
+    app_scrolled_window.set_min_content_width(int(menu_min_content_width));
 }
 
 void WayfireMenu::toggle_menu()
