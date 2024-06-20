@@ -178,6 +178,9 @@ class WayfireMenu : public WayfireWidget
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     WfOption<bool> menu_show_categories{"panel/menu_show_categories"};
     void update_popover_layout();
+    void update_category_width();
+    void update_content_height();
+    void update_content_width();
     void create_logout_ui();
     void on_logout_click();
     void key_press_search();
