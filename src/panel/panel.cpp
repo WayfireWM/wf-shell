@@ -288,14 +288,17 @@ class WayfirePanel::impl
             {
                 should_expand = true;
             }
+
             container.push_back(std::move(widget));
         }
+
         GtkPackType pack_type;
         gboolean old_expand;
         guint old_padding;
-        gtk_box_query_child_packing((GtkBox*)content_box.gobj(), (GtkWidget*)box.gobj(), &old_expand, &old_expand, &old_padding, &pack_type);
-        gtk_box_set_child_packing((GtkBox*)content_box.gobj(), (GtkWidget*)box.gobj(), should_expand, should_expand, old_padding, pack_type);
-
+        gtk_box_query_child_packing((GtkBox*)content_box.gobj(),
+            (GtkWidget*)box.gobj(), &old_expand, &old_expand, &old_padding, &pack_type);
+        gtk_box_set_child_packing((GtkBox*)content_box.gobj(),
+            (GtkWidget*)box.gobj(), should_expand, should_expand, old_padding, pack_type);
     }
 
     WfOption<std::string> left_widgets_opt{"panel/widgets_left"};
