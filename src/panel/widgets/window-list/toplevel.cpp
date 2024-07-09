@@ -57,6 +57,9 @@ class WayfireToplevel::impl
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
             &toplevel_handle_v1_impl, this);
 
+        label.set_ellipsize(Pango::ELLIPSIZE_END);
+        label.set_max_width_chars(18);
+
         button.get_style_context()->add_class("window-button");
         button_contents.add(image);
         button_contents.add(label);
@@ -67,8 +70,6 @@ class WayfireToplevel::impl
 
         button.signal_clicked().connect_notify(
             sigc::mem_fun(this, &WayfireToplevel::impl::on_clicked));
-        button.signal_size_allocate().connect_notify(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_allocation_changed));
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(this, &WayfireToplevel::impl::on_scale_update));
         button.signal_button_press_event().connect(
@@ -319,12 +320,6 @@ class WayfireToplevel::impl
         }
     }
 
-    void on_allocation_changed(Gtk::Allocation& alloc)
-    {
-        send_rectangle_hint();
-        window_list->scrolled_window.queue_allocate();
-    }
-
     void on_scale_update()
     {
         set_app_id(app_id);
@@ -354,66 +349,11 @@ class WayfireToplevel::impl
         }
     }
 
-    int32_t max_width = 0;
     void set_title(std::string title)
     {
         this->title = title;
         button.set_tooltip_text(title);
-
-        set_max_width(max_width);
-    }
-
-    Glib::ustring shorten_title(int show_chars)
-    {
-        if (show_chars == 0)
-        {
-            return "";
-        }
-
-        int title_len = title.length();
-        Glib::ustring short_title = title.substr(0, show_chars);
-        if (title_len - show_chars >= 2)
-        {
-            short_title += "..";
-        } else if (title_len != show_chars)
-        {
-            short_title += ".";
-        }
-
-        return short_title;
-    }
-
-    int get_button_preferred_width()
-    {
-        int min_width, preferred_width;
-        button.get_preferred_width(min_width, preferred_width);
-
-        return preferred_width;
-    }
-
-    void set_max_width(int width)
-    {
-        this->max_width = width;
-        if (max_width == 0)
-        {
-            this->button.set_size_request(-1, -1);
-            this->label.set_label(title);
-            return;
-        }
-
-        this->button.set_size_request(width, -1);
-
-        int show_chars = 0;
-        for (show_chars = title.length(); show_chars > 0; show_chars--)
-        {
-            this->label.set_text(shorten_title(show_chars));
-            if (get_button_preferred_width() <= max_width)
-            {
-                break;
-            }
-        }
-
-        label.set_text(shorten_title(show_chars));
+        label.set_text(title);
     }
 
     uint32_t get_state()
@@ -540,10 +480,6 @@ WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list,
     pimpl(new WayfireToplevel::impl(window_list, handle))
 {}
 
-void WayfireToplevel::set_width(int pixels)
-{
-    return pimpl->set_max_width(pixels);
-}
 
 std::vector<zwlr_foreign_toplevel_handle_v1*>& WayfireToplevel::get_children()
 {

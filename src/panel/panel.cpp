@@ -139,6 +139,11 @@ class WayfirePanel::impl
         left_box.get_style_context()->add_class("left");
         center_box.get_style_context()->add_class("center");
         right_box.get_style_context()->add_class("right");
+
+        left_box.set_hexpand(false);
+        center_box.set_hexpand(false);
+        right_box.set_hexpand(false);
+
         content_box.pack_start(left_box, false, false);
         content_box.pack_end(right_box, false, false);
         if (!center_box.get_children().empty())
@@ -268,6 +273,7 @@ class WayfirePanel::impl
         const auto lock_notification_daemon = Daemon::Instance();
         container.clear();
         auto widgets = tokenize(list);
+        bool should_expand = false;
         for (auto widget_name : widgets)
         {
             auto widget = widget_from_name(widget_name);
@@ -278,8 +284,18 @@ class WayfirePanel::impl
 
             widget->widget_name = widget_name;
             widget->init(&box);
+            if (widget_name == "window-list")
+            {
+                should_expand = true;
+            }
             container.push_back(std::move(widget));
         }
+        GtkPackType pack_type;
+        gboolean old_expand;
+        guint old_padding;
+        gtk_box_query_child_packing((GtkBox*)content_box.gobj(), (GtkWidget*)box.gobj(), &old_expand, &old_expand, &old_padding, &pack_type);
+        gtk_box_set_child_packing((GtkBox*)content_box.gobj(), (GtkWidget*)box.gobj(), should_expand, should_expand, old_padding, pack_type);
+
     }
 
     WfOption<std::string> left_widgets_opt{"panel/widgets_left"};

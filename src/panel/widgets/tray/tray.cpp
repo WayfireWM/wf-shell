@@ -15,7 +15,7 @@ void WayfireStatusNotifier::add_item(const Glib::ustring & service)
     }
 
     items.emplace(service, service);
-    icons_hbox.pack_start(items.at(service));
+    icons_hbox.pack_start(items.at(service), Gtk::PACK_SHRINK);
     icons_hbox.show_all();
 }
 

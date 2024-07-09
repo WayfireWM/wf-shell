@@ -76,12 +76,12 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
 
     if ((icon_position == "right") || (icon_position == "bottom"))
     {
-        box.pack_start(main_label);
-        box.pack_start(icon);
+        box.pack_start(main_label, false, false);
+        box.pack_start(icon, false, false);
     } else
     {
-        box.pack_start(icon);
-        box.pack_start(main_label);
+        box.pack_start(icon, false, false);
+        box.pack_start(main_label, false, false);
     }
 
     if (icon_name.empty())

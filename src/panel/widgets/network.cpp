@@ -444,7 +444,7 @@ void WayfireNetworkInfo::handle_config_reload()
     {
         if (!status.get_parent())
         {
-            button_content.pack_start(status);
+            button_content.pack_start(status, Gtk::PACK_SHRINK);
             button_content.show_all();
         }
     }
