@@ -30,7 +30,4 @@ void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
 
 void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff);
 
-std::string sanitize_pango_markup(const std::string input);
-void replace_all(std::string& haystack, const std::string from, const std::string to);
-
 #endif /* end of include guard: WF_GTK_UTILS */

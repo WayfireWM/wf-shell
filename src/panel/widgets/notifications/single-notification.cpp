@@ -2,6 +2,7 @@
 #include "daemon.hpp"
 
 #include <glibmm/main.h>
+#include <glibmm/markup.h>
 #include <gtk-utils.hpp>
 #include <gtkmm/icontheme.h>
 
@@ -111,11 +112,11 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
     text.set_line_wrap_mode(Pango::WRAP_CHAR);
     if (notification.body.empty())
     {
-        text.set_markup(sanitize_pango_markup(notification.summary));
+        text.set_markup(Glib::Markup::escape_text(notification.summary));
     } else
     {
         // NOTE: that is not a really right way to implement FDN markup feature, but the easiest one.
-        text.set_markup("<b>" + sanitize_pango_markup(notification.summary) + "</b>" + "\n" + sanitize_pango_markup(notification.body));
+        text.set_markup("<b>" + Glib::Markup::escape_text(notification.summary) + "</b>" + "\n" + Glib::Markup::escape_text(notification.body));
     }
 
     content.pack_start(text);
