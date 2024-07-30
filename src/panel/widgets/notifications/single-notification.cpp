@@ -116,7 +116,8 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
     } else
     {
         // NOTE: that is not a really right way to implement FDN markup feature, but the easiest one.
-        text.set_markup("<b>" + Glib::Markup::escape_text(notification.summary) + "</b>" + "\n" + Glib::Markup::escape_text(notification.body));
+        text.set_markup("<b>" + Glib::Markup::escape_text(
+            notification.summary) + "</b>" + "\n" + Glib::Markup::escape_text(notification.body));
     }
 
     content.pack_start(text);

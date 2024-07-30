@@ -187,7 +187,8 @@ void StatusNotifierItem::setup_tooltip()
             get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
 
         auto tooltip_label_text = !tooltip_text.empty() && !tooltip_title.empty() ?
-            "<b>" + Glib::Markup::escape_text(tooltip_title) + "</b>: " + Glib::Markup::escape_text(tooltip_text) :
+            "<b>" + Glib::Markup::escape_text(tooltip_title) + "</b>: " +
+            Glib::Markup::escape_text(tooltip_text) :
             !tooltip_title.empty() ? Glib::Markup::escape_text(tooltip_title) :
             !tooltip_text.empty() ? Glib::Markup::escape_text(tooltip_text) :
             Glib::Markup::escape_text(get_item_property<Glib::ustring>("Title"));
