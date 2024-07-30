@@ -115,3 +115,24 @@ void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
 
     set_image_pixbuf(image, pbuff, scale);
 }
+
+std::string sanitize_pango_markup(std::string input){
+    replace_all(input, "&", "&amp;");
+    replace_all(input, "<", "&lt;");
+    replace_all(input, ">", "&gt;");
+    replace_all(input, "'", "&#39;");
+    replace_all(input, "\"", "&#34;");
+    return input;
+}
+
+void replace_all(std::string& haystack, const std::string from, const std::string to){
+    if (from.empty()){
+        return;
+    }
+
+    size_t pos = 0;
+    while ((pos = haystack.find(from, pos)) != std::string::npos) {
+        haystack.replace(pos, from.length(), to);
+        pos += to.length();
+    }
+}

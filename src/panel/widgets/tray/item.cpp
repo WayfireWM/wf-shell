@@ -185,10 +185,10 @@ void StatusNotifierItem::setup_tooltip()
             get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
 
         auto tooltip_label_text = !tooltip_text.empty() && !tooltip_title.empty() ?
-            "<b>" + tooltip_title + "</b>: " + tooltip_text :
-            !tooltip_title.empty() ? tooltip_title :
-            !tooltip_text.empty() ? tooltip_text :
-            get_item_property<Glib::ustring>("Title");
+            "<b>" + sanitize_pango_markup(tooltip_title) + "</b>: " + sanitize_pango_markup(tooltip_text) :
+            !tooltip_title.empty() ? sanitize_pango_markup(tooltip_title) :
+            !tooltip_text.empty() ? sanitize_pango_markup(tooltip_text) :
+            sanitize_pango_markup(get_item_property<Glib::ustring>("Title"));
 
         const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
 
