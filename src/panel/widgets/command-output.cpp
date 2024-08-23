@@ -54,6 +54,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     }
 
     get_style_context()->add_class("command-output");
+    get_style_context()->add_class("icon-" + icon_position);
 
     main_label.set_ellipsize(Pango::ELLIPSIZE_END);
     main_label.set_max_width_chars(max_chars_opt);
@@ -66,8 +67,6 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     {
         main_label.set_max_width_chars(max_chars_opt);
     });
-
-    box.set_spacing(5);
 
     box.set_orientation(
         icon_position == "bottom" ||

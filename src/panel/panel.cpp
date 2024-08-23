@@ -387,7 +387,13 @@ void WayfirePanelApp::on_css_reload()
     {
         if (p.path().extension() == ext)
         {
-            add_css_file(p.path().string());
+            int priority = GTK_STYLE_PROVIDER_PRIORITY_USER;
+            if (p.path().filename() == "default.css")
+            {
+                priority = GTK_STYLE_PROVIDER_PRIORITY_APPLICATION;
+            }
+
+            add_css_file(p.path().string(), priority);
         }
     }
 
@@ -396,7 +402,7 @@ void WayfirePanelApp::on_css_reload()
     std::string custom_css = custom_css_config;
     if (custom_css != "")
     {
-        add_css_file(custom_css);
+        add_css_file(custom_css, GTK_STYLE_PROVIDER_PRIORITY_USER);
     }
 }
 
@@ -412,7 +418,7 @@ void WayfirePanelApp::clear_css_rules()
     css_rules.clear();
 }
 
-void WayfirePanelApp::add_css_file(std::string file)
+void WayfirePanelApp::add_css_file(std::string file, int priority)
 {
     auto screen = Gdk::Screen::get_default();
     auto style_context = Gtk::StyleContext::create();
@@ -422,7 +428,7 @@ void WayfirePanelApp::add_css_file(std::string file)
         if (css_provider)
         {
             style_context->add_provider_for_screen(
-                screen, css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
+                screen, css_provider, priority);
             css_rules.push_back(css_provider);
         }
     }
