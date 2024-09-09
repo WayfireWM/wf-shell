@@ -10,6 +10,6 @@ WayfireSeparator::WayfireSeparator(int pixels)
 void WayfireSeparator::init(Gtk::HBox *container)
 {
     separator.get_style_context()->add_class("separator");
-    container->pack_start(separator);
+    container->pack_start(separator, Gtk::PACK_SHRINK);
     separator.show_all();
 }
