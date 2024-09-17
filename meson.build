@@ -22,6 +22,7 @@ gtklayershell  = dependency('gtk-layer-shell-0', version: '>= 0.6', fallback: ['
 libpulse       = dependency('libpulse', required : get_option('pulse'))
 dbusmenu_gtk   = dependency('dbusmenu-gtk3-0.4')
 libgvc         = subproject('gvc', default_options: ['static=true'], required : get_option('pulse'))
+glm            = dependency('glm', required: false)
 
 if get_option('wayland-logout') == true
   wayland_logout = subproject('wayland-logout')
@@ -30,6 +31,10 @@ endif
 if libpulse.found()
   libgvc = libgvc.get_variable('libgvc_dep')
   add_project_arguments('-DHAVE_PULSE=1', language : 'cpp')
+endif
+
+if not glm.found() and not meson.get_compiler('cpp').check_header('glm/glm.hpp')
+  error('GLM not found, and directly using the header \'glm/glm.hpp\' is not possible.')
 endif
 
 needs_libinotify = ['freebsd', 'dragonfly'].contains(host_machine.system())
