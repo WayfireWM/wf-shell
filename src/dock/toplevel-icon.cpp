@@ -283,7 +283,10 @@ Icon get_from_desktop_app_info(std::string app_id)
     std::vector<std::string> app_id_variations = {
         app_id,
         tolower(app_id),
+        tolower(app_id),
     };
+    // e.g. org.gnome.Evince.desktop
+    app_id_variations[2][0] = std::toupper(app_id_variations[2][0]);
 
     std::vector<std::string> suffixes = {
         "",
