@@ -273,6 +273,22 @@ Icon get_from_desktop_app_info(std::string app_id)
         }
     }
 
+    if (!app_info)
+    {
+        // special treatment for snap apps
+        std::string prefix = "/var/lib/snapd/desktop/applications/";
+        auto& id = app_id_variations[1]; // seems to be lower case
+        for (auto& suffix : suffixes)
+        {
+            app_info = Gio::DesktopAppInfo::create_from_filename(
+                prefix + id + "_" + id + suffix);
+            if (app_info)
+            {
+                break;
+            }
+        }
+    }
+
     if (app_info) // success
     {
         return app_info->get_icon();
