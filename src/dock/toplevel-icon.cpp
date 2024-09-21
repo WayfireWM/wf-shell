@@ -274,8 +274,10 @@ Icon get_from_desktop_app_info(std::string app_id)
         "/usr/share/applications/",
         "/usr/share/applications/kde/",
         "/usr/share/applications/org.kde.",
+        "/usr/share/applications/org.gnome.",
         "/usr/local/share/applications/",
         "/usr/local/share/applications/org.kde.",
+        "/usr/local/share/applications/org.gnome.",
     };
 
     std::vector<std::string> app_id_variations = {
