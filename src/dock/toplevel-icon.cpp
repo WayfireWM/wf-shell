@@ -239,14 +239,19 @@ Icon get_from_desktop_app_info(std::string app_id)
         "/usr/share/applications/",
         "/usr/share/applications/kde/",
         "/usr/share/applications/org.kde.",
+        "/usr/share/applications/org.gnome.",
         "/usr/local/share/applications/",
         "/usr/local/share/applications/org.kde.",
+        "/usr/local/share/applications/org.gnome.",
     };
 
     std::vector<std::string> app_id_variations = {
         app_id,
         tolower(app_id),
+        tolower(app_id),
     };
+    // e.g. org.gnome.Evince.desktop
+    app_id_variations[2][0] = std::toupper(app_id_variations[2][0]);
 
     std::vector<std::string> suffixes = {
         "",
@@ -264,6 +269,22 @@ Icon get_from_desktop_app_info(std::string app_id)
                     app_info = Gio::DesktopAppInfo
                         ::create_from_filename(prefix + id + suffix);
                 }
+            }
+        }
+    }
+
+    if (!app_info)
+    {
+        // special treatment for snap apps
+        std::string prefix = "/var/lib/snapd/desktop/applications/";
+        auto& id = app_id_variations[1]; // seems to be lower case
+        for (auto& suffix : suffixes)
+        {
+            app_info = Gio::DesktopAppInfo::create_from_filename(
+                prefix + id + "_" + id + suffix);
+            if (app_info)
+            {
+                break;
             }
         }
     }
