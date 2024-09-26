@@ -174,6 +174,23 @@ void WayfireBatteryInfo::update_details()
     }
 }
 
+void WayfireBatteryInfo::on_battery_scroll(GdkEventScroll *event)
+{
+    if (scroll_counter <= 0) {
+        if (event->delta_y < 0)
+        {
+            std::system(battery_scrollup_command.value().c_str());
+        } else if (0 < event->delta_y)
+        {
+            std::system(battery_scrolldown_command.value().c_str());
+        }
+
+        scroll_counter = 3;
+    }
+
+    scroll_counter--;
+}
+
 void WayfireBatteryInfo::update_state()
 {
     std::cout << "unimplemented reached, in battery.cpp: "
@@ -222,10 +239,11 @@ bool WayfireBatteryInfo::setup_dbus()
 }
 
 // TODO: simplify config loading
-
 static const std::string default_font = "default";
 void WayfireBatteryInfo::init(Gtk::HBox *container)
 {
+    scroll_counter = 0;
+
     if (!setup_dbus())
     {
         return;
@@ -234,6 +252,10 @@ void WayfireBatteryInfo::init(Gtk::HBox *container)
     button_box.add(icon);
     button.get_style_context()->add_class("battery");
     button.get_style_context()->add_class("flat");
+
+    button.set_events(Gdk::SCROLL_MASK | Gdk::SMOOTH_SCROLL_MASK);
+    button.signal_scroll_event().connect_notify(
+        sigc::mem_fun(this, &WayfireBatteryInfo::on_battery_scroll));
 
     status_opt.set_callback([=] () { update_details(); });
     font_opt.set_callback([=] () { update_font(); });
