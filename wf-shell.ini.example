@@ -42,7 +42,7 @@ position = top
 
 # set the background color.
 background_color = gtk_headerbar # match the color of a GtkHeaderbar
-#background_color = $555555 # Hex color, for example $FFFFFF for white
+#background_color = \#555f # Hex color (4 or 8 Bytes), for example \#ffff or \#ffffffff for white
 #background_color = 0.033 0.041 0.047 0.9 # RGBA color, 1.0 0.0 0.0 0.5 for semi-transparent red
 
 
