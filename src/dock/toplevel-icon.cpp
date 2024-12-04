@@ -239,14 +239,19 @@ Icon get_from_desktop_app_info(std::string app_id)
         "/usr/share/applications/",
         "/usr/share/applications/kde/",
         "/usr/share/applications/org.kde.",
+        "/usr/share/applications/org.gnome.",
         "/usr/local/share/applications/",
         "/usr/local/share/applications/org.kde.",
+        "/usr/local/share/applications/org.gnome.",
     };
 
     std::vector<std::string> app_id_variations = {
         app_id,
         tolower(app_id),
+        tolower(app_id),
     };
+    // e.g. org.gnome.Evince.desktop
+    app_id_variations[2][0] = std::toupper(app_id_variations[2][0]);
 
     std::vector<std::string> suffixes = {
         "",
