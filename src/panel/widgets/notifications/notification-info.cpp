@@ -18,7 +18,7 @@ static K getHint(const std::map<std::string, Glib::VariantBase> & map, const std
         const auto & val = map.at(key);
         if (val.is_of_type(Glib::Variant<K>::variant_type()))
         {
-            return Glib::VariantBase::cast_dynamic<Glib::Variant<K>>(map.at(key)).get();
+            return Glib::VariantBase::cast_dynamic<Glib::Variant<K>>(val).get();
         }
     }
 
@@ -73,7 +73,7 @@ Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> & map)
         image_data = pixbufFromVariant(map.at("image-data"));
     } else if (map.count("icon_data") != 0)
     {
-        image_data = pixbufFromVariant(map.at("image_data"));
+        image_data = pixbufFromVariant(map.at("icon_data"));
     }
 
     image_path = getHint<Glib::ustring>(map, "image-path");
