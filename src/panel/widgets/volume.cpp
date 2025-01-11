@@ -14,6 +14,7 @@ WayfireVolumeScale::WayfireVolumeScale()
             value_changed.block();
             this->set_value(this->current_volume);
             value_changed.unblock();
+            this->queue_draw();
         }
     }, true);
 
