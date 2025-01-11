@@ -8,6 +8,7 @@ void WayfireClock::init(Gtk::HBox *container)
     button->get_style_context()->add_class("clock");
     button->add(label);
     button->show();
+    label.set_justify(Gtk::JUSTIFY_CENTER);
     label.show();
 
     update_label();
