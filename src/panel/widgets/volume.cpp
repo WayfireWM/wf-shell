@@ -105,11 +105,6 @@ bool WayfireVolume::on_popover_timeout(int timer)
 void WayfireVolume::check_set_popover_timeout()
 {
     popover_timeout.disconnect();
-    if (this->button->is_popover_focused())
-    {
-        return;
-    }
-
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
         &WayfireVolume::on_popover_timeout), 0), timeout * 1000);
 }
@@ -123,10 +118,15 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
         gvc_mixer_stream_push_volume(gvc_stream);
     }
 
-    if ((flags & VOLUME_FLAG_SHOW_POPOVER) &&
-        !button->get_popover()->is_visible())
+    if (flags & VOLUME_FLAG_SHOW_POPOVER)
     {
-        button->get_popover()->popup();
+        if (!button->get_popover()->is_visible())
+        {
+            button->get_popover()->popup();
+        } else
+        {
+            check_set_popover_timeout();
+        }
     }
 
     update_icon();
@@ -138,7 +138,6 @@ void WayfireVolume::on_volume_scroll(GdkEventScroll *event)
         0.0, max_norm));
 
     button->grab_focus();
-    check_set_popover_timeout();
 }
 
 void WayfireVolume::on_volume_button_press(GdkEventButton *event)
