@@ -2,16 +2,16 @@
 
 #include <gdkmm.h>
 
-template<class T>
-static void iterTo(Glib::VariantIter & iter, T & to)
+namespace
 {
-    Glib::Variant<T> var;
-    iter.next_value(var);
-    to = var.get();
+template<class... T>
+void extractValues(const Glib::VariantBase & variant, T&... values)
+{
+    std::tie(values...) = Glib::VariantBase::cast_dynamic<Glib::Variant<std::tuple<T...>>>(variant).get();
 }
 
 template<class K>
-static K getHint(const std::map<std::string, Glib::VariantBase> & map, const std::string & key)
+K getHint(const std::map<std::string, Glib::VariantBase> & map, const std::string & key)
 {
     if (map.count(key) != 0)
     {
@@ -27,41 +27,28 @@ static K getHint(const std::map<std::string, Glib::VariantBase> & map, const std
 
 Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase & variant)
 {
-    if (!variant.is_of_type(Glib::VariantType("iiibiiay")))
-    {
-        throw std::invalid_argument("Cannot create pixbuf from variant.");
-    }
-
-    auto iter = Glib::VariantIter(variant);
     gint32 width;
     gint32 height;
     gint32 rowstride;
     bool has_alpha;
     gint32 bits_per_sample;
     gint32 channels;
-
-    iterTo(iter, width);
-    iterTo(iter, height);
-    iterTo(iter, rowstride);
-    iterTo(iter, has_alpha);
-    iterTo(iter, bits_per_sample);
-    iterTo(iter, channels);
-
-    Glib::VariantBase data_var;
-    iter.next_value(data_var);
+    std::vector<guint8> data;
+    extractValues(variant, width, height, rowstride, has_alpha, bits_per_sample, channels, data);
 
     // for integer positive A, floor((A + 7) / 8) = ceil(A / 8)
     gulong pixel_size = (channels * bits_per_sample + 7) / 8;
-    if (data_var.get_size() != ((gulong)height - 1) * (gulong)rowstride + (gulong)width * pixel_size)
+    if (data.size() != ((gulong)height - 1) * (gulong)rowstride + (gulong)width * pixel_size)
     {
         throw std::invalid_argument(
             "Cannot create pixbuf from variant: expected data size doesn't equal actual one.");
     }
 
-    const auto *data = (guint8*)(g_memdup2(data_var.get_data(), data_var.get_size()));
-    return Gdk::Pixbuf::create_from_data(data, Gdk::COLORSPACE_RGB, has_alpha, bits_per_sample, width, height,
+    return Gdk::Pixbuf::create_from_data(
+        data.data(), Gdk::COLORSPACE_RGB, has_alpha, bits_per_sample, width, height,
         rowstride);
 }
+}  // namespace
 
 Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> & map)
 {
@@ -94,29 +81,13 @@ Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> & map)
 
 Notification::Notification(const Glib::VariantContainerBase & parameters, const Glib::ustring & sender)
 {
-    static const auto REQUIRED_TYPE = Glib::VariantType("(susssasa{sv}i)");
-    if (!parameters.is_of_type(REQUIRED_TYPE))
-    {
-        throw std::invalid_argument("NotificationInfo: parameters type must be (susssasa{sv}i)");
-    }
-
-    Glib::VariantBase params_var;
-    parameters.get_normal_form(params_var);
-    auto iter = Glib::VariantIter(params_var);
-    iterTo(iter, app_name);
-    iterTo(iter, id);
+    std::map<std::string, Glib::VariantBase> hints_map;
+    extractValues(parameters, app_name, id, app_icon, summary, body, actions, hints_map, expire_time);
     if (id == 0)
     {
         id = ++Notification::notifications_count;
     }
 
-    iterTo(iter, app_icon);
-    iterTo(iter, summary);
-    iterTo(iter, body);
-    iterTo(iter, actions);
-
-    std::map<std::string, Glib::VariantBase> hints_map;
-    iterTo(iter, hints_map);
     hints = Hints(hints_map);
 
     additional_info.recv_time = std::time(nullptr);
