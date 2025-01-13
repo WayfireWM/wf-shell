@@ -44,10 +44,10 @@ Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase & variant)
             "Cannot create pixbuf from variant: expected data size doesn't equal actual one.");
     }
 
-    const auto *raw_data = (guint8*)g_memdup2(data.data(), data.size());
-    return Gdk::Pixbuf::create_from_data(raw_data,
+    auto *data_ptr = new auto(std::move(data));
+    return Gdk::Pixbuf::create_from_data(data_ptr->data(),
         Gdk::COLORSPACE_RGB, has_alpha, bits_per_sample, width, height,
-        rowstride, [] (const guint8 *data) { g_free((gpointer)data); });
+        rowstride, [data_ptr] (auto*) { delete data_ptr; });
 }
 } // namespace
 
