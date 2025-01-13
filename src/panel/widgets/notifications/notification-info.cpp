@@ -47,7 +47,7 @@ Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase & variant)
     const auto *raw_data = (guint8*)g_memdup2(data.data(), data.size());
     return Gdk::Pixbuf::create_from_data(raw_data,
         Gdk::COLORSPACE_RGB, has_alpha, bits_per_sample, width, height,
-        rowstride, [](const guint8 *data) { g_free((gpointer)data); });
+        rowstride, [] (const guint8 *data) { g_free((gpointer)data); });
 }
 } // namespace
 
