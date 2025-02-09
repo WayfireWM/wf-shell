@@ -1,17 +1,21 @@
 # wf-shell
 
+This fork of wf-shell is attempting to port the project to GTK4.
+
+It is anticipated that a few cosmetic options will be removed, with a subset of those ported to CSS rules
+
 wf-shell is a repository which contains the various components needed to built a fully functional DE based around wayfire.
 Currently it has only a GTK-based panel and background client.
 
 # Dependencies
 
-wf-shell needs the core wayland libraries and protocols (`wayland-devel` and `wayland-protocols-devel` for Fedora), gtkmm-3.0 and [wf-config](https://github.com/WayfireWM/wf-config)
+wf-shell needs the core wayland libraries and protocols (`wayland-devel` and `wayland-protocols-devel` for Fedora), gtkmm-4.0 and [wf-config](https://github.com/WayfireWM/wf-config)
 
 # Build
 
 Just like any meson project:
 ```
-git clone https://github.com/WayfireWM/wf-shell && cd wf-shell
+git clone https://github.com/trigg/wf-shell && cd wf-shell
 meson build --prefix=/usr --buildtype=release
 ninja -C build && sudo ninja -C build install
 ```
