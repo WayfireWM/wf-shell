@@ -109,7 +109,6 @@ class WayfireToplevel::impl
                 }else if(butt == 1){
                     this->on_clicked();
                     click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-                    //return;
                 }else if(butt = 2 && middle_click_close){
                     zwlr_foreign_toplevel_handle_v1_close(handle);
                     click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);

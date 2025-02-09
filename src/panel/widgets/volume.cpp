@@ -1,3 +1,4 @@
+#include <gtkmm.h>
 #include <iostream>
 #include <glibmm.h>
 #include "volume.hpp"
@@ -131,33 +132,9 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
 
     update_icon();
 }
-/*
-void WayfireVolume::on_volume_scroll(GdkEventScroll *event)
-{
-    set_volume(std::clamp(volume_scale.get_target_value() - event->delta_y * max_norm * scroll_sensitivity,
-        0.0, max_norm));
 
-    button->grab_focus();
-    check_set_popover_timeout();
-}
 
-void WayfireVolume::on_volume_button_press(GdkEventButton *event)
-{
-    if ((event->button == 2) && (event->type == GDK_BUTTON_PRESS))
-    {
-        // Toggle mute on middle click 
-        if (gvc_mixer_stream_get_is_muted(gvc_stream))
-        {
-            gvc_mixer_stream_change_is_muted(gvc_stream, false);
-            gvc_mixer_stream_set_is_muted(gvc_stream, false);
-        } else
-        {
-            gvc_mixer_stream_change_is_muted(gvc_stream, true);
-            gvc_mixer_stream_set_is_muted(gvc_stream, true);
-        }
-    }
-}*/
-// TODO Fix scroll and button
+
 
 void WayfireVolume::on_volume_changed_external()
 {
@@ -247,6 +224,14 @@ void WayfireVolume::on_volume_value_changed()
     set_volume(volume_scale.get_target_value());
 }
 
+bool WayfireVolume::scroll(double dx, double dy){
+    set_volume(std::clamp(volume_scale.get_target_value() - dy * max_norm * scroll_sensitivity ,
+        0.0, max_norm));
+
+    check_set_popover_timeout();
+    return true;
+}
+
 void WayfireVolume::init(Gtk::Box *container)
 {
     icon_size.set_callback([=] () { update_icon(); });
@@ -256,12 +241,11 @@ void WayfireVolume::init(Gtk::Box *container)
     auto style = button->get_style_context();
     style->add_class("volume");
     style->add_class("flat");
-    /*button->set_events(Gdk::SCROLL_MASK | Gdk::SMOOTH_SCROLL_MASK | Gdk::BUTTON_PRESS_MASK);
-    button->signal_scroll_event().connect_notify(
-        sigc::mem_fun(*this, &WayfireVolume::on_volume_scroll));
-    button->signal_button_press_event().connect_notify(
-        sigc::mem_fun(*this, &WayfireVolume::on_volume_button_press));*/
-    // TODO Reinstate scroll controlled volume
+
+    auto scroll_gesture = Gtk::EventControllerScroll::create();
+    scroll_gesture->signal_scroll().connect(sigc::mem_fun(*this, &WayfireVolume::scroll),true);
+    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    button->add_controller(scroll_gesture);
     button->property_scale_factor().signal_changed().connect(
         [=] () {update_icon(); });
 

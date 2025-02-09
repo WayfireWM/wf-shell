@@ -152,13 +152,13 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
                 actions.append(*action_button.get());
             } else
             {
-                auto refGesture = Gtk::GestureClick::create();
-                refGesture->signal_pressed().connect(
+                auto click_gesture = Gtk::GestureClick::create();
+                click_gesture->signal_pressed().connect(
                     [id = notification.id, action_key] (int count, double x, double y)
                 {
                     Daemon::Instance()->invokeAction(id, action_key);
                 });
-                default_action_ev_box.add_controller(refGesture);
+                default_action_ev_box.add_controller(click_gesture);
             }
         }
 

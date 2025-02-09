@@ -91,6 +91,8 @@ class WayfireVolume : public WayfireWidget
     /** Called when the default sink changes */
     void on_default_sink_changed();
 
+    bool scroll(double dx, double dy);
+
     /**
      * Check whether the popover should be auto-hidden, and if yes, start
      * a timer to hide it
