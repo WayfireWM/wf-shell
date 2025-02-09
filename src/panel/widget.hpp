@@ -1,7 +1,7 @@
 #ifndef WIDGET_HPP
 #define WIDGET_HPP
 
-#include <gtkmm/hvbox.h>
+#include <gtkmm/box.h>
 #include <wf-option-wrap.hpp>
 #include <wayfire/config/types.hpp>
 
@@ -17,7 +17,7 @@ class WayfireWidget
   public:
     std::string widget_name; // for WayfirePanel use, widgets shouldn't change it
 
-    virtual void init(Gtk::HBox *container) = 0;
+    virtual void init(Gtk::Box *container) = 0;
     virtual void handle_config_reload()
     {}
     virtual ~WayfireWidget()

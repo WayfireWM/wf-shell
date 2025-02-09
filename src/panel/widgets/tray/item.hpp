@@ -2,11 +2,7 @@
 #define TRAY_ITEM_HPP
 
 #include <giomm.h>
-#include <gtkmm/button.h>
-#include <gtkmm/hvbox.h>
-#include <gtkmm/icontheme.h>
-#include <gtkmm/image.h>
-#include <gtkmm/menu.h>
+#include <gtkmm.h>
 
 #include <wf-option-wrap.hpp>
 
@@ -23,12 +19,12 @@ class StatusNotifierItem : public Gtk::Button
     Glib::RefPtr<Gio::DBus::Proxy> item_proxy;
 
     Gtk::Image icon;
-    std::optional<Gtk::Menu> menu;
+    std::optional<Gtk::PopoverMenu> menu;
 
     gdouble distance_scrolled_x = 0;
     gdouble distance_scrolled_y = 0;
 
-    Glib::RefPtr<Gtk::IconTheme> icon_theme = Gtk::IconTheme::get_default();
+    Glib::RefPtr<Gtk::IconTheme> icon_theme ;
 
     template<typename T>
     T get_item_property(const Glib::ustring & name, const T & default_value = {}) const
@@ -48,7 +44,7 @@ class StatusNotifierItem : public Gtk::Button
     void update_icon();
     void setup_tooltip();
 
-    void fetch_property(const Glib::ustring & property_name, const sigc::slot<void> & callback = {});
+    void fetch_property(const Glib::ustring & property_name, const sigc::slot<void> & callback );
 
   public:
     explicit StatusNotifierItem(const Glib::ustring & service);

@@ -34,9 +34,7 @@ class BackgroundDrawingArea : public Gtk::DrawingArea
     BackgroundDrawingArea();
     void show_image(Glib::RefPtr<Gdk::Pixbuf> image,
         double offset_x, double offset_y, double image_scale);
-
-  protected:
-    bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr) override;
+    bool do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
 };
 
 class WayfireBackground

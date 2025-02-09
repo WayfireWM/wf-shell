@@ -3,7 +3,7 @@
 #include "watcher.hpp"
 
 StatusNotifierHost::StatusNotifierHost(WayfireStatusNotifier *tray) :
-    dbus_name_id(Gio::DBus::own_name(Gio::DBus::BUS_TYPE_SESSION,
+    dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SESSION,
         "org.kde.StatusNotifierHost-" + std::to_string(getpid()) + "-" +
         std::to_string(++hosts_counter),
         sigc::mem_fun(*this, &StatusNotifierHost::on_bus_acquired))),

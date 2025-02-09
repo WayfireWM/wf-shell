@@ -7,3 +7,9 @@
 [submodule "subprojects/wayland-logout"]
 	path = subprojects/wayland-logout
 	url = https://github.com/soreau/wayland-logout
+[submodule "gtk4-layer-shell"]
+	path = gtk4-layer-shell
+	url = https://github.com/wmww/gtk4-layer-shell.git
+[submodule "subprojects/gtk4-layer-shell"]
+	path = subprojects/gtk4-layer-shell
+	url = https://github.com/wmww/gtk4-layer-shell.git

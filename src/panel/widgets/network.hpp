@@ -56,7 +56,7 @@ class WayfireNetworkInfo : public WayfireWidget
     std::unique_ptr<WfNetworkConnectionInfo> info;
 
     Gtk::Button button;
-    Gtk::HBox button_content;
+    Gtk::Box button_content;
     Gtk::Image icon;
     Gtk::Label status;
 
@@ -79,7 +79,7 @@ class WayfireNetworkInfo : public WayfireWidget
     void update_icon();
     void update_status();
 
-    void init(Gtk::HBox *container);
+    void init(Gtk::Box *container);
     void handle_config_reload();
     virtual ~WayfireNetworkInfo();
 };

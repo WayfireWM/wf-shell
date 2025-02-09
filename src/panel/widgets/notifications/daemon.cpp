@@ -150,9 +150,9 @@ std::shared_ptr<Daemon> Daemon::Instance()
 }
 
 Daemon::Daemon() :
-    owner_id(Gio::DBus::own_name(Gio::DBus::BUS_TYPE_SESSION, FDN_NAME,
-        sigc::mem_fun(this, &Daemon::on_bus_acquired),
-        {}, {}, Gio::DBus::BUS_NAME_OWNER_FLAGS_REPLACE))
+    owner_id(Gio::DBus::own_name(Gio::DBus::BusType::SESSION, FDN_NAME,
+        sigc::mem_fun(*this, &Daemon::on_bus_acquired),
+        {}, {}, Gio::DBus::BusNameOwnerFlags::REPLACE))
 {}
 
 Daemon::~Daemon()

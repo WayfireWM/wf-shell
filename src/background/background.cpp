@@ -5,7 +5,8 @@
 #include <gtkmm/image.h>
 #include <gdkmm/pixbuf.h>
 #include <gdkmm/general.h>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <random>
 #include <algorithm>
@@ -14,7 +15,7 @@
 #include <map>
 
 #include <gtk-utils.hpp>
-#include <gtk-layer-shell.h>
+#include <gtk4-layer-shell.h>
 #include <glib-unix.h>
 
 #include "background.hpp"
@@ -25,14 +26,14 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
 {
     if (!image)
     {
-        to_image.source.clear();
-        from_image.source.clear();
+        //to_image.source.clear();
+        //from_image.source.clear();
         return;
     }
 
     from_image = to_image;
-    to_image.source = Gdk::Cairo::create_surface_from_pixbuf(image,
-        this->get_scale_factor());
+    //to_image.source = Gdk::Cairo::create_surface_from_pixbuf(image,
+    //    this->get_scale_factor());
 
     to_image.x     = offset_x / this->get_scale_factor();
     to_image.y     = offset_y / this->get_scale_factor();
@@ -51,7 +52,7 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<Gdk::Pixbuf> image,
     });
 }
 
-bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+bool BackgroundDrawingArea::do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height)
 {
     if (!to_image.source)
     {
@@ -63,7 +64,7 @@ bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         queue_draw();
     } else
     {
-        from_image.source.clear();
+        //from_image.source.clear();
     }
 
     cr->save();
@@ -86,6 +87,7 @@ bool BackgroundDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 BackgroundDrawingArea::BackgroundDrawingArea()
 {
+    set_draw_func([=] (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) { this->do_draw(cr,width,height) ;});
     fade.animate(0, 0);
 }
 
@@ -235,7 +237,7 @@ bool WayfireBackground::load_next_background(Glib::RefPtr<Gdk::Pixbuf> & pbuf,
         {
             std::cerr << "Failed to load background images from " <<
                     (std::string)background_image << std::endl;
-            window.remove();
+            //window.remove();
             return false;
         }
 
@@ -307,7 +309,7 @@ void WayfireBackground::reset_cycle_timeout()
     if (images.size())
     {
         change_bg_conn = Glib::signal_timeout().connect(sigc::mem_fun(
-            this, &WayfireBackground::change_background), cycle_timeout);
+            *this, &WayfireBackground::change_background), cycle_timeout);
     }
 }
 
@@ -326,8 +328,7 @@ void WayfireBackground::setup_window()
     gtk_layer_set_keyboard_mode(window.gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
 
     gtk_layer_set_exclusive_zone(window.gobj(), -1);
-    window.add(drawing_area);
-    window.show_all();
+    window.set_child(drawing_area);
 
     auto reset_background = [=] () { set_background(); };
     auto reset_cycle = [=] () { reset_cycle_timeout(); };
@@ -337,7 +338,7 @@ void WayfireBackground::setup_window()
     background_cycle_timeout.set_callback(reset_cycle);
 
     window.property_scale_factor().signal_changed().connect(
-        sigc::mem_fun(this, &WayfireBackground::set_background));
+        sigc::mem_fun(*this, &WayfireBackground::set_background));
 }
 
 WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output)
@@ -352,17 +353,6 @@ WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output
     }
 
     setup_window();
-
-    this->window.signal_size_allocate().connect_notify(
-        [this, width = 0, height = 0] (Gtk::Allocation& alloc) mutable
-    {
-        if ((alloc.get_width() != width) || (alloc.get_height() != height))
-        {
-            this->set_background();
-            width  = alloc.get_width();
-            height = alloc.get_height();
-        }
-    });
 }
 
 WayfireBackground::~WayfireBackground()

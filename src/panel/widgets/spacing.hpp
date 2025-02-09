@@ -5,12 +5,12 @@
 
 class WayfireSpacing : public WayfireWidget
 {
-    Gtk::HBox box;
+    Gtk::Box box;
 
   public:
     WayfireSpacing(int pixels);
 
-    virtual void init(Gtk::HBox *container);
+    virtual void init(Gtk::Box *container);
     virtual ~WayfireSpacing()
     {}
 };

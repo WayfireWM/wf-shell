@@ -2,7 +2,7 @@
 #define WF_DOCK_HPP
 
 #include <map>
-#include <gtkmm/hvbox.h>
+#include <gtkmm/box.h>
 #include <wayland-client.h>
 
 #include "toplevel-icon.hpp"

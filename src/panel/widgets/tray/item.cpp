@@ -4,8 +4,9 @@
 
 #include <gtkmm/icontheme.h>
 #include <gtkmm/tooltip.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include <libdbusmenu-gtk/dbusmenu-gtk.h>
+#include <libdbusmenu-glib/dbusmenu-glib.h>
 
 static std::pair<Glib::ustring, Glib::ustring> name_and_obj_path(const Glib::ustring & service)
 {
@@ -41,18 +42,18 @@ static Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(IconData && pixbuf_data)
 
     auto *data_ptr = new auto(std::move(data));
     return Gdk::Pixbuf::create_from_data(
-        data_ptr->data(), Gdk::Colorspace::COLORSPACE_RGB, true, 8, width, height,
+        data_ptr->data(), Gdk::Colorspace::RGB, true, 8, width, height,
         4 * width, [data_ptr] (auto*) { delete data_ptr; });
 }
 
 StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
 {
-    set_image(icon);
+    set_child(icon);
 
     const auto & [name, path] = name_and_obj_path(service);
     dbus_name = name;
     Gio::DBus::Proxy::create_for_bus(
-        Gio::DBus::BUS_TYPE_SESSION, name, path, "org.kde.StatusNotifierItem",
+        Gio::DBus::BusType::SESSION, name, path, "org.kde.StatusNotifierItem",
         [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
     {
         item_proxy = Gio::DBus::Proxy::create_for_bus_finish(result);
@@ -81,7 +82,8 @@ void StatusNotifierItem::init_widget()
             if (menu)
             {
                 /* Under all tests I tried this places sensibly */
-                menu->popup_at_widget(&icon, Gdk::GRAVITY_NORTH_EAST, Gdk::GRAVITY_SOUTH_EAST, NULL);
+                //menu->popup_at_widget(&icon, Gdk::Gravity::NORTH_EAST, Gdk::Gravity::SOUTH_EAST, NULL);
+                // TODO Fix popup
             } else
             {
                 item_proxy->call("ContextMenu", ev_coords);
@@ -92,6 +94,7 @@ void StatusNotifierItem::init_widget()
         }
     });
 
+    /*
     signal_button_press_event().connect([this] (GdkEventButton *ev) -> bool
     {
         if (ev->button == GDK_BUTTON_PRIMARY)
@@ -118,9 +121,12 @@ void StatusNotifierItem::init_widget()
 
         return true;
     });
+    */
+    // TODO Gestures for tray
 
-    add_events(Gdk::SCROLL_MASK | Gdk::SMOOTH_SCROLL_MASK);
+    //add_events(Gdk::SCROLL_MASK | Gdk::SMOOTH_SCROLL_MASK);
 
+    /*
     signal_scroll_event().connect([this] (GdkEventScroll *ev)
     {
         int dx = 0;
@@ -174,12 +180,14 @@ void StatusNotifierItem::init_widget()
 
         return true;
     });
+    */
+    // TODO Scroll gestures for tray
 }
 
 void StatusNotifierItem::setup_tooltip()
 {
     set_has_tooltip();
-    signal_query_tooltip().connect([this] (int, int, bool, const Glib::RefPtr<Gtk::Tooltip> & tooltip)
+    /*signal_query_tooltip().connect([this] (int, int, bool, const std::shared_ptr<Gtk::Tooltip> & tooltip)
     {
         auto [tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
             get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
@@ -192,21 +200,16 @@ void StatusNotifierItem::setup_tooltip()
 
         const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
 
-        bool icon_shown = true;
-        if (icon_theme->has_icon(tooltip_icon_name))
-        {
-            tooltip->set_icon_from_icon_name(tooltip_icon_name, Gtk::ICON_SIZE_LARGE_TOOLBAR);
-        } else if (pixbuf)
-        {
+        if (pixbuf) {
             tooltip->set_icon(pixbuf);
-        } else
-        {
-            icon_shown = false;
+        }else{
+            tooltip->set_icon_from_icon_name(tooltip_icon_name);
         }
 
         tooltip->set_markup(tooltip_label_text);
         return icon_shown || !tooltip_label_text.empty();
-    });
+    });*/
+    // TODO Fix tray tooltip
 }
 
 void StatusNotifierItem::update_icon()
@@ -218,7 +221,7 @@ void StatusNotifierItem::update_icon()
         icon_theme->add_resource_path(icon_theme_path);
     } else
     {
-        icon_theme = Gtk::IconTheme::get_default();
+        icon_theme = Gtk::IconTheme::get_for_display(get_display());
     }
 
     const Glib::ustring icon_type_name =
@@ -227,10 +230,10 @@ void StatusNotifierItem::update_icon()
     const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
     if (icon_theme->lookup_icon(icon_name, icon_size))
     {
-        set_image_icon(icon, icon_name, icon_size, {}, icon_theme);
+        icon.set_from_icon_name(icon_name);
     } else if (pixmap_data)
     {
-        icon.set(pixmap_data->scale_simple(icon_size, icon_size, Gdk::INTERP_BILINEAR));
+        icon.set(pixmap_data->scale_simple(icon_size, icon_size, Gdk::InterpType::BILINEAR));
     }
 }
 
@@ -242,19 +245,22 @@ void StatusNotifierItem::init_menu()
         return;
     }
 
-    auto *raw_menu = dbusmenu_gtkmenu_new((gchar*)dbus_name.data(), (gchar*)menu_path.data());
+    /*DbusmenuMenuItem* mi = dbusmenu_menuitem_new_with_id()
+
+    auto *raw_menu = dbusmenu_gmenu_new((gchar*)dbus_name.data(), (gchar*)menu_path.data());
     if (raw_menu == nullptr)
     {
         return;
     }
 
     menu = std::move(*Glib::wrap(GTK_MENU(raw_menu)));
-    menu->attach_to_widget(*this);
+    menu->attach_to_widget(*this);*/
 }
 
 void StatusNotifierItem::handle_signal(const Glib::ustring & signal,
     const Glib::VariantContainerBase & params)
 {
+    /*
     if (signal.size() < 3)
     {
         return;
@@ -278,11 +284,13 @@ void StatusNotifierItem::handle_signal(const Glib::ustring & signal,
         item_proxy->set_cached_property(property, status);
         update_icon();
     }
+        */
 }
 
 void StatusNotifierItem::fetch_property(const Glib::ustring & property_name,
     const sigc::slot<void> & callback)
 {
+    /*
     item_proxy->call(
         "org.freedesktop.DBus.Properties.Get",
         [this, property_name, callback] (const Glib::RefPtr<Gio::AsyncResult> & res)
@@ -299,4 +307,5 @@ void StatusNotifierItem::fetch_property(const Glib::ustring & property_name,
     },
         Glib::Variant<std::tuple<Glib::ustring, Glib::ustring>>::create({"org.kde.StatusNotifierItem",
             property_name}));
+            */
 }

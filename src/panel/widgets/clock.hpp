@@ -20,7 +20,7 @@ class WayfireClock : public WayfireWidget
     void on_calendar_shown();
 
   public:
-    void init(Gtk::HBox *container) override;
+    void init(Gtk::Box *container) override;
     bool update_label();
     ~WayfireClock();
 };

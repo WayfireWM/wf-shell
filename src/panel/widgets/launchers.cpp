@@ -23,16 +23,16 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
     } else
     {
         // Generate a .desktop file in memory
-        auto keyfile = Glib::KeyFile();
-        keyfile.set_string("Desktop Entry", "Type", "Application");
-        keyfile.set_string("Desktop Entry", "Exec", "/bin/sh -c \"" + name + "\"");
-        keyfile.set_string("Desktop Entry", "Icon", icon);
+        auto keyfile = Glib::KeyFile::create();
+        keyfile->set_string("Desktop Entry", "Type", "Application");
+        keyfile->set_string("Desktop Entry", "Exec", "/bin/sh -c \"" + name + "\"");
+        keyfile->set_string("Desktop Entry", "Icon", icon);
         if (label == "")
         {
             label = name;
         }
 
-        keyfile.set_string("Desktop Entry", "Name", label);
+        keyfile->set_string("Desktop Entry", "Name", label);
 
         // Hand off to have a custom launcher
         app_info = Gio::DesktopAppInfo::create_from_keyfile(keyfile);
@@ -44,7 +44,7 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         return false;
     }
 
-    button.set_image(m_icon);
+    button.set_icon_name(icon);
     auto style = button.get_style_context();
     style->add_class("flat");
     style->add_class("launcher");
@@ -62,7 +62,8 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
 
 void WfLauncherButton::update_icon()
 {
-    set_image_icon(m_icon, app_info->get_icon()->to_string(), icon_size);
+    //set_image_icon(m_icon, app_info->get_icon()->to_string(), icon_size);
+    m_icon.set_from_icon_name(app_info->get_icon()->to_string());
 }
 
 void WfLauncherButton::launch()
@@ -146,10 +147,10 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
     return launchers;
 }
 
-void WayfireLaunchers::init(Gtk::HBox *container)
+void WayfireLaunchers::init(Gtk::Box *container)
 {
     box.get_style_context()->add_class("launchers");
-    container->pack_start(box, false, false);
+    container->append(box);
     handle_config_reload();
 }
 
@@ -160,8 +161,7 @@ void WayfireLaunchers::handle_config_reload()
     launchers = get_launchers_from_config();
     for (auto& l : launchers)
     {
-        box.pack_start(l->button, false, false);
+        box.append(l->button);
     }
 
-    box.show_all();
 }

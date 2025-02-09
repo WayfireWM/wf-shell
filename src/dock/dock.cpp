@@ -1,13 +1,13 @@
 #include <gtkmm/window.h>
 #include <glibmm/main.h>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
 
 #include <iostream>
 #include <map>
 
 #include <gtk-utils.hpp>
 #include <wf-shell-app.hpp>
-#include <gtk-layer-shell.h>
+#include <gtk4-layer-shell.h>
 #include <wf-autohide-window.hpp>
 
 #include "dock.hpp"
@@ -19,7 +19,7 @@ class WfDock::impl
     std::unique_ptr<WayfireAutohidingWindow> window;
     wl_surface *_wl_surface;
 
-    Gtk::HBox box;
+    Gtk::Box box;
 
     WfOption<std::string> css_path{"dock/css_path"};
     WfOption<int> dock_height{"dock/dock_height"};
@@ -34,31 +34,28 @@ class WfDock::impl
         window->set_size_request(dock_height, dock_height);
         gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
 
-        window->signal_size_allocate().connect_notify(
-            sigc::mem_fun(this, &WfDock::impl::on_allocation));
-        window->add(box);
+        /*window->signal_size_allocate().connect_notify(
+            sigc::mem_fun(this, &WfDock::impl::on_allocation));*/
+        // TODO Reimplement allocation somehow
+        window->set_child(box);
 
         if ((std::string)css_path != "")
         {
             auto css = load_css_from_path(css_path);
             if (css)
             {
-                auto screen = Gdk::Screen::get_default();
-                auto style_context = Gtk::StyleContext::create();
-                style_context->add_provider_for_screen(
-                    screen, css, GTK_STYLE_PROVIDER_PRIORITY_USER);
+                auto display = Gdk::Display::get_default();
+                Gtk::StyleContext::add_provider_for_display(display, css, GTK_STYLE_PROVIDER_PRIORITY_USER);
             }
         }
 
-        window->show_all();
-        _wl_surface = gdk_wayland_window_get_wl_surface(
-            window->get_window()->gobj());
+        /*_wl_surface = gdk_wayland_window_get_wl_surface(
+            window->gobj());*/
     }
 
     void add_child(Gtk::Widget& widget)
     {
-        box.pack_end(widget);
-        box.show_all();
+        box.append(widget);
     }
 
     void rem_child(Gtk::Widget& widget)
@@ -66,6 +63,7 @@ class WfDock::impl
         this->box.remove(widget);
 
         /* We now need to resize the dock so it fits the remaining widgets. */
+        /*
         int total_width  = 0;
         int total_height = last_height;
         box.foreach([&] (Gtk::Widget& child)
@@ -80,6 +78,8 @@ class WfDock::impl
         total_width = std::min(total_height, 100);
         this->window->resize(total_width, total_height);
         this->window->set_size_request(total_width, total_height);
+        */
+        // TODO Find a cleaner way than resizing window
     }
 
     wl_surface *get_wl_surface()

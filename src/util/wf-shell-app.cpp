@@ -1,7 +1,8 @@
 #include "wf-shell-app.hpp"
 #include <glibmm/main.h>
 #include <sys/inotify.h>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
+#include <gio/gio.h>
 #include <iostream>
 #include <filesystem>
 #include <memory>
@@ -172,23 +173,28 @@ void WayfireShellApp::on_activate()
 
     Glib::signal_io().connect(
         sigc::bind<0>(&handle_inotify_event, this),
-        inotify_fd, Glib::IO_IN | Glib::IO_HUP);
+        inotify_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
     Glib::signal_io().connect(
         sigc::bind<0>(&handle_css_inotify_event, this),
-        inotify_css_fd, Glib::IO_IN | Glib::IO_HUP);
+        inotify_css_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
 
     // Hook up monitor tracking
     auto display = Gdk::Display::get_default();
-    display->signal_monitor_added().connect_notify(
-        [=] (const GMonitor& monitor) { this->add_output(monitor); });
-    display->signal_monitor_removed().connect_notify(
-        [=] (const GMonitor& monitor) { this->rem_output(monitor); });
+    auto monitors = display->get_monitors();
+    monitors->signal_items_changed().connect(
+        [=] (const int position, const int removed, const int added) {
+            //this->add_output(monitor);
+            // TODO Reconstitute list correctly
+        });
+    //display->signal_monitor_removed().connect_notify(
+    //    [=] (const GMonitor& monitor) { this->rem_output(monitor); });
 
     // initial monitors
-    int num_monitors = display->get_n_monitors();
+    int num_monitors = monitors->get_n_items();
     for (int i = 0; i < num_monitors; i++)
     {
-        add_output(display->get_monitor(i));
+        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+        add_output(obj);
     }
 }
 
@@ -213,15 +219,14 @@ void WayfireShellApp::rem_output(GMonitor monitor)
 
 WayfireShellApp::WayfireShellApp(int argc, char **argv)
 {
-    app = Gtk::Application::create(argc, argv, "",
-        Gio::APPLICATION_HANDLES_COMMAND_LINE);
-    app->signal_activate().connect_notify(
-        sigc::mem_fun(this, &WayfireShellApp::on_activate));
+    app = Gtk::Application::create("",Gio::Application::Flags::HANDLES_COMMAND_LINE);
+    app->signal_activate().connect(
+        sigc::mem_fun(*this, &WayfireShellApp::on_activate));
     app->add_main_option_entry(
-        sigc::mem_fun(this, &WayfireShellApp::parse_cfgfile),
+        sigc::mem_fun(*this, &WayfireShellApp::parse_cfgfile),
         "config", 'c', "config file to use", "file");
     app->add_main_option_entry(
-        sigc::mem_fun(this, &WayfireShellApp::parse_cssfile),
+        sigc::mem_fun(*this, &WayfireShellApp::parse_cssfile),
         "css", 's', "css style directory to use", "directory");
 
     // Activate app after parsing command line

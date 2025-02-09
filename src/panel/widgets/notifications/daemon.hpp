@@ -72,7 +72,7 @@ class Daemon
     notification_signal signal_notification_replaced;
     notification_signal signal_notification_closed;
 
-    const Gio::DBus::InterfaceVTable interface_vtable{sigc::mem_fun(this, &Daemon::on_interface_method_call)};
+    const Gio::DBus::InterfaceVTable interface_vtable{sigc::mem_fun(*this, &Daemon::on_interface_method_call)};
 
     Daemon();
 

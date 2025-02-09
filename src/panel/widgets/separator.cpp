@@ -7,9 +7,8 @@ WayfireSeparator::WayfireSeparator(int pixels)
     separator.set_margin_end(half);
 }
 
-void WayfireSeparator::init(Gtk::HBox *container)
+void WayfireSeparator::init(Gtk::Box *container)
 {
     separator.get_style_context()->add_class("separator");
-    container->pack_start(separator);
-    separator.show_all();
+    container->append(separator);
 }

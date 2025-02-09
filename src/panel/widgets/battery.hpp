@@ -3,7 +3,7 @@
 
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
-#include <gtkmm/hvbox.h>
+#include <gtkmm/box.h>
 #include <gtkmm/label.h>
 
 #include <giomm/dbusproxy.h>
@@ -28,7 +28,7 @@ class WayfireBatteryInfo : public WayfireWidget
 
     Gtk::Button button;
     Gtk::Label label;
-    Gtk::HBox button_box;
+    Gtk::Box button_box;
 
     Gtk::Image icon;
 
@@ -47,7 +47,7 @@ class WayfireBatteryInfo : public WayfireWidget
         const std::vector<Glib::ustring>& invalidated);
 
   public:
-    virtual void init(Gtk::HBox *container);
+    virtual void init(Gtk::Box *container);
     virtual ~WayfireBatteryInfo() = default;
 };
 

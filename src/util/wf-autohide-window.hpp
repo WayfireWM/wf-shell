@@ -2,7 +2,7 @@
 #define WF_AUTOHIDE_WINDOW_HPP
 
 #include <gtkmm/window.h>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
 #include "wf-popover.hpp"
 #include <wf-option-wrap.hpp>
 #include <wayfire/util/duration.hpp>

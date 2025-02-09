@@ -1,9 +1,10 @@
 #include "tray.hpp"
 
-void WayfireStatusNotifier::init(Gtk::HBox *container)
+void WayfireStatusNotifier::init(Gtk::Box *container)
 {
     icons_hbox.get_style_context()->add_class("tray");
-    container->add(icons_hbox);
+    icons_hbox.set_spacing(5);
+    container->append(icons_hbox);
 }
 
 void WayfireStatusNotifier::add_item(const Glib::ustring & service)
@@ -14,8 +15,7 @@ void WayfireStatusNotifier::add_item(const Glib::ustring & service)
     }
 
     items.emplace(service, service);
-    icons_hbox.pack_start(items.at(service));
-    icons_hbox.show_all();
+    icons_hbox.append(items.at(service));
 }
 
 void WayfireStatusNotifier::remove_item(const Glib::ustring & service)

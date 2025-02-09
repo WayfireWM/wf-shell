@@ -40,8 +40,8 @@ class WayfireVolume : public WayfireWidget
     WfOption<double> timeout{"panel/volume_display_timeout"};
     WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
 
-    void on_volume_scroll(GdkEventScroll *event);
-    void on_volume_button_press(GdkEventButton *event);
+    //void on_volume_scroll(GdkEventScroll *event);
+    //void on_volume_button_press(GdkEventButton *event);
     void on_volume_value_changed();
     bool on_popover_timeout(int timer);
 
@@ -79,7 +79,7 @@ class WayfireVolume : public WayfireWidget
         set_volume_flags_t flags = VOLUME_FLAG_FULL);
 
   public:
-    void init(Gtk::HBox *container) override;
+    void init(Gtk::Box *container) override;
     virtual ~WayfireVolume();
 
     /** Update the icon based on volume and muted state */

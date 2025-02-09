@@ -2,7 +2,7 @@
 #include "toplevel.hpp"
 #include "toplevel-icon.hpp"
 #include <iostream>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
 
 
 namespace

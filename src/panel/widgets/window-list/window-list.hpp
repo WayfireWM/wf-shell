@@ -10,7 +10,7 @@
 
 class WayfireToplevel;
 
-class WayfireWindowListBox : public Gtk::HBox
+class WayfireWindowListBox : public Gtk::Box
 {
     Gtk::Widget *top_widget = nullptr;
     int top_x = 0;
@@ -29,8 +29,8 @@ class WayfireWindowListBox : public Gtk::HBox
      * Override some of Gtk::HBox's built-in layouting functions, so that we
      * support manually dragging a button
      */
-    void forall_vfunc(gboolean, GtkCallback callback, gpointer callback_data) override;
-    void on_size_allocate(Gtk::Allocation& alloc) override;
+    //void forall_vfunc(gboolean, GtkCallback callback, gpointer callback_data) override;
+    //void on_size_allocate(Gtk::Allocation& alloc) override;
 
     /**
      * @param x the x-axis position, relative to ref
@@ -76,13 +76,10 @@ class WayfireWindowList : public WayfireWidget
 
     wayfire_config *get_config();
 
-    void init(Gtk::HBox *container) override;
+    void init(Gtk::Box *container) override;
     void add_output(WayfireOutput *output);
 
   private:
-    void on_draw(const Cairo::RefPtr<Cairo::Context>&);
-
-    void set_button_width(int width);
     int get_default_button_width();
     int get_target_button_width();
 };

@@ -1,12 +1,12 @@
 #include <giomm/desktopappinfo.h>
 #include <gtkmm/button.h>
-#include <gtkmm/hvbox.h>
+#include <gtkmm/box.h>
 #include <gtkmm/icontheme.h>
 #include <gtkmm/image.h>
 
 #include <gdkmm/display.h>
 #include <gdkmm/seat.h>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
 
 #include "dock.hpp"
 #include "toplevel.hpp"
@@ -41,17 +41,16 @@ class WfToplevelIcon::impl
         this->handle = handle;
         this->output = output;
 
-        button.add(image);
+        button.set_child(image);
         button.set_tooltip_text("none");
         button.get_style_context()->add_class("flat");
-        button.show_all();
 
-        button.signal_clicked().connect_notify(
-            sigc::mem_fun(this, &WfToplevelIcon::impl::on_clicked));
-        button.signal_size_allocate().connect_notify(
-            sigc::mem_fun(this, &WfToplevelIcon::impl::on_allocation_changed));
+        button.signal_clicked().connect(
+            sigc::mem_fun(*this, &WfToplevelIcon::impl::on_clicked));
+        //button.signal_size_allocate().connect(
+        //    sigc::mem_fun(*this, &WfToplevelIcon::impl::on_allocation_changed));
         button.property_scale_factor().signal_changed()
-            .connect(sigc::mem_fun(this, &WfToplevelIcon::impl::on_scale_update));
+            .connect(sigc::mem_fun(*this, &WfToplevelIcon::impl::on_scale_update));
 
         auto dock = WfDockApp::get().dock_for_wl_output(output);
         assert(dock); // ToplevelIcon is created only for existing outputs
@@ -222,7 +221,7 @@ bool set_custom_icon(Gtk::Image& image, std::string app_id, int size, int scale)
         return false;
     }
 
-    set_image_pixbuf(image, pb, scale);
+    //set_image_pixbuf(image, pb, scale);
     return true;
 }
 
@@ -286,6 +285,7 @@ void set_image_from_icon(Gtk::Image& image,
 
     /* Wayfire sends a list of app-id's in space separated format, other compositors
      * send a single app-id, but in any case this works fine */
+     auto display = image.get_display();
     while (stream >> app_id)
     {
         /* Try first method: custom icon file provided by the user */
@@ -302,7 +302,7 @@ void set_image_from_icon(Gtk::Image& image,
         if (!icon)
         {
             /* Finally try directly looking up the icon, if it exists */
-            if (Gtk::IconTheme::get_default()->lookup_icon(app_id, 24))
+            if (Gtk::IconTheme::get_for_display(display)->lookup_icon(app_id, 24))
             {
                 icon_name = app_id;
             }
@@ -313,7 +313,8 @@ void set_image_from_icon(Gtk::Image& image,
 
         WfIconLoadOptions options;
         options.user_scale = scale;
-        set_image_icon(image, icon_name, size, options);
+        image.set_from_icon_name(icon_name);
+        //set_image_icon(image, icon_name, size, options);
 
         /* finally found some icon */
         if (icon_name != "unknown")
