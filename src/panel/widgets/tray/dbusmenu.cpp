@@ -10,11 +10,13 @@ static void menu_updated(DbusmenuMenuitem * item, gpointer user_data)
     menu->layout_updated(item);
 }
 
-DbusMenuModel::DbusMenuModel(){
+DbusMenuModel::DbusMenuModel()
+{
     actions = Gio::SimpleActionGroup::create();
 }
 
-type_signal_action_group DbusMenuModel::signal_action_group(){
+type_signal_action_group DbusMenuModel::signal_action_group()
+{
     return signal;
 }
 
@@ -30,23 +32,12 @@ void DbusMenuModel::connect(const Glib::ustring & dbus_name, const Glib::ustring
         G_CALLBACK(menu_updated),
         this
     );
-
-
-
-    /*Gio::DBus::Proxy::create_for_bus(
-        Gio::DBus::BusType::SESSION, dbus_name, menu_path, "com.canonical.dbusmenu",
-        [this, menu_path, dbus_name] (const Glib::RefPtr<Gio::AsyncResult> & result)
-    {
-        menu_proxy = Gio::DBus::Proxy::create_for_bus_finish(result);
-        menu_proxy->signal_signal().connect(
-            [this] (const Glib::ustring & sender, const Glib::ustring & signal,
-                    const Glib::VariantContainerBase & params) { handle_signal(signal, params); });
-    });*/
     auto root = dbusmenu_client_get_root(client);
     reconstitute(root);
 }
 
-void DbusMenuModel::reconstitute(DbusmenuMenuitem * rootItem){
+void DbusMenuModel::reconstitute(DbusmenuMenuitem * rootItem)
+{
     remove_all();
     auto action_list = actions->list_actions();
     for(auto action_name : action_list){
@@ -54,21 +45,22 @@ void DbusMenuModel::reconstitute(DbusmenuMenuitem * rootItem){
     }
     iterate_children(this, rootItem,0 );
 
-    signal.emit();
-    //std::cout << "Children " << list->size() << std::endl;
+    signal.emit(); // Tell the SNI that the menu actions have changed. Seemed necessary, as if it was taking a copy not a ref
 }
 
 int DbusMenuModel::iterate_children(Gio::Menu * parent_menu, DbusmenuMenuitem * parent, int stupid_count)
 {
-    
-    if (DBUSMENU_IS_MENUITEM(parent)){
+    if (DBUSMENU_IS_MENUITEM(parent))
+    {
         auto list = dbusmenu_menuitem_get_children(parent);
         auto current_section = Gio::Menu::create();
-        for(; list != NULL ; list = g_list_next(list) ) {
+        for(; list != NULL ; list = g_list_next(list) )
+        {
             auto child = DBUSMENU_MENUITEM(list->data);
             std::cout << "dbus menu..." << std::endl;
             auto label = dbusmenu_menuitem_property_get(child, DBUSMENU_MENUITEM_PROP_LABEL);
-            if (label == nullptr){
+            if (label == nullptr)
+            {
                 auto item = Gio::MenuItem::create(current_section);
                 item->set_section(current_section);
                 current_section = Gio::Menu::create();
@@ -78,28 +70,33 @@ int DbusMenuModel::iterate_children(Gio::Menu * parent_menu, DbusmenuMenuitem * 
             std::string menutype = "";
             std::string icon_name = "";
             std::string toggle_type = "";
-            if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_TYPE)){
+            if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_TYPE))
+            {
                 menutype = std::string(dbusmenu_menuitem_property_get(child, DBUSMENU_MENUITEM_PROP_TYPE));
             }
             bool enabled = dbusmenu_menuitem_property_get_bool(child, DBUSMENU_MENUITEM_PROP_ENABLED);
-            bool visible = dbusmenu_menuitem_property_get_bool(child, DBUSMENU_MENUITEM_PROP_VISIBLE);
-            if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_ICON_NAME)){
+            if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_ICON_NAME))
+            {
                 icon_name = dbusmenu_menuitem_property_get(child, DBUSMENU_MENUITEM_PROP_ICON_NAME);
             }
-            if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE)){
+            if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE))
+            {
                 toggle_type = dbusmenu_menuitem_property_get(child, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
             }
             int toggle_state = dbusmenu_menuitem_property_get_int(child, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE);
             bool has_children = dbusmenu_menuitem_get_children(child) != NULL;
             std::cout << ">> " << label << " type: " << menutype <<  " enabled: " << (enabled ? "true" : "false")  <<" icon: " << icon_name <<  " toggle_type: " << toggle_type << " has_children: " << has_children <<  std::endl;
 
-            if(has_children){
+            if(has_children)
+            {
                 auto submenu = Gio::Menu::create();
                 stupid_count = iterate_children(submenu.get(), child, stupid_count);
                 current_section->append_submenu(label, submenu);
-            } else {
+            } else
+            {
                 auto item = Gio::MenuItem::create(label, "a");
-                if(icon_name!=""){
+                if(icon_name!="")
+                {
                     item->set_icon(Gio::Icon::create(icon_name));
                 }
                 if (enabled)
@@ -125,7 +122,8 @@ int DbusMenuModel::iterate_children(Gio::Menu * parent_menu, DbusmenuMenuitem * 
         item->set_section(current_section);
         current_section = Gio::Menu::create();
         parent_menu->append_item(item);
-    }else{
+    }else
+    {
         std::cout << "DBUS iterating non-menu-item " << std::endl;
     }
     return stupid_count;
@@ -144,6 +142,12 @@ Glib::RefPtr<Gio::SimpleActionGroup> DbusMenuModel::get_action_group()
 }
 
 
+/*
+  Strip none alphabetical characters and add a unique numeric ID.
+  Keeping alphacharacters can help with debugging but isn't strictly necessary.
+
+  Once we're sure nothing really stupid is happening here, we could have a letter followed by unique number.
+ */
 std::string DbusMenuModel::label_to_action_name(std::string label, int numeric)
 {
     std::string ret = label;
@@ -151,8 +155,6 @@ std::string DbusMenuModel::label_to_action_name(std::string label, int numeric)
     for (int i = 0; i < ret.size(); i++) {
         if (ret[i] < 'a'
             || ret[i] > 'z') {
-            // erase function to erase
-            // the character
             ret.erase(i, 1);
             i--;
         }

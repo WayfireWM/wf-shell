@@ -211,65 +211,7 @@ void StatusNotifierItem::init_menu()
         auto action_group = menu->get_action_group();
         insert_action_group(action_prefix, action_group);
     });
-    //auto action_group = menu->get_action_group();
     set_menu_model(menu);
-
-    // DbusMenu-glib documents say we should connect to the signal "layout-updated" or possibly "root-changed"
-    // But for the life of me I cannot work out how right now.
-
-    // Below is snippets that absolutely didn not work out as planned
-
-/*
-        //Partial success but no way to cast to Gio::Menu or MenuModel....
-
-    client = dbusmenu_client_new(dbus_name.c_str(), menu_path.c_str());
-    auto gclient = G_OBJECT(client);
-    //gclient->signal_connect(DBUSMENU_CLIENT_SIGNAL_LAYOUT_UPDATED, [] () {}, NULL);
-    //gclient->connect(DBUSMENU_CLIENT_SIGNAL_LAYOUT_UPDATED, [] {}, NULL);
-
-    menu_handler_id =
-    g_signal_connect(
-        gclient,
-        DBUSMENU_CLIENT_SIGNAL_LAYOUT_UPDATED,
-        G_CALLBACK(menu_updated),
-        this
-    );
-*/
-
-    /*
-        //Grab-and-run fails because Dbusmenu MenuItem is not a GMenuItem or GMenuModel
-
-    DbusmenuMenuitem *menuitem = dbusmenu_client_get_root(client);
-    auto menu = Glib::wrap(G_MENU_MODEL(menuitem));
-    if (menu == nullptr)
-    {
-        std::cout << "Systray " << menu_path << " has a menu but is NULL" << std::endl;
-    }
-    set_menu_model(menu);
-    */
-
-    /*
-        // Watch for changes and try grab the model off dbus
-        // I strongly suspect this fails because Gio::DbusMenuModel is
-        // nothing to do with the `com.canonical.dbusmenu` standard
-
-    Gio::DBus::Proxy::create_for_bus(
-        Gio::DBus::BusType::SESSION, dbus_name, menu_path, "com.canonical.dbusmenu",
-        [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
-    {
-        menu_proxy = Gio::DBus::Proxy::create_for_bus_finish(result);
-        connection = item_proxy->get_connection();
-        menu_proxy->signal_signal().connect(
-            [this] (const Glib::ustring & sender, const Glib::ustring & signal,
-                    const Glib::VariantContainerBase & params) { handle_menu_signal(signal, params); });
-        //init_widget();
-        std::cout << "Menu time... " << menu_path << std::endl;
-        auto bdmm = Gio::DBus::MenuModel::get(connection, dbus_name, menu_path);
-        if(bdmm == nullptr){
-            std::cout << "Feck" << std::endl;
-        }
-        set_menu_model(bdmm);
-    });*/
 }
 
 
