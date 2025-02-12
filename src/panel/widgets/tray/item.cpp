@@ -5,8 +5,12 @@
 #include <gtkmm/icontheme.h>
 #include <gtkmm/tooltip.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <glib.h>
+#include <glib-object.h>
+#include <giomm/dbusmenumodel.h>
 
-#include <libdbusmenu-glib/dbusmenu-glib.h>
+#include <iostream>
+#include <cassert>
 
 static std::pair<Glib::ustring, Glib::ustring> name_and_obj_path(const Glib::ustring & service)
 {
@@ -49,6 +53,7 @@ static Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(IconData && pixbuf_data)
 StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
 {
     set_child(icon);
+    menu = std::shared_ptr<DbusMenuModel>(new DbusMenuModel());
 
     const auto & [name, path] = name_and_obj_path(service);
     dbus_name = name;
@@ -64,6 +69,10 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
     });
 }
 
+StatusNotifierItem::~StatusNotifierItem(){
+
+}
+
 void StatusNotifierItem::init_widget()
 {
     update_icon();
@@ -74,120 +83,67 @@ void StatusNotifierItem::init_widget()
     style->add_class("tray-button");
     style->add_class("flat");
 
-    signal_clicked().connect([this] () -> void
-    {
+    auto scroll_gesture = Gtk::EventControllerScroll::create();
+    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::BOTH_AXES);
+    scroll_gesture->signal_scroll().connect([=](double dx, double dy)->bool {
+        using ScrollParams = Glib::Variant<std::tuple<int, Glib::ustring>>;
+        item_proxy->call("Scroll", ScrollParams::create({dx, "horizontal"}));
+        item_proxy->call("Scroll", ScrollParams::create({dy, "vertical"}));
+        return true;
+    },true);
+
+    auto click_gesture = Gtk::GestureClick::create();
+    click_gesture->set_button(0);
+    click_gesture->signal_pressed().connect([=](int count, double x, double y){
+        int butt = click_gesture->get_current_button();
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({0, 0});
-        if (get_item_property<bool>("ItemIsMenu", true))
-        {
-            if (menu)
+
+        const int primary_click = 1;
+        const int secondary_click = menu_on_middle_click ? 2 : 3;
+        const int tertiary_click = menu_on_middle_click ? 3 : 2;
+        if(butt == primary_click){
+            if (get_item_property<bool>("ItemIsMenu", true))
             {
-                /* Under all tests I tried this places sensibly */
-                //menu->popup_at_widget(&icon, Gdk::Gravity::NORTH_EAST, Gdk::Gravity::SOUTH_EAST, NULL);
-                // TODO Fix popup
+                if(get_menu_model())
+                {
+                    set_active(true);
+                } else
+                {
+                    item_proxy->call("ContextMenu", ev_coords);
+                }
             } else
             {
+                item_proxy->call("Activate", ev_coords);
+            }
+        } else if (butt == secondary_click)
+        {
+            if (get_menu_model())
+            {
+                set_active(true);
+            } else {
                 item_proxy->call("ContextMenu", ev_coords);
             }
-        } else
-        {
-            item_proxy->call("Activate", ev_coords);
-        }
-    });
-
-    /*
-    signal_button_press_event().connect([this] (GdkEventButton *ev) -> bool
-    {
-        if (ev->button == GDK_BUTTON_PRIMARY)
-        {
-            return true;
-        }
-
-        const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({ev->x, ev->y});
-        const guint menu_btn = menu_on_middle_click ? GDK_BUTTON_MIDDLE : GDK_BUTTON_SECONDARY;
-        const guint secondary_activate_btn = menu_on_middle_click ? GDK_BUTTON_SECONDARY : GDK_BUTTON_MIDDLE;
-        if (get_item_property<bool>("ItemIsMenu", true) || (ev->button == menu_btn))
-        {
-            if (menu)
-            {
-                menu->popup_at_widget(&icon, Gdk::GRAVITY_NORTH_EAST, Gdk::GRAVITY_SOUTH_EAST, NULL);
-            } else
-            {
-                item_proxy->call("ContextMenu", ev_coords);
-            }
-        } else if (ev->button == secondary_activate_btn)
+        } else if (butt == tertiary_click)
         {
             item_proxy->call("SecondaryActivate", ev_coords);
+        } else
+        {
+            // Don't claim other buttons
+            click_gesture->set_state(Gtk::EventSequenceState::DENIED);
+            return;
         }
-
-        return true;
+        click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+        return;
     });
-    */
-    // TODO Gestures for tray
 
-    //add_events(Gdk::SCROLL_MASK | Gdk::SMOOTH_SCROLL_MASK);
-
-    /*
-    signal_scroll_event().connect([this] (GdkEventScroll *ev)
-    {
-        int dx = 0;
-        int dy = 0;
-        switch (ev->direction)
-        {
-          case GDK_SCROLL_UP:
-            dy = -1;
-            break;
-
-          case GDK_SCROLL_DOWN:
-            dy = 1;
-            break;
-
-          case GDK_SCROLL_LEFT:
-            dx = -1;
-            break;
-
-          case GDK_SCROLL_RIGHT:
-            dx = 1;
-            break;
-
-          case GDK_SCROLL_SMOOTH:
-            distance_scrolled_x += ev->delta_x;
-            distance_scrolled_y += ev->delta_y;
-            if (std::abs(distance_scrolled_x) >= smooth_scolling_threshold)
-            {
-                dx = std::lround(distance_scrolled_x);
-                distance_scrolled_x = 0;
-            }
-
-            if (std::abs(distance_scrolled_y) >= smooth_scolling_threshold)
-            {
-                dy = std::lround(distance_scrolled_y);
-                distance_scrolled_y = 0;
-            }
-
-            break;
-        }
-
-        using ScrollParams = Glib::Variant<std::tuple<int, Glib::ustring>>;
-        if (dx != 0)
-        {
-            item_proxy->call("Scroll", ScrollParams::create({dx, "hozirontal"}));
-        }
-
-        if (dy != 0)
-        {
-            item_proxy->call("Scroll", ScrollParams::create({dy, "vertical"}));
-        }
-
-        return true;
-    });
-    */
-    // TODO Scroll gestures for tray
+    add_controller(scroll_gesture);
+    add_controller(click_gesture);
 }
 
 void StatusNotifierItem::setup_tooltip()
 {
     set_has_tooltip();
-    /*signal_query_tooltip().connect([this] (int, int, bool, const std::shared_ptr<Gtk::Tooltip> & tooltip)
+    signal_query_tooltip().connect([this] (int, int, bool, const std::shared_ptr<Gtk::Tooltip> & tooltip)
     {
         auto [tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
             get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
@@ -199,17 +155,17 @@ void StatusNotifierItem::setup_tooltip()
             get_item_property<Glib::ustring>("Title");
 
         const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
-
+        bool icon_shown = false;
         if (pixbuf) {
             tooltip->set_icon(pixbuf);
+            icon_shown = true;
         }else{
-            tooltip->set_icon_from_icon_name(tooltip_icon_name);
+            //tooltip->set_icon_from_name(tooltip_icon_name);
         }
 
         tooltip->set_markup(tooltip_label_text);
         return icon_shown || !tooltip_label_text.empty();
-    });*/
-    // TODO Fix tray tooltip
+    },true);
 }
 
 void StatusNotifierItem::update_icon()
@@ -239,28 +195,88 @@ void StatusNotifierItem::update_icon()
 
 void StatusNotifierItem::init_menu()
 {
-    const auto menu_path = get_item_property<Glib::DBusObjectPathString>("Menu");
+    menu_path = get_item_property<Glib::DBusObjectPathString>("Menu");
+
+    std::cout << "Systray " << dbus_name << " " <<menu_path << std::endl;
     if (menu_path.empty())
     {
+        std::cout << "Systray "<< dbus_name << " has no menu" << std::endl;
         return;
     }
+    auto action_prefix = dbus_name_as_prefix();
 
-    /*DbusmenuMenuItem* mi = dbusmenu_menuitem_new_with_id()
+    menu->connect(dbus_name, menu_path, action_prefix);
+    menu->signal_action_group().connect([=] () {
+        std::cout << "New Action group for " << dbus_name<< " " << action_prefix << std::endl;
+        auto action_group = menu->get_action_group();
+        insert_action_group(action_prefix, action_group);
+    });
+    //auto action_group = menu->get_action_group();
+    set_menu_model(menu);
 
-    auto *raw_menu = dbusmenu_gmenu_new((gchar*)dbus_name.data(), (gchar*)menu_path.data());
-    if (raw_menu == nullptr)
+    // DbusMenu-glib documents say we should connect to the signal "layout-updated" or possibly "root-changed"
+    // But for the life of me I cannot work out how right now.
+
+    // Below is snippets that absolutely didn not work out as planned
+
+/*
+        //Partial success but no way to cast to Gio::Menu or MenuModel....
+
+    client = dbusmenu_client_new(dbus_name.c_str(), menu_path.c_str());
+    auto gclient = G_OBJECT(client);
+    //gclient->signal_connect(DBUSMENU_CLIENT_SIGNAL_LAYOUT_UPDATED, [] () {}, NULL);
+    //gclient->connect(DBUSMENU_CLIENT_SIGNAL_LAYOUT_UPDATED, [] {}, NULL);
+
+    menu_handler_id =
+    g_signal_connect(
+        gclient,
+        DBUSMENU_CLIENT_SIGNAL_LAYOUT_UPDATED,
+        G_CALLBACK(menu_updated),
+        this
+    );
+*/
+
+    /*
+        //Grab-and-run fails because Dbusmenu MenuItem is not a GMenuItem or GMenuModel
+
+    DbusmenuMenuitem *menuitem = dbusmenu_client_get_root(client);
+    auto menu = Glib::wrap(G_MENU_MODEL(menuitem));
+    if (menu == nullptr)
     {
-        return;
+        std::cout << "Systray " << menu_path << " has a menu but is NULL" << std::endl;
     }
+    set_menu_model(menu);
+    */
 
-    menu = std::move(*Glib::wrap(GTK_MENU(raw_menu)));
-    menu->attach_to_widget(*this);*/
+    /*
+        // Watch for changes and try grab the model off dbus
+        // I strongly suspect this fails because Gio::DbusMenuModel is
+        // nothing to do with the `com.canonical.dbusmenu` standard
+
+    Gio::DBus::Proxy::create_for_bus(
+        Gio::DBus::BusType::SESSION, dbus_name, menu_path, "com.canonical.dbusmenu",
+        [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
+    {
+        menu_proxy = Gio::DBus::Proxy::create_for_bus_finish(result);
+        connection = item_proxy->get_connection();
+        menu_proxy->signal_signal().connect(
+            [this] (const Glib::ustring & sender, const Glib::ustring & signal,
+                    const Glib::VariantContainerBase & params) { handle_menu_signal(signal, params); });
+        //init_widget();
+        std::cout << "Menu time... " << menu_path << std::endl;
+        auto bdmm = Gio::DBus::MenuModel::get(connection, dbus_name, menu_path);
+        if(bdmm == nullptr){
+            std::cout << "Feck" << std::endl;
+        }
+        set_menu_model(bdmm);
+    });*/
 }
+
+
 
 void StatusNotifierItem::handle_signal(const Glib::ustring & signal,
     const Glib::VariantContainerBase & params)
 {
-    /*
     if (signal.size() < 3)
     {
         return;
@@ -284,13 +300,12 @@ void StatusNotifierItem::handle_signal(const Glib::ustring & signal,
         item_proxy->set_cached_property(property, status);
         update_icon();
     }
-        */
 }
 
+
 void StatusNotifierItem::fetch_property(const Glib::ustring & property_name,
-    const sigc::slot<void> & callback)
+    const sigc::slot<void()> & callback)
 {
-    /*
     item_proxy->call(
         "org.freedesktop.DBus.Properties.Get",
         [this, property_name, callback] (const Glib::RefPtr<Gio::AsyncResult> & res)
@@ -307,5 +322,34 @@ void StatusNotifierItem::fetch_property(const Glib::ustring & property_name,
     },
         Glib::Variant<std::tuple<Glib::ustring, Glib::ustring>>::create({"org.kde.StatusNotifierItem",
             property_name}));
-            */
+
+}
+
+std::string StatusNotifierItem::get_unique_name(){
+    std::stringstream ss;
+    ss << dbus_name << "_" << menu_path;
+    return ss.str();
+}
+
+
+/*
+  DBUS names are in the format of :1.61
+  I have no idea what this means, I frankly don't care, but I need a way to generate an acceptable action group name from this
+  such that it is idempotent
+ */
+
+const std::string CHARS_IN= ":0123456789.";
+const std::string CHARS_OUT="zabcdefghijk";
+std::string StatusNotifierItem::dbus_name_as_prefix(){
+    std::unordered_map<char, char> map;
+    for (int i = 0; i < CHARS_IN.length(); i++) {
+        map[CHARS_IN[i]] = CHARS_OUT[i];
+    }
+    std::stringstream ss;
+    for(int i = 0; i < dbus_name.length(); i ++ )
+    {
+        ss << map[dbus_name [i]];
+    }
+
+    return ss.str();
 }
