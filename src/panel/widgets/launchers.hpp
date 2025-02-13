@@ -14,7 +14,6 @@ struct WfLauncherButton
     Gtk::Image m_icon;
     Gtk::Button button;
     Glib::RefPtr<Gio::DesktopAppInfo> app_info;
-    WfOption<int> icon_size{"panel/launchers_size"};
 
     WfLauncherButton();
     WfLauncherButton(const WfLauncherButton& other) = delete;

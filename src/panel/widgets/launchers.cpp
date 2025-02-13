@@ -52,7 +52,6 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
     button.signal_clicked().connect([=] () { launch(); });
     button.property_scale_factor().signal_changed()
         .connect([=] () {update_icon(); });
-    icon_size.set_callback([=] () { update_icon(); });
 
     update_icon();
 
@@ -159,7 +158,6 @@ void WayfireLaunchers::handle_config_reload()
     for(auto child : box.get_children()){
         box.remove(*child);
     }
-    box.set_spacing(WfOption<int>{"panel/launchers_spacing"});
 
     launchers = get_launchers_from_config();
     for (auto& l : launchers)

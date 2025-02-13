@@ -76,7 +76,6 @@ StatusNotifierItem::~StatusNotifierItem(){
 void StatusNotifierItem::init_widget()
 {
     update_icon();
-    icon_size.set_callback([this] { update_icon(); });
     setup_tooltip();
     init_menu();
     auto style = get_style_context();
@@ -184,12 +183,12 @@ void StatusNotifierItem::update_icon()
         get_item_property<Glib::ustring>("Status") == "NeedsAttention" ? "AttentionIcon" : "Icon";
     const auto icon_name   = get_item_property<Glib::ustring>(icon_type_name + "Name");
     const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
-    if (icon_theme->lookup_icon(icon_name, icon_size))
+    if (pixmap_data)
+    {
+        icon.set(pixmap_data);
+    } else
     {
         icon.set_from_icon_name(icon_name);
-    } else if (pixmap_data)
-    {
-        icon.set(pixmap_data->scale_simple(icon_size, icon_size, Gdk::InterpType::BILINEAR));
     }
 }
 

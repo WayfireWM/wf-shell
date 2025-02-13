@@ -23,7 +23,6 @@ class WayfireBatteryInfo : public WayfireWidget
 {
     WfOption<std::string> status_opt{"panel/battery_status"};
     WfOption<std::string> font_opt{"panel/battery_font"};
-    WfOption<int> size_opt{"panel/battery_icon_size"};
     WfOption<bool> invert_opt{"panel/battery_icon_invert"};
 
     Gtk::Button button;

@@ -808,7 +808,6 @@ void WayfireMenu::init(Gtk::Box *container)
     output->toggle_menu_signal().connect(sigc::mem_fun(*this, &WayfireMenu::toggle_menu));
 
     menu_icon.set_callback([=] () { update_icon(); });
-    menu_size.set_callback([=] () { update_icon(); });
     menu_min_category_width.set_callback([=] () { update_category_width(); });
     menu_min_content_height.set_callback([=] () { update_content_height(); });
     menu_min_content_width.set_callback([=] () { update_content_width(); });

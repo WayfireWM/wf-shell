@@ -167,7 +167,6 @@ class WayfireMenu : public WayfireWidget
     WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
     WfOption<std::string> panel_position{"panel/position"};
     WfOption<std::string> menu_icon{"panel/menu_icon"};
-    WfOption<int> menu_size{"panel/launchers_size"};
     WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     WfOption<bool> menu_show_categories{"panel/menu_show_categories"};

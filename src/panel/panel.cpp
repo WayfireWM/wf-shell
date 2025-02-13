@@ -12,6 +12,7 @@
 
 #include <map>
 #include <filesystem>
+#include <css-config.hpp>
 
 #include "panel.hpp"
 #include "../util/gtk-utils.hpp"
@@ -292,6 +293,14 @@ class WayfirePanel::impl
   public:
     impl(WayfireOutput *output) : output(output)
     {
+        // Intentionally leaking feels bad.
+        new CssFromConfigInt("panel/launchers_size", ".menu-button,.launcher{-gtk-icon-size:", "px;}");
+        new CssFromConfigInt("panel/launchers_spacing", ".launcher{padding: 0px ", "px;}");
+        new CssFromConfigInt("panel/battery_icon_size", ".battery image{-gtk-icon-size:", "px;}");
+        new CssFromConfigInt("panel/network_icon_size", ".network{-gtk-icon-size:","px;}");
+        new CssFromConfigInt("panel/volume_icon_size", ".volume{-gtk-icon-size:", "px;}");
+        new CssFromConfigInt("panel/notifications_icon_size", ".notification-center{-gtk-icon-size:", "px;}");
+        new CssFromConfigInt("panel/tray_icon_size", ".tray-button{-gtk-icon-size:", "px;}");
         create_window();
     }
 

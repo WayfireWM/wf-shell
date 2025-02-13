@@ -234,7 +234,6 @@ bool WayfireVolume::scroll(double dx, double dy){
 
 void WayfireVolume::init(Gtk::Box *container)
 {
-    icon_size.set_callback([=] () { update_icon(); });
 
     /* Setup button */
     button = std::make_unique<WayfireMenuButton>("panel");
