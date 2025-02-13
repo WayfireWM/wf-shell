@@ -277,18 +277,18 @@ std::string StatusNotifierItem::get_unique_name(){
 /*
   DBUS names are in the format of :1.61
   I have no idea what this means, I frankly don't care, but I need a way to generate an acceptable action group name from this
-  such that it is idempotent
+  such that it always gets the same unique output for the same input
  */
 
 const std::string CHARS_IN= ":0123456789.";
 const std::string CHARS_OUT="zabcdefghijk";
 std::string StatusNotifierItem::dbus_name_as_prefix(){
     std::unordered_map<char, char> map;
-    for (int i = 0; i < CHARS_IN.length(); i++) {
+    for (int i = 0; i < (int)CHARS_IN.length(); i++) {
         map[CHARS_IN[i]] = CHARS_OUT[i];
     }
     std::stringstream ss;
-    for(int i = 0; i < dbus_name.length(); i ++ )
+    for(int i = 0; i < (int)dbus_name.length(); i ++ )
     {
         ss << map[dbus_name [i]];
     }

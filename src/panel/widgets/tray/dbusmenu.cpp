@@ -97,7 +97,10 @@ int DbusMenuModel::iterate_children(Gio::Menu * parent_menu, DbusmenuMenuitem * 
                 auto item = Gio::MenuItem::create(label, "a");
                 if(icon_name!="")
                 {
-                    item->set_icon(Gio::Icon::create(icon_name));
+                    //item->set_icon(Gio::Icon::create(icon_name));
+                    auto icon = Gio::ThemedIcon::create(icon_name, true);
+
+                    item->set_icon(icon);
                 }
                 if (enabled)
                 {

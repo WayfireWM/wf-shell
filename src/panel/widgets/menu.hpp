@@ -4,14 +4,7 @@
 #include "../widget.hpp"
 #include "wf-popover.hpp"
 #include <giomm/desktopappinfo.h>
-#include <gtkmm/entry.h>
-#include <gtkmm/image.h>
-#include <gtkmm/window.h>
-#include <gtkmm/flowbox.h>
-#include <gtkmm/scrolledwindow.h>
-#include <gtkmm/separator.h>
-#include <gtkmm/label.h>
-#include <gtkmm/button.h>
+#include <gtkmm.h>
 #include <set>
 
 class WayfireMenu;
@@ -57,12 +50,14 @@ class WfMenuMenuItem : public Gtk::FlowBoxChild
     bool operator <(const WfMenuMenuItem& other);
     void set_search_value(uint32_t value);
     uint32_t get_search_value();
+    void on_click();
 
   private:
     WayfireMenu *menu;
     Gtk::Box m_left_pad, m_right_pad;
     Gtk::Box m_padding_box;
     Gtk::Box m_button_box;
+    Gtk::Button m_button;
     Gtk::Box m_list_box;
     Gtk::Image m_image;
     Gtk::Label m_label;
@@ -72,7 +67,6 @@ class WfMenuMenuItem : public Gtk::FlowBoxChild
     uint32_t m_search_value = 0;
 
     AppInfo m_app_info;
-    void on_click();
 };
 
 class WayfireLogoutUIButton
@@ -116,13 +110,12 @@ class WayfireLogoutUI
     void on_cancel_click();
 };
 
-class WayfireMenuInjectionEntry : public Gtk::Entry
-{
-};
 
 class WayfireMenu : public WayfireWidget
 {
     WayfireOutput *output;
+
+    std::string search_contents = "";
 
     Gtk::Box flowbox_container;
     Gtk::Box hbox, hbox_bottom, scroll_pair;
@@ -131,7 +124,9 @@ class WayfireMenu : public WayfireWidget
     Gtk::Box category_box;
     Gtk::Separator separator;
     Gtk::Image main_image;
-    WayfireMenuInjectionEntry search_box;
+    Gtk::Image search_logo;
+    Gtk::Box search_box;
+    Gtk::Label search_label;
     Gtk::FlowBox flowbox;
     Gtk::Button logout_button;
     Gtk::ScrolledWindow app_scrolled_window, category_scrolled_window;
@@ -184,9 +179,9 @@ class WayfireMenu : public WayfireWidget
     void on_logout_click();
     void key_press_search();
     void select_first_flowbox_item();
-    void set_default_to_selection();
 
   public:
+    void arrow_key(Gtk::DirectionType dir);
     void init(Gtk::Box *container) override;
     void populate_menu_items(std::string category);
     void populate_menu_categories();

@@ -38,11 +38,11 @@ class WayfirePanel::impl
     std::unique_ptr<WayfireAutohidingWindow> window;
 
     Gtk::Box content_box;
-    Gtk::Box left_box, right_box;
+    Gtk::Box left_box, center_box, right_box;
 
     using Widget = std::unique_ptr<WayfireWidget>;
     using WidgetContainer = std::vector<Widget>;
-    WidgetContainer left_widgets, right_widgets;
+    WidgetContainer left_widgets, center_widgets, right_widgets;
 
     WayfireOutput *output;
 
@@ -98,12 +98,16 @@ class WayfirePanel::impl
     {
         left_box.get_style_context()->add_class("left");
         right_box.get_style_context()->add_class("right");
+        center_box.get_style_context()->add_class("center");
         content_box.append(left_box);
+        content_box.append(center_box);
         content_box.append(right_box);
 
         content_box.set_hexpand(true);
 
 
+        left_box.set_halign(Gtk::Align::START);
+        center_box.set_halign(Gtk::Align::CENTER);
         right_box.set_halign(Gtk::Align::END);
 
         window->set_child(content_box);
@@ -224,6 +228,9 @@ class WayfirePanel::impl
     {
         const auto lock_sn_watcher = Watcher::Instance();
         const auto lock_notification_daemon = Daemon::Instance();
+        for(auto child : box.get_children()){
+            box.remove(*child);
+        }
         container.clear();
         auto widgets = tokenize(list);
         for (auto widget_name : widgets)
@@ -246,6 +253,7 @@ class WayfirePanel::impl
 
     WfOption<std::string> left_widgets_opt{"panel/widgets_left"};
     WfOption<std::string> right_widgets_opt{"panel/widgets_right"};
+    WfOption<std::string> center_widgets_opt{"panel/widgets_center"};
     void init_widgets()
     {
         left_widgets_opt.set_callback([=] ()
@@ -256,9 +264,29 @@ class WayfirePanel::impl
         {
             reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
         });
+        center_widgets_opt.set_callback([=] ()
+        {
+            reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+
+            if (center_box.get_children().empty())
+            {
+                content_box.set_homogeneous(false);
+            } else
+            {
+                content_box.set_homogeneous(true);
+            }
+        });
 
         reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
         reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
+        reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+        if (center_box.get_children().empty())
+        {
+            content_box.set_homogeneous(false);
+        } else
+        {
+            content_box.set_homogeneous(true);
+        }
     }
 
   public:
@@ -285,6 +313,10 @@ class WayfirePanel::impl
         }
 
         for (auto& w : right_widgets)
+        {
+            w->handle_config_reload();
+        }
+        for (auto& w : center_widgets)
         {
             w->handle_config_reload();
         }

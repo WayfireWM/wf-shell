@@ -280,15 +280,13 @@ void WayfireAutohidingWindow::setup_auto_exclusive_zone()
 
 void WayfireAutohidingWindow::update_auto_exclusive_zone()
 {
-    gtk_layer_auto_exclusive_zone_enable(this->gobj());
-    //int allocated_height = get_allocated_height();
-    //int new_zone_size    = this->auto_exclusive_zone ? allocated_height : 0;
-
-    //if (new_zone_size != this->auto_exclusive_zone_size)
-    //{
-    //    gtk_layer_set_exclusive_zone(this->gobj(), new_zone_size);
-    //    this->auto_exclusive_zone_size = new_zone_size;
-    //}
+    if(this->auto_exclusive_zone)
+    {
+        gtk_layer_auto_exclusive_zone_enable(this->gobj());
+    } else
+    {
+        gtk_layer_set_exclusive_zone(this->gobj(), 0);
+    }
 }
 
 void WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)

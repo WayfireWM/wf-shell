@@ -156,6 +156,9 @@ void WayfireLaunchers::init(Gtk::Box *container)
 
 void WayfireLaunchers::handle_config_reload()
 {
+    for(auto child : box.get_children()){
+        box.remove(*child);
+    }
     box.set_spacing(WfOption<int>{"panel/launchers_spacing"});
 
     launchers = get_launchers_from_config();
