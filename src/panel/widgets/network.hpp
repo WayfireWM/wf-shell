@@ -63,7 +63,6 @@ class WayfireNetworkInfo : public WayfireWidget
 
     bool enabled = true;
     WfOption<std::string> status_opt{"panel/network_status"};
-    WfOption<bool> icon_invert_opt{"panel/network_icon_invert_color"};
     WfOption<bool> status_color_opt{"panel/network_status_use_color"};
     WfOption<std::string> status_font_opt{"panel/network_status_font"};
     WfOption<std::string> click_command_opt{"panel/network_onclick_command"};

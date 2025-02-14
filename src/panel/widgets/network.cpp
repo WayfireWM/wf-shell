@@ -425,6 +425,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     icon.set_valign(Gtk::Align::CENTER);
     icon.property_scale_factor().signal_changed().connect(
         sigc::mem_fun(*this, &WayfireNetworkInfo::update_icon));
+    icon.get_style_context()->add_class("network-icon");
 
     update_active_connection();
     handle_config_reload();

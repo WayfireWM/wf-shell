@@ -233,7 +233,6 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
 
     status_opt.set_callback([=] () { update_details(); });
     font_opt.set_callback([=] () { update_font(); });
-    invert_opt.set_callback([=] () { update_icon(); });
 
     update_details();
     update_font();
