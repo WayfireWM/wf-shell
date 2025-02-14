@@ -30,13 +30,17 @@ class WayfireToplevel::impl
     uint32_t state;
 
     Gtk::MenuButton button;
+    Glib::RefPtr<Gio::SimpleActionGroup> actions;
 
-    Gtk::Button minimize,maximize,close;
-    Gtk::Box menu_box;
+    Glib::RefPtr<Gio::Menu> menu;
+
+    Glib::RefPtr<Gio::MenuItem> minimize,maximize,close;
+    Glib::RefPtr<Gio::SimpleAction> minimize_action, maximize_action, close_action;
+    //Gtk::Box menu_box;
     Gtk::Box button_contents;
     Gtk::Image image;
     Gtk::Label label;
-    Gtk::PopoverMenu menu;
+    //Gtk::PopoverMenu menu;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
     sigc::connection m_drag_timeout;
 
@@ -72,31 +76,29 @@ class WayfireToplevel::impl
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_scale_update));
 
-        minimize.set_label("Minimize");
-        minimize.get_style_context()->add_class("flat");
-        minimize.get_child()->set_halign(Gtk::Align::START);
-        maximize.set_label("Maximize");
-        maximize.get_style_context()->add_class("flat");
-        maximize.get_child()->set_halign(Gtk::Align::START);
-        close.set_label("Close");
-        close.get_style_context()->add_class("flat");
-        close.get_child()->set_halign(Gtk::Align::START);
-        minimize.signal_clicked().connect(
-            sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_minimize));
-        maximize.signal_clicked().connect(
-            sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_maximize));
-        close.signal_clicked().connect(
-            sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_close));
-        menu.set_child(menu_box);
-        menu_box.set_orientation(Gtk::Orientation::VERTICAL);
-        menu_box.append(minimize);
-        menu_box.append(maximize);
-        menu_box.append(close);
-        menu_box.set_margin_top(10);
-        menu_box.set_margin_bottom(10);
-        menu_box.set_margin_start(10);
-        menu_box.set_margin_end(10);
-        button.set_popover(menu);
+        actions = Gio::SimpleActionGroup::create();
+
+        close_action = Gio::SimpleAction::create("close");
+        minimize_action = Gio::SimpleAction::create_bool("minimize", false);
+        maximize_action = Gio::SimpleAction::create_bool("maximize", false);
+        close_action->signal_activate().connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_close));
+        minimize_action->signal_change_state().connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_minimize));
+        maximize_action->signal_change_state().connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_maximize));
+
+        actions->add_action(close_action);
+        actions->add_action(minimize_action);
+        actions->add_action(maximize_action);
+
+        button.insert_action_group("windowaction", actions);
+        menu = Gio::Menu::create();
+        minimize = Gio::MenuItem::create("Minimize", "windowaction.minimize");
+        maximize = Gio::MenuItem::create("Maximize", "windowaction.maximize");
+        close = Gio::MenuItem::create("Close", "windowaction.close");
+
+        menu->append_item(minimize);
+        menu->append_item(maximize);
+        menu->append_item(close);
+        button.set_menu_model(menu);
 
         auto click_gesture = Gtk::GestureClick::create();
         click_gesture->set_button(0);
@@ -115,7 +117,6 @@ class WayfireToplevel::impl
                 }
             });
         button.add_controller(click_gesture);
-
         /*button.drag_dest_set(Gtk::DEST_DEFAULT_MOTION & Gtk::DEST_DEFAULT_HIGHLIGHT, Gdk::DragAction(0));
 
         button.signal_drag_motion().connect(
@@ -254,33 +255,30 @@ class WayfireToplevel::impl
         // TODO Fix DND
     }
 
-    void on_menu_minimize()
+    void on_menu_minimize(Glib::VariantBase vb)
     {
-        menu.popdown();
-        if (state & WF_TOPLEVEL_STATE_MINIMIZED)
+        bool val = g_variant_get_boolean(vb.gobj());
+        if (!val)
         {
             zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
-        } else
-        {
-            zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
+            return;
         }
+        zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
     }
 
-    void on_menu_maximize()
+    void on_menu_maximize(Glib::VariantBase vb)
     {
-        menu.popdown();
-        if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
+        bool val = g_variant_get_boolean(vb.gobj());
+        if (!val)
         {
             zwlr_foreign_toplevel_handle_v1_unset_maximized(handle);
-        } else
-        {
-            zwlr_foreign_toplevel_handle_v1_set_maximized(handle);
+            return;
         }
+        zwlr_foreign_toplevel_handle_v1_set_maximized(handle);
     }
 
-    void on_menu_close()
+    void on_menu_close(Glib::VariantBase vb)
     {
-        menu.popdown();
         zwlr_foreign_toplevel_handle_v1_close(handle);
     }
 
@@ -406,24 +404,6 @@ class WayfireToplevel::impl
         container.remove(button);
     }
 
-    void update_menu_item_text()
-    {
-        if (state & WF_TOPLEVEL_STATE_MINIMIZED)
-        {
-            minimize.set_label("Unminimize");
-        } else
-        {
-            minimize.set_label("Minimize");
-        }
-
-        if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
-        {
-            maximize.set_label("Unmaximize");
-        } else
-        {
-            maximize.set_label("Maximize");
-        }
-    }
 
     void set_classes(uint32_t state)
     {
@@ -440,17 +420,22 @@ class WayfireToplevel::impl
         if (state & WF_TOPLEVEL_STATE_MINIMIZED)
         {
             button.get_style_context()->add_class("minimized");
+            minimize_action->set_state(Glib::wrap(g_variant_new_boolean(true)));
         } else
         {
             button.get_style_context()->remove_class("minimized");
+            minimize_action->set_state(Glib::wrap(g_variant_new_boolean(false)));
+
         }
 
         if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
         {
             button.get_style_context()->add_class("maximized");
+            maximize_action->set_state(Glib::wrap(g_variant_new_boolean(true)));
         } else
         {
             button.get_style_context()->remove_class("maximized");
+            maximize_action->set_state(Glib::wrap(g_variant_new_boolean(false)));
         }
     }
 
@@ -458,7 +443,6 @@ class WayfireToplevel::impl
     {
         this->state = state;
         set_classes(state);
-        update_menu_item_text();
     }
 
     ~impl()
@@ -484,7 +468,6 @@ class WayfireToplevel::impl
             container.append(button);
         }
 
-        update_menu_item_text();
     }
 
     void handle_output_leave(wl_output *output)
