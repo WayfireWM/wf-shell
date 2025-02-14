@@ -61,7 +61,9 @@ class WfMenuMenuItem : public Gtk::FlowBoxChild
     Gtk::Box m_list_box;
     Gtk::Image m_image;
     Gtk::Label m_label;
-    //Gtk::Menu m_action_menu;
+    Glib::RefPtr<Gio::Menu> m_menu;
+    Glib::RefPtr<Gio::SimpleActionGroup> m_actions;
+    Gtk::MenuButton m_extra_actions_button;
 
     bool m_has_actions = false;
     uint32_t m_search_value = 0;

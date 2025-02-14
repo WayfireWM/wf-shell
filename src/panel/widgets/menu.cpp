@@ -76,47 +76,52 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     m_padding_box.append(m_button);
     m_label.set_ellipsize(Pango::EllipsizeMode::END);
     m_button.get_style_context()->add_class("flat");
-
+    m_extra_actions_button.get_style_context()->add_class("flat");
+    m_extra_actions_button.get_style_context()->add_class("app-button-extras");
+    m_extra_actions_button.set_halign(Gtk::Align::END);
+    m_extra_actions_button.set_direction(Gtk::ArrowType::RIGHT);
+    m_menu = Gio::Menu::create();
+    m_actions = Gio::SimpleActionGroup::create();
+    m_extra_actions_button.hide();
 
     if (menu->menu_list)
     {
+        m_padding_box.append(m_extra_actions_button);
         this->set_size_request(menu->menu_min_content_width, 48);
-        if (m_has_actions)
+        for (auto action : app->list_actions())
         {
-            auto action_button = new Gtk::Button();
-            action_button->set_image_from_icon_name("pan-end");
-            action_button->get_style_context()->add_class("flat");
-            action_button->get_style_context()->add_class("app-button-extras");
-            m_padding_box.append(*action_button);
-            action_button->set_halign(Gtk::Align::END);
+            std::stringstream ss;
+            ss << "app." << action;
+            std::string full_action = ss.str();
 
-            action_button->signal_clicked().connect(
-                [this] ()
+            auto menu_item = Gio::MenuItem::create(m_app_info->get_action_name(action), full_action);
+
+            auto action_obj = Gio::SimpleAction::create(action);
+            action_obj->signal_activate().connect(
+                [this, action] (Glib::VariantBase vb)
             {
-                // TODO Context menu
-                //m_action_menu.popup_at_widget(this, Gdk::Gravity::NORTH_EAST, Gdk::Gravity::NORTH_WEST, NULL);
+                m_app_info->launch_action(action);
+                menu->hide_menu();
             });
+            m_menu->append_item(menu_item);
+            m_actions->add_action(action_obj);
+
+            m_extra_actions_button.show();
         }
+        m_extra_actions_button.set_menu_model(m_menu);
+    }else{
     }
-
-    /*for (auto action : app->list_actions())
-    {
-        auto menu_item = new Gtk::MenuItem();
-        menu_item->set_label(m_app_info->get_action_name(action));
-        menu_item->show();
-        menu_item->signal_activate().connect(
-            [this, action] ()
-        {
-            m_app_info->launch_action(action);
-            menu->hide_menu();
-        });
-        m_action_menu.append(*menu_item);
-    }*/
-    // TODO Fix Additional actions menu
-
     set_child(m_padding_box);
     get_style_context()->add_class("app-button");
+    m_extra_actions_button.insert_action_group("app", m_actions);
 
+    auto click_gesture = Gtk::GestureClick::create();
+    click_gesture->set_button(3);
+    click_gesture->signal_pressed().connect([=] (int count, double x, double y) {
+        m_extra_actions_button.activate();
+        click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+    });
+    m_button.add_controller(click_gesture);
     // TODO Right click
 }
 
