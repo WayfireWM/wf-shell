@@ -907,6 +907,7 @@ void WayfireMenu::select_first_flowbox_item()
             {
                 flowbox.select_child(*cast_child);
                 cast_child->grab_focus();
+                app_scrolled_window.set_vadjustment(0);
                 return;
             }
         }
