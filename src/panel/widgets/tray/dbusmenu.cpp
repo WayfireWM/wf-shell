@@ -89,7 +89,7 @@ int DbusMenuModel::iterate_children(Gio::Menu * parent_menu, DbusmenuMenuitem * 
                 toggle_type = dbusmenu_menuitem_property_get(child, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
                 std::cout << " (toggle_type: " << toggle_type << "::" << toggle_state << ")";
             }
-            
+
             bool has_children = dbusmenu_menuitem_get_children(child) != NULL;
             std::cout << std::endl;
 
@@ -121,13 +121,14 @@ int DbusMenuModel::iterate_children(Gio::Menu * parent_menu, DbusmenuMenuitem * 
                     auto action_name = label_to_action_name(label, stupid_count);
                     std::stringstream ss;
                         ss << prefix << "." << action_name;
-                        std::string action_string = ss.str();
-                    item->set_action(action_string);
+                    std::string action_string = ss.str();
 
                     if (toggle_type == DBUSMENU_MENUITEM_TOGGLE_RADIO)
                     {
+                        item->set_action_and_target(action_string, Glib::wrap(g_variant_new_string(action_name.c_str())));
+
                         // Radio action
-                        auto boolean_action = Gio::SimpleAction::create_radio_string(action_string, "");
+                        auto boolean_action = Gio::SimpleAction::create_radio_string(action_name, toggle_state ? action_name : "");
                         boolean_action->signal_activate().connect([=] (Glib::VariantBase vb)
                           {
                             GVariant * data = g_variant_new_int32(0);
@@ -137,8 +138,10 @@ int DbusMenuModel::iterate_children(Gio::Menu * parent_menu, DbusmenuMenuitem * 
 
                     } else if (toggle_type == DBUSMENU_MENUITEM_TOGGLE_CHECK)
                     {
+                        item->set_action_and_target(action_string, Glib::wrap(g_variant_new_boolean(toggle_state)));
+
                         // Checkbox action
-                        auto boolean_action = Gio::SimpleAction::create_bool(action_string, toggle_state);
+                        auto boolean_action = Gio::SimpleAction::create_bool(action_name, toggle_state);
                         boolean_action->signal_activate().connect([=] (Glib::VariantBase vb)
                           {
                             GVariant * data = g_variant_new_int32(0);
@@ -147,6 +150,8 @@ int DbusMenuModel::iterate_children(Gio::Menu * parent_menu, DbusmenuMenuitem * 
                         actions->add_action(boolean_action);
                     } else
                     {
+                        item->set_action(action_string);
+
                         // Plain actions
                         actions->add_action(action_name, [=] ()
                           {
