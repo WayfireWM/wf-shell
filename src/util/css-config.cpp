@@ -46,13 +46,17 @@ option_value{option_name}
 CssFromConfigString::CssFromConfigString(std::string option_name, std::string css_before, std::string css_after):
 option_value{option_name}
 {
+    provider = Gtk::CssProvider::create();
     option_value.set_callback([=] ()
     {
         // TODO When we go up to c++20 use std::format
         std::stringstream ss;
-        //ss << css_before << option_value << css_after;
+        ss << css_before << (std::string)option_value << css_after;
         provider->load_from_string(ss.str());
     });
+    std::stringstream ss;
+    ss << css_before << (std::string)option_value << css_after;
+    provider->load_from_string(ss.str());
 
     add_provider();
 }

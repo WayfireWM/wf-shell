@@ -301,6 +301,7 @@ class WayfirePanel::impl
         new CssFromConfigInt("panel/volume_icon_size", ".volume{-gtk-icon-size:", "px;}");
         new CssFromConfigInt("panel/notifications_icon_size", ".notification-center{-gtk-icon-size:", "px;}");
         new CssFromConfigInt("panel/tray_icon_size", ".tray-button{-gtk-icon-size:", "px;}");
+        new CssFromConfigString("panel/background_color", ".wf-panel{background-color:",";}");
         create_window();
     }
 
