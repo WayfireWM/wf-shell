@@ -122,7 +122,6 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
         click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
     });
     m_button.add_controller(click_gesture);
-    // TODO Right click
 }
 
 void WfMenuMenuItem::on_click()
