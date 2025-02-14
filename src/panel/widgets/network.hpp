@@ -39,6 +39,7 @@ struct WfNetworkConnectionInfo
     virtual std::string get_icon_name(WfConnectionState state) = 0;
     virtual int get_connection_strength() = 0;
     virtual std::string get_ip() = 0;
+    virtual std::string get_strength_str() = 0;
 
     virtual ~WfNetworkConnectionInfo()
     {}

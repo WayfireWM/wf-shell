@@ -118,8 +118,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     {
         set_has_tooltip();
         tooltip_label.show();
-        //signal_query_tooltip().connect(sigc::mem_fun(*this, &WfCommandOutputButtons::CommandOutput::query_tooltip));
-        // TODO Fix custom tooltip code
+        signal_query_tooltip().connect(sigc::mem_fun(*this, &WfCommandOutputButtons::CommandOutput::query_tooltip), false);
     }
 }
 

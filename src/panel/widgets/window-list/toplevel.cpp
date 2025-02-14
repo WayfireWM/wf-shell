@@ -338,7 +338,6 @@ class WayfireToplevel::impl
                 zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
             }
         }
-        // TODO Activated
     }
 
     void on_scale_update()

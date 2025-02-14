@@ -36,6 +36,10 @@ struct NoConnectionInfo : public WfNetworkConnectionInfo
         return 0;
     }
 
+    std::string get_strength_str(){
+        return "none";
+    }
+
     std::string get_ip()
     {
         return "127.0.0.1";
@@ -187,6 +191,11 @@ struct EthernetConnectionInfo : public WfNetworkConnectionInfo
         return "Ethernet - " + connection_name;
     }
 
+    std::string get_strength_str()
+    {
+        return "excellent";
+    }
+
     virtual int get_connection_strength()
     {
         return 100;
@@ -268,15 +277,14 @@ void WayfireNetworkInfo::update_status()
     status.set_text(description);
     button.set_tooltip_text(description);
 
-    /*if (status_color_opt)
+    status.get_style_context()->remove_class("excellent");
+    status.get_style_context()->remove_class("good");
+    status.get_style_context()->remove_class("weak");
+    status.get_style_context()->remove_class("none");
+    if (status_color_opt)
     {
-        status.override_color(get_color_for_pc(info->get_connection_strength()));
-    } else
-    {
-        status.unset_color();
-    }*/
-
-    //TODO Reinstate colour preferences
+        status.get_style_context()->add_class(info->get_strength_str());
+    }
 }
 
 void WayfireNetworkInfo::update_active_connection()

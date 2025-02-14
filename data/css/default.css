@@ -60,3 +60,23 @@
 .wf-panel .command-output.icon-bottom label {
     padding-bottom: 5px;
 }
+
+.excellent {
+    color: #00ff00;
+}
+
+.good {
+    color: #88ff00;
+}
+
+.ok {
+    color: #ffff00;
+}
+
+.weak {
+    color: #ff8800;
+}
+
+.none {
+    color: #ff0000;
+}
