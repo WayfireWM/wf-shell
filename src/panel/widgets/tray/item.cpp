@@ -196,17 +196,14 @@ void StatusNotifierItem::init_menu()
 {
     menu_path = get_item_property<Glib::DBusObjectPathString>("Menu");
 
-    std::cout << "Systray " << dbus_name << " " <<menu_path << std::endl;
     if (menu_path.empty())
     {
-        std::cout << "Systray "<< dbus_name << " has no menu" << std::endl;
         return;
     }
     auto action_prefix = dbus_name_as_prefix();
 
     menu->connect(dbus_name, menu_path, action_prefix);
     menu->signal_action_group().connect([=] () {
-        std::cout << "New Action group for " << dbus_name<< " " << action_prefix << std::endl;
         auto action_group = menu->get_action_group();
         insert_action_group(action_prefix, action_group);
     });

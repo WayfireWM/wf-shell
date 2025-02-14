@@ -169,9 +169,6 @@ int DbusMenuModel::iterate_children(Gio::Menu * parent_menu, DbusmenuMenuitem * 
         item->set_section(current_section);
         current_section = Gio::Menu::create();
         parent_menu->append_item(item);
-    }else
-    {
-        std::cout << "DBUS iterating non-menu-item " << std::endl;
     }
     return stupid_count;
 }

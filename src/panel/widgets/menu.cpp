@@ -309,8 +309,6 @@ void WayfireMenu::populate_menu_categories()
     for (auto child : category_box.get_children())
     {
         category_box.remove(*child);
-        //child->destroy();
-        //gtk_widget_destroy(GTK_WIDGET(child->gobj()));
     }
 
     // Iterate allowed categories in order
@@ -340,7 +338,6 @@ void WayfireMenu::populate_menu_items(std::string category)
     for (auto child : flowbox.get_children())
     {
         flowbox.remove(*child);
-        //gtk_widget_destroy(GTK_WIDGET(child->gobj()));
     }
 
     for (auto app_info : category_list[category]->items)
@@ -567,7 +564,6 @@ void WayfireMenu::update_popover_layout()
                 std::string input = gdk_keyval_name(keyval);
                 if (input.length() == 1){
                     search_contents = search_contents + input;
-                    std::cout << keyval << " SHOULD GO TO TEXT BOX " << gdk_keyval_name(keyval)  << std::endl;
                     on_search_changed();
                     return true;
                 }
@@ -824,7 +820,6 @@ void WayfireMenu::init(Gtk::Box *container)
     auto style = button->get_style_context();
     style->add_class("menu-button");
     style->add_class("flat");
-    //button->get_popover()->set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
     button->get_popover()->get_style_context()->add_class("menu-popover");
     button->get_popover()->signal_show().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown));
@@ -843,8 +838,6 @@ void WayfireMenu::init(Gtk::Box *container)
     logout_button.set_image_from_icon_name("system-shutdown");
     logout_button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_logout_click));
-    //logout_button.property_margin().set_value(20);
-    //logout_button.set_margin_right(35);
     hbox_bottom.append(logout_button);
 
     popover_layout_box.set_orientation(Gtk::Orientation::VERTICAL);
