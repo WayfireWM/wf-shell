@@ -60,3 +60,26 @@ option_value{option_name}
 
     add_provider();
 }
+
+CssFromConfigFont::CssFromConfigFont(std::string option_name, std::string css_before, std::string css_after):
+option_value{option_name}
+{
+    provider = Gtk::CssProvider::create();
+    option_value.set_callback([=] ()
+    {
+        std::stringstream ss;
+        std::string font_name = (std::string)option_value;
+        ss << css_before << "font: " << font_name << ";" <<  css_after;
+        auto css = ss.str();
+        std::cout << css << std::endl;
+        provider->load_from_string(css);
+    });
+
+    std::stringstream ss;
+    std::string font_name = (std::string)option_value;
+    ss << css_before << "font: " << font_name << ";" << css_after;
+    auto css = ss.str();
+    std::cout << css << std::endl;
+    provider->load_from_string(css);
+    add_provider();
+}

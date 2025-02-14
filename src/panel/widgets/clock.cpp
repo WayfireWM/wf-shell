@@ -22,11 +22,6 @@ void WayfireClock::init(Gtk::Box *container)
 
     timeout = Glib::signal_timeout().connect_seconds(
         sigc::mem_fun(*this, &WayfireClock::update_label), 1);
-
-    // initially set font
-    set_font();
-
-    font.set_callback([=] () { set_font(); });
 }
 
 void WayfireClock::on_calendar_shown()
@@ -57,17 +52,6 @@ bool WayfireClock::update_label()
 
     label.set_text(text.substr(i));
     return 1;
-}
-
-void WayfireClock::set_font()
-{
-    if ((std::string)font == "default")
-    {
-        //label.unset_font();
-    } else
-    {
-        //label.override_font(Pango::FontDescription((std::string)font));
-    }
 }
 
 WayfireClock::~WayfireClock()

@@ -111,17 +111,6 @@ static std::string uint_to_time(int64_t time)
     return format_digit(hrs) + ":" + format_digit(min);
 }
 
-void WayfireBatteryInfo::update_font()
-{
-    if ((std::string)font_opt == "default")
-    {
-        //label.unset_font();
-    } else
-    {
-        //label.override_font(Pango::FontDescription((std::string)font_opt));
-    }
-}
-
 void WayfireBatteryInfo::update_details()
 {
     Glib::Variant<guint32> type;
@@ -219,7 +208,6 @@ bool WayfireBatteryInfo::setup_dbus()
 
 // TODO: simplify config loading
 
-static const std::string default_font = "default";
 void WayfireBatteryInfo::init(Gtk::Box *container)
 {
     if (!setup_dbus())
@@ -232,10 +220,8 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
     button.get_style_context()->add_class("flat");
 
     status_opt.set_callback([=] () { update_details(); });
-    font_opt.set_callback([=] () { update_font(); });
 
     update_details();
-    update_font();
     update_icon();
 
     container->append(button);

@@ -23,6 +23,12 @@ class CssFromConfigString : public CssFromConfig{
     CssFromConfigString(std::string config_opt, std::string css_before, std::string css_after);
 };
 
+class CssFromConfigFont : public CssFromConfig{
+    WfOption<std::string> option_value;
+    public:
+    CssFromConfigFont(std::string config_opt, std::string css_before, std::string css_after);
+};
+
 class CssFromConfigInt : public CssFromConfig{
     WfOption<int> option_value;
     public:

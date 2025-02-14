@@ -22,7 +22,6 @@ class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
     WfOption<std::string> status_opt{"panel/battery_status"};
-    WfOption<std::string> font_opt{"panel/battery_font"};
 
     Gtk::Button button;
     Gtk::Label label;
@@ -35,7 +34,6 @@ class WayfireBatteryInfo : public WayfireWidget
 
     bool setup_dbus();
 
-    void update_font();
     void update_icon();
     void update_details();
     void update_state();

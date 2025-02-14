@@ -304,6 +304,12 @@ class WayfirePanel::impl
         new CssFromConfigString("panel/background_color", ".wf-panel{background-color:",";}");
         new CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "");
         new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
+        
+        // People will probably need to update sizes to have a measure
+        // 16px, 1.1rem, 1em .
+        // So on
+        new CssFromConfigFont("panel/battery_font", ".battery {","}");
+        new CssFromConfigFont("panel/clock_font", ".clock {","}");
 
         create_window();
     }

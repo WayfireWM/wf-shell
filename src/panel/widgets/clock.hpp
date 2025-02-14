@@ -14,9 +14,7 @@ class WayfireClock : public WayfireWidget
 
     sigc::connection timeout;
     WfOption<std::string> format{"panel/clock_format"};
-    WfOption<std::string> font{"panel/clock_font"};
 
-    void set_font();
     void on_calendar_shown();
 
   public:
