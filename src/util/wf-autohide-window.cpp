@@ -162,7 +162,7 @@ void WayfireAutohidingWindow::update_position()
     }
 
     /* When the position changes, show an animation from the new edge. */
-    y_position.animate(-this->get_allocated_height()+1, 0);
+    y_position.animate(-this->get_allocated_height(), 0);
     start_draw_timer();
     m_show_uncertain();
     setup_hotspot();
@@ -330,7 +330,7 @@ bool WayfireAutohidingWindow::should_autohide() const
 
 bool WayfireAutohidingWindow::m_do_hide()
 {
-    y_position.animate(-get_allocated_height() + 1);
+    y_position.animate(-get_allocated_height());
     start_draw_timer();
     update_margin();
     return false; // disconnect
