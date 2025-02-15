@@ -48,6 +48,7 @@ class WayfireShellApp
 
     Glib::RefPtr<Gtk::Application> app;
 
+    void output_list_updated(int pos, int rem, int add);
     virtual void add_output(GMonitor monitor);
     virtual void rem_output(GMonitor monitor);
 

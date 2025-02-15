@@ -727,7 +727,7 @@ void set_image_from_icon(Gtk::Image& image,
         {
             icon_name = icon->to_string();
         }
-        image.set_from_icon_name(icon_name);
+        image_set_icon(&image, icon_name);
 
         /* finally found some icon */
         if (icon_name != "unknown")

@@ -48,8 +48,6 @@ class WfToplevelIcon::impl
 
         button.signal_clicked().connect(
             sigc::mem_fun(*this, &WfToplevelIcon::impl::on_clicked));
-        //button.signal_size_allocate().connect(
-        //    sigc::mem_fun(*this, &WfToplevelIcon::impl::on_allocation_changed));
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(*this, &WfToplevelIcon::impl::on_scale_update));
 
@@ -235,14 +233,7 @@ bool set_custom_icon(Gtk::Image& image, std::string app_id, int size, int scale)
     {
         return false;
     }
-
-    auto pb = load_icon_pixbuf_safe(custom_icons[app_id], size * scale);
-    if (!pb.get())
-    {
-        return false;
-    }
-
-    //set_image_pixbuf(image, pb, scale);
+    image_set_icon(&image, custom_icons[app_id]);
     return true;
 }
 
@@ -334,8 +325,7 @@ void set_image_from_icon(Gtk::Image& image,
 
         WfIconLoadOptions options;
         options.user_scale = scale;
-        image.set_from_icon_name(icon_name);
-        //set_image_icon(image, icon_name, size, options);
+        image_set_icon(&image, icon_name);
 
         /* finally found some icon */
         if (icon_name != "unknown")

@@ -20,4 +20,6 @@ struct WfIconLoadOptions
 
 void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff);
 
+void image_set_icon(Gtk::Image * image, std::string path);
+
 #endif /* end of include guard: WF_GTK_UTILS */

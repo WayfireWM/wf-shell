@@ -61,8 +61,7 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
 
 void WfLauncherButton::update_icon()
 {
-    //set_image_icon(m_icon, app_info->get_icon()->to_string(), icon_size);
-    m_icon.set_from_icon_name(app_info->get_icon()->to_string());
+    image_set_icon(&m_icon, app_info->get_icon()->to_string());
 }
 
 void WfLauncherButton::launch()

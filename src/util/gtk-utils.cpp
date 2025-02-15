@@ -61,3 +61,14 @@ void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff)
         }
     }
 }
+
+void image_set_icon(Gtk::Image * image, std::string path)
+{
+    if(path.rfind("/",0) == 0 || path.rfind("~",0)==0)
+    {
+        image->set(path);
+    } else
+    {
+        image->set_from_icon_name(path);
+    }
+}

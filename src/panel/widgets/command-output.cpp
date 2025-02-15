@@ -52,7 +52,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     this->tooltip_command = tooltip_command;
     if (icon_size > 0)
     {
-        icon.set_from_icon_name(icon_name);
+        image_set_icon(&icon, icon_name);
     }
 
     get_style_context()->add_class("command-output");
