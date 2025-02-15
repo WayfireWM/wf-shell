@@ -107,6 +107,52 @@
 }
 
 .wf-dock .minimized image {
-    transition: 200ms;
     -gtk-icon-filter: grayscale(1);
+}
+
+.wf-dock image {
+    animation-name: embiggen;
+    animation-duration: 1000ms;
+    animation-timing-function: linear;
+    animation-iteration-count: 1;
+}
+
+.wf-dock .closing image {
+    animation-name: kromulent;
+    animation-duration: 1000ms;
+    animation-timing-function: linear;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+
+@keyframes embiggen {
+    to {
+        -gtk-icon-size: 64px;
+        -gtk-icon-transform: translateY(0px);
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    from {
+        -gtk-icon-size: 0px;
+        -gtk-icon-transform: translateY(64px);
+        padding-left: 0rem;
+        padding-right: 0rem;
+    }
+}
+
+@keyframes kromulent {
+    from {
+        -gtk-icon-size: 64px;
+        -gtk-icon-transform: translateY(0px);
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    to {
+        -gtk-icon-size: 0px;
+        -gtk-icon-transform: translateY(64px);
+        padding-left: 0rem;
+        padding-right: 0rem;
+    }
 }

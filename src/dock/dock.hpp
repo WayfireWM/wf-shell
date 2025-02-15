@@ -7,6 +7,7 @@
 
 #include "toplevel-icon.hpp"
 #include "wf-shell-app.hpp"
+#include <wf-option-wrap.hpp>
 
 class WfDock
 {

@@ -40,6 +40,7 @@ class BackgroundDrawingArea : public Gtk::DrawingArea
 
   public:
     BackgroundDrawingArea();
+    gboolean update_animation(Glib::RefPtr<Gdk::FrameClock> clock);
     void show_image(Glib::RefPtr<BackgroundImage> image);
     bool do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
 };

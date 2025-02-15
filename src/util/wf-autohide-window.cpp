@@ -460,21 +460,6 @@ void WayfireAutohidingWindow::setup_autohide()
     this->set_auto_exclusive_zone(!(output->output && autohide_opt));
     this->update_autohide();
 
-    /*this->signal_size_allocate().connect_notify(
-        [=] (Gtk::Allocation&)
-    {
-        // std::cerr << "set_auto_exclusive_zone: " << this->auto_exclusive_zone << std::endl;
-        this->update_auto_exclusive_zone();
-
-        // We have to check here as well, otherwise it enables hotspot when it shouldn't
-        if (!output->output || !(output->output && autohide_opt))
-        {
-            return;
-        }
-
-        this->setup_hotspot();
-    });*/
-    // TODO Fix exclusion zone on autohide
     this->update_auto_exclusive_zone();
 }
 

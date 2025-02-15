@@ -1,10 +1,7 @@
 #include <wordexp.h>
 #include <glibmm/main.h>
-#include <gtkmm/drawingarea.h>
-#include <gtkmm/window.h>
-#include <gtkmm/image.h>
-#include <gdkmm/pixbuf.h>
-#include <gdkmm/general.h>
+#include <gtkmm.h>
+#include <gdkmm.h>
 #include <gdk/wayland/gdkwayland.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
@@ -108,11 +105,15 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
 
     fade.animate(0.0, 1.0);
 
-    Glib::signal_timeout().connect([=] ()
-    {
-        this->queue_draw();
-        return fade.running();
-    }, 16);
+    // Called shortly before vsync/render to see if we need to register a draw
+    add_tick_callback(sigc::mem_fun(*this, &BackgroundDrawingArea::update_animation));
+}
+
+gboolean BackgroundDrawingArea::update_animation(Glib::RefPtr<Gdk::FrameClock> frame_clock)
+{
+    this->queue_draw();
+    // Once we've finished fading, stop this callback
+    return fade.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 
 bool BackgroundDrawingArea::do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height)

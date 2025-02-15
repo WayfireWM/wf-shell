@@ -29,6 +29,7 @@ class WfToplevelIcon::impl
     wl_output *output;
 
     uint32_t state;
+    bool closing = false;
 
     Gtk::Button button;
     Gtk::Image image;
@@ -48,8 +49,6 @@ class WfToplevelIcon::impl
 
         button.signal_clicked().connect(
             sigc::mem_fun(*this, &WfToplevelIcon::impl::on_clicked));
-        button.property_scale_factor().signal_changed()
-            .connect(sigc::mem_fun(*this, &WfToplevelIcon::impl::on_scale_update));
 
         auto dock = WfDockApp::get().dock_for_wl_output(output);
         assert(dock); // ToplevelIcon is created only for existing outputs
@@ -58,6 +57,7 @@ class WfToplevelIcon::impl
 
     void on_clicked()
     {
+        if (closing) return;
         if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
         {
             auto gseat = Gdk::Display::get_default()->get_default_seat();
@@ -76,18 +76,9 @@ class WfToplevelIcon::impl
         }
     }
 
-    void on_allocation_changed(Gtk::Allocation& alloc)
-    {
-        send_rectangle_hint();
-    }
-
-    void on_scale_update()
-    {
-        set_app_id(app_id);
-    }
-
     void set_app_id(std::string app_id)
     {
+        if (closing) return;
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image,
             app_id,
@@ -97,6 +88,7 @@ class WfToplevelIcon::impl
 
     void send_rectangle_hint()
     {
+        if (closing) return;
         Gtk::Widget *widget = &this->button;
 
         int x = 0, y = 0;
@@ -123,12 +115,19 @@ class WfToplevelIcon::impl
 
     void set_title(std::string title)
     {
+        if (closing) return;
         button.set_tooltip_text(title);
+    }
+
+    void close()
+    {
+        button.get_style_context()->add_class("closing");
+        closing = true;
     }
 
     void set_state(uint32_t state)
     {
-
+        if (closing) return;
         bool was_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
         this->state = state;
         bool is_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
@@ -188,6 +187,11 @@ void WfToplevelIcon::set_app_id(std::string app_id)
 void WfToplevelIcon::set_state(uint32_t state)
 {
     return pimpl->set_state(state);
+}
+
+void WfToplevelIcon::close()
+{
+    return pimpl->close();
 }
 
 /* Icon loading functions */
