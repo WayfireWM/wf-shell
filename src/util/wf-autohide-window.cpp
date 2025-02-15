@@ -4,6 +4,7 @@
 #include <gtk4-layer-shell.h>
 #include <wf-shell-app.hpp>
 #include <gdk/wayland/gdkwayland.h>
+#include <gtkmm.h>
 
 #include <glibmm.h>
 #include <iostream>
@@ -29,20 +30,24 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     this->position.set_callback([=] () { this->update_position(); });
     this->update_position();
 
-    /*this->signal_draw().connect_notify(
-        [=] (const Cairo::RefPtr<Cairo::Context>&) { update_margin(); });
-        */
-    // TODO Something else here
-
-    /*this->signal_focus_out_event().connect_notify(
-        [=] (const GdkEventFocus*)
-    {
-        if (this->active_button)
+    auto pointer_gesture = Gtk::EventControllerMotion::create();
+    pointer_gesture->signal_enter().connect([=] (double x, double y) {
+        if (this->pending_hide.connected())
         {
-            unset_active_popover(*this->active_button);
+            this->pending_hide.disconnect();
         }
-    });*/
-    // TODO Focus out seems to be gone, find a replacement
+        this->input_inside_panel = true;
+        y_position.animate(0);
+        start_draw_timer();
+    });
+    pointer_gesture->signal_leave().connect([=] {
+        this->input_inside_panel = false;
+        if (this->should_autohide())
+        {
+            this->schedule_hide(AUTOHIDE_HIDE_DELAY);
+        }
+    });
+    this->add_controller(pointer_gesture);
 
     this->setup_autohide();
 
@@ -90,10 +95,8 @@ WayfireAutohidingWindow::~WayfireAutohidingWindow()
 
 wl_surface*WayfireAutohidingWindow::get_wl_surface() const
 {
-    // TODO Fix
-    return NULL;
-    //GdkWaylandSurface surface = this->get_surface();
-    //return surface->get_wl_surface();
+    auto wsurf = GDK_WAYLAND_SURFACE(this->get_surface()->gobj());
+    return gdk_wayland_surface_get_wl_surface(wsurf);
 }
 
 /** Verify that position is correct and return a correct position */
@@ -159,11 +162,12 @@ void WayfireAutohidingWindow::update_position()
     }
 
     /* When the position changes, show an animation from the new edge. */
-    y_position.animate(-this->get_allocated_height(), -this->get_allocated_height());
+    y_position.animate(-this->get_allocated_height()+1, 0);
+    start_draw_timer();
     m_show_uncertain();
     setup_hotspot();
 }
-
+  
 struct WayfireAutohidingWindowHotspotCallbacks
 {
     std::function<void()> on_enter;
@@ -326,10 +330,25 @@ bool WayfireAutohidingWindow::should_autohide() const
 
 bool WayfireAutohidingWindow::m_do_hide()
 {
-    y_position.animate(-get_allocated_height());
+    y_position.animate(-get_allocated_height() + 1);
+    start_draw_timer();
     update_margin();
     return false; // disconnect
 }
+
+void WayfireAutohidingWindow::start_draw_timer()
+{
+    add_tick_callback(sigc::mem_fun(*this, &WayfireAutohidingWindow::update_animation));
+}
+
+gboolean WayfireAutohidingWindow::update_animation(Glib::RefPtr<Gdk::FrameClock> frame_clock)
+{
+    update_margin();
+    //this->queue_draw();
+    // Once we've finished fading, stop this callback
+    return y_position.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+}
+
 
 void WayfireAutohidingWindow::schedule_hide(int delay)
 {
@@ -349,7 +368,8 @@ void WayfireAutohidingWindow::schedule_hide(int delay)
 
 bool WayfireAutohidingWindow::m_do_show()
 {
-    y_position.animate(std::fmin(0, y_position + 1), 0);
+    y_position.animate(0);
+    start_draw_timer();
     update_margin();
     return false; // disconnect
 }
@@ -378,10 +398,10 @@ bool WayfireAutohidingWindow::update_margin()
             get_anchor_edge(position), y_position);
         // queue_draw does not work when the panel is hidden
         // so calling wl_surface_commit to make WM show the panel back
-        /*if (get_window())
+        if (get_surface())
         {
             wl_surface_commit(get_wl_surface());
-        }*/
+        }
 
         this->queue_draw();
         return true;
@@ -435,7 +455,6 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
 
     this->active_button->set_has_focus(false);
     this->active_button->set_active(false);
-    this->active_button->get_popover()->popdown();
     this->active_button = nullptr;
     this->popover_hide.disconnect();
 
