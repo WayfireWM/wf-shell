@@ -44,6 +44,7 @@ class WfToplevelIcon::impl
         button.set_child(image);
         button.set_tooltip_text("none");
         button.get_style_context()->add_class("flat");
+        button.get_style_context()->add_class("toplevel-icon");
 
         button.signal_clicked().connect(
             sigc::mem_fun(*this, &WfToplevelIcon::impl::on_clicked));
@@ -117,8 +118,9 @@ class WfToplevelIcon::impl
             return;
         }
 
-        zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
-            dock->get_wl_surface(), x, y, width, height);
+        // TODO Fix rectangle hint
+        //zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
+        //    dock->get_wl_surface(), x, y, width, height);
     }
 
     void set_title(std::string title)
@@ -128,16 +130,35 @@ class WfToplevelIcon::impl
 
     void set_state(uint32_t state)
     {
+
         bool was_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
         this->state = state;
         bool is_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
-
+        bool is_min = state & WF_TOPLEVEL_STATE_MINIMIZED;
+        bool is_max = state & WF_TOPLEVEL_STATE_MAXIMIZED;
+        auto style = this->button.get_style_context();
         if (!was_activated && is_activated)
         {
-            this->button.get_style_context()->remove_class("flat");
+            style->remove_class("flat");
         } else if (was_activated && !is_activated)
         {
-            this->button.get_style_context()->add_class("flat");
+            style->add_class("flat");
+        }
+
+        if(is_min)
+        {
+            style->add_class("minimized");
+        }else
+        {
+            style->remove_class("minimized");
+        }
+
+        if(is_max)
+        {
+            style->add_class("maximized");
+        } else
+        {
+            style->remove_class("maximized");
         }
     }
 

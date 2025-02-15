@@ -36,16 +36,12 @@ class WayfirePanelApp : public WayfireShellApp
     void handle_new_output(WayfireOutput *output) override;
     void handle_output_removed(WayfireOutput *output) override;
     void on_config_reload() override;
-    void on_css_reload() override;
 
   private:
     WayfirePanelApp(int argc, char **argv);
 
-    void clear_css_rules();
-    void add_css_file(std::string file, int priority);
 
     class impl;
-    std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
     std::unique_ptr<impl> priv;
 };
 

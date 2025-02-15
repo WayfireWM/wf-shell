@@ -38,7 +38,7 @@ class WayfirePanel::impl
 {
     std::unique_ptr<WayfireAutohidingWindow> window;
 
-    Gtk::Box content_box;
+    Gtk::CenterBox content_box;
     Gtk::Box left_box, center_box, right_box;
 
     using Widget = std::unique_ptr<WayfireWidget>;
@@ -100,9 +100,9 @@ class WayfirePanel::impl
         left_box.get_style_context()->add_class("left");
         right_box.get_style_context()->add_class("right");
         center_box.get_style_context()->add_class("center");
-        content_box.append(left_box);
-        content_box.append(center_box);
-        content_box.append(right_box);
+        content_box.set_start_widget(left_box);
+        content_box.set_center_widget(center_box);
+        content_box.set_end_widget(right_box);
 
         content_box.set_hexpand(true);
 
@@ -268,26 +268,11 @@ class WayfirePanel::impl
         center_widgets_opt.set_callback([=] ()
         {
             reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
-
-            if (center_box.get_children().empty())
-            {
-                content_box.set_homogeneous(false);
-            } else
-            {
-                content_box.set_homogeneous(true);
-            }
         });
 
         reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
         reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
         reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
-        if (center_box.get_children().empty())
-        {
-            content_box.set_homogeneous(false);
-        } else
-        {
-            content_box.set_homogeneous(true);
-        }
     }
 
   public:
@@ -304,7 +289,7 @@ class WayfirePanel::impl
         new CssFromConfigString("panel/background_color", ".wf-panel{background-color:",";}");
         new CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "");
         new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
-        
+
         // People will probably need to update sizes to have a measure
         // 16px, 1.1rem, 1em .
         // So on
@@ -370,60 +355,6 @@ void WayfirePanelApp::on_config_reload()
     for (auto& p : priv->panels)
     {
         p.second->handle_config_reload();
-    }
-}
-
-void WayfirePanelApp::on_css_reload()
-{
-    clear_css_rules();
-    /* Add user directory */
-    std::string ext(".css");
-    for (auto & p : std::filesystem::directory_iterator(get_css_config_dir()))
-    {
-        if (p.path().extension() == ext)
-        {
-            int priority = GTK_STYLE_PROVIDER_PRIORITY_USER;
-            if (p.path().filename() == "default.css")
-            {
-                priority = GTK_STYLE_PROVIDER_PRIORITY_APPLICATION;
-            }
-
-            add_css_file(p.path().string(), priority);
-        }
-    }
-
-    /* Add one user file */
-    auto custom_css_config = WfOption<std::string>{"panel/css_path"};
-    std::string custom_css = custom_css_config;
-    if (custom_css != "")
-    {
-        add_css_file(custom_css, GTK_STYLE_PROVIDER_PRIORITY_USER);
-    }
-}
-
-void WayfirePanelApp::clear_css_rules()
-{
-    auto display = Gdk::Display::get_default();
-    for (auto css_provider : css_rules)
-    {
-        Gtk::StyleContext::remove_provider_for_display(display, css_provider);
-    }
-
-    css_rules.clear();
-}
-
-void WayfirePanelApp::add_css_file(std::string file, int priority)
-{
-    auto display = Gdk::Display::get_default();
-    if (file != "")
-    {
-        auto css_provider = load_css_from_path(file);
-        if (css_provider)
-        {
-            Gtk::StyleContext::add_provider_for_display(
-                display, css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
-            css_rules.push_back(css_provider);
-        }
     }
 }
 

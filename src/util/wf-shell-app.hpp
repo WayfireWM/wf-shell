@@ -7,6 +7,7 @@
 
 #include <gtkmm/application.h>
 #include <gdkmm/monitor.h>
+#include <gtkmm/cssprovider.h>
 
 #include "wayfire-shell-unstable-v2-client-protocol.h"
 
@@ -36,6 +37,7 @@ class WayfireShellApp
 {
   private:
     std::vector<std::unique_ptr<WayfireOutput>> monitors;
+    std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
 
   protected:
     /** This should be initialized by the subclass in each program which uses
@@ -76,9 +78,10 @@ class WayfireShellApp
 
     virtual void on_config_reload()
     {}
+    void on_css_reload();
+    void clear_css_rules();
+    void add_css_file(std::string file, int priority);
 
-    virtual void on_css_reload()
-    {}
 
     /**
      * WayfireShellApp is a singleton class.

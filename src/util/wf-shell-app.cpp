@@ -7,6 +7,8 @@
 #include <filesystem>
 #include <memory>
 #include <wayfire/config/file.hpp>
+#include <wf-option-wrap.hpp>
+#include <gtk-utils.hpp>
 
 #include <unistd.h>
 
@@ -63,6 +65,60 @@ std::string WayfireShellApp::get_css_config_dir()
     }
 
     return css_directory;
+}
+
+void WayfireShellApp::on_css_reload()
+{
+    clear_css_rules();
+    /* Add user directory */
+    std::string ext(".css");
+    for (auto & p : std::filesystem::directory_iterator(get_css_config_dir()))
+    {
+        if (p.path().extension() == ext)
+        {
+            int priority = GTK_STYLE_PROVIDER_PRIORITY_USER;
+            if (p.path().filename() == "default.css")
+            {
+                priority = GTK_STYLE_PROVIDER_PRIORITY_APPLICATION;
+            }
+
+            add_css_file(p.path().string(), priority);
+        }
+    }
+
+    /* Add one user file */
+    auto custom_css_config = WfOption<std::string>{"panel/css_path"};
+    std::string custom_css = custom_css_config;
+    if (custom_css != "")
+    {
+        add_css_file(custom_css, GTK_STYLE_PROVIDER_PRIORITY_USER);
+    }
+}
+
+void WayfireShellApp::clear_css_rules()
+{
+    auto display = Gdk::Display::get_default();
+    for (auto css_provider : css_rules)
+    {
+        Gtk::StyleContext::remove_provider_for_display(display, css_provider);
+    }
+
+    css_rules.clear();
+}
+
+void WayfireShellApp::add_css_file(std::string file, int priority)
+{
+    auto display = Gdk::Display::get_default();
+    if (file != "")
+    {
+        auto css_provider = load_css_from_path(file);
+        if (css_provider)
+        {
+            Gtk::StyleContext::add_provider_for_display(
+                display, css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
+            css_rules.push_back(css_provider);
+        }
+    }
 }
 
 bool WayfireShellApp::parse_cfgfile(const Glib::ustring & option_name,
