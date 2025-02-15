@@ -251,22 +251,21 @@ void WayfireShellApp::on_activate()
 void WayfireShellApp::output_list_updated(const int pos, const int rem, const int add)
 {
     auto display = Gdk::Display::get_default();
-
-    for (int i = 0; i < monitors.size(); i++)
-    {
-        rem_output(monitors[i]->monitor);
-    }
     auto monitors = display->get_monitors();
-    int num_monitors = monitors->get_n_items();
-    for (int i = 0; i < num_monitors; i++)
+    for (int i = 0; i < add; i++)
     {
-        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i+pos));
         add_output(obj);
     }
 }
 
 void WayfireShellApp::add_output(GMonitor monitor)
 {
+    // Remove self when unplugged
+    monitor->signal_invalidate().connect([=] {
+        rem_output(monitor);
+    });
+    // Add to list
     monitors.push_back(
         std::make_unique<WayfireOutput>(monitor, this->wf_shell_manager));
     handle_new_output(monitors.back().get());

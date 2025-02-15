@@ -53,7 +53,7 @@ static Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(IconData && pixbuf_data)
 StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
 {
     set_child(icon);
-    menu = std::shared_ptr<DbusMenuModel>(new DbusMenuModel());
+    menu = std::make_shared<DbusMenuModel>();
 
     const auto & [name, path] = name_and_obj_path(service);
     dbus_name = name;

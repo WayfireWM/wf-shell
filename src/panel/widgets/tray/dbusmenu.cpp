@@ -6,13 +6,24 @@
 static void menu_updated(DbusmenuMenuitem * item, gpointer user_data)
 {
     DbusMenuModel *menu = (DbusMenuModel*)user_data;
-
-    menu->layout_updated(item);
+    if (menu != nullptr)
+    {
+        menu->layout_updated(item);
+    }
 }
 
 DbusMenuModel::DbusMenuModel()
 {
     actions = Gio::SimpleActionGroup::create();
+}
+
+DbusMenuModel::~DbusMenuModel()
+{
+    if (client)
+    {
+        g_object_unref(client);
+    }
+
 }
 
 type_signal_action_group DbusMenuModel::signal_action_group()

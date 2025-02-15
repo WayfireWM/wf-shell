@@ -23,6 +23,7 @@ class DbusMenuModel : public Gio::Menu
 
   public:
     explicit DbusMenuModel();
+    ~DbusMenuModel();
     void connect(const Glib::ustring & service, const Glib::ustring & menu_path, const Glib::ustring & prefix);
     void layout_updated(DbusmenuMenuitem * item);
     void reconstitute(DbusmenuMenuitem * item);
