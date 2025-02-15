@@ -353,22 +353,13 @@ class WayfireToplevel::impl
 
     void send_rectangle_hint()
     {
-        /*
-        Gtk::Widget *widget = &this->button;
         auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
         if (panel)
         {
-            double x, y;
-            widget->translate_coordinates(panel->get_window(), 0, 0, x, y);
-
-            int width  = button.get_allocated_width();
-            int height = button.get_allocated_height();
+            auto widget_bounds = this->button.compute_bounds(panel->get_window());
             zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
-                panel->get_wl_surface(), x, y, width, height);
+                panel->get_wl_surface(), widget_bounds->get_x(), widget_bounds->get_y(), widget_bounds->get_width(), widget_bounds->get_height());
         }
-        */
-
-        // TODO Rect hint needs fixing
     }
 
     void set_title(std::string title)

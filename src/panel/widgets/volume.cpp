@@ -7,18 +7,6 @@
 
 WayfireVolumeScale::WayfireVolumeScale()
 {
-    /*this->signal_draw().connect_notify(
-        [=] (const Cairo::RefPtr<Cairo::Context>& ctx)
-    {
-        if (this->current_volume.running())
-        {
-            value_changed.block();
-            this->set_value(this->current_volume);
-            value_changed.unblock();
-        }
-    }, true);*/
-   // TODO hook this in elsewhere, ondraw is gone
-
     value_changed = this->signal_value_changed().connect([=] ()
     {
         this->current_volume.animate(this->get_value(), this->get_value());
@@ -127,7 +115,7 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
     if ((flags & VOLUME_FLAG_SHOW_POPOVER) &&
         !button->get_popover()->is_visible())
     {
-        button->get_popover()->popup();
+        //button->get_popover()->popup();
     }
 
     update_icon();
@@ -224,14 +212,6 @@ void WayfireVolume::on_volume_value_changed()
     set_volume(volume_scale.get_target_value());
 }
 
-bool WayfireVolume::scroll(double dx, double dy){
-    set_volume(std::clamp(volume_scale.get_target_value() - dy * max_norm * scroll_sensitivity ,
-        0.0, max_norm));
-
-    check_set_popover_timeout();
-    return true;
-}
-
 void WayfireVolume::init(Gtk::Box *container)
 {
 
@@ -242,7 +222,25 @@ void WayfireVolume::init(Gtk::Box *container)
     style->add_class("flat");
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();
-    scroll_gesture->signal_scroll().connect(sigc::mem_fun(*this, &WayfireVolume::scroll),true);
+    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
+    {
+        int change = 0;
+        if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
+        {
+            // +- number of clicks.
+            change = dy * max_norm * scroll_sensitivity;
+
+        } else
+        {
+            // Number of pixels expected to have scrolled. usually in 100s
+            change = (dy/100.0) * max_norm * scroll_sensitivity;
+        }
+        std::cout << std::clamp(volume_scale.get_target_value(),
+        0.0, max_norm) << " " << change <<  std::endl;
+        set_volume(std::clamp(volume_scale.get_target_value() - change ,
+            0.0, max_norm));
+        return true;
+    },true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     button->add_controller(scroll_gesture);
     button->property_scale_factor().signal_changed().connect(
@@ -253,6 +251,7 @@ void WayfireVolume::init(Gtk::Box *container)
     popover->set_child(volume_scale);
     //popover->set_modal(false);
     popover->get_style_context()->add_class("volume-popover");
+    popover->add_controller(scroll_gesture);
 
     volume_scale.set_draw_value(false);
     volume_scale.set_size_request(300, 0);

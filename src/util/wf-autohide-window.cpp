@@ -167,7 +167,7 @@ void WayfireAutohidingWindow::update_position()
     m_show_uncertain();
     setup_hotspot();
 }
-  
+
 struct WayfireAutohidingWindowHotspotCallbacks
 {
     std::function<void()> on_enter;

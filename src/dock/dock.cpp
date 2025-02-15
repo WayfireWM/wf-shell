@@ -1,4 +1,5 @@
 #include <gtkmm/window.h>
+#include <gdkmm/frameclock.h>
 #include <glibmm/main.h>
 #include <gdk/wayland/gdkwayland.h>
 
@@ -60,20 +61,24 @@ class WfDock::impl
         }
         window->present();
         new CssFromConfigInt("dock/icon_height", ".toplevel-icon {-gtk-icon-size:", "px;}");
-        /*_wl_surface = gdk_wayland_window_get_wl_surface(
-            window->gobj());*/
+        _wl_surface = gdk_wayland_surface_get_wl_surface(
+            window->get_surface()->gobj());
+
+        box.add_tick_callback([=] (Glib::RefPtr<Gdk::FrameClock> fc) {
+            set_clickable_region();
+            return true;
+        });
+
     }
 
     void add_child(Gtk::Widget& widget)
     {
         box.append(widget);
-        set_clickable_region();
     }
 
     void rem_child(Gtk::Widget& widget)
     {
         this->box.remove(widget);
-        set_clickable_region();
     }
 
     wl_surface *get_wl_surface()
@@ -82,7 +87,7 @@ class WfDock::impl
     }
 
     /* Sets the central section as clickable and transparent edges as click-through
-       Should call it for every content change and output resize */
+       Gets called regularly to ensure css size changes all register */
     void set_clickable_region()
     {
         auto surface = window->get_surface();

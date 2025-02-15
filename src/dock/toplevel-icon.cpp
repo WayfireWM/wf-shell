@@ -107,10 +107,8 @@ class WfToplevelIcon::impl
         {
             return;
         }
-
-        // TODO Fix rectangle hint
-        //zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
-        //    dock->get_wl_surface(), x, y, width, height);
+        zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
+            dock->get_wl_surface(), x, y, width, height);
     }
 
     void set_title(std::string title)
