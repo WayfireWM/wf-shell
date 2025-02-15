@@ -9,12 +9,20 @@
 
 class WayfireBackground;
 
+class BackgroundImageAdjustments
+{
+  public:
+  double scale_x=-1, scale_y=-1;
+  double x,y;
+};
+
 class BackgroundImage
 {
   public:
-    double scale;
-    double x, y;
-    Cairo::RefPtr<Cairo::Surface> source;
+    Glib::RefPtr<Gdk::Pixbuf> source;
+    std::string fill_type;
+
+    Glib::RefPtr<BackgroundImageAdjustments> generate_adjustments(int width, int height);
 };
 
 class BackgroundDrawingArea : public Gtk::DrawingArea
@@ -28,12 +36,11 @@ class BackgroundDrawingArea : public Gtk::DrawingArea
      * pbuf is the current image to which we are fading and
      * pbuf2 is the image from which we are fading. x and y
      * are used as offsets when preserve aspect is set. */
-    BackgroundImage to_image, from_image;
+    Glib::RefPtr<BackgroundImage> to_image, from_image;
 
   public:
     BackgroundDrawingArea();
-    void show_image(Glib::RefPtr<Gdk::Pixbuf> image,
-        double offset_x, double offset_y, double image_scale);
+    void show_image(Glib::RefPtr<BackgroundImage> image);
     bool do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
 };
 
@@ -46,9 +53,6 @@ class WayfireBackground
     std::vector<std::string> images;
     Gtk::Window window;
 
-    int scale;
-    double offset_x, offset_y;
-    double image_scale = 1.0;
     bool inhibited     = false;
     uint current_background;
     sigc::connection change_bg_conn;
@@ -58,10 +62,10 @@ class WayfireBackground
     WfOption<bool> background_randomize{"background/randomize"};
     WfOption<std::string> background_fill_mode{"background/fill_mode"};
 
-    Glib::RefPtr<Gdk::Pixbuf> create_from_file_safe(std::string path);
+    Glib::RefPtr<BackgroundImage> create_from_file_safe(std::string path);
     bool background_transition_frame(int timer);
     bool load_images_from_dir(std::string path);
-    bool load_next_background(Glib::RefPtr<Gdk::Pixbuf> & pbuf, std::string & path);
+    Glib::RefPtr<BackgroundImage> load_next_background();
     void reset_background();
     void set_background();
     void reset_cycle_timeout();
