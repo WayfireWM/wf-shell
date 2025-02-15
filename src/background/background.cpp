@@ -117,7 +117,6 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
 
 bool BackgroundDrawingArea::do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height)
 {
-    std::cout << "DRAW" << std::endl;
     if (!to_image)
     {
         return false;
