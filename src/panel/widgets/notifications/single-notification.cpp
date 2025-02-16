@@ -98,14 +98,6 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
         int width;
         int height;
         auto image_pixbuf = notification.hints.image_data;
-        /*Gtk::IconSize::lookup(body_image_size, width, height);
-
-
-        if (image_pixbuf->get_width() > width)
-        {
-            image_pixbuf = image_pixbuf->scale_simple(width,
-                width * image_pixbuf->get_height() / image_pixbuf->get_width(), Gdk::INTERP_BILINEAR);
-        }*/
 
         image.set(image_pixbuf);
     } else if (!notification.hints.image_path.empty())

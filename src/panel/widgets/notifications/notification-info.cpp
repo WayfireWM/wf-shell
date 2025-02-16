@@ -1,6 +1,7 @@
 #include "notification-info.hpp"
 
 #include <gdkmm.h>
+#include <gtkmm.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 namespace
@@ -28,13 +29,6 @@ K getHint(const std::map<std::string, Glib::VariantBase> & map, const std::strin
 
 Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase & variant)
 {
-    /*
-    if (!variant.is_of_type(Glib::VariantType("iiibiiay")))
-    {
-        throw std::invalid_argument("Cannot create pixbuf from variant.");
-    }
-
-    auto iter = Glib::VariantIter(variant);
     gint32 width;
     gint32 height;
     gint32 rowstride;
@@ -54,9 +48,8 @@ Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase & variant)
 
     auto *data_ptr = new auto(std::move(data));
     return Gdk::Pixbuf::create_from_data(data_ptr->data(),
-        Gdk::COLORSPACE_RGB, has_alpha, bits_per_sample, width, height,
+        Gdk::Colorspace::RGB, has_alpha, bits_per_sample, width, height,
         rowstride, [data_ptr] (auto*) { delete data_ptr; });
-*/
 }
 } // namespace
 
@@ -91,7 +84,6 @@ Notification::Hints::Hints(const std::map<std::string, Glib::VariantBase> & map)
 
 Notification::Notification(const Glib::VariantContainerBase & parameters, const Glib::ustring & sender)
 {
-/*
     std::map<std::string, Glib::VariantBase> hints_map;
     extractValues(parameters, app_name, id, app_icon, summary, body, actions, hints_map, expire_time);
     if (id == 0)
@@ -103,5 +95,4 @@ Notification::Notification(const Glib::VariantContainerBase & parameters, const 
 
     additional_info.recv_time = std::time(nullptr);
     additional_info.sender    = sender;
-    */
 }

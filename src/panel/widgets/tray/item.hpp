@@ -10,7 +10,6 @@
 #include <sstream>
 #include <string>
 
-
 #include <optional>
 
 class StatusNotifierItem : public Gtk::MenuButton

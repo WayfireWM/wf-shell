@@ -1,6 +1,7 @@
 #include "notification-center.hpp"
 
 #include <glibmm/main.h>
+#include <gtkmm.h>
 
 #include <gtk-utils.hpp>
 
@@ -20,19 +21,19 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
     popover->get_style_context()->add_class("notification-popover");
 
     vbox.set_valign(Gtk::Align::START);
+    vbox.set_orientation(Gtk::Orientation::VERTICAL);
     scrolled_window.set_child(vbox);
     popover->set_child(scrolled_window);
 
     button->set_tooltip_text("Middle click to toggle DND mode.");
-    /*button->signal_button_press_event().connect_notify([=] (GdkEventButton *ev)
-    {
-        if (ev->button == 2)
-        {
-            dnd_enabled = !dnd_enabled;
-            updateIcon();
-        }
-    });*/
-    // TODO Fix DND
+
+    auto click_gesture = Gtk::GestureClick::create();
+    click_gesture->set_button(2);
+    click_gesture->signal_pressed().connect([=](int count, double x, double y){
+        dnd_enabled = !dnd_enabled;
+        updateIcon();
+    });
+    button->add_controller(click_gesture);
 
     for (const auto & [id, _] : daemon->getNotifications())
     {
