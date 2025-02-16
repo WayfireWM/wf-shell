@@ -59,6 +59,7 @@ class WayfireToplevel::impl
             &toplevel_handle_v1_impl, this);
 
         button.get_style_context()->add_class("window-button");
+        button.get_style_context()->add_class("flat");
         button_contents.append(image);
         button_contents.append(label);
         button_contents.set_halign(Gtk::Align::START);
