@@ -83,29 +83,24 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
             std::string icon_name   = "";
             std::string toggle_type = "";
 
-            std::cout << ">> " << label;
             if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_TYPE))
             {
                 menutype = std::string(dbusmenu_menuitem_property_get(child, DBUSMENU_MENUITEM_PROP_TYPE));
-                std::cout << " (type: " << menutype << ")";
             }
 
             bool enabled = dbusmenu_menuitem_property_get_bool(child, DBUSMENU_MENUITEM_PROP_ENABLED);
             if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_ICON_NAME))
             {
                 icon_name = dbusmenu_menuitem_property_get(child, DBUSMENU_MENUITEM_PROP_ICON_NAME);
-                std::cout << " (icon: " << icon_name << ")";
             }
 
             int toggle_state = dbusmenu_menuitem_property_get_int(child, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE);
             if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE))
             {
                 toggle_type = dbusmenu_menuitem_property_get(child, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
-                std::cout << " (toggle_type: " << toggle_type << "::" << toggle_state << ")";
             }
 
             bool has_children = dbusmenu_menuitem_get_children(child) != NULL;
-            std::cout << std::endl;
 
             /* Some lovely theoretical code here I hope to be able to test...
              *  icons are set, but from what I read they won't be shown in gtk4

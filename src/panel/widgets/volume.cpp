@@ -231,8 +231,6 @@ void WayfireVolume::init(Gtk::Box *container)
             change = (dy / 100.0) * max_norm * scroll_sensitivity;
         }
 
-        std::cout << std::clamp(volume_scale.get_target_value(),
-            0.0, max_norm) << " " << change << std::endl;
         set_volume(std::clamp(volume_scale.get_target_value() - change,
             0.0, max_norm));
         return true;

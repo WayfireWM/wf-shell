@@ -73,7 +73,6 @@ CssFromConfigFont::CssFromConfigFont(std::string option_name, std::string css_be
         std::string font_name = (std::string)option_value;
         ss << css_before << "font: " << font_name << ";" << css_after;
         auto css = ss.str();
-        std::cout << css << std::endl;
         provider->load_from_string(css);
     });
 
@@ -81,7 +80,6 @@ CssFromConfigFont::CssFromConfigFont(std::string option_name, std::string css_be
     std::string font_name = (std::string)option_value;
     ss << css_before << "font: " << font_name << ";" << css_after;
     auto css = ss.str();
-    std::cout << css << std::endl;
     provider->load_from_string(css);
     add_provider();
 }

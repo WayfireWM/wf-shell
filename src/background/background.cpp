@@ -100,7 +100,6 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
 
     from_image = to_image;
     to_image   = next_image;
-    std::cout << fade_duration << std::endl;
     fade = {
         fade_duration,
         wf::animation::smoothing::linear
