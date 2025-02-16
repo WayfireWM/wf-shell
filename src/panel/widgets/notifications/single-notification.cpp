@@ -88,7 +88,6 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
     close_button.get_style_context()->add_class("close");
     close_button.signal_clicked().connect(
         [=] { Daemon::Instance()->closeNotification(notification.id, Daemon::CloseReason::Dismissed); });
-    top_bar.append(close_button);
     top_bar.set_spacing(5);
 
     child.append(top_bar);
@@ -146,9 +145,10 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
             {
                 auto click_gesture = Gtk::GestureClick::create();
                 click_gesture->signal_pressed().connect(
-                    [id = notification.id, action_key] (int count, double x, double y)
+                    [id = notification.id, action_key, click_gesture] (int count, double x, double y)
                 {
                     Daemon::Instance()->invokeAction(id, action_key);
+                    click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
                 });
                 default_action_ev_box.add_controller(click_gesture);
             }
@@ -162,7 +162,9 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
     }
 
     default_action_ev_box.set_child(child);
-    set_child(default_action_ev_box);
+    outer_box.append(default_action_ev_box);
+    outer_box.append(close_button);
+    set_child(outer_box);
     set_transition_type(Gtk::RevealerTransitionType::SLIDE_UP);
 }
 
