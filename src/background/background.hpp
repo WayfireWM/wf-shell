@@ -12,8 +12,8 @@ class WayfireBackground;
 class BackgroundImageAdjustments
 {
   public:
-  double scale_x=-1, scale_y=-1;
-  double x,y;
+    double scale_x = -1, scale_y = -1;
+    double x, y;
 };
 
 class BackgroundImage
@@ -43,7 +43,10 @@ class BackgroundDrawingArea : public Gtk::DrawingArea
     gboolean update_animation(Glib::RefPtr<Gdk::FrameClock> clock);
     void show_image(Glib::RefPtr<BackgroundImage> image);
     bool do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
-    Glib::RefPtr<BackgroundImage> get_current_image() { return to_image; }
+    Glib::RefPtr<BackgroundImage> get_current_image()
+    {
+        return to_image;
+    }
 };
 
 class WayfireBackground
@@ -55,7 +58,7 @@ class WayfireBackground
     std::vector<std::string> images;
     Gtk::Window window;
 
-    bool inhibited     = false;
+    bool inhibited = false;
     uint current_background;
     sigc::connection change_bg_conn;
 

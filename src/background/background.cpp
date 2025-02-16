@@ -20,18 +20,18 @@
 Glib::RefPtr<BackgroundImageAdjustments> BackgroundImage::generate_adjustments(int width, int height)
 {
     // Sanity checks
-    if (width == 0                ||
-        height == 0               ||
-        source == nullptr         ||
-        source->get_width() ==0   ||
-        source->get_height() == 0 )
+    if ((width == 0) ||
+        (height == 0) ||
+        (source == nullptr) ||
+        (source->get_width() == 0) ||
+        (source->get_height() == 0))
     {
         return nullptr;
     }
 
-    double screen_width = (double)width;
+    double screen_width  = (double)width;
     double screen_height = (double)height;
-    double source_width = (double)source->get_width();
+    double source_width  = (double)source->get_width();
     double source_height = (double)source->get_height();
 
     auto adjustment = Glib::RefPtr<BackgroundImageAdjustments>(new BackgroundImageAdjustments());
@@ -44,45 +44,48 @@ Glib::RefPtr<BackgroundImageAdjustments> BackgroundImage::generate_adjustments(i
         adjustment->scale_y = screen_height / source_height;
         adjustment->scale_x = screen_width / source_width;
         return adjustment;
-    }else if (!fill_and_crop_string.compare(fill_type))
+    } else if (!fill_and_crop_string.compare(fill_type))
     {
         double screen_aspect_ratio = screen_width / screen_height;
         double image_aspect_ratio  = source_width / source_height;
-        bool should_fill_width    = (screen_aspect_ratio > image_aspect_ratio);
+        bool should_fill_width     = (screen_aspect_ratio > image_aspect_ratio);
         if (should_fill_width)
         {
             adjustment->scale_x = screen_width / source_width;
             adjustment->scale_y = screen_width / source_width;
-            adjustment->y    = ((screen_height / adjustment->scale_x) - source_height) * 0.5;
-            adjustment->x    = 0.0;
+            adjustment->y = ((screen_height / adjustment->scale_x) - source_height) * 0.5;
+            adjustment->x = 0.0;
         } else
         {
             adjustment->scale_x = screen_height / source_height;
             adjustment->scale_y = screen_height / source_height;
-            adjustment->x    = ((screen_width / adjustment->scale_x) - source_width) * 0.5;
-            adjustment->y    = 0.0;
+            adjustment->x = ((screen_width / adjustment->scale_x) - source_width) * 0.5;
+            adjustment->y = 0.0;
         }
+
         return adjustment;
     } else
     {
         double screen_aspect_ratio = screen_width / screen_height;
         double image_aspect_ratio  = source_width / source_height;
-        bool should_fill_width    = (screen_aspect_ratio > image_aspect_ratio);
+        bool should_fill_width     = (screen_aspect_ratio > image_aspect_ratio);
         if (should_fill_width)
         {
             adjustment->scale_x = screen_height / source_height;
             adjustment->scale_y = screen_height / source_height;
-            adjustment->y    = ((screen_height / adjustment->scale_x) - source_height) * 0.5;
-            adjustment->x    = ((screen_width / adjustment->scale_x) - source_width) * 0.5;
+            adjustment->y = ((screen_height / adjustment->scale_x) - source_height) * 0.5;
+            adjustment->x = ((screen_width / adjustment->scale_x) - source_width) * 0.5;
         } else
         {
             adjustment->scale_x = screen_width / source_width;
             adjustment->scale_y = screen_width / source_width;
-            adjustment->x    = ((screen_width / adjustment->scale_x) - source_width) * 0.5;
-            adjustment->y    = ((screen_height / adjustment->scale_x) - source_height) * 0.5;
+            adjustment->x = ((screen_width / adjustment->scale_x) - source_width) * 0.5;
+            adjustment->y = ((screen_height / adjustment->scale_x) - source_height) * 0.5;
         }
+
         return adjustment;
     }
+
     return nullptr;
 }
 
@@ -90,13 +93,13 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
 {
     if (!next_image)
     {
-        to_image = nullptr;
+        to_image   = nullptr;
         from_image = nullptr;
         return;
     }
 
     from_image = to_image;
-    to_image = next_image;
+    to_image   = next_image;
     std::cout << fade_duration << std::endl;
     fade = {
         fade_duration,
@@ -128,6 +131,7 @@ bool BackgroundDrawingArea::do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int
     {
         return false;
     }
+
     cr->save();
     cr->scale(to_adjustments->scale_x, to_adjustments->scale_y);
     gdk_cairo_set_source_pixbuf(cr->cobj(), to_image->source->gobj(), to_adjustments->x, to_adjustments->y);
@@ -137,14 +141,17 @@ bool BackgroundDrawingArea::do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int
     {
         return false;
     }
+
     auto from_adjustments = from_image->generate_adjustments(width, height);
     if (from_adjustments == nullptr)
     {
         return false;
     }
+
     cr->save();
     cr->scale(from_adjustments->scale_x, from_adjustments->scale_y);
-    gdk_cairo_set_source_pixbuf(cr->cobj(), from_image->source->gobj(), from_adjustments->x, from_adjustments->y);
+    gdk_cairo_set_source_pixbuf(cr->cobj(),
+        from_image->source->gobj(), from_adjustments->x, from_adjustments->y);
     cr->paint_with_alpha(1.0 - fade);
     cr->restore();
     return false;
@@ -152,7 +159,10 @@ bool BackgroundDrawingArea::do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int
 
 BackgroundDrawingArea::BackgroundDrawingArea()
 {
-    set_draw_func([=] (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) { this->do_draw(cr,width,height) ;});
+    set_draw_func([=] (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height)
+    {
+        this->do_draw(cr, width, height);
+    });
 }
 
 Glib::RefPtr<BackgroundImage> WayfireBackground::create_from_file_safe(std::string path)
@@ -162,14 +172,15 @@ Glib::RefPtr<BackgroundImage> WayfireBackground::create_from_file_safe(std::stri
 
     try {
         image->source = Gdk::Pixbuf::create_from_file(path);
-    } catch(...)
+    } catch (...)
     {
         return nullptr;
     }
-    if (image->source == nullptr){
+
+    if (image->source == nullptr)
+    {
         return nullptr;
     }
-
 
     return image;
 }
@@ -183,6 +194,7 @@ bool WayfireBackground::change_background()
     {
         return false;
     }
+
     std::cout << "Loaded " << path << std::endl;
     drawing_area.show_image(next_image);
     return true;
@@ -258,7 +270,7 @@ Glib::RefPtr<BackgroundImage> WayfireBackground::load_next_background()
         {
             std::cerr << "Failed to load background images from " <<
                     (std::string)background_image << std::endl;
-            //window.remove();
+            // window.remove();
             return nullptr;
         }
 
@@ -272,7 +284,7 @@ Glib::RefPtr<BackgroundImage> WayfireBackground::load_next_background()
             images.erase(images.begin() + current_background);
         } else
         {
-            std::cout << "Picked background "<< path << std::endl;
+            std::cout << "Picked background " << path << std::endl;
         }
     }
 
@@ -283,8 +295,9 @@ void WayfireBackground::update_background()
 {
     Glib::RefPtr<BackgroundImage> image = Glib::RefPtr<BackgroundImage>(new BackgroundImage());
     auto current = drawing_area.get_current_image();
-    if (current != nullptr){
-        image->source = current->source;
+    if (current != nullptr)
+    {
+        image->source    = current->source;
         image->fill_type = background_fill_mode;
         drawing_area.show_image(image);
     }
@@ -310,9 +323,8 @@ void WayfireBackground::set_background()
             {
                 throw std::exception();
             }
+
             drawing_area.show_image(image);
-
-
         } else
         {
             auto image = create_from_file_safe(path);
@@ -320,8 +332,8 @@ void WayfireBackground::set_background()
             {
                 throw std::exception();
             }
-            drawing_area.show_image(image);
 
+            drawing_area.show_image(image);
         }
     } catch (...)
     {
@@ -366,7 +378,7 @@ void WayfireBackground::setup_window()
     window.set_child(drawing_area);
 
     auto update_background = [=] () { this->update_background(); };
-    auto set_background = [=] () { this->set_background(); };
+    auto set_background    = [=] () { this->set_background(); };
     auto reset_cycle = [=] () { reset_cycle_timeout(); };
     background_image.set_callback(set_background);
     background_fill_mode.set_callback(update_background);
@@ -375,7 +387,6 @@ void WayfireBackground::setup_window()
     window.present();
 
     set_background();
-
 }
 
 WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output)

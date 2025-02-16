@@ -122,7 +122,7 @@ void WfDockApp::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
         {
             priv->toplevels.erase(handle);
             return false;
-        },2000);
+        }, 2000);
     } else
     {
         priv->toplevels.erase(handle);
@@ -145,6 +145,7 @@ void WfDockApp::create(int argc, char **argv)
     {
         throw std::logic_error("Running WfDockApp twice!");
     }
+
     instance = std::unique_ptr<WfDockApp>{new WfDockApp(argc, argv)};
     instance->run();
 }

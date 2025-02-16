@@ -235,7 +235,7 @@ void WayfireShellApp::on_activate()
         inotify_css_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
 
     // Hook up monitor tracking
-    auto display = Gdk::Display::get_default();
+    auto display  = Gdk::Display::get_default();
     auto monitors = display->get_monitors();
     monitors->signal_items_changed().connect(sigc::mem_fun(*this, &WayfireShellApp::output_list_updated));
 
@@ -250,11 +250,11 @@ void WayfireShellApp::on_activate()
 
 void WayfireShellApp::output_list_updated(const int pos, const int rem, const int add)
 {
-    auto display = Gdk::Display::get_default();
+    auto display  = Gdk::Display::get_default();
     auto monitors = display->get_monitors();
     for (int i = 0; i < add; i++)
     {
-        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i+pos));
+        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i + pos));
         add_output(obj);
     }
 }
@@ -262,7 +262,8 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
 void WayfireShellApp::add_output(GMonitor monitor)
 {
     // Remove self when unplugged
-    monitor->signal_invalidate().connect([=] {
+    monitor->signal_invalidate().connect([=]
+    {
         rem_output(monitor);
     });
     // Add to list
@@ -285,7 +286,7 @@ void WayfireShellApp::rem_output(GMonitor monitor)
 
 WayfireShellApp::WayfireShellApp(int argc, char **argv)
 {
-    app = Gtk::Application::create("",Gio::Application::Flags::HANDLES_COMMAND_LINE);
+    app = Gtk::Application::create("", Gio::Application::Flags::HANDLES_COMMAND_LINE);
     app->signal_activate().connect(
         sigc::mem_fun(*this, &WayfireShellApp::on_activate));
     app->add_main_option_entry(
