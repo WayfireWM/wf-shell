@@ -76,7 +76,6 @@ class WayfirePanel::impl
     void create_window()
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
-        window->set_interactive_debugging(true);
 
         window->set_default_size(0, minimal_panel_height);
         window->get_style_context()->add_class("wf-panel");

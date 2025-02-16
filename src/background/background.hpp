@@ -43,6 +43,7 @@ class BackgroundDrawingArea : public Gtk::DrawingArea
     gboolean update_animation(Glib::RefPtr<Gdk::FrameClock> clock);
     void show_image(Glib::RefPtr<BackgroundImage> image);
     bool do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
+    Glib::RefPtr<BackgroundImage> get_current_image() { return to_image; }
 };
 
 class WayfireBackground
@@ -69,6 +70,7 @@ class WayfireBackground
     Glib::RefPtr<BackgroundImage> load_next_background();
     void reset_background();
     void set_background();
+    void update_background();
     void reset_cycle_timeout();
 
     void setup_window();

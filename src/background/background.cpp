@@ -131,7 +131,7 @@ bool BackgroundDrawingArea::do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int
     cr->save();
     cr->scale(to_adjustments->scale_x, to_adjustments->scale_y);
     gdk_cairo_set_source_pixbuf(cr->cobj(), to_image->source->gobj(), to_adjustments->x, to_adjustments->y);
-    cr->paint_with_alpha(fade);
+    cr->paint_with_alpha(1.0);
     cr->restore();
     if (!from_image)
     {
@@ -176,7 +176,6 @@ Glib::RefPtr<BackgroundImage> WayfireBackground::create_from_file_safe(std::stri
 
 bool WayfireBackground::change_background()
 {
-    Glib::RefPtr<Gdk::Pixbuf> pbuf;
     std::string path;
 
     auto next_image = load_next_background();
@@ -280,6 +279,17 @@ Glib::RefPtr<BackgroundImage> WayfireBackground::load_next_background()
     return image;
 }
 
+void WayfireBackground::update_background()
+{
+    Glib::RefPtr<BackgroundImage> image = Glib::RefPtr<BackgroundImage>(new BackgroundImage());
+    auto current = drawing_area.get_current_image();
+    if (current != nullptr){
+        image->source = current->source;
+        image->fill_type = background_fill_mode;
+        drawing_area.show_image(image);
+    }
+}
+
 void WayfireBackground::reset_background()
 {
     images.clear();
@@ -289,8 +299,6 @@ void WayfireBackground::reset_background()
 
 void WayfireBackground::set_background()
 {
-    Glib::RefPtr<Gdk::Pixbuf> pbuf;
-
     reset_background();
 
     std::string path = background_image;
@@ -357,11 +365,11 @@ void WayfireBackground::setup_window()
     gtk_layer_set_exclusive_zone(window.gobj(), -1);
     window.set_child(drawing_area);
 
-    auto reset_background = [=] () { set_background(); };
+    auto update_background = [=] () { this->update_background(); };
+    auto set_background = [=] () { this->set_background(); };
     auto reset_cycle = [=] () { reset_cycle_timeout(); };
-    background_image.set_callback(reset_background);
-    background_randomize.set_callback(reset_background);
-    background_fill_mode.set_callback(reset_background);
+    background_image.set_callback(set_background);
+    background_fill_mode.set_callback(update_background);
     background_cycle_timeout.set_callback(reset_cycle);
 
     window.present();

@@ -45,7 +45,6 @@ class WfDock::impl
         box.get_style_context()->add_class("box");
         window->set_child(out_box);
 
-        window->set_interactive_debugging(true);
         window->get_style_context()->add_class("wf-dock");
 
         out_box.set_halign(Gtk::Align::CENTER);
