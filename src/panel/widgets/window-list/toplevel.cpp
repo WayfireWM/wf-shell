@@ -71,8 +71,6 @@ class WayfireToplevel::impl
         label.set_max_width_chars(100);
         label.set_hexpand(true);
 
-        //button.signal_clicked().connect(
-        //    sigc::mem_fun(*this, &WayfireToplevel::impl::on_clicked));
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_scale_update));
 
@@ -100,6 +98,15 @@ class WayfireToplevel::impl
         menu->append_item(close);
         button.set_menu_model(menu);
 
+        drag_gesture = Gtk::GestureDrag::create();
+        drag_gesture->signal_drag_begin().connect(
+            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_begin));
+        drag_gesture->signal_drag_update().connect(
+            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_update));
+        drag_gesture->signal_drag_end().connect(
+            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_end));
+        button.add_controller(drag_gesture);
+
         auto click_gesture = Gtk::GestureClick::create();
         click_gesture->set_button(0);
         click_gesture->signal_pressed().connect(
@@ -109,17 +116,27 @@ class WayfireToplevel::impl
                     button.popup();
                     click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
                 }else if(butt == 1){
-                    this->on_clicked();
                     click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
                 }else if(butt = 2 && middle_click_close){
                     zwlr_foreign_toplevel_handle_v1_close(handle);
                     click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
                 }
             });
-        button.add_controller(click_gesture);
-        /*button.drag_dest_set(Gtk::DEST_DEFAULT_MOTION & Gtk::DEST_DEFAULT_HIGHLIGHT, Gdk::DragAction(0));
 
-        button.signal_drag_motion().connect(
+        click_gesture->signal_released().connect(
+            [=] (int count, double x, double y) {
+                if (click_gesture->get_current_button()==1)
+                {
+                    if(!ignore_next_click){
+                        this->on_clicked();
+                    }
+                    ignore_next_click=false;
+                }
+            }
+        );
+        button.add_controller(click_gesture);
+
+        /*button.signal_drag_motion().connect(
             [this] (const Glib::RefPtr<Gdk::DragContext>, gint x, gint y, guint time) -> bool
         {
             if (!m_drag_timeout)
@@ -139,17 +156,6 @@ class WayfireToplevel::impl
                 m_drag_timeout.disconnect();
             }
         });*/
-        // TODO Fix DND
-
-        /*
-        drag_gesture = Gtk::GestureDrag::create(button);
-        drag_gesture->signal_drag_begin().connect_notify(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_begin));
-        drag_gesture->signal_drag_update().connect_notify(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_update));
-        drag_gesture->signal_drag_end().connect_notify(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_end));
-            */
 
         this->window_list = window_list;
     }
@@ -166,13 +172,11 @@ class WayfireToplevel::impl
         //auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
         zwlr_foreign_toplevel_handle_v1_activate(handle, gseat);
         */
-        // TODO Fix DND
         return false;
     }
 
     void on_drag_begin(double _x, double _y)
     {
-        /*
         auto& container = window_list->box;
         // Set grab start, before transforming it to absolute position
         grab_start_x = _x;
@@ -190,69 +194,72 @@ class WayfireToplevel::impl
         grab_off_x = x - loc_x;
 
         drag_exceeds_threshold = false;
-        */
-        // TODO Fix DND
     }
 
     static constexpr int DRAG_THRESHOLD = 3;
-    void on_drag_update(double _x, double)
+    void on_drag_update(double _x, double y)
     {
-        //auto& container = window_list->box;
+        auto& container = window_list->box;
         /* Window was not just clicked, but also dragged. Ignore the next click,
          * which is the one that happens when the drag gesture ends. */
-        //set_ignore_next_click();
+        set_ignore_next_click();
 
-        //int x = _x + grab_start_x;
-        //x = container.get_absolute_position(x, button);
-        //if (std::abs(x - grab_abs_start_x) > DRAG_THRESHOLD)
-        //{
-        //    drag_exceeds_threshold = true;
-        //}
+        int x = _x + grab_start_x;
+        x = container.get_absolute_position(x, button);
+        if (std::abs(x - grab_abs_start_x) > DRAG_THRESHOLD)
+        {
+            drag_exceeds_threshold = true;
+        }
 
-        //auto hovered_button = container.get_widget_at(x);
+        auto hovered_button = container.get_widget_at(x);
 
-        //if ((hovered_button != &button) && hovered_button)
-        //{
-        //    auto children = container.get_unsorted_widgets();
-        //    auto it = std::find(children.begin(), children.end(), hovered_button);
-        //    container.reorder_child(button, it - children.begin());
-        //}
+        if ((hovered_button != &button) )
+        {
+            if (hovered_button == nullptr){
+                gtk_box_reorder_child_after(container.gobj(), GTK_WIDGET(button.gobj()), nullptr);
+            } else
+            {
+                // If you write the documents to say 'Argument can be null' and have null mean something important...
+                // Make sure the user can send null...
+                container.reorder_child_after(button, *hovered_button);
+            }
+        }
 
         /* Make sure the grabbed button always stays at the same relative position
          * to the DnD position */
-        //int target_x = x - grab_off_x;
-        //window_list->box.set_top_x(target_x);
-
-        // TODO Fix DND
+        int target_x = x - grab_off_x;
+        window_list->box.set_top_x(target_x);
     }
 
     void on_drag_end(double _x, double _y)
     {
-        //int x     = _x + grab_start_x;
-        //int y     = _y + grab_start_y;
-        //int width = button.get_allocated_width();
-        //int height = button.get_allocated_height();
+        int x     = _x + grab_start_x;
+        int y     = _y + grab_start_y;
+        int width = button.get_allocated_width();
+        int height = button.get_allocated_height();
 
-        //window_list->box.set_top_widget(nullptr);
-        //set_classes(state);
+        window_list->box.set_top_widget(nullptr);
+        set_classes(state);
 
         /* When a button is dropped after dnd, we ignore the unclick
          * event so action doesn't happen in addition to dropping.
          * If the drag ends and the unclick event happens outside
          * the button, unset ignore_next_click or else the next
          * click on the button won't cause action. */
-        //if ((x < 0) || (x > width) || (y < 0) || (y > height))
-        //{
-        //    unset_ignore_next_click();
-        //}
+        if ((x < 0) || (x > width) || (y < 0) || (y > height))
+        {
+            unset_ignore_next_click();
+        }
 
         /* When dragging with touch or pen, we allow some small movement while
          * still counting the action as button press as opposed to only dragging. */
-        //if (!drag_exceeds_threshold)
-        //{
-        //    unset_ignore_next_click();
-        //}
-        // TODO Fix DND
+        if (!drag_exceeds_threshold)
+        {
+            unset_ignore_next_click();
+            this->on_clicked();
+        }
+        drag_gesture->set_state(Gtk::EventSequenceState::DENIED);
+
     }
 
     void on_menu_minimize(Glib::VariantBase vb)

@@ -45,56 +45,6 @@ void WayfireWindowListBox::set_top_x(int x)
     //on_size_allocate(alloc);
 }
 
-/*static void for_each_child_callback(GtkWidget *widget, gpointer data)
-{
-    auto v = (std::vector<GtkWidget*>*)data;
-    v->push_back(widget);
-}
-
-std::vector<Gtk::Widget*> WayfireWindowListBox::get_unsorted_widgets()
-{
-    std::vector<GtkWidget*> children;
-    Box::forall_vfunc(true, &for_each_child_callback, &children);
-
-    std::vector<Gtk::Widget*> result;
-    for (auto& child : children)
-    {
-        result.push_back(Glib::wrap(child));
-    }
-
-    return result;
-}
-
-void WayfireWindowListBox::forall_vfunc(gboolean value, GtkCallback callback, gpointer callback_data)
-{
-    std::vector<GtkWidget*> children;
-    Box::forall_vfunc(true, &for_each_child_callback, &children);
-
-    if (top_widget)
-    {
-        auto it = std::find(children.begin(), children.end(), top_widget->gobj());
-        children.erase(it);
-        children.push_back(top_widget->gobj());
-    }
-
-    for (auto& child : children)
-    {
-        callback(child, callback_data);
-    }
-}
-
-void WayfireWindowListBox::on_size_allocate(Gtk::Allocation& alloc)
-{
-    Box::on_size_allocate(alloc);
-
-    if (top_widget)
-    {
-        auto alloc = top_widget->get_allocation();
-        alloc.set_x(this->top_x);
-        top_widget->size_allocate(alloc);
-    }
-}*/
-
 int WayfireWindowListBox::get_absolute_position(int x, Gtk::Widget& ref)
 {
     auto w = &ref;
@@ -125,6 +75,8 @@ Gtk::Widget*WayfireWindowListBox::get_widget_at(int x)
 
     return nullptr;
 }
+
+
 
 #define DEFAULT_SIZE_PC 0.1
 

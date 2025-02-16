@@ -5,8 +5,7 @@
 #include "panel.hpp"
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
-#include <gtkmm/button.h>
-#include <gtkmm/scrolledwindow.h>
+#include <gtkmm.h>
 
 class WayfireToplevel;
 
