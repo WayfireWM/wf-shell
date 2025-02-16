@@ -57,7 +57,11 @@ class WfToplevelIcon::impl
 
     void on_clicked()
     {
-        if (closing) return;
+        if (closing)
+        {
+            return;
+        }
+
         if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
         {
             auto gseat = Gdk::Display::get_default()->get_default_seat();
@@ -78,7 +82,11 @@ class WfToplevelIcon::impl
 
     void set_app_id(std::string app_id)
     {
-        if (closing) return;
+        if (closing)
+        {
+            return;
+        }
+
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image,
             app_id,
@@ -88,7 +96,11 @@ class WfToplevelIcon::impl
 
     void send_rectangle_hint()
     {
-        if (closing) return;
+        if (closing)
+        {
+            return;
+        }
+
         Gtk::Widget *widget = &this->button;
 
         int x = 0, y = 0;
@@ -107,13 +119,18 @@ class WfToplevelIcon::impl
         {
             return;
         }
+
         zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
             dock->get_wl_surface(), x, y, width, height);
     }
 
     void set_title(std::string title)
     {
-        if (closing) return;
+        if (closing)
+        {
+            return;
+        }
+
         button.set_tooltip_text(title);
     }
 
@@ -125,13 +142,17 @@ class WfToplevelIcon::impl
 
     void set_state(uint32_t state)
     {
-        if (closing) return;
+        if (closing)
+        {
+            return;
+        }
+
         bool was_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
         this->state = state;
         bool is_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
         bool is_min = state & WF_TOPLEVEL_STATE_MINIMIZED;
         bool is_max = state & WF_TOPLEVEL_STATE_MAXIMIZED;
-        auto style = this->button.get_style_context();
+        auto style  = this->button.get_style_context();
         if (!was_activated && is_activated)
         {
             style->remove_class("flat");
@@ -140,15 +161,15 @@ class WfToplevelIcon::impl
             style->add_class("flat");
         }
 
-        if(is_min)
+        if (is_min)
         {
             style->add_class("minimized");
-        }else
+        } else
         {
             style->remove_class("minimized");
         }
 
-        if(is_max)
+        if (is_max)
         {
             style->add_class("maximized");
         } else
@@ -235,6 +256,7 @@ bool set_custom_icon(Gtk::Image& image, std::string app_id, int size, int scale)
     {
         return false;
     }
+
     image_set_icon(&image, custom_icons[app_id]);
     return true;
 }
@@ -299,7 +321,7 @@ void set_image_from_icon(Gtk::Image& image,
 
     /* Wayfire sends a list of app-id's in space separated format, other compositors
      * send a single app-id, but in any case this works fine */
-     auto display = image.get_display();
+    auto display = image.get_display();
     while (stream >> app_id)
     {
         /* Try first method: custom icon file provided by the user */

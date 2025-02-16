@@ -90,8 +90,8 @@ class WayfirePanel::impl
         init_widgets();
         init_layout();
 
-        //window->signal_close_request().connect(
-        //    sigc::mem_fun(*this, &WayfirePanel::impl::on_delete));
+        // window->signal_close_request().connect(
+        // sigc::mem_fun(*this, &WayfirePanel::impl::on_delete));
     }
 
     void init_layout()
@@ -104,7 +104,6 @@ class WayfirePanel::impl
         content_box.set_end_widget(right_box);
 
         content_box.set_hexpand(true);
-
 
         left_box.set_halign(Gtk::Align::START);
         center_box.set_halign(Gtk::Align::CENTER);
@@ -228,16 +227,20 @@ class WayfirePanel::impl
     {
         const auto lock_sn_watcher = Watcher::Instance();
         const auto lock_notification_daemon = Daemon::Instance();
-        for(auto child : box.get_children()){
+        for (auto child : box.get_children())
+        {
             box.remove(*child);
         }
+
         container.clear();
         auto widgets = tokenize(list);
         for (auto widget_name : widgets)
         {
-            if(widget_name == "window-list"){
+            if (widget_name == "window-list")
+            {
                 box.set_hexpand(true);
             }
+
             auto widget = widget_from_name(widget_name);
             if (!widget)
             {
@@ -281,19 +284,19 @@ class WayfirePanel::impl
         new CssFromConfigInt("panel/launchers_size", ".menu-button,.launcher{-gtk-icon-size:", "px;}");
         new CssFromConfigInt("panel/launchers_spacing", ".launcher{padding: 0px ", "px;}");
         new CssFromConfigInt("panel/battery_icon_size", ".battery image{-gtk-icon-size:", "px;}");
-        new CssFromConfigInt("panel/network_icon_size", ".network{-gtk-icon-size:","px;}");
+        new CssFromConfigInt("panel/network_icon_size", ".network{-gtk-icon-size:", "px;}");
         new CssFromConfigInt("panel/volume_icon_size", ".volume{-gtk-icon-size:", "px;}");
         new CssFromConfigInt("panel/notifications_icon_size", ".notification-center{-gtk-icon-size:", "px;}");
         new CssFromConfigInt("panel/tray_icon_size", ".tray-button{-gtk-icon-size:", "px;}");
-        new CssFromConfigString("panel/background_color", ".wf-panel{background-color:",";}");
+        new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
         new CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "");
         new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
 
         // People will probably need to update sizes to have a measure
         // 16px, 1.1rem, 1em .
         // So on
-        new CssFromConfigFont("panel/battery_font", ".battery {","}");
-        new CssFromConfigFont("panel/clock_font", ".clock {","}");
+        new CssFromConfigFont("panel/battery_font", ".battery {", "}");
+        new CssFromConfigFont("panel/clock_font", ".clock {", "}");
 
         create_window();
     }
@@ -319,6 +322,7 @@ class WayfirePanel::impl
         {
             w->handle_config_reload();
         }
+
         for (auto& w : center_widgets)
         {
             w->handle_config_reload();

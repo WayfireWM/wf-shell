@@ -231,5 +231,4 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
     button.set_child(button_box);
     button.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(*this, &WayfireBatteryInfo::update_icon));
-
 }

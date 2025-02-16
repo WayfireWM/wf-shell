@@ -64,7 +64,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     {
         main_label.set_max_width_chars(max_chars_opt);
     });
-    //main_label.set_alignment(Gtk::ALIGN_CENTER);
+    // main_label.set_alignment(Gtk::ALIGN_CENTER);
     max_chars_opt.set_callback([this]
     {
         main_label.set_max_width_chars(max_chars_opt);
@@ -91,7 +91,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     }
 
     set_child(box);
-    //set_relief(Gtk::RELIEF_NONE);
+    // set_relief(Gtk::RELIEF_NONE);
 
     const auto update_output = [=] ()
     {
@@ -118,17 +118,21 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     {
         set_has_tooltip();
         tooltip_label.show();
-        signal_query_tooltip().connect(sigc::mem_fun(*this, &WfCommandOutputButtons::CommandOutput::query_tooltip), false);
+        signal_query_tooltip().connect(sigc::mem_fun(*this,
+            &WfCommandOutputButtons::CommandOutput::query_tooltip), false);
     }
 }
 
-bool WfCommandOutputButtons::CommandOutput::query_tooltip(int i, int j, bool k, const std::shared_ptr<Gtk::Tooltip>& tooltip){
+bool WfCommandOutputButtons::CommandOutput::query_tooltip(int i, int j, bool k,
+    const std::shared_ptr<Gtk::Tooltip>& tooltip)
+{
     this->update_tooltip();
     tooltip->set_custom(tooltip_label);
     return true;
 }
 
-void WfCommandOutputButtons::CommandOutput::update_tooltip(){
+void WfCommandOutputButtons::CommandOutput::update_tooltip()
+{
     if (std::time(nullptr) - last_tooltip_update < 1)
     {
         return;
@@ -148,9 +152,11 @@ void WfCommandOutputButtons::init(Gtk::Box *container)
 void WfCommandOutputButtons::update_buttons()
 {
     const auto & opt_value = commands_list_opt.value();
-    for (auto child : box.get_children()){
+    for (auto child : box.get_children())
+    {
         box.remove(*child);
     }
+
     buttons.clear();
     buttons.reserve(opt_value.size());
     for (const auto & command_info : opt_value)
@@ -161,5 +167,4 @@ void WfCommandOutputButtons::update_buttons()
         }, command_info));
         box.append(*buttons.back());
     }
-
 }

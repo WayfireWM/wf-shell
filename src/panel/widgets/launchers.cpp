@@ -154,7 +154,8 @@ void WayfireLaunchers::init(Gtk::Box *container)
 
 void WayfireLaunchers::handle_config_reload()
 {
-    for(auto child : box.get_children()){
+    for (auto child : box.get_children())
+    {
         box.remove(*child);
     }
 
@@ -163,5 +164,4 @@ void WayfireLaunchers::handle_config_reload()
     {
         box.append(l->button);
     }
-
 }
