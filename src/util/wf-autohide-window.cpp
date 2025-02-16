@@ -31,16 +31,19 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     this->update_position();
 
     auto pointer_gesture = Gtk::EventControllerMotion::create();
-    pointer_gesture->signal_enter().connect([=] (double x, double y) {
+    pointer_gesture->signal_enter().connect([=] (double x, double y)
+    {
         if (this->pending_hide.connected())
         {
             this->pending_hide.disconnect();
         }
+
         this->input_inside_panel = true;
         y_position.animate(0);
         start_draw_timer();
     });
-    pointer_gesture->signal_leave().connect([=] {
+    pointer_gesture->signal_leave().connect([=]
+    {
         this->input_inside_panel = false;
         if (this->should_autohide())
         {
@@ -284,7 +287,7 @@ void WayfireAutohidingWindow::setup_auto_exclusive_zone()
 
 void WayfireAutohidingWindow::update_auto_exclusive_zone()
 {
-    if(this->auto_exclusive_zone)
+    if (this->auto_exclusive_zone)
     {
         gtk_layer_auto_exclusive_zone_enable(this->gobj());
     } else
@@ -344,11 +347,10 @@ void WayfireAutohidingWindow::start_draw_timer()
 gboolean WayfireAutohidingWindow::update_animation(Glib::RefPtr<Gdk::FrameClock> frame_clock)
 {
     update_margin();
-    //this->queue_draw();
+    // this->queue_draw();
     // Once we've finished fading, stop this callback
     return y_position.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
-
 
 void WayfireAutohidingWindow::schedule_hide(int delay)
 {
@@ -430,16 +432,16 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
     const bool should_grab_focus = this->active_button->is_keyboard_interactive();
 
     /*
-    if (should_grab_focus)
-    {
-        // First, set exclusive mode to grab input
-        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
-        wl_surface_commit(get_wl_surface());
-
-        // Next, allow releasing of focus when clicking outside of the panel
-        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
-    }
-        */
+     *  if (should_grab_focus)
+     *  {
+     *   // First, set exclusive mode to grab input
+     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+     *   wl_surface_commit(get_wl_surface());
+     *
+     *   // Next, allow releasing of focus when clicking outside of the panel
+     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+     *  }
+     */
     // TODO come back for intentional focus steal
 
     this->active_button->set_has_focus(should_grab_focus);

@@ -747,7 +747,7 @@ void WayfireMenu::on_logout_click()
     logout_ui->ui.present();
 
     /* Set the background window to the same size of the screen */
-    //logout_ui->bg.set_size_request(gdk_screen->get_width(), gdk_screen->get_height());
+    // logout_ui->bg.set_size_request(gdk_screen->get_width(), gdk_screen->get_height());
 }
 
 void WayfireMenu::refresh()
@@ -852,7 +852,6 @@ void WayfireMenu::init(Gtk::Box *container)
     populate_menu_categories();
     populate_menu_items("All");
 
-
     app_info_monitor_changed_handler_id =
         g_signal_connect(app_info_monitor, "changed", G_CALLBACK(app_info_changed), this);
 
@@ -879,7 +878,7 @@ void WayfireMenu::update_content_width()
 
 void WayfireMenu::toggle_menu()
 {
-    search_contents="";
+    search_contents = "";
     if (button->get_active())
     {
         button->set_active(false);
@@ -899,6 +898,7 @@ void WayfireMenu::set_category(std::string in_category)
     category = in_category;
     populate_menu_items(in_category);
 }
+
 void WayfireMenu::select_first_flowbox_item()
 {
     for (auto child : flowbox.get_children())

@@ -29,7 +29,8 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
 
     auto click_gesture = Gtk::GestureClick::create();
     click_gesture->set_button(2);
-    click_gesture->signal_pressed().connect([=](int count, double x, double y){
+    click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
         dnd_enabled = !dnd_enabled;
         updateIcon();
         click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);

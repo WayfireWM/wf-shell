@@ -28,8 +28,8 @@ class WayfireWindowListBox : public Gtk::Box
      * Override some of Gtk::HBox's built-in layouting functions, so that we
      * support manually dragging a button
      */
-    //void forall_vfunc(gboolean, GtkCallback callback, gpointer callback_data) override;
-    //void on_size_allocate(Gtk::Allocation& alloc) override;
+    // void forall_vfunc(gboolean, GtkCallback callback, gpointer callback_data) override;
+    // void on_size_allocate(Gtk::Allocation& alloc) override;
 
     /**
      * @param x the x-axis position, relative to ref

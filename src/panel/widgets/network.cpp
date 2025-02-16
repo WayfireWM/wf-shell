@@ -36,7 +36,8 @@ struct NoConnectionInfo : public WfNetworkConnectionInfo
         return 0;
     }
 
-    std::string get_strength_str(){
+    std::string get_strength_str()
+    {
         return "none";
     }
 

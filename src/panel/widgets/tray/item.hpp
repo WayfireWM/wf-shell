@@ -56,7 +56,7 @@ class StatusNotifierItem : public Gtk::MenuButton
     std::string dbus_name_as_prefix();
 
   public:
-    void menu_update(DbusmenuClient * client);
+    void menu_update(DbusmenuClient *client);
     explicit StatusNotifierItem(const Glib::ustring & service);
     ~StatusNotifierItem();
     std::string get_unique_name();

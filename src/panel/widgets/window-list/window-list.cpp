@@ -42,7 +42,7 @@ void WayfireWindowListBox::set_top_x(int x)
     queue_draw();
 
     auto alloc = this->get_allocation();
-    //on_size_allocate(alloc);
+    // on_size_allocate(alloc);
 }
 
 int WayfireWindowListBox::get_absolute_position(int x, Gtk::Widget& ref)
@@ -75,8 +75,6 @@ Gtk::Widget*WayfireWindowListBox::get_widget_at(int x)
 
     return nullptr;
 }
-
-
 
 #define DEFAULT_SIZE_PC 0.1
 

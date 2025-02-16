@@ -34,13 +34,13 @@ class WayfireToplevel::impl
 
     Glib::RefPtr<Gio::Menu> menu;
 
-    Glib::RefPtr<Gio::MenuItem> minimize,maximize,close;
+    Glib::RefPtr<Gio::MenuItem> minimize, maximize, close;
     Glib::RefPtr<Gio::SimpleAction> minimize_action, maximize_action, close_action;
-    //Gtk::Box menu_box;
+    // Gtk::Box menu_box;
     Gtk::Box button_contents;
     Gtk::Image image;
     Gtk::Label label;
-    //Gtk::PopoverMenu menu;
+    // Gtk::PopoverMenu menu;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
     sigc::connection m_drag_timeout;
 
@@ -77,22 +77,24 @@ class WayfireToplevel::impl
 
         actions = Gio::SimpleActionGroup::create();
 
-        close_action = Gio::SimpleAction::create("close");
+        close_action    = Gio::SimpleAction::create("close");
         minimize_action = Gio::SimpleAction::create_bool("minimize", false);
         maximize_action = Gio::SimpleAction::create_bool("maximize", false);
         close_action->signal_activate().connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_close));
-        minimize_action->signal_change_state().connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_minimize));
-        maximize_action->signal_change_state().connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_maximize));
+        minimize_action->signal_change_state().connect(sigc::mem_fun(*this,
+            &WayfireToplevel::impl::on_menu_minimize));
+        maximize_action->signal_change_state().connect(sigc::mem_fun(*this,
+            &WayfireToplevel::impl::on_menu_maximize));
 
         actions->add_action(close_action);
         actions->add_action(minimize_action);
         actions->add_action(maximize_action);
 
         button.insert_action_group("windowaction", actions);
-        menu = Gio::Menu::create();
+        menu     = Gio::Menu::create();
         minimize = Gio::MenuItem::create("Minimize", "windowaction.minimize");
         maximize = Gio::MenuItem::create("Maximize", "windowaction.maximize");
-        close = Gio::MenuItem::create("Close", "windowaction.close");
+        close    = Gio::MenuItem::create("Close", "windowaction.close");
 
         menu->append_item(minimize);
         menu->append_item(maximize);
@@ -111,52 +113,58 @@ class WayfireToplevel::impl
         auto click_gesture = Gtk::GestureClick::create();
         click_gesture->set_button(0);
         click_gesture->signal_pressed().connect(
-            [=] (int count, double x, double y) {
-                int butt = click_gesture->get_current_button();
-                if(butt == 3){
-                    button.popup();
-                    click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-                }else if(butt == 1){
-                    click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-                }else if(butt = 2 && middle_click_close){
-                    zwlr_foreign_toplevel_handle_v1_close(handle);
-                    click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-                }
-            });
+            [=] (int count, double x, double y)
+        {
+            int butt = click_gesture->get_current_button();
+            if (butt == 3)
+            {
+                button.popup();
+                click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+            } else if (butt == 1)
+            {
+                click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+            } else if (butt = 2 && middle_click_close)
+            {
+                zwlr_foreign_toplevel_handle_v1_close(handle);
+                click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+            }
+        });
 
         click_gesture->signal_released().connect(
-            [=] (int count, double x, double y) {
-                if (click_gesture->get_current_button()==1)
+            [=] (int count, double x, double y)
+        {
+            if (click_gesture->get_current_button() == 1)
+            {
+                if (!ignore_next_click)
                 {
-                    if(!ignore_next_click){
-                        this->on_clicked();
-                    }
-                    ignore_next_click=false;
+                    this->on_clicked();
                 }
+
+                ignore_next_click = false;
             }
-        );
+        });
         button.add_controller(click_gesture);
 
         /*button.signal_drag_motion().connect(
-            [this] (const Glib::RefPtr<Gdk::DragContext>, gint x, gint y, guint time) -> bool
-        {
-            if (!m_drag_timeout)
-            {
-                m_drag_timeout = Glib::signal_timeout().connect(sigc::mem_fun(this,
-                    &WayfireToplevel::impl::drag_paused), 700);
-            }
-
-            return true;
-        });
-
-        button.signal_drag_leave().connect(
-            [this] (const Glib::RefPtr<Gdk::DragContext>, guint time)
-        {
-            if (m_drag_timeout)
-            {
-                m_drag_timeout.disconnect();
-            }
-        });*/
+         *   [this] (const Glib::RefPtr<Gdk::DragContext>, gint x, gint y, guint time) -> bool
+         *  {
+         *   if (!m_drag_timeout)
+         *   {
+         *       m_drag_timeout = Glib::signal_timeout().connect(sigc::mem_fun(this,
+         *           &WayfireToplevel::impl::drag_paused), 700);
+         *   }
+         *
+         *   return true;
+         *  });
+         *
+         *  button.signal_drag_leave().connect(
+         *   [this] (const Glib::RefPtr<Gdk::DragContext>, guint time)
+         *  {
+         *   if (m_drag_timeout)
+         *   {
+         *       m_drag_timeout.disconnect();
+         *   }
+         *  });*/
 
         this->window_list = window_list;
     }
@@ -169,10 +177,10 @@ class WayfireToplevel::impl
     bool drag_paused()
     {
         /*
-        auto gseat = Gdk::Display::get_default()->get_default_seat()->get_wl_seat();
-        //auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
-        zwlr_foreign_toplevel_handle_v1_activate(handle, gseat);
-        */
+         *  auto gseat = Gdk::Display::get_default()->get_default_seat()->get_wl_seat();
+         *  //auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
+         *  zwlr_foreign_toplevel_handle_v1_activate(handle, gseat);
+         */
         return false;
     }
 
@@ -214,13 +222,15 @@ class WayfireToplevel::impl
 
         auto hovered_button = container.get_widget_at(x);
 
-        if ((hovered_button != &button) )
+        if ((hovered_button != &button))
         {
-            if (hovered_button == nullptr){
+            if (hovered_button == nullptr)
+            {
                 gtk_box_reorder_child_after(container.gobj(), GTK_WIDGET(button.gobj()), nullptr);
             } else
             {
-                // If you write the documents to say 'Argument can be null' and have null mean something important...
+                // If you write the documents to say 'Argument can be null' and have null mean something
+                // important...
                 // Make sure the user can send null...
                 container.reorder_child_after(button, *hovered_button);
             }
@@ -259,8 +269,8 @@ class WayfireToplevel::impl
             unset_ignore_next_click();
             this->on_clicked();
         }
-        drag_gesture->set_state(Gtk::EventSequenceState::DENIED);
 
+        drag_gesture->set_state(Gtk::EventSequenceState::DENIED);
     }
 
     void on_menu_minimize(Glib::VariantBase vb)
@@ -271,6 +281,7 @@ class WayfireToplevel::impl
             zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
             return;
         }
+
         zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
     }
 
@@ -282,6 +293,7 @@ class WayfireToplevel::impl
             zwlr_foreign_toplevel_handle_v1_unset_maximized(handle);
             return;
         }
+
         zwlr_foreign_toplevel_handle_v1_set_maximized(handle);
     }
 
@@ -331,7 +343,7 @@ class WayfireToplevel::impl
         if (!(state & WF_TOPLEVEL_STATE_ACTIVATED) && !child_activated)
         {
             auto gseat = Gdk::Display::get_default()->get_default_seat();
-            auto seat = gdk_wayland_seat_get_wl_seat(gseat->gobj());
+            auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
             zwlr_foreign_toplevel_handle_v1_activate(handle, seat);
         } else
         {
@@ -366,7 +378,8 @@ class WayfireToplevel::impl
         {
             auto widget_bounds = this->button.compute_bounds(panel->get_window());
             zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
-                panel->get_wl_surface(), widget_bounds->get_x(), widget_bounds->get_y(), widget_bounds->get_width(), widget_bounds->get_height());
+                panel->get_wl_surface(), widget_bounds->get_x(),
+                widget_bounds->get_y(), widget_bounds->get_width(), widget_bounds->get_height());
         }
     }
 
@@ -403,7 +416,6 @@ class WayfireToplevel::impl
         container.remove(button);
     }
 
-
     void set_classes(uint32_t state)
     {
         if (state & WF_TOPLEVEL_STATE_ACTIVATED)
@@ -424,7 +436,6 @@ class WayfireToplevel::impl
         {
             button.get_style_context()->remove_class("minimized");
             minimize_action->set_state(Glib::wrap(g_variant_new_boolean(false)));
-
         }
 
         if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
@@ -466,7 +477,6 @@ class WayfireToplevel::impl
         {
             container.append(button);
         }
-
     }
 
     void handle_output_leave(wl_output *output)
@@ -726,6 +736,7 @@ void set_image_from_icon(Gtk::Image& image,
         {
             icon_name = icon->to_string();
         }
+
         image_set_icon(&image, icon_name);
 
         /* finally found some icon */

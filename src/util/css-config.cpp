@@ -5,7 +5,8 @@
 
 void CssFromConfig::add_provider()
 {
-    Gtk::StyleContext::add_provider_for_display(Gdk::Display::get_default(), provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    Gtk::StyleContext::add_provider_for_display(
+        Gdk::Display::get_default(), provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 }
 
 void CssFromConfig::remove_provider()
@@ -13,8 +14,8 @@ void CssFromConfig::remove_provider()
     Gtk::StyleContext::remove_provider_for_display(Gdk::Display::get_default(), provider);
 }
 
-CssFromConfigBool::CssFromConfigBool(std::string option_name, std::string css_true, std::string css_false):
-option_value{option_name}
+CssFromConfigBool::CssFromConfigBool(std::string option_name, std::string css_true, std::string css_false) :
+    option_value{option_name}
 {
     provider = Gtk::CssProvider::create();
     option_value.set_callback([=]
@@ -25,8 +26,8 @@ option_value{option_name}
     add_provider();
 }
 
-CssFromConfigInt::CssFromConfigInt(std::string option_name, std::string css_before, std::string css_after):
-option_value{option_name}
+CssFromConfigInt::CssFromConfigInt(std::string option_name, std::string css_before, std::string css_after) :
+    option_value{option_name}
 {
     provider = Gtk::CssProvider::create();
     option_value.set_callback([=]
@@ -43,8 +44,9 @@ option_value{option_name}
     add_provider();
 }
 
-CssFromConfigString::CssFromConfigString(std::string option_name, std::string css_before, std::string css_after):
-option_value{option_name}
+CssFromConfigString::CssFromConfigString(std::string option_name, std::string css_before,
+    std::string css_after) :
+    option_value{option_name}
 {
     provider = Gtk::CssProvider::create();
     option_value.set_callback([=] ()
@@ -61,15 +63,15 @@ option_value{option_name}
     add_provider();
 }
 
-CssFromConfigFont::CssFromConfigFont(std::string option_name, std::string css_before, std::string css_after):
-option_value{option_name}
+CssFromConfigFont::CssFromConfigFont(std::string option_name, std::string css_before, std::string css_after) :
+    option_value{option_name}
 {
     provider = Gtk::CssProvider::create();
     option_value.set_callback([=] ()
     {
         std::stringstream ss;
         std::string font_name = (std::string)option_value;
-        ss << css_before << "font: " << font_name << ";" <<  css_after;
+        ss << css_before << "font: " << font_name << ";" << css_after;
         auto css = ss.str();
         std::cout << css << std::endl;
         provider->load_from_string(css);

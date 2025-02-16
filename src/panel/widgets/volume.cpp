@@ -115,14 +115,11 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
     if ((flags & VOLUME_FLAG_SHOW_POPOVER) &&
         !button->get_popover()->is_visible())
     {
-        //button->get_popover()->popup();
+        // button->get_popover()->popup();
     }
 
     update_icon();
 }
-
-
-
 
 void WayfireVolume::on_volume_changed_external()
 {
@@ -214,7 +211,6 @@ void WayfireVolume::on_volume_value_changed()
 
 void WayfireVolume::init(Gtk::Box *container)
 {
-
     /* Setup button */
     button = std::make_unique<WayfireMenuButton>("panel");
     auto style = button->get_style_context();
@@ -229,18 +225,18 @@ void WayfireVolume::init(Gtk::Box *container)
         {
             // +- number of clicks.
             change = dy * max_norm * scroll_sensitivity;
-
         } else
         {
             // Number of pixels expected to have scrolled. usually in 100s
-            change = (dy/100.0) * max_norm * scroll_sensitivity;
+            change = (dy / 100.0) * max_norm * scroll_sensitivity;
         }
+
         std::cout << std::clamp(volume_scale.get_target_value(),
-        0.0, max_norm) << " " << change <<  std::endl;
-        set_volume(std::clamp(volume_scale.get_target_value() - change ,
+            0.0, max_norm) << " " << change << std::endl;
+        set_volume(std::clamp(volume_scale.get_target_value() - change,
             0.0, max_norm));
         return true;
-    },true);
+    }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     button->add_controller(scroll_gesture);
     button->property_scale_factor().signal_changed().connect(
@@ -249,7 +245,7 @@ void WayfireVolume::init(Gtk::Box *container)
     /* Setup popover */
     auto popover = button->get_popover();
     popover->set_child(volume_scale);
-    //popover->set_modal(false);
+    // popover->set_modal(false);
     popover->get_style_context()->add_class("volume-popover");
     popover->add_controller(scroll_gesture);
 

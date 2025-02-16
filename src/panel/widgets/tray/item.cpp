@@ -69,9 +69,8 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
     });
 }
 
-StatusNotifierItem::~StatusNotifierItem(){
-
-}
+StatusNotifierItem::~StatusNotifierItem()
+{}
 
 void StatusNotifierItem::init_widget()
 {
@@ -84,26 +83,29 @@ void StatusNotifierItem::init_widget()
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::BOTH_AXES);
-    scroll_gesture->signal_scroll().connect([=](double dx, double dy)->bool {
+    scroll_gesture->signal_scroll().connect([=] (double dx, double dy) -> bool
+    {
         using ScrollParams = Glib::Variant<std::tuple<int, Glib::ustring>>;
         item_proxy->call("Scroll", ScrollParams::create({dx, "horizontal"}));
         item_proxy->call("Scroll", ScrollParams::create({dy, "vertical"}));
         return true;
-    },true);
+    }, true);
 
     auto click_gesture = Gtk::GestureClick::create();
     click_gesture->set_button(0);
-    click_gesture->signal_pressed().connect([=](int count, double x, double y){
+    click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
         int butt = click_gesture->get_current_button();
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({0, 0});
 
-        const int primary_click = 1;
+        const int primary_click   = 1;
         const int secondary_click = menu_on_middle_click ? 2 : 3;
-        const int tertiary_click = menu_on_middle_click ? 3 : 2;
-        if(butt == primary_click){
+        const int tertiary_click  = menu_on_middle_click ? 3 : 2;
+        if (butt == primary_click)
+        {
             if (get_item_property<bool>("ItemIsMenu", true))
             {
-                if(get_menu_model())
+                if (get_menu_model())
                 {
                     set_active(true);
                 } else
@@ -119,7 +121,8 @@ void StatusNotifierItem::init_widget()
             if (get_menu_model())
             {
                 set_active(true);
-            } else {
+            } else
+            {
                 item_proxy->call("ContextMenu", ev_coords);
             }
         } else if (butt == tertiary_click)
@@ -131,6 +134,7 @@ void StatusNotifierItem::init_widget()
             click_gesture->set_state(Gtk::EventSequenceState::DENIED);
             return;
         }
+
         click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
         return;
     });
@@ -154,17 +158,19 @@ void StatusNotifierItem::setup_tooltip()
             get_item_property<Glib::ustring>("Title");
 
         const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
-        bool icon_shown = false;
-        if (pixbuf) {
+        bool icon_shown   = false;
+        if (pixbuf)
+        {
             tooltip->set_icon(pixbuf);
             icon_shown = true;
-        }else{
-            //tooltip->set_icon_from_name(tooltip_icon_name);
+        } else
+        {
+            // tooltip->set_icon_from_name(tooltip_icon_name);
         }
 
         tooltip->set_markup(tooltip_label_text);
         return icon_shown || !tooltip_label_text.empty();
-    },true);
+    }, true);
 }
 
 void StatusNotifierItem::update_icon()
@@ -200,17 +206,17 @@ void StatusNotifierItem::init_menu()
     {
         return;
     }
+
     auto action_prefix = dbus_name_as_prefix();
 
     menu->connect(dbus_name, menu_path, action_prefix);
-    menu->signal_action_group().connect([=] () {
+    menu->signal_action_group().connect([=] ()
+    {
         auto action_group = menu->get_action_group();
         insert_action_group(action_prefix, action_group);
     });
     set_menu_model(menu);
 }
-
-
 
 void StatusNotifierItem::handle_signal(const Glib::ustring & signal,
     const Glib::VariantContainerBase & params)
@@ -240,7 +246,6 @@ void StatusNotifierItem::handle_signal(const Glib::ustring & signal,
     }
 }
 
-
 void StatusNotifierItem::fetch_property(const Glib::ustring & property_name,
     const sigc::slot<void()> & callback)
 {
@@ -260,33 +265,36 @@ void StatusNotifierItem::fetch_property(const Glib::ustring & property_name,
     },
         Glib::Variant<std::tuple<Glib::ustring, Glib::ustring>>::create({"org.kde.StatusNotifierItem",
             property_name}));
-
 }
 
-std::string StatusNotifierItem::get_unique_name(){
+std::string StatusNotifierItem::get_unique_name()
+{
     std::stringstream ss;
     ss << dbus_name << "_" << menu_path;
     return ss.str();
 }
 
-
 /*
-  DBUS names are in the format of :1.61
-  I have no idea what this means, I frankly don't care, but I need a way to generate an acceptable action group name from this
-  such that it always gets the same unique output for the same input
+ *  DBUS names are in the format of :1.61
+ *  I have no idea what this means, I frankly don't care, but I need a way to generate an acceptable action
+ * group name from this
+ *  such that it always gets the same unique output for the same input
  */
 
-const std::string CHARS_IN= ":0123456789.";
-const std::string CHARS_OUT="zabcdefghijk";
-std::string StatusNotifierItem::dbus_name_as_prefix(){
+const std::string CHARS_IN  = ":0123456789.";
+const std::string CHARS_OUT = "zabcdefghijk";
+std::string StatusNotifierItem::dbus_name_as_prefix()
+{
     std::unordered_map<char, char> map;
-    for (int i = 0; i < (int)CHARS_IN.length(); i++) {
+    for (int i = 0; i < (int)CHARS_IN.length(); i++)
+    {
         map[CHARS_IN[i]] = CHARS_OUT[i];
     }
+
     std::stringstream ss;
-    for(int i = 0; i < (int)dbus_name.length(); i ++ )
+    for (int i = 0; i < (int)dbus_name.length(); i++)
     {
-        ss << map[dbus_name [i]];
+        ss << map[dbus_name[i]];
     }
 
     return ss.str();
