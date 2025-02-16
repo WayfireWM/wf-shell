@@ -8,7 +8,7 @@ jobs:
     container: alpine:latest
     steps:
     - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
-    - run: apk --no-cache add git g++ binutils pkgconf meson ninja musl-dev gtk4.0-dev gtkmm4-dev wayland-protocols wayfire-dev pulseaudio-dev libdbusmenu-glib-dev alsa-lib-dev
+    - run: apk --no-cache add git g++ binutils pkgconf meson ninja musl-dev gtk4.0-dev gtkmm4-dev gtk4-layer-shell wayland-protocols wayfire-dev pulseaudio-dev libdbusmenu-glib-dev alsa-lib-dev
     - name: wf-shell
       uses: actions/checkout@v2
       with:
