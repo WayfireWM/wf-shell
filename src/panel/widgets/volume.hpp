@@ -28,6 +28,8 @@ class WayfireVolumeScale : public Gtk::Scale
     void set_target_value(double value);
     /** Set the callback when the user changes the scale value */
     void set_user_changed_callback(std::function<void()> callback);
+    /** Callback to animate volume control */
+    gboolean update_animation(Glib::RefPtr<Gdk::FrameClock> clock);
 };
 
 class WayfireVolume : public WayfireWidget

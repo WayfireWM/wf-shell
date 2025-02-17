@@ -102,10 +102,9 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
 
             bool has_children = dbusmenu_menuitem_get_children(child) != NULL;
 
-            /* Some lovely theoretical code here I hope to be able to test...
-             *  icons are set, but from what I read they won't be shown in gtk4
+            /*  #Icons are set, but from what I read they won't be shown in gtk4.
              *  for some reason TOGGLE_TYPE is always returning as if not set.
-             *  So checkboxes and radios *might* work but are never sent
+             *  So checkboxes and radios work but are never sent
              */
             if (has_children)
             {

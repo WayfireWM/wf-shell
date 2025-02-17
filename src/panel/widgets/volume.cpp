@@ -20,7 +20,16 @@ WayfireVolumeScale::WayfireVolumeScale()
 void WayfireVolumeScale::set_target_value(double value)
 {
     this->current_volume.animate(value);
-    this->queue_draw();
+    add_tick_callback(sigc::mem_fun(*this, &WayfireVolumeScale::update_animation));
+}
+
+gboolean WayfireVolumeScale::update_animation(Glib::RefPtr<Gdk::FrameClock> frame_clock)
+{
+    value_changed.block();
+    this->set_value(this->current_volume);
+    value_changed.unblock();
+    // Once we've finished fading, stop this callback
+    return this->current_volume.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 
 double WayfireVolumeScale::get_target_value() const
@@ -115,7 +124,7 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
     if ((flags & VOLUME_FLAG_SHOW_POPOVER) &&
         !button->get_popover()->is_visible())
     {
-        // button->get_popover()->popup();
+        button->get_popover()->popup();
     }
 
     update_icon();
@@ -126,12 +135,7 @@ void WayfireVolume::on_volume_changed_external()
     auto volume = gvc_mixer_stream_get_volume(gvc_stream);
     if (volume != (pa_volume_t)this->volume_scale.get_target_value())
     {
-        /* When the volume changes externally, we want to temporarily show the
-         * popover. However it shouldn't grab focus, because we're just displaying
-         * a notification. */
-        button->set_keyboard_interactive(false);
         set_volume(volume, VOLUME_FLAG_SHOW_POPOVER);
-        button->set_keyboard_interactive(true);
     }
 
     check_set_popover_timeout();
@@ -205,7 +209,6 @@ static void default_sink_changed(GvcMixerControl *gvc_control,
 void WayfireVolume::on_volume_value_changed()
 {
     /* User manually changed volume */
-    button->grab_focus();
     set_volume(volume_scale.get_target_value());
 }
 
@@ -242,6 +245,7 @@ void WayfireVolume::init(Gtk::Box *container)
 
     /* Setup popover */
     auto popover = button->get_popover();
+    popover->set_autohide(false);
     popover->set_child(volume_scale);
     // popover->set_modal(false);
     popover->get_style_context()->add_class("volume-popover");
