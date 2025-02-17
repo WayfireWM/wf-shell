@@ -70,7 +70,9 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
 }
 
 StatusNotifierItem::~StatusNotifierItem()
-{}
+{
+    gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
+}
 
 void StatusNotifierItem::init_widget()
 {
@@ -80,6 +82,7 @@ void StatusNotifierItem::init_widget()
     auto style = get_style_context();
     style->add_class("tray-button");
     style->add_class("flat");
+    gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(gobj()));
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::BOTH_AXES);
@@ -105,9 +108,9 @@ void StatusNotifierItem::init_widget()
         {
             if (get_item_property<bool>("ItemIsMenu", true))
             {
-                if (get_menu_model())
+                if (has_menu)
                 {
-                    set_active(true);
+                    popover.popup();
                 } else
                 {
                     item_proxy->call("ContextMenu", ev_coords);
@@ -118,9 +121,9 @@ void StatusNotifierItem::init_widget()
             }
         } else if (butt == secondary_click)
         {
-            if (get_menu_model())
+            if (has_menu)
             {
-                set_active(true);
+                popover.popup();
             } else
             {
                 item_proxy->call("ContextMenu", ev_coords);
@@ -215,7 +218,8 @@ void StatusNotifierItem::init_menu()
         auto action_group = menu->get_action_group();
         insert_action_group(action_prefix, action_group);
     });
-    set_menu_model(menu);
+    popover.set_menu_model(menu);
+    has_menu = true;
 }
 
 void StatusNotifierItem::handle_signal(const Glib::ustring & signal,

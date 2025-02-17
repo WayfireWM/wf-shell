@@ -442,6 +442,7 @@ class WayfireToplevel::impl
 
     ~impl()
     {
+        gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
         if (m_drag_timeout)
         {
             m_drag_timeout.disconnect();

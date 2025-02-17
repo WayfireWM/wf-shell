@@ -12,7 +12,7 @@
 
 #include <optional>
 
-class StatusNotifierItem : public Gtk::MenuButton
+class StatusNotifierItem : public Gtk::Button
 {
     guint menu_handler_id;
 
@@ -23,7 +23,10 @@ class StatusNotifierItem : public Gtk::MenuButton
 
     Glib::RefPtr<Gio::DBus::Proxy> item_proxy;
 
+    Gtk::PopoverMenu popover;
     std::shared_ptr<DbusMenuModel> menu;
+
+    bool has_menu = false;
 
     Gtk::Image icon;
 
