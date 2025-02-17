@@ -44,14 +44,12 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         return false;
     }
 
-    button.set_icon_name(icon);
+    button.set_child(m_icon);
     auto style = button.get_style_context();
     style->add_class("flat");
     style->add_class("launcher");
 
     button.signal_clicked().connect([=] () { launch(); });
-    button.property_scale_factor().signal_changed()
-        .connect([=] () {update_icon(); });
 
     update_icon();
 

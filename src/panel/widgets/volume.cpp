@@ -96,14 +96,14 @@ void WayfireVolume::update_icon()
 
 bool WayfireVolume::on_popover_timeout(int timer)
 {
-    button->get_popover()->popdown();
+    popover.popdown();
     return false;
 }
 
 void WayfireVolume::check_set_popover_timeout()
 {
     popover_timeout.disconnect();
-    if (this->button->is_popover_focused())
+    if (volume_scale.is_focus())
     {
         return;
     }
@@ -122,9 +122,10 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
     }
 
     if ((flags & VOLUME_FLAG_SHOW_POPOVER) &&
-        !button->get_popover()->is_visible())
+        !popover.is_visible())
     {
-        button->get_popover()->popup();
+        popover.popup();
+        check_set_popover_timeout();
     }
 
     update_icon();
@@ -215,10 +216,21 @@ void WayfireVolume::on_volume_value_changed()
 void WayfireVolume::init(Gtk::Box *container)
 {
     /* Setup button */
-    button = std::make_unique<WayfireMenuButton>("panel");
-    auto style = button->get_style_context();
+    button.signal_clicked().connect([=]
+    {
+        if (!popover.is_visible())
+        {
+            popover.popup();
+        } else
+        {
+            popover.popdown();
+        }
+    });
+    auto style = button.get_style_context();
     style->add_class("volume");
     style->add_class("flat");
+
+    gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(button.gobj()));
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
@@ -239,17 +251,14 @@ void WayfireVolume::init(Gtk::Box *container)
         return true;
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
-    button->add_controller(scroll_gesture);
-    button->property_scale_factor().signal_changed().connect(
-        [=] () {update_icon(); });
+    button.add_controller(scroll_gesture);
 
     /* Setup popover */
-    auto popover = button->get_popover();
-    popover->set_autohide(false);
-    popover->set_child(volume_scale);
+    popover.set_autohide(false);
+    popover.set_child(volume_scale);
     // popover->set_modal(false);
-    popover->get_style_context()->add_class("volume-popover");
-    popover->add_controller(scroll_gesture);
+    popover.get_style_context()->add_class("volume-popover");
+    popover.add_controller(scroll_gesture);
 
     volume_scale.set_draw_value(false);
     volume_scale.set_size_request(300, 0);
@@ -265,12 +274,13 @@ void WayfireVolume::init(Gtk::Box *container)
     gvc_mixer_control_open(gvc_control);
 
     /* Setup layout */
-    container->append(*button);
-    button->set_child(main_image);
+    container->append(button);
+    button.set_child(main_image);
 }
 
 WayfireVolume::~WayfireVolume()
 {
+    gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
     disconnect_gvc_stream_signals();
 
     if (notify_default_sink_changed)
