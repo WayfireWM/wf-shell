@@ -29,11 +29,11 @@ class WayfireToplevel::impl
     std::vector<zwlr_foreign_toplevel_handle_v1*> children;
     uint32_t state;
 
-    Gtk::MenuButton button;
+    Gtk::Button button;
     Glib::RefPtr<Gio::SimpleActionGroup> actions;
 
+    Gtk::PopoverMenu popover;
     Glib::RefPtr<Gio::Menu> menu;
-
     Glib::RefPtr<Gio::MenuItem> minimize, maximize, close;
     Glib::RefPtr<Gio::SimpleAction> minimize_action, maximize_action, close_action;
     // Gtk::Box menu_box;
@@ -69,7 +69,7 @@ class WayfireToplevel::impl
         button.set_tooltip_text("none");
 
         label.set_ellipsize(Pango::EllipsizeMode::END);
-        label.set_max_width_chars(100);
+        label.set_max_width_chars(30);
         label.set_hexpand(true);
 
         button.property_scale_factor().signal_changed()
@@ -90,7 +90,11 @@ class WayfireToplevel::impl
         actions->add_action(minimize_action);
         actions->add_action(maximize_action);
 
-        button.insert_action_group("windowaction", actions);
+        // Hey Kids, want to see a really stupid idea?
+        // Button can only have one child! But setting the parent of a popover still works fine...
+        gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(button.gobj()));
+
+        popover.insert_action_group("windowaction", actions);
         menu     = Gio::Menu::create();
         minimize = Gio::MenuItem::create("Minimize", "windowaction.minimize");
         maximize = Gio::MenuItem::create("Maximize", "windowaction.maximize");
@@ -99,7 +103,7 @@ class WayfireToplevel::impl
         menu->append_item(minimize);
         menu->append_item(maximize);
         menu->append_item(close);
-        button.set_menu_model(menu);
+        popover.set_menu_model(menu);
 
         drag_gesture = Gtk::GestureDrag::create();
         drag_gesture->signal_drag_begin().connect(
@@ -118,10 +122,11 @@ class WayfireToplevel::impl
             int butt = click_gesture->get_current_button();
             if (butt == 3)
             {
-                button.popup();
+                popover.popup();
                 click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
             } else if (butt == 1)
             {
+                // Don't action it now because the press might be a drag!
                 click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
             } else if (butt = 2 && middle_click_close)
             {
@@ -135,6 +140,7 @@ class WayfireToplevel::impl
         {
             if (click_gesture->get_current_button() == 1)
             {
+                // Ah, it was a press after all!
                 if (!ignore_next_click)
                 {
                     this->on_clicked();
@@ -144,27 +150,6 @@ class WayfireToplevel::impl
             }
         });
         button.add_controller(click_gesture);
-
-        /*button.signal_drag_motion().connect(
-         *   [this] (const Glib::RefPtr<Gdk::DragContext>, gint x, gint y, guint time) -> bool
-         *  {
-         *   if (!m_drag_timeout)
-         *   {
-         *       m_drag_timeout = Glib::signal_timeout().connect(sigc::mem_fun(this,
-         *           &WayfireToplevel::impl::drag_paused), 700);
-         *   }
-         *
-         *   return true;
-         *  });
-         *
-         *  button.signal_drag_leave().connect(
-         *   [this] (const Glib::RefPtr<Gdk::DragContext>, guint time)
-         *  {
-         *   if (m_drag_timeout)
-         *   {
-         *       m_drag_timeout.disconnect();
-         *   }
-         *  });*/
 
         this->window_list = window_list;
     }
