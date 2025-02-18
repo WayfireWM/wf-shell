@@ -100,7 +100,10 @@ class WayfirePanel::impl
         right_box.get_style_context()->add_class("right");
         center_box.get_style_context()->add_class("center");
         content_box.set_start_widget(left_box);
-        content_box.set_center_widget(center_box);
+        if(!center_box.get_children().empty())
+        {
+            content_box.set_center_widget(center_box);
+        }
         content_box.set_end_widget(right_box);
 
         content_box.set_hexpand(true);
@@ -270,6 +273,13 @@ class WayfirePanel::impl
         center_widgets_opt.set_callback([=] ()
         {
             reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+            if (center_box.get_children().empty())
+            {
+                content_box.unset_center_widget();
+            } else
+            {
+                content_box.set_center_widget(center_box);
+            }
         });
 
         reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
