@@ -100,10 +100,11 @@ class WayfirePanel::impl
         right_box.get_style_context()->add_class("right");
         center_box.get_style_context()->add_class("center");
         content_box.set_start_widget(left_box);
-        if(!center_box.get_children().empty())
+        if (!center_box.get_children().empty())
         {
             content_box.set_center_widget(center_box);
         }
+
         content_box.set_end_widget(right_box);
 
         content_box.set_hexpand(true);
