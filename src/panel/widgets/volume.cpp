@@ -103,10 +103,6 @@ bool WayfireVolume::on_popover_timeout(int timer)
 void WayfireVolume::check_set_popover_timeout()
 {
     popover_timeout.disconnect();
-    if (volume_scale.is_focus())
-    {
-        return;
-    }
 
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
         &WayfireVolume::on_popover_timeout), 0), timeout * 1000);
@@ -121,11 +117,15 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
         gvc_mixer_stream_push_volume(gvc_stream);
     }
 
-    if ((flags & VOLUME_FLAG_SHOW_POPOVER) &&
-        !popover.is_visible())
+    if (flags & VOLUME_FLAG_SHOW_POPOVER)
     {
-        popover.popup();
-        check_set_popover_timeout();
+        if (!popover.is_visible())
+        {
+            popover.popup();
+        } else
+        {
+            check_set_popover_timeout();
+        }
     }
 
     update_icon();
