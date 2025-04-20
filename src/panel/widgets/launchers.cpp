@@ -66,7 +66,8 @@ void WfLauncherButton::launch()
 {
     if (app_info)
     {
-        app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
+        auto ctx = Gdk::Display::get_default()->get_app_launch_context();
+        app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
     }
 }
 
