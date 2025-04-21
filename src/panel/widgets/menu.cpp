@@ -118,7 +118,8 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
         menu_item->signal_activate().connect(
             [this, action] ()
         {
-            m_app_info->launch_action(action);
+            auto ctx = Gdk::Display::get_default()->get_app_launch_context();
+            m_app_info->launch_action(action, ctx);
             menu->hide_menu();
         });
         m_action_menu.append(*menu_item);
@@ -161,7 +162,8 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
 
 void WfMenuMenuItem::on_click()
 {
-    m_app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
+    auto ctx = Gdk::Display::get_default()->get_app_launch_context();
+    m_app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
     menu->hide_menu();
 }
 

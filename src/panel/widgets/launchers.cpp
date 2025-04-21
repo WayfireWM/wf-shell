@@ -33,6 +33,11 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         }
 
         keyfile.set_string("Desktop Entry", "Name", label);
+        /* needed for xdg-activation to work, see:
+         * https://gitlab.gnome.org/GNOME/glib/-/blob/main/gio/gdesktopappinfo.c?ref_type=heads#L1970
+         * https://gitlab.gnome.org/GNOME/glib/-/blob/main/gio/gdesktopappinfo.c?ref_type=heads#L2957
+         */
+        keyfile.set_string("Desktop Entry", "StartupNotify", "true");
 
         // Hand off to have a custom launcher
         app_info = Gio::DesktopAppInfo::create_from_keyfile(keyfile);
@@ -69,7 +74,8 @@ void WfLauncherButton::launch()
 {
     if (app_info)
     {
-        app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
+        auto ctx = Gdk::Display::get_default()->get_app_launch_context();
+        app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
     }
 }
 
