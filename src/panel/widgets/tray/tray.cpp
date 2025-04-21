@@ -20,6 +20,10 @@ void WayfireStatusNotifier::add_item(const Glib::ustring & service)
 
 void WayfireStatusNotifier::remove_item(const Glib::ustring & service)
 {
+    if (items.count(service) == 0)
+    {
+        return;
+    }
     icons_hbox.remove(items.at(service));
     items.erase(service);
 }

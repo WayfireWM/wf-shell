@@ -190,6 +190,7 @@ void StatusNotifierItem::update_icon()
 
     const Glib::ustring icon_type_name =
         get_item_property<Glib::ustring>("Status") == "NeedsAttention" ? "AttentionIcon" : "Icon";
+    const bool hide = get_item_property<Glib::ustring>("Status") == "Passive";
     const auto icon_name   = get_item_property<Glib::ustring>(icon_type_name + "Name");
     const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
     if (pixmap_data)
@@ -198,6 +199,13 @@ void StatusNotifierItem::update_icon()
     } else
     {
         icon.set_from_icon_name(icon_name);
+    }
+    if (hide)
+    {
+        this->hide();
+    } else
+    {
+        this->show();
     }
 }
 
