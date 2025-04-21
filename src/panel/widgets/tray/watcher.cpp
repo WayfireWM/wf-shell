@@ -80,11 +80,12 @@ void Watcher::register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connec
     const Glib::ustring & sender, const Glib::ustring & path)
 {
     const auto full_obj_path = sender + path;
-    if (sn_items_id.count(full_obj_path) !=0)
+    if (sn_items_id.count(full_obj_path) != 0)
     {
         std::cout << "Unabe to add status notifier : already exists" << std::endl;
         return;
     }
+    
     emit_signal("StatusNotifierItemRegistered", full_obj_path);
     sn_items_id.emplace(full_obj_path, Gio::DBus::watch_name(
         Gio::DBus::BusType::SESSION, sender, {},

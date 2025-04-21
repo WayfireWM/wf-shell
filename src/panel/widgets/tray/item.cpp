@@ -200,6 +200,7 @@ void StatusNotifierItem::update_icon()
     {
         icon.set_from_icon_name(icon_name);
     }
+    
     if (hide)
     {
         this->hide();
