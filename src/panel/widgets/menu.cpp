@@ -517,6 +517,8 @@ void WayfireMenu::update_popover_layout()
         flowbox_container.append(bottom_pad);
         flowbox_container.append(flowbox);
 
+        flowbox.set_size_request(int(menu_min_content_width), int(menu_min_content_height));
+
         scroll_pair.append(category_scrolled_window);
         scroll_pair.append(app_scrolled_window);
         scroll_pair.set_homogeneous(false);
