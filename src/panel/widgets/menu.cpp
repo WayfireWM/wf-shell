@@ -80,6 +80,8 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     m_extra_actions_button.get_style_context()->add_class("app-button-extras");
     m_extra_actions_button.set_halign(Gtk::Align::END);
     m_extra_actions_button.set_direction(Gtk::ArrowType::RIGHT);
+    m_extra_actions_button.set_has_frame(false);
+    m_extra_actions_button.set_icon_name("arrow-right");
     m_menu    = Gio::Menu::create();
     m_actions = Gio::SimpleActionGroup::create();
     m_extra_actions_button.hide();
