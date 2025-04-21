@@ -24,7 +24,7 @@ void WayfireStatusNotifier::remove_item(const Glib::ustring & service)
     {
         return;
     }
-    
+
     icons_hbox.remove(items.at(service));
     items.erase(service);
 }
