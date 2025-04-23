@@ -114,6 +114,7 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
             } else
             {
                 auto item = Gio::MenuItem::create(label, "a");
+                /*
                 if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_ICON_DATA))
                 {
                     auto image_data = dbusmenu_menuitem_property_get_variant(child,
@@ -125,7 +126,7 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
                     {
                         item->set_icon(Gio::ThemedIcon::create(icon_name, true));
                     }
-                }
+                }*/
 
                 if (enabled)
                 {
