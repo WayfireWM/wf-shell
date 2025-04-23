@@ -114,20 +114,6 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
             } else
             {
                 auto item = Gio::MenuItem::create(label, "a");
-                /*
-                if (dbusmenu_menuitem_property_exist(child, DBUSMENU_MENUITEM_PROP_ICON_DATA))
-                {
-                    auto image_data = dbusmenu_menuitem_property_get_variant(child,
-                        DBUSMENU_MENUITEM_PROP_ICON_DATA);
-                    item->set_icon(Gio::BytesIcon::create(Glib::wrap(image_data).get_data_as_bytes()));
-                } else
-                {
-                    if (icon_name != "")
-                    {
-                        item->set_icon(Gio::ThemedIcon::create(icon_name, true));
-                    }
-                }*/
-
                 if (enabled)
                 {
                     auto action_name = label_to_action_name(label, stupid_count);
