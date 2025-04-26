@@ -532,6 +532,7 @@ void WayfireMenu::update_popover_layout()
         app_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
 
         category_box.get_style_context()->add_class("category-list");
+        category_box.set_orientation(Gtk::Orientation::VERTICAL);
 
         category_scrolled_window.set_min_content_width(int(menu_min_category_width));
         category_scrolled_window.set_min_content_height(int(menu_min_content_height));
