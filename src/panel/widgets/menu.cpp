@@ -75,6 +75,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     });
     m_padding_box.append(m_button);
     m_label.set_ellipsize(Pango::EllipsizeMode::END);
+    m_label.set_max_width_chars(5);
     m_button.get_style_context()->add_class("flat");
     m_extra_actions_button.get_style_context()->add_class("flat");
     m_extra_actions_button.get_style_context()->add_class("app-button-extras");
