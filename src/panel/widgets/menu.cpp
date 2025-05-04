@@ -906,6 +906,7 @@ void WayfireMenu::set_category(std::string in_category)
 
 void WayfireMenu::select_first_flowbox_item()
 {
+    flowbox.grab_focus();
     for (auto child : flowbox.get_children())
     {
         if (child->get_mapped())
