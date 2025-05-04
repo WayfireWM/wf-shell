@@ -281,7 +281,7 @@ void WayfireVolume::init(Gtk::Box *container)
         bool muted = !(gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream));
         gvc_mixer_stream_change_is_muted(gvc_stream, muted);
         gvc_mixer_stream_push_volume(gvc_stream);
-    }); 
+    });
     button.add_controller(middle_click_gesture);
 
     /* Setup layout */
