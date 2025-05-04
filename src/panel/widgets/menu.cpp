@@ -421,7 +421,6 @@ void WayfireMenu::on_search_changed()
         {
             /* User is filtering, hide categories, ignore chosen category */
             populate_menu_items("All");
-
         }
     }
 
