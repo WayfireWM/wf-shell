@@ -126,9 +126,7 @@ class WayfireMenu : public WayfireWidget
     Gtk::Box category_box;
     Gtk::Separator separator;
     Gtk::Image main_image;
-    Gtk::Image search_logo;
-    Gtk::Box search_box;
-    Gtk::Label search_label;
+    Gtk::Entry search_entry;
     Gtk::FlowBox flowbox;
     Gtk::Button logout_button;
     Gtk::ScrolledWindow app_scrolled_window, category_scrolled_window;

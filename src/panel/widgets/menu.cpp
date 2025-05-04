@@ -408,7 +408,7 @@ void WayfireMenu::load_menu_items_all()
 
 void WayfireMenu::on_search_changed()
 {
-    search_label.set_text(search_contents);
+    search_entry.set_text(search_contents);
     if (menu_show_categories)
     {
         if (search_contents.length() == 0)
@@ -541,12 +541,9 @@ void WayfireMenu::update_popover_layout()
         category_scrolled_window.get_style_context()->add_class("categtory-list-scroll");
         category_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
 
-        search_logo.set_from_icon_name("search");
-        search_box.get_style_context()->add_class("app-search");
-        search_box.set_halign(Gtk::Align::START);
-
-        search_box.append(search_logo);
-        search_box.append(search_label);
+        search_entry.get_style_context()->add_class("app-search");
+        search_entry.set_icon_from_icon_name("search", Gtk::Entry::IconPosition::SECONDARY);
+        search_entry.set_can_focus(false);
 
         auto typing_gesture = Gtk::EventControllerKey::create();
         typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
@@ -590,7 +587,7 @@ void WayfireMenu::update_popover_layout()
     {
         /* Layout was already initialized, make sure to remove widgets before
          * adding them again */
-        popover_layout_box.remove(search_box);
+        popover_layout_box.remove(search_entry);
         popover_layout_box.remove(scroll_pair);
         popover_layout_box.remove(separator);
         popover_layout_box.remove(hbox_bottom);
@@ -598,14 +595,14 @@ void WayfireMenu::update_popover_layout()
 
     if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {
-        popover_layout_box.append(search_box);
+        popover_layout_box.append(search_entry);
         popover_layout_box.append(scroll_pair);
         popover_layout_box.append(separator);
         popover_layout_box.append(hbox_bottom);
     } else
     {
         popover_layout_box.append(scroll_pair);
-        popover_layout_box.append(search_box);
+        popover_layout_box.append(search_entry);
         popover_layout_box.append(separator);
         popover_layout_box.append(hbox_bottom);
     }
@@ -917,7 +914,6 @@ void WayfireMenu::select_first_flowbox_item()
             if (cast_child)
             {
                 flowbox.select_child(*cast_child);
-                cast_child->grab_focus();
                 app_scrolled_window.set_vadjustment(0);
                 return;
             }
