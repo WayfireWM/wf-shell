@@ -273,6 +273,17 @@ void WayfireVolume::init(Gtk::Box *container)
         "default-sink-changed", G_CALLBACK(default_sink_changed), this);
     gvc_mixer_control_open(gvc_control);
 
+    /* Middle click toggle mute */
+    auto middle_click_gesture = Gtk::GestureClick::create();
+    middle_click_gesture->set_button(2);
+    middle_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        bool muted = !(gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream));
+        gvc_mixer_stream_change_is_muted(gvc_stream, muted);
+        gvc_mixer_stream_push_volume(gvc_stream);
+    }); 
+    button.add_controller(middle_click_gesture);
+
     /* Setup layout */
     container->append(button);
     button.set_child(main_image);
