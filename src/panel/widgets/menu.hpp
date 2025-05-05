@@ -128,6 +128,7 @@ class WayfireMenu : public WayfireWidget
     Gtk::Entry search_entry;
     Gtk::FlowBox flowbox;
     Gtk::Button logout_button;
+    Gtk::Image logout_image;
     Gtk::ScrolledWindow app_scrolled_window, category_scrolled_window;
     std::unique_ptr<WayfireMenuButton> button;
     std::unique_ptr<WayfireLogoutUI> logout_ui;

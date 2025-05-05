@@ -835,10 +835,15 @@ void WayfireMenu::init(Gtk::Box *container)
     container->append(hbox);
     hbox.append(*button);
 
-    logout_button.set_image_from_icon_name("system-shutdown");
+    logout_image.set_icon_size(Gtk::IconSize::LARGE);
+    logout_image.set_from_icon_name("system-shutdown");
+    logout_button.get_style_context()->add_class("flat");
     logout_button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_logout_click));
+    logout_button.set_margin_end(35);
+    logout_button.set_child(logout_image);
     hbox_bottom.append(logout_button);
+    hbox_bottom.set_halign(Gtk::Align::END);
 
     popover_layout_box.set_orientation(Gtk::Orientation::VERTICAL);
 
