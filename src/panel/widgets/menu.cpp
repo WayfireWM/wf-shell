@@ -665,7 +665,8 @@ void WayfireLogoutUI::create_logout_ui_button(WayfireLogoutUIButton *button, con
     button->layout.append(button->label);
     button->button.set_child(button->layout);
 
-    button->button.signal_query_tooltip().connect([=] (int x, int y, bool key_mode, const std::shared_ptr<Gtk::Tooltip>& tooltip) -> bool
+    button->button.signal_query_tooltip().connect([=] (int x, int y, bool key_mode, 
+                                                       const std::shared_ptr<Gtk::Tooltip>& tooltip) -> bool
     {
         tooltip->set_text(label);
         return true;
