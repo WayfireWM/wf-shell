@@ -119,6 +119,13 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
 
     set_child(m_padding_box);
     get_style_context()->add_class("app-button");
+    set_has_tooltip();
+    signal_query_tooltip().connect([=] (int x, int y, bool key_mode, 
+                                        const std::shared_ptr<Gtk::Tooltip>& tooltip) -> bool
+    {
+        tooltip->set_text(app->get_name());
+        return true;
+    }, false);
     m_extra_actions_button.insert_action_group("app", m_actions);
 
     auto click_gesture = Gtk::GestureClick::create();
@@ -658,19 +665,11 @@ void WayfireLogoutUI::create_logout_ui_button(WayfireLogoutUIButton *button, con
     const char *label)
 {
     button->button.set_size_request(LOGOUT_BUTTON_SIZE, LOGOUT_BUTTON_SIZE);
-    button->button.set_has_tooltip(true);
     button->image.set_from_icon_name(icon);
     button->label.set_text(label);
     button->layout.append(button->image);
     button->layout.append(button->label);
     button->button.set_child(button->layout);
-
-    button->button.signal_query_tooltip().connect([=] (int x, int y, bool key_mode, 
-                                                       const std::shared_ptr<Gtk::Tooltip>& tooltip) -> bool
-    {
-        tooltip->set_text(label);
-        return true;
-    }, false);
 }
 
 WayfireLogoutUI::WayfireLogoutUI()
