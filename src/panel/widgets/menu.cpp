@@ -120,7 +120,8 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     set_child(m_padding_box);
     get_style_context()->add_class("app-button");
     set_has_tooltip();
-    signal_query_tooltip().connect([=] (int x, int y, bool key_mode, const std::shared_ptr<Gtk::Tooltip>& tooltip) -> bool
+    signal_query_tooltip().connect([=] (int x, int y, bool key_mode,
+                                        const std::shared_ptr<Gtk::Tooltip>& tooltip) -> bool
     {
         tooltip->set_text(app->get_name());
         return true;
