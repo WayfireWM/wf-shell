@@ -738,7 +738,6 @@ void WayfireMenu::on_logout_click()
 
     /* If no command specified for logout, show our own logout window */
     logout_ui->ui.present();
-
 }
 
 void WayfireMenu::refresh()
