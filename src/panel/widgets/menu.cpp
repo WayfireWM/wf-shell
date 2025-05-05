@@ -613,49 +613,42 @@ void WayfireMenu::update_popover_layout()
 void WayfireLogoutUI::on_logout_click()
 {
     ui.hide();
-    bg.hide();
     g_spawn_command_line_async(std::string(logout_command).c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_reboot_click()
 {
     ui.hide();
-    bg.hide();
     g_spawn_command_line_async(std::string(reboot_command).c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_shutdown_click()
 {
     ui.hide();
-    bg.hide();
     g_spawn_command_line_async(std::string(shutdown_command).c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_suspend_click()
 {
     ui.hide();
-    bg.hide();
     g_spawn_command_line_async(std::string(suspend_command).c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_hibernate_click()
 {
     ui.hide();
-    bg.hide();
     g_spawn_command_line_async(std::string(hibernate_command).c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_switchuser_click()
 {
     ui.hide();
-    bg.hide();
     g_spawn_command_line_async(std::string(switchuser_command).c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_cancel_click()
 {
     ui.hide();
-    bg.hide();
 }
 
 #define LOGOUT_BUTTON_SIZE  125
@@ -677,61 +670,59 @@ WayfireLogoutUI::WayfireLogoutUI()
     create_logout_ui_button(&suspend, "emblem-synchronizing", "Suspend");
     suspend.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_suspend_click));
-    top_layout.append(suspend.button);
+
+    main_layout.attach(suspend.button, 0, 0, 1, 1);
 
     create_logout_ui_button(&hibernate, "weather-clear-night", "Hibernate");
     hibernate.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_hibernate_click));
-    top_layout.append(hibernate.button);
+    main_layout.attach(hibernate.button, 1, 0, 1, 1);
 
     create_logout_ui_button(&switchuser, "system-users", "Switch User");
     switchuser.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_switchuser_click));
-    top_layout.append(switchuser.button);
+    main_layout.attach(switchuser.button, 2, 0, 1, 1);
 
     create_logout_ui_button(&logout, "system-log-out", "Log Out");
     logout.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_logout_click));
-    middle_layout.append(logout.button);
+    main_layout.attach(logout.button, 0, 1, 1, 1);
 
     create_logout_ui_button(&reboot, "system-reboot", "Reboot");
     reboot.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_reboot_click));
-    middle_layout.append(reboot.button);
+    main_layout.attach(reboot.button, 1, 1, 1, 1);
 
     create_logout_ui_button(&shutdown, "system-shutdown", "Shut Down");
     shutdown.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_shutdown_click));
-    middle_layout.append(shutdown.button);
+    main_layout.attach(shutdown.button, 2, 1, 1, 1);
 
     cancel.button.set_size_request(100, 50);
     cancel.button.set_label("Cancel");
-    bottom_layout.append(cancel.button);
+    main_layout.attach(cancel.button, 1, 2, 1, 1);
     cancel.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_cancel_click));
 
-    top_layout.set_spacing(LOGOUT_BUTTON_MARGIN);
-    middle_layout.set_spacing(LOGOUT_BUTTON_MARGIN);
-    bottom_layout.set_spacing(LOGOUT_BUTTON_MARGIN);
-    main_layout.set_spacing(LOGOUT_BUTTON_MARGIN);
-    main_layout.append(top_layout);
-    main_layout.append(middle_layout);
-    main_layout.append(bottom_layout);
-    /* Work around spacing bug for immediate child of window */
-    hspacing_layout.append(main_layout);
-    vspacing_layout.append(hspacing_layout);
+    main_layout.set_row_spacing(LOGOUT_BUTTON_MARGIN);
+    main_layout.set_column_spacing(LOGOUT_BUTTON_MARGIN);
     /* Make surfaces layer shell */
-    gtk_layer_init_for_window(bg.gobj());
-    gtk_layer_set_layer(bg.gobj(), GTK_LAYER_SHELL_LAYER_TOP);
-    gtk_layer_set_exclusive_zone(bg.gobj(), -1);
     gtk_layer_init_for_window(ui.gobj());
     gtk_layer_set_layer(ui.gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
-    ui.set_child(vspacing_layout);
-    bg.set_opacity(0.5);
+
+    gtk_layer_set_anchor(ui.gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
+    gtk_layer_set_anchor(ui.gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+    gtk_layer_set_anchor(ui.gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+    gtk_layer_set_anchor(ui.gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+    main_layout.set_valign(Gtk::Align::CENTER);
+    hbox.set_center_widget(main_layout);
+    hbox.set_hexpand(true);
+    hbox.set_vexpand(true);
+    ui.set_child(hbox);
+    ui.get_style_context()->add_class("logout");
     auto display = ui.get_display();
     auto css_provider = Gtk::CssProvider::create();
-    bg.set_name("logout_background");
-    css_provider->load_from_data("window#logout_background { background-color: black; }");
+    css_provider->load_from_data("window.logout { background-color: rgba(0, 0, 0, 0.5); }");
     Gtk::StyleContext::add_provider_for_display(display,
         css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
@@ -748,8 +739,6 @@ void WayfireMenu::on_logout_click()
     /* If no command specified for logout, show our own logout window */
     logout_ui->ui.present();
 
-    /* Set the background window to the same size of the screen */
-    // logout_ui->bg.set_size_request(gdk_screen->get_width(), gdk_screen->get_height());
 }
 
 void WayfireMenu::refresh()

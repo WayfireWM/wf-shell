@@ -90,8 +90,7 @@ class WayfireLogoutUI
     WfOption<std::string> suspend_command{"panel/suspend_command"};
     WfOption<std::string> hibernate_command{"panel/hibernate_command"};
     WfOption<std::string> switchuser_command{"panel/switchuser_command"};
-    Gtk::Window ui, bg;
-    Gtk::Box bg_box;
+    Gtk::Window ui;
     WayfireLogoutUIButton logout;
     WayfireLogoutUIButton reboot;
     WayfireLogoutUIButton shutdown;
@@ -99,8 +98,8 @@ class WayfireLogoutUI
     WayfireLogoutUIButton hibernate;
     WayfireLogoutUIButton switchuser;
     WayfireLogoutUIButton cancel;
-    Gtk::Box main_layout, vspacing_layout;
-    Gtk::Box top_layout, middle_layout, bottom_layout, hspacing_layout;
+    Gtk::CenterBox hbox;
+    Gtk::Grid main_layout;
     void create_logout_ui_button(WayfireLogoutUIButton *button,
         const char *icon, const char *label);
     void on_logout_click();
