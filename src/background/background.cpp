@@ -28,8 +28,8 @@ attribute highp vec2 uvpos;
 varying vec2 uv;
 
 void main() {
-  uv = uvpos;
-  gl_Position = vec4(in_position, 0.0, 1.0);
+    uv = uvpos;
+    gl_Position = vec4(in_position, 0.0, 1.0);
 }
 )";
 
@@ -43,105 +43,105 @@ uniform float progress;
 varying vec2 uv;
 
 void main() {
-  vec4 from = texture2D(bg_texture_from, uv);
-  vec4 to = texture2D(bg_texture_to, uv);
-  vec3 color = mix(from.rgb, to.rgb, progress);
-  gl_FragColor = vec4(color, 1.0);
+    vec4 from = texture2D(bg_texture_from, uv);
+    vec4 to = texture2D(bg_texture_to, uv);
+    vec3 color = mix(from.rgb, to.rgb, progress);
+    gl_FragColor = vec4(color, 1.0);
 }
 )";
 
 /* Create and compile a shader */
 static GLuint create_shader(int type, const char *src)
 {
-  GLuint shader;
-  int status;
+    GLuint shader;
+    int status;
 
-  shader = glCreateShader(type);
-  glShaderSource(shader, 1, &src, NULL);
-  glCompileShader(shader);
+    shader = glCreateShader(type);
+    glShaderSource(shader, 1, &src, NULL);
+    glCompileShader(shader);
 
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-  if (status == GL_FALSE)
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    if (status == GL_FALSE)
     {
-      int log_len;
-      char *buffer;
+        int log_len;
+        char *buffer;
 
-      glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_len);
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_len);
 
-      buffer = (char*)g_malloc(log_len + 1);
-      glGetShaderInfoLog(shader, log_len, NULL, buffer);
+        buffer = (char*)g_malloc(log_len + 1);
+        glGetShaderInfoLog(shader, log_len, NULL, buffer);
 
-      printf("Compile failure in %s shader:\n%s",
-          type == GL_VERTEX_SHADER ? "vertex" : "fragment",
-          buffer);
+        printf("Compile failure in %s shader:\n%s",
+            type == GL_VERTEX_SHADER ? "vertex" : "fragment",
+            buffer);
 
-      g_free(buffer);
+        g_free(buffer);
 
-      glDeleteShader(shader);
+        glDeleteShader(shader);
 
-      return 0;
+        return 0;
     }
 
-  return shader;
+    return shader;
 }
 
 /* Initialize the shaders and link them into a program */
 static GLuint init_shaders()
 {
-  GLuint vertex, fragment;
-  GLuint program = 0;
-  int status;
+    GLuint vertex, fragment;
+    GLuint program = 0;
+    int status;
 
-  vertex = create_shader(GL_VERTEX_SHADER, vertex_shader);
+    vertex = create_shader(GL_VERTEX_SHADER, vertex_shader);
 
-  if (vertex == 0)
-  {
-      return 0;
-  }
+    if (vertex == 0)
+    {
+        return 0;
+    }
 
-  fragment = create_shader(GL_FRAGMENT_SHADER, fragment_shader);
+    fragment = create_shader(GL_FRAGMENT_SHADER, fragment_shader);
 
-  if (fragment == 0)
-  {
-      glDeleteShader(vertex);
-      return 0;
-  }
+    if (fragment == 0)
+    {
+        glDeleteShader(vertex);
+        return 0;
+    }
 
-  program = glCreateProgram ();
-  glAttachShader (program, vertex);
-  glAttachShader (program, fragment);
+    program = glCreateProgram ();
+    glAttachShader (program, vertex);
+    glAttachShader (program, fragment);
 
-  glLinkProgram (program);
+    glLinkProgram (program);
 
-  glGetProgramiv (program, GL_LINK_STATUS, &status);
-  if (status == GL_FALSE)
-  {
-      int log_len;
-      char *buffer;
+    glGetProgramiv (program, GL_LINK_STATUS, &status);
+    if (status == GL_FALSE)
+    {
+        int log_len;
+        char *buffer;
 
-      glGetProgramiv (program, GL_INFO_LOG_LENGTH, &log_len);
+        glGetProgramiv (program, GL_INFO_LOG_LENGTH, &log_len);
 
-      buffer = (char *)g_malloc(log_len + 1);
-      glGetProgramInfoLog (program, log_len, NULL, buffer);
+        buffer = (char *)g_malloc(log_len + 1);
+        glGetProgramInfoLog (program, log_len, NULL, buffer);
 
-      g_warning ("Linking failure:\n%s", buffer);
+        g_warning ("Linking failure:\n%s", buffer);
 
-      g_free (buffer);
+        g_free (buffer);
 
-      glDeleteProgram (program);
-      program = 0;
+        glDeleteProgram (program);
+        program = 0;
 
-      goto out;
-  }
+        goto out;
+    }
 
-  glDetachShader (program, vertex);
-  glDetachShader (program, fragment);
+    glDetachShader (program, vertex);
+    glDetachShader (program, fragment);
 
 out:
-  glDeleteShader (vertex);
-  glDeleteShader (fragment);
+    glDeleteShader (vertex);
+    glDeleteShader (fragment);
 
-  return program;
+    return program;
 }
 
 Glib::RefPtr<BackgroundImageAdjustments> BackgroundImage::generate_adjustments(int width, int height)
