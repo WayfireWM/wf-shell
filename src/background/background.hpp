@@ -43,7 +43,8 @@ class BackgroundGLArea : public Gtk::GLArea
      * are used as offsets when preserve aspect is set. */
     Glib::RefPtr<BackgroundImage> to_image, from_image;
     GLuint from_tex = 0;
-    GLuint to_tex = 0;
+    GLuint to_tex   = 0;
+
   public:
     BackgroundGLArea(WayfireBackground *background);
     void realize();
@@ -58,8 +59,10 @@ class BackgroundGLArea : public Gtk::GLArea
 class BackgroundWindow : public Gtk::Window
 {
     WayfireBackground *background;
+
   public:
     BackgroundWindow(WayfireBackground *background);
+
   protected:
     void size_allocate_vfunc(int width, int height, int baseline) override;
 };
@@ -93,7 +96,7 @@ class WayfireBackground
     void setup_window();
 
   public:
-    guint window_width = 0;
+    guint window_width  = 0;
     guint window_height = 0;
     WayfireBackground(WayfireShellApp *app, WayfireOutput *output);
     void set_background();
