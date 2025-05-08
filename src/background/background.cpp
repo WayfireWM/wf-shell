@@ -480,10 +480,10 @@ bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
         1.0f, -1.0f,
     };
     static const float uv_coords[] = {
-        0.0f, 0.0f,
         1.0f, 0.0f,
-        1.0f, 1.0f,
+        0.0f, 0.0f,
         0.0f, 1.0f,
+        1.0f, 1.0f,
     };
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
