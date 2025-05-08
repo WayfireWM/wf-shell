@@ -39,12 +39,16 @@ precision highp float;
 uniform sampler2D bg_texture_from;
 uniform sampler2D bg_texture_to;
 uniform float progress;
+uniform vec4 from_adj;
+uniform vec4 to_adj;
 
 varying vec2 uv;
 
 void main() {
-    vec4 from = texture2D(bg_texture_from, uv);
-    vec4 to = texture2D(bg_texture_to, uv);
+    vec2 from_uv = vec2((uv.x * from_adj.z) - from_adj.x, (uv.y * from_adj.w) - from_adj.y);
+    vec2 to_uv = vec2((uv.x * to_adj.z) - to_adj.x, (uv.y * to_adj.w) - to_adj.y);
+    vec4 from = texture2D(bg_texture_from, from_uv);
+    vec4 to = texture2D(bg_texture_to, to_uv);
     vec3 color = mix(from.rgb, to.rgb, progress);
     gl_FragColor = vec4(color, 1.0);
 }
@@ -144,7 +148,7 @@ out:
     return program;
 }
 
-Glib::RefPtr<BackgroundImageAdjustments> BackgroundImage::generate_adjustments(int width, int height)
+void BackgroundImage::generate_adjustments(int width, int height)
 {
     // Sanity checks
     if ((width == 0) ||
@@ -153,7 +157,7 @@ Glib::RefPtr<BackgroundImageAdjustments> BackgroundImage::generate_adjustments(i
         (source->get_width() == 0) ||
         (source->get_height() == 0))
     {
-        return nullptr;
+        return;
     }
 
     double screen_width  = (double)width;
@@ -161,64 +165,56 @@ Glib::RefPtr<BackgroundImageAdjustments> BackgroundImage::generate_adjustments(i
     double source_width  = (double)source->get_width();
     double source_height = (double)source->get_height();
 
-    auto adjustment = Glib::RefPtr<BackgroundImageAdjustments>(new BackgroundImageAdjustments());
+    adjustments = Glib::RefPtr<BackgroundImageAdjustments>(new BackgroundImageAdjustments());
     std::string fill_and_crop_string = "fill_and_crop";
     std::string stretch_string = "stretch";
     if (!stretch_string.compare(fill_type))
     {
-        adjustment->x = 0.0;
-        adjustment->y = 0.0;
-        adjustment->scale_y = screen_height / source_height;
-        adjustment->scale_x = screen_width / source_width;
-        return adjustment;
+        adjustments->x = 0.0;
+        adjustments->y = 0.0;
+        adjustments->scale_x = 1.0;
+        adjustments->scale_y = 1.0;
     } else if (!fill_and_crop_string.compare(fill_type))
     {
-        double screen_aspect_ratio = screen_width / screen_height;
-        double image_aspect_ratio  = source_width / source_height;
-        bool should_fill_width     = (screen_aspect_ratio > image_aspect_ratio);
-        if (should_fill_width)
+		auto width_difference = screen_width - source_width;
+		auto height_difference = screen_height - source_height;
+        if (width_difference > height_difference)
         {
-            adjustment->scale_x = screen_width / source_width;
-            adjustment->scale_y = screen_width / source_width;
-            adjustment->y = ((screen_height / adjustment->scale_x) - source_height) * 0.5;
-            adjustment->x = 0.0;
+            adjustments->scale_x = 1.0;
+            adjustments->scale_y = (screen_height / screen_width) * (source_width / source_height);
+            adjustments->x    = 0.0;
+            adjustments->y    = ((screen_height - source_height * (screen_width / source_width))) * adjustments->scale_y * 0.5 * (1.0 / screen_height);
         } else
         {
-            adjustment->scale_x = screen_height / source_height;
-            adjustment->scale_y = screen_height / source_height;
-            adjustment->x = ((screen_width / adjustment->scale_x) - source_width) * 0.5;
-            adjustment->y = 0.0;
+            adjustments->scale_x = (screen_width / screen_height) * (source_height / source_width);
+            adjustments->scale_y = 1.0;
+            adjustments->x    = ((screen_width - source_width * (screen_height / source_height))) * adjustments->scale_x * 0.5 * (1.0 / screen_width);
+            adjustments->y    = 0.0;
         }
-
-        return adjustment;
-    } else
+    } else /* "preserve_aspect" */
     {
-        double screen_aspect_ratio = screen_width / screen_height;
-        double image_aspect_ratio  = source_width / source_height;
-        bool should_fill_width     = (screen_aspect_ratio > image_aspect_ratio);
-        if (should_fill_width)
+		auto width_difference = screen_width - source_width;
+		auto height_difference = screen_height - source_height;
+        if (width_difference < height_difference)
         {
-            adjustment->scale_x = screen_height / source_height;
-            adjustment->scale_y = screen_height / source_height;
-            adjustment->y = ((screen_height / adjustment->scale_x) - source_height) * 0.5;
-            adjustment->x = ((screen_width / adjustment->scale_x) - source_width) * 0.5;
+            adjustments->scale_x = 1.0;
+            adjustments->scale_y = screen_height / source_height;
+            adjustments->x    = 0.0;
+            adjustments->y    = height_difference * adjustments->scale_y * 0.5 * (1.0 / screen_height);
         } else
         {
-            adjustment->scale_x = screen_width / source_width;
-            adjustment->scale_y = screen_width / source_width;
-            adjustment->x = ((screen_width / adjustment->scale_x) - source_width) * 0.5;
-            adjustment->y = ((screen_height / adjustment->scale_x) - source_height) * 0.5;
+            adjustments->scale_x = screen_width / source_width;
+            adjustments->scale_y = 1.0;
+            adjustments->x    = width_difference * adjustments->scale_x * 0.5 * (1.0 / screen_width);
+            adjustments->y    = 0.0;
         }
-
-        return adjustment;
     }
-
-    return nullptr;
 }
 
 void BackgroundGLArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
 {
-    if (!next_image)
+    if (!next_image || !next_image->source ||
+        background->window_width <= 0 || background->window_height <= 0)
     {
         to_image   = nullptr;
         from_image = nullptr;
@@ -231,6 +227,7 @@ void BackgroundGLArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
     int width, height;
     if (from_image)
     {
+        from_image->generate_adjustments(background->window_width, background->window_height);
         width = from_image->source->get_width();
         height = from_image->source->get_height();
         glBindTexture(GL_TEXTURE_2D, from_tex);
@@ -238,6 +235,7 @@ void BackgroundGLArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, from_image->source->get_pixels());
     }
 
+    to_image->generate_adjustments(background->window_width, background->window_height);
     width = to_image->source->get_width();
     height = to_image->source->get_height();
     glBindTexture(GL_TEXTURE_2D, to_tex);
@@ -445,7 +443,6 @@ void WayfireBackground::reset_cycle_timeout()
         change_bg_conn = Glib::signal_timeout().connect(sigc::mem_fun(
             *this, &WayfireBackground::change_background), cycle_timeout);
     }
-    change_background();
 }
 
 static GLuint create_texture()
@@ -454,8 +451,8 @@ static GLuint create_texture()
 
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -485,6 +482,22 @@ bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
         0.0f, 1.0f,
         1.0f, 1.0f,
     };
+    static float from_adj[4] = {0.0, 0.0, 1.0, 1.0};
+    if (from_image)
+    {
+        from_adj[0] = from_image->adjustments->x;
+        from_adj[1] = from_image->adjustments->y;
+        from_adj[2] = from_image->adjustments->scale_x;
+        from_adj[3] = from_image->adjustments->scale_y;
+    }
+    static float to_adj[4] = {0.0, 0.0, 1.0, 1.0};
+    if (to_image)
+    {
+        to_adj[0] = to_image->adjustments->x;
+        to_adj[1] = to_image->adjustments->y;
+        to_adj[2] = to_image->adjustments->scale_x;
+        to_adj[3] = to_image->adjustments->scale_y;
+    }
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -503,6 +516,10 @@ bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
     GLuint progress = glGetUniformLocation(program, "progress");
     glUniform1f(progress, fade);
+    GLuint from_adj_loc = glGetUniformLocation(program, "from_adj");
+    glUniform4fv(from_adj_loc, 1, from_adj);
+    GLuint to_adj_loc = glGetUniformLocation(program, "to_adj");
+    glUniform4fv(to_adj_loc, 1, to_adj);
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
@@ -540,6 +557,8 @@ void BackgroundWindow::size_allocate_vfunc(int width, int height, int baseline)
     Gtk::Widget::size_allocate_vfunc(width, height, baseline);
     background->window_width = width;
     background->window_height = height;
+
+    background->set_background();
 }
 
 void WayfireBackground::setup_window()
@@ -571,8 +590,6 @@ void WayfireBackground::setup_window()
     background_cycle_timeout.set_callback(reset_cycle);
 
     window->present();
-
-    set_background();
 }
 
 WayfireBackground::WayfireBackground(WayfireShellApp *app, WayfireOutput *output)

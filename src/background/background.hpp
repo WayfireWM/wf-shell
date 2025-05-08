@@ -14,8 +14,8 @@ class WayfireBackground;
 class BackgroundImageAdjustments
 {
   public:
-    double scale_x = -1, scale_y = -1;
-    double x, y;
+    GLfloat scale_x = -1, scale_y = -1;
+    GLfloat x, y;
 };
 
 class BackgroundImage
@@ -23,8 +23,9 @@ class BackgroundImage
   public:
     Glib::RefPtr<Gdk::Pixbuf> source;
     std::string fill_type;
+    Glib::RefPtr<BackgroundImageAdjustments> adjustments;
 
-    Glib::RefPtr<BackgroundImageAdjustments> generate_adjustments(int width, int height);
+    void generate_adjustments(int width, int height);
 };
 
 class BackgroundGLArea : public Gtk::GLArea
@@ -86,7 +87,6 @@ class WayfireBackground
     bool load_images_from_dir(std::string path);
     Glib::RefPtr<BackgroundImage> load_next_background();
     void reset_background();
-    void set_background();
     void update_background();
     void reset_cycle_timeout();
 
@@ -96,6 +96,7 @@ class WayfireBackground
     guint window_width = 0;
     guint window_height = 0;
     WayfireBackground(WayfireShellApp *app, WayfireOutput *output);
+    void set_background();
     bool change_background();
     ~WayfireBackground();
 };
