@@ -183,30 +183,30 @@ void BackgroundImage::generate_adjustments(int width, int height)
             adjustments->scale_x = 1.0;
             adjustments->scale_y = (screen_height / screen_width) * (source_width / source_height);
             adjustments->x    = 0.0;
-            adjustments->y    = ((screen_height - source_height * (screen_width / source_width))) * adjustments->scale_y * 0.5 * (1.0 / screen_height);
+            adjustments->y    = (screen_height - source_height * (screen_width / source_width)) * adjustments->scale_y * 0.5 * (1.0 / screen_height);
         } else
         {
             adjustments->scale_x = (screen_width / screen_height) * (source_height / source_width);
             adjustments->scale_y = 1.0;
-            adjustments->x    = ((screen_width - source_width * (screen_height / source_height))) * adjustments->scale_x * 0.5 * (1.0 / screen_width);
+            adjustments->x    = (screen_width - source_width * (screen_height / source_height)) * adjustments->scale_x * 0.5 * (1.0 / screen_width);
             adjustments->y    = 0.0;
         }
     } else /* "preserve_aspect" */
     {
-		auto width_difference = screen_width - source_width;
-		auto height_difference = screen_height - source_height;
-        if (width_difference < height_difference)
+		auto width_difference = screen_width / source_width;
+		auto height_difference = screen_height / source_height;
+        if (width_difference > height_difference)
         {
-            adjustments->scale_x = 1.0;
-            adjustments->scale_y = screen_height / source_height;
-            adjustments->x    = 0.0;
-            adjustments->y    = height_difference * adjustments->scale_y * 0.5 * (1.0 / screen_height);
+            adjustments->scale_x = (screen_width / screen_height) * (source_height / source_width);
+            adjustments->scale_y = 1.0;
+            adjustments->x    = (screen_width - source_width * (screen_height / source_height)) * adjustments->scale_x * 0.5 * (1.0 / screen_width);
+            adjustments->y    = 0.0;
         } else
         {
-            adjustments->scale_x = screen_width / source_width;
-            adjustments->scale_y = 1.0;
-            adjustments->x    = width_difference * adjustments->scale_x * 0.5 * (1.0 / screen_width);
-            adjustments->y    = 0.0;
+            adjustments->scale_x = 1.0;
+            adjustments->scale_y = (screen_height / screen_width) * (source_width / source_height);
+            adjustments->x    = 0.0;
+            adjustments->y    = (screen_height - source_height * (screen_width / source_width)) * adjustments->scale_y * 0.5 * (1.0 / screen_height);
         }
     }
 }
