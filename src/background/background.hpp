@@ -7,6 +7,8 @@
 #include <wf-option-wrap.hpp>
 #include <wayfire/util/duration.hpp>
 
+#include <epoxy/gl.h>
+
 class WayfireBackground;
 
 class BackgroundImageAdjustments
@@ -25,8 +27,10 @@ class BackgroundImage
     Glib::RefPtr<BackgroundImageAdjustments> generate_adjustments(int width, int height);
 };
 
-class BackgroundDrawingArea : public Gtk::DrawingArea
+class BackgroundGLArea : public Gtk::GLArea
 {
+    WayfireBackground *background;
+    GLuint program = 0;
     wf::animation::simple_animation_t fade;
     WfOption<int> fade_duration{"background/fade_duration"};
 
@@ -37,16 +41,26 @@ class BackgroundDrawingArea : public Gtk::DrawingArea
      * pbuf2 is the image from which we are fading. x and y
      * are used as offsets when preserve aspect is set. */
     Glib::RefPtr<BackgroundImage> to_image, from_image;
-
+    GLuint from_tex = 0;
+    GLuint to_tex = 0;
   public:
-    BackgroundDrawingArea();
-    gboolean update_animation(Glib::RefPtr<Gdk::FrameClock> clock);
+    BackgroundGLArea(WayfireBackground *background);
+    void realize();
+    bool render(const Glib::RefPtr<Gdk::GLContext>& context);
     void show_image(Glib::RefPtr<BackgroundImage> image);
-    bool do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
     Glib::RefPtr<BackgroundImage> get_current_image()
     {
         return to_image;
     }
+};
+
+class BackgroundWindow : public Gtk::Window
+{
+    WayfireBackground *background;
+  public:
+    BackgroundWindow(WayfireBackground *background);
+  protected:
+    void size_allocate_vfunc(int width, int height, int baseline) override;
 };
 
 class WayfireBackground
@@ -54,9 +68,9 @@ class WayfireBackground
     WayfireShellApp *app;
     WayfireOutput *output;
 
-    BackgroundDrawingArea drawing_area;
+    Glib::RefPtr<BackgroundGLArea> gl_area;
     std::vector<std::string> images;
-    Gtk::Window window;
+    Glib::RefPtr<Gtk::Window> window;
 
     bool inhibited = false;
     uint current_background;
@@ -79,6 +93,8 @@ class WayfireBackground
     void setup_window();
 
   public:
+    guint window_width = 0;
+    guint window_height = 0;
     WayfireBackground(WayfireShellApp *app, WayfireOutput *output);
     bool change_background();
     ~WayfireBackground();

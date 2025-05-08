@@ -17,6 +17,133 @@
 
 #include "background.hpp"
 
+
+
+static const char *vertex_shader =
+R"(
+attribute vec2 in_position;
+
+//uniform mat4 matrix;
+attribute highp vec2 uvpos;
+varying vec2 uv;
+
+void main() {
+  uv = uvpos;
+  gl_Position = vec4(in_position, 0.0, 1.0);
+}
+)";
+
+static const char *fragment_shader =
+R"(
+precision highp float;
+uniform sampler2D bg_texture_from;
+uniform sampler2D bg_texture_to;
+uniform float progress;
+
+varying vec2 uv;
+
+void main() {
+  vec4 from = texture2D(bg_texture_from, uv);
+  vec4 to = texture2D(bg_texture_to, uv);
+  vec3 color = mix(from.rgb, to.rgb, progress);
+  gl_FragColor = vec4(color, 1.0);
+}
+)";
+
+/* Create and compile a shader */
+static GLuint create_shader(int type, const char *src)
+{
+  GLuint shader;
+  int status;
+
+  shader = glCreateShader(type);
+  glShaderSource(shader, 1, &src, NULL);
+  glCompileShader(shader);
+
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+  if (status == GL_FALSE)
+    {
+      int log_len;
+      char *buffer;
+
+      glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_len);
+
+      buffer = (char*)g_malloc(log_len + 1);
+      glGetShaderInfoLog(shader, log_len, NULL, buffer);
+
+      printf("Compile failure in %s shader:\n%s",
+          type == GL_VERTEX_SHADER ? "vertex" : "fragment",
+          buffer);
+
+      g_free(buffer);
+
+      glDeleteShader(shader);
+
+      return 0;
+    }
+
+  return shader;
+}
+
+/* Initialize the shaders and link them into a program */
+static GLuint init_shaders()
+{
+  GLuint vertex, fragment;
+  GLuint program = 0;
+  int status;
+
+  vertex = create_shader(GL_VERTEX_SHADER, vertex_shader);
+
+  if (vertex == 0)
+  {
+      return 0;
+  }
+
+  fragment = create_shader(GL_FRAGMENT_SHADER, fragment_shader);
+
+  if (fragment == 0)
+  {
+      glDeleteShader(vertex);
+      return 0;
+  }
+
+  program = glCreateProgram ();
+  glAttachShader (program, vertex);
+  glAttachShader (program, fragment);
+
+  glLinkProgram (program);
+
+  glGetProgramiv (program, GL_LINK_STATUS, &status);
+  if (status == GL_FALSE)
+  {
+      int log_len;
+      char *buffer;
+
+      glGetProgramiv (program, GL_INFO_LOG_LENGTH, &log_len);
+
+      buffer = (char *)g_malloc(log_len + 1);
+      glGetProgramInfoLog (program, log_len, NULL, buffer);
+
+      g_warning ("Linking failure:\n%s", buffer);
+
+      g_free (buffer);
+
+      glDeleteProgram (program);
+      program = 0;
+
+      goto out;
+  }
+
+  glDetachShader (program, vertex);
+  glDetachShader (program, fragment);
+
+out:
+  glDeleteShader (vertex);
+  glDeleteShader (fragment);
+
+  return program;
+}
+
 Glib::RefPtr<BackgroundImageAdjustments> BackgroundImage::generate_adjustments(int width, int height)
 {
     // Sanity checks
@@ -89,7 +216,7 @@ Glib::RefPtr<BackgroundImageAdjustments> BackgroundImage::generate_adjustments(i
     return nullptr;
 }
 
-void BackgroundDrawingArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
+void BackgroundGLArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
 {
     if (!next_image)
     {
@@ -100,68 +227,31 @@ void BackgroundDrawingArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
 
     from_image = to_image;
     to_image   = next_image;
+
+    int width, height;
+    if (from_image)
+    {
+        width = from_image->source->get_width();
+        height = from_image->source->get_height();
+        glBindTexture(GL_TEXTURE_2D, from_tex);
+        auto format = from_image->source->get_has_alpha() ? GL_RGBA : GL_RGB;
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, from_image->source->get_pixels());
+    }
+
+    width = to_image->source->get_width();
+    height = to_image->source->get_height();
+    glBindTexture(GL_TEXTURE_2D, to_tex);
+    auto format = to_image->source->get_has_alpha() ? GL_RGBA : GL_RGB;
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, to_image->source->get_pixels());
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     fade = {
         fade_duration,
-        wf::animation::smoothing::linear
+        wf::animation::smoothing::sigmoid
     };
-
     fade.animate(0.0, 1.0);
 
-    // Called shortly before vsync/render to see if we need to register a draw
-    add_tick_callback(sigc::mem_fun(*this, &BackgroundDrawingArea::update_animation));
-}
-
-gboolean BackgroundDrawingArea::update_animation(Glib::RefPtr<Gdk::FrameClock> frame_clock)
-{
     this->queue_draw();
-    // Once we've finished fading, stop this callback
-    return fade.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
-}
-
-bool BackgroundDrawingArea::do_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height)
-{
-    if (!to_image)
-    {
-        return false;
-    }
-
-    auto to_adjustments = to_image->generate_adjustments(width, height);
-    if (to_adjustments == nullptr)
-    {
-        return false;
-    }
-
-    cr->save();
-    cr->scale(to_adjustments->scale_x, to_adjustments->scale_y);
-    gdk_cairo_set_source_pixbuf(cr->cobj(), to_image->source->gobj(), to_adjustments->x, to_adjustments->y);
-    cr->paint_with_alpha(1.0);
-    cr->restore();
-    if (!from_image)
-    {
-        return false;
-    }
-
-    auto from_adjustments = from_image->generate_adjustments(width, height);
-    if (from_adjustments == nullptr)
-    {
-        return false;
-    }
-
-    cr->save();
-    cr->scale(from_adjustments->scale_x, from_adjustments->scale_y);
-    gdk_cairo_set_source_pixbuf(cr->cobj(),
-        from_image->source->gobj(), from_adjustments->x, from_adjustments->y);
-    cr->paint_with_alpha(1.0 - fade);
-    cr->restore();
-    return false;
-}
-
-BackgroundDrawingArea::BackgroundDrawingArea()
-{
-    set_draw_func([=] (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height)
-    {
-        this->do_draw(cr, width, height);
-    });
 }
 
 Glib::RefPtr<BackgroundImage> WayfireBackground::create_from_file_safe(std::string path)
@@ -186,16 +276,14 @@ Glib::RefPtr<BackgroundImage> WayfireBackground::create_from_file_safe(std::stri
 
 bool WayfireBackground::change_background()
 {
-    std::string path;
-
     auto next_image = load_next_background();
     if (!next_image)
     {
         return false;
     }
 
-    std::cout << "Loaded " << path << std::endl;
-    drawing_area.show_image(next_image);
+    gl_area->show_image(next_image);
+
     return true;
 }
 
@@ -293,12 +381,12 @@ Glib::RefPtr<BackgroundImage> WayfireBackground::load_next_background()
 void WayfireBackground::update_background()
 {
     Glib::RefPtr<BackgroundImage> image = Glib::RefPtr<BackgroundImage>(new BackgroundImage());
-    auto current = drawing_area.get_current_image();
+    auto current = gl_area->get_current_image();
     if (current != nullptr)
     {
         image->source    = current->source;
         image->fill_type = background_fill_mode;
-        drawing_area.show_image(image);
+        gl_area->show_image(image);
     }
 }
 
@@ -323,7 +411,7 @@ void WayfireBackground::set_background()
                 throw std::exception();
             }
 
-            drawing_area.show_image(image);
+            gl_area->show_image(image);
         } else
         {
             auto image = create_from_file_safe(path);
@@ -332,7 +420,7 @@ void WayfireBackground::set_background()
                 throw std::exception();
             }
 
-            drawing_area.show_image(image);
+            gl_area->show_image(image);
         }
     } catch (...)
     {
@@ -357,24 +445,123 @@ void WayfireBackground::reset_cycle_timeout()
         change_bg_conn = Glib::signal_timeout().connect(sigc::mem_fun(
             *this, &WayfireBackground::change_background), cycle_timeout);
     }
+    change_background();
+}
+
+static GLuint create_texture()
+{
+	GLuint tex;
+
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return tex;
+}
+
+void BackgroundGLArea::realize()
+{
+    this->make_current();
+    program = init_shaders();
+    from_tex = create_texture();
+    to_tex = create_texture();
+}
+
+bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
+{
+    static const float vertices[] = {
+        1.0f, 1.0f,
+        -1.0f, 1.0f,
+        -1.0f, -1.0f,
+        1.0f, -1.0f,
+    };
+    static const float uv_coords[] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+    };
+
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glUseProgram(program);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, from_tex);
+    GLuint from_tex_uniform = glGetUniformLocation(program, "bg_texture_from");
+    glUniform1i(from_tex_uniform, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, to_tex);
+    GLuint to_tex_uniform = glGetUniformLocation(program, "bg_texture_to");
+    glUniform1i(to_tex_uniform, 1);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
+    GLuint progress = glGetUniformLocation(program, "progress");
+    glUniform1f(progress, fade);
+
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glUseProgram(0);
+
+    if (fade.running())
+    {
+        Glib::signal_idle().connect([=] () {
+            this->queue_draw();
+            return false;
+        });
+    }
+
+    return true;
+}
+
+BackgroundGLArea::BackgroundGLArea(WayfireBackground *background)
+{
+    this->background = background;
+}
+
+BackgroundWindow::BackgroundWindow(WayfireBackground *background)
+{
+    this->background = background;
+}
+
+void BackgroundWindow::size_allocate_vfunc(int width, int height, int baseline)
+{
+    Gtk::Widget::size_allocate_vfunc(width, height, baseline);
+    background->window_width = width;
+    background->window_height = height;
 }
 
 void WayfireBackground::setup_window()
 {
-    window.set_decorated(false);
+    gl_area = Glib::RefPtr<BackgroundGLArea>(new BackgroundGLArea(this));
+    window = Glib::RefPtr<BackgroundWindow>(new BackgroundWindow(this));
+    window->set_decorated(false);
 
-    gtk_layer_init_for_window(window.gobj());
-    gtk_layer_set_layer(window.gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
-    gtk_layer_set_monitor(window.gobj(), this->output->monitor->gobj());
+    gtk_layer_init_for_window(window->gobj());
+    gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
+    gtk_layer_set_monitor(window->gobj(), this->output->monitor->gobj());
 
-    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
-    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
-    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-    gtk_layer_set_keyboard_mode(window.gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+    gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
+    gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+    gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+    gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+    gtk_layer_set_keyboard_mode(window->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
 
-    gtk_layer_set_exclusive_zone(window.gobj(), -1);
-    window.set_child(drawing_area);
+    gtk_layer_set_exclusive_zone(window->gobj(), -1);
+    gl_area->signal_realize().connect(sigc::mem_fun(*gl_area, &BackgroundGLArea::realize));
+    gl_area->signal_render().connect(sigc::mem_fun(*gl_area, &BackgroundGLArea::render), false);
+    window->set_child(*gl_area);
 
     auto update_background = [=] () { this->update_background(); };
     auto set_background    = [=] () { this->set_background(); };
@@ -383,7 +570,7 @@ void WayfireBackground::setup_window()
     background_fill_mode.set_callback(update_background);
     background_cycle_timeout.set_callback(reset_cycle);
 
-    window.present();
+    window->present();
 
     set_background();
 }
