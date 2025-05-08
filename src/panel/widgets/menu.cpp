@@ -569,7 +569,7 @@ void WayfireMenu::update_popover_layout()
                     auto child = dynamic_cast<WfMenuMenuItem*>(children[0]);
                     child->on_click();
                 }
-                
+
                 return true;
             } else
             {
