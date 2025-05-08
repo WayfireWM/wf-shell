@@ -549,7 +549,8 @@ void WayfireMenu::update_popover_layout()
 
         auto typing_gesture = Gtk::EventControllerKey::create();
         typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
-        typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode, Gdk::ModifierType state)
+        typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
+                                                          Gdk::ModifierType state)
         {
             if (keyval == GDK_KEY_BackSpace)
             {
@@ -560,7 +561,7 @@ void WayfireMenu::update_popover_layout()
 
                 on_search_changed();
                 return true;
-            } else if (keyval == GDK_KEY_Return || keyval == GDK_KEY_KP_Enter)
+            } else if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
             {
                 auto children = flowbox.get_selected_children();
                 if (children.size() == 1)
@@ -568,6 +569,7 @@ void WayfireMenu::update_popover_layout()
                     auto child = dynamic_cast<WfMenuMenuItem*>(children[0]);
                     child->on_click();
                 }
+                
                 return true;
             } else
             {
