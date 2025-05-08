@@ -520,11 +520,9 @@ void WayfireMenu::update_popover_layout()
         flowbox.set_sort_func(sigc::mem_fun(*this, &WayfireMenu::on_sort));
         flowbox.set_filter_func(sigc::mem_fun(*this, &WayfireMenu::on_filter));
         flowbox.get_style_context()->add_class("app-list");
-
-        flowbox_container.append(bottom_pad);
-        flowbox_container.append(flowbox);
-
         flowbox.set_size_request(int(menu_min_content_width), int(menu_min_content_height));
+
+        flowbox_container.append(flowbox);
 
         scroll_pair.append(category_scrolled_window);
         scroll_pair.append(app_scrolled_window);
@@ -550,13 +548,10 @@ void WayfireMenu::update_popover_layout()
         search_entry.set_can_focus(false);
 
         auto typing_gesture = Gtk::EventControllerKey::create();
-        typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
-                                                          Gdk::ModifierType state)
+        typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
+        typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode, Gdk::ModifierType state)
         {
-            if (keyval == GDK_KEY_Escape)
-            {
-                return false;
-            } else if (keyval == GDK_KEY_BackSpace)
+            if (keyval == GDK_KEY_BackSpace)
             {
                 if (search_contents.length() > 0)
                 {
@@ -564,15 +559,16 @@ void WayfireMenu::update_popover_layout()
                 }
 
                 on_search_changed();
-            } else if (keyval == GDK_KEY_Return)
+                return true;
+            } else if (keyval == GDK_KEY_Return || keyval == GDK_KEY_KP_Enter)
             {
                 auto children = flowbox.get_selected_children();
                 if (children.size() == 1)
                 {
                     auto child = dynamic_cast<WfMenuMenuItem*>(children[0]);
                     child->on_click();
-                    return true;
                 }
+                return true;
             } else
             {
                 std::string input = gdk_keyval_name(keyval);
@@ -586,7 +582,7 @@ void WayfireMenu::update_popover_layout()
 
             return false;
         }, false);
-        popover_layout_box.add_controller(typing_gesture);
+        button->get_popover()->add_controller(typing_gesture);
     } else
     {
         /* Layout was already initialized, make sure to remove widgets before
@@ -881,6 +877,7 @@ void WayfireMenu::update_content_width()
 void WayfireMenu::toggle_menu()
 {
     search_contents = "";
+    search_entry.set_text("");
     if (button->get_active())
     {
         button->set_active(false);
@@ -903,18 +900,13 @@ void WayfireMenu::set_category(std::string in_category)
 
 void WayfireMenu::select_first_flowbox_item()
 {
-    flowbox.grab_focus();
-    for (auto child : flowbox.get_children())
+    auto child = flowbox.get_child_at_index(0);
+    if (child)
     {
-        if (child->get_mapped())
+        auto cast_child = dynamic_cast<WfMenuMenuItem*>(child);
+        if (cast_child)
         {
-            Gtk::FlowBoxChild *cast_child = dynamic_cast<Gtk::FlowBoxChild*>(child);
-            if (cast_child)
-            {
-                flowbox.select_child(*cast_child);
-                app_scrolled_window.set_vadjustment(0);
-                return;
-            }
+            flowbox.select_child(*cast_child);
         }
     }
 }
