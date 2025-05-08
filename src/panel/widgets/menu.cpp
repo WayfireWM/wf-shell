@@ -832,6 +832,13 @@ void WayfireMenu::init(Gtk::Box *container)
 
     container->append(hbox);
     hbox.append(*button);
+    
+    auto click_gesture = Gtk::GestureClick::create();
+    click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        toggle_menu();
+    });
+    hbox.add_controller(click_gesture);
 
     logout_image.set_icon_size(Gtk::IconSize::LARGE);
     logout_image.set_from_icon_name("system-shutdown");
