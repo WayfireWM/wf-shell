@@ -1,3 +1,3 @@
 executable('wf-background', ['background.cpp'],
-        dependencies: [gtkmm, wayland_client, libutil, wf_protos, wfconfig, gtklayershell],
+        dependencies: [gtkmm, wayland_client, libutil, wf_protos, wfconfig, gtklayershell, epoxy],
         install: true)
