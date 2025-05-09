@@ -229,21 +229,11 @@ void BackgroundGLArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
     to_image   = next_image;
 
     int width, height;
-    if (from_image)
-    {
-        from_image->generate_adjustments(background->window_width, background->window_height);
-        width  = from_image->source->get_width();
-        height = from_image->source->get_height();
-        glBindTexture(GL_TEXTURE_2D, from_tex);
-        auto format = from_image->source->get_has_alpha() ? GL_RGBA : GL_RGB;
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE,
-            from_image->source->get_pixels());
-    }
 
     to_image->generate_adjustments(background->window_width, background->window_height);
     width  = to_image->source->get_width();
     height = to_image->source->get_height();
-    glBindTexture(GL_TEXTURE_2D, to_tex);
+    glBindTexture(GL_TEXTURE_2D, to_image->tex_id);
     auto format = to_image->source->get_has_alpha() ? GL_RGBA : GL_RGB;
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE,
         to_image->source->get_pixels());
@@ -256,6 +246,31 @@ void BackgroundGLArea::show_image(Glib::RefPtr<BackgroundImage> next_image)
     fade.animate(0.0, 1.0);
 
     this->queue_draw();
+}
+
+static GLuint create_texture()
+{
+    GLuint tex;
+
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return tex;
+}
+
+BackgroundImage::BackgroundImage()
+{
+    tex_id = create_texture();
+}
+
+BackgroundImage::~BackgroundImage()
+{
+    glDeleteTextures(1, &tex_id);
 }
 
 Glib::RefPtr<BackgroundImage> WayfireBackground::create_from_file_safe(std::string path)
@@ -451,27 +466,10 @@ void WayfireBackground::reset_cycle_timeout()
     }
 }
 
-static GLuint create_texture()
-{
-    GLuint tex;
-
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    return tex;
-}
-
 void BackgroundGLArea::realize()
 {
     this->make_current();
     program  = init_shaders();
-    from_tex = create_texture();
-    to_tex   = create_texture();
 }
 
 bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
@@ -509,12 +507,15 @@ bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(program);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, from_tex);
-    GLuint from_tex_uniform = glGetUniformLocation(program, "bg_texture_from");
-    glUniform1i(from_tex_uniform, 0);
+    if (from_image)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, from_image->tex_id);
+        GLuint from_tex_uniform = glGetUniformLocation(program, "bg_texture_from");
+        glUniform1i(from_tex_uniform, 0);
+    }
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, to_tex);
+    glBindTexture(GL_TEXTURE_2D, to_image->tex_id);
     GLuint to_tex_uniform = glGetUniformLocation(program, "bg_texture_to");
     glUniform1i(to_tex_uniform, 1);
     glEnableVertexAttribArray(0);

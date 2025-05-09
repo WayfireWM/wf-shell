@@ -21,11 +21,14 @@ class BackgroundImageAdjustments
 class BackgroundImage
 {
   public:
+    BackgroundImage();
+    ~BackgroundImage();
     Glib::RefPtr<Gdk::Pixbuf> source;
     std::string fill_type;
     Glib::RefPtr<BackgroundImageAdjustments> adjustments;
 
     void generate_adjustments(int width, int height);
+    GLuint tex_id = 0;
 };
 
 class BackgroundGLArea : public Gtk::GLArea
@@ -42,8 +45,6 @@ class BackgroundGLArea : public Gtk::GLArea
      * pbuf2 is the image from which we are fading. x and y
      * are used as offsets when preserve aspect is set. */
     Glib::RefPtr<BackgroundImage> to_image, from_image;
-    GLuint from_tex = 0;
-    GLuint to_tex   = 0;
 
   public:
     BackgroundGLArea(WayfireBackground *background);
