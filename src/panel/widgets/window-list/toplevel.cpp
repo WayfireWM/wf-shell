@@ -219,6 +219,13 @@ class WayfireToplevel::impl
                 // important...
                 // Make sure the user can send null...
                 container.reorder_child_after(button, *hovered_button);
+                for (const auto& toplevel_button : window_list->toplevels)
+                {
+                    if (toplevel_button.second && toplevel_button.second->pimpl)
+                    {
+                        toplevel_button.second->pimpl->send_rectangle_hint();
+                    }
+                }
             }
         }
 
@@ -257,11 +264,19 @@ class WayfireToplevel::impl
         }
 
         drag_gesture->set_state(Gtk::EventSequenceState::DENIED);
+        for (const auto& toplevel_button : window_list->toplevels)
+        {
+            if (toplevel_button.second && toplevel_button.second->pimpl)
+            {
+                toplevel_button.second->pimpl->send_rectangle_hint();
+            }
+        }
     }
 
     void on_menu_minimize(Glib::VariantBase vb)
     {
         bool val = g_variant_get_boolean(vb.gobj());
+        send_rectangle_hint();
         if (!val)
         {
             zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
@@ -362,10 +377,10 @@ class WayfireToplevel::impl
         auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
         if (panel)
         {
-            auto widget_bounds = this->button.compute_bounds(panel->get_window());
-            zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
-                panel->get_wl_surface(), widget_bounds->get_x(),
-                widget_bounds->get_y(), widget_bounds->get_width(), widget_bounds->get_height());
+            double x, y;
+            button_contents.translate_coordinates(panel->get_window(), 0, 0, x, y);
+            zwlr_foreign_toplevel_handle_v1_set_rectangle(handle, panel->get_wl_surface(),
+                x, y, button_contents.get_width(), button_contents.get_height());
         }
     }
 
