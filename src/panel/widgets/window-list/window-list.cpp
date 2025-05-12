@@ -40,9 +40,6 @@ void WayfireWindowListBox::set_top_x(int x)
 
     queue_allocate();
     queue_draw();
-
-    auto alloc = this->get_allocation();
-    // on_size_allocate(alloc);
 }
 
 int WayfireWindowListBox::get_absolute_position(int x, Gtk::Widget& ref)

@@ -47,12 +47,6 @@ class WayfireWindowListBox : public Gtk::Box
      * @return The direct child widget or none if it doesn't exist
      */
     Gtk::Widget *get_widget_at(int x);
-
-    /**
-     * Get the list of widgets sorted from left to right, i.e ignoring the top
-     * widget setting
-     */
-    std::vector<Gtk::Widget*> get_unsorted_widgets();
 };
 
 class WayfireWindowList : public WayfireWidget
