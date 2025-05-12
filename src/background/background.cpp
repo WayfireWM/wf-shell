@@ -514,7 +514,7 @@ bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
         GLuint from_tex_uniform = glGetUniformLocation(program, "bg_texture_from");
         glUniform1i(from_tex_uniform, 0);
     }
-    
+
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, to_image->tex_id);
     GLuint to_tex_uniform = glGetUniformLocation(program, "bg_texture_to");
