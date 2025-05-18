@@ -6,7 +6,7 @@
 #include "window-list.hpp"
 #include "panel.hpp"
 
-WayfireWindowListBox::WayfireWindowListBox() : Gtk::Box()
+WayfireWindowListBox::WayfireWindowListBox()
 {}
 
 void WayfireWindowListBox::set_top_widget(Gtk::Widget *top)
