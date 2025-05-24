@@ -153,6 +153,8 @@ class WayfireToplevel::impl
         button.add_controller(click_gesture);
 
         this->window_list = window_list;
+
+        send_rectangle_hints();
     }
 
     int grab_off_x;
@@ -219,13 +221,6 @@ class WayfireToplevel::impl
                 // important...
                 // Make sure the user can send null...
                 container.reorder_child_after(button, *hovered_button);
-                for (const auto& toplevel_button : window_list->toplevels)
-                {
-                    if (toplevel_button.second && toplevel_button.second->pimpl)
-                    {
-                        toplevel_button.second->pimpl->send_rectangle_hint();
-                    }
-                }
             }
         }
 
@@ -264,13 +259,8 @@ class WayfireToplevel::impl
         }
 
         drag_gesture->set_state(Gtk::EventSequenceState::DENIED);
-        for (const auto& toplevel_button : window_list->toplevels)
-        {
-            if (toplevel_button.second && toplevel_button.second->pimpl)
-            {
-                toplevel_button.second->pimpl->send_rectangle_hint();
-            }
-        }
+
+        send_rectangle_hints();
     }
 
     void on_menu_minimize(Glib::VariantBase vb)
@@ -372,15 +362,26 @@ class WayfireToplevel::impl
             std::min(int(minimal_panel_height), 24), button.get_scale_factor());
     }
 
+    void send_rectangle_hints()
+    {
+        for (const auto& toplevel_button : window_list->toplevels)
+        {
+            if (toplevel_button.second && toplevel_button.second->pimpl)
+            {
+                toplevel_button.second->pimpl->send_rectangle_hint();
+            }
+        }
+    }
+
     void send_rectangle_hint()
     {
         auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
         if (panel)
         {
             double x, y;
-            button_contents.translate_coordinates(panel->get_window(), 0, 0, x, y);
+            button.translate_coordinates(panel->get_window(), 0, 0, x, y);
             zwlr_foreign_toplevel_handle_v1_set_rectangle(handle, panel->get_wl_surface(),
-                x, y, button_contents.get_width(), button_contents.get_height());
+                x, y, button.get_width(), button.get_height());
         }
     }
 
@@ -415,6 +416,7 @@ class WayfireToplevel::impl
     {
         auto& container = window_list->box;
         container.remove(button);
+        send_rectangle_hints();
     }
 
     void set_classes(uint32_t state)
@@ -478,6 +480,7 @@ class WayfireToplevel::impl
         if (window_list->output->wo == output)
         {
             container.append(button);
+            send_rectangle_hints();
         }
     }
 
@@ -487,6 +490,7 @@ class WayfireToplevel::impl
         if (window_list->output->wo == output)
         {
             container.remove(button);
+            send_rectangle_hints();
         }
     }
 };
