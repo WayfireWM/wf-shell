@@ -101,8 +101,8 @@ void CssFromConfigFont::set_from_string()
         }
 
         std::stringstream ss;
-        ss << css_before << "font: " << size << unit << " " << before.str()<< " " << after.str() << ";" << 
-        css_after;
+        ss << css_before << "font: " << size << unit << " " << before.str() << " " << after.str() << ";" <<
+            css_after;
         auto css = ss.str();
         provider->load_from_string(css);
 
