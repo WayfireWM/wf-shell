@@ -4,6 +4,7 @@
 #include "glibmm.h"
 #include <iostream>
 #include <gdk/wayland/gdkwayland.h>
+#include <css-config.hpp>
 
 
 namespace
@@ -47,6 +48,7 @@ class WfDockApp::impl
 void WfDockApp::on_activate()
 {
     WayfireShellApp::on_activate();
+    new CssFromConfigInt("dock/icon_height", ".toplevel-icon {-gtk-icon-size:", "px;}");
     IconProvider::load_custom_icons();
 
     /* At this point, wayland connection has been initialized,

@@ -58,7 +58,6 @@ class WfDock::impl
         }
 
         window->present();
-        new CssFromConfigInt("dock/icon_height", ".toplevel-icon {-gtk-icon-size:", "px;}");
         _wl_surface = gdk_wayland_surface_get_wl_surface(
             window->get_surface()->gobj());
 

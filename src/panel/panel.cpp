@@ -89,9 +89,6 @@ class WayfirePanel::impl
         window->present();
         init_widgets();
         init_layout();
-
-        // window->signal_close_request().connect(
-        // sigc::mem_fun(*this, &WayfirePanel::impl::on_delete));
     }
 
     void init_layout()
@@ -291,24 +288,6 @@ class WayfirePanel::impl
   public:
     impl(WayfireOutput *output) : output(output)
     {
-        // Intentionally leaking feels bad.
-        new CssFromConfigInt("panel/launchers_size", ".menu-button,.launcher{-gtk-icon-size:", "px;}");
-        new CssFromConfigInt("panel/launchers_spacing", ".launcher{padding: 0px ", "px;}");
-        new CssFromConfigInt("panel/battery_icon_size", ".battery image{-gtk-icon-size:", "px;}");
-        new CssFromConfigInt("panel/network_icon_size", ".network{-gtk-icon-size:", "px;}");
-        new CssFromConfigInt("panel/volume_icon_size", ".volume{-gtk-icon-size:", "px;}");
-        new CssFromConfigInt("panel/notifications_icon_size", ".notification-center{-gtk-icon-size:", "px;}");
-        new CssFromConfigInt("panel/tray_icon_size", ".tray-button{-gtk-icon-size:", "px;}");
-        new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
-        new CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "");
-        new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
-
-        // People will probably need to update sizes to have a measure
-        // 16px, 1.1rem, 1em .
-        // So on
-        new CssFromConfigFont("panel/battery_font", ".battery {", "}");
-        new CssFromConfigFont("panel/clock_font", ".clock {", "}");
-
         create_window();
     }
 
@@ -370,6 +349,24 @@ void WayfirePanelApp::on_config_reload()
     {
         p.second->handle_config_reload();
     }
+}
+
+void WayfirePanelApp::on_activate()
+{
+    WayfireShellApp::on_activate();
+    new CssFromConfigInt("panel/launchers_size", ".menu-button,.launcher{-gtk-icon-size:", "px;}");
+    new CssFromConfigInt("panel/launchers_spacing", ".launcher{padding: 0px ", "px;}");
+    new CssFromConfigInt("panel/battery_icon_size", ".battery image{-gtk-icon-size:", "px;}");
+    new CssFromConfigInt("panel/network_icon_size", ".network{-gtk-icon-size:", "px;}");
+    new CssFromConfigInt("panel/volume_icon_size", ".volume{-gtk-icon-size:", "px;}");
+    new CssFromConfigInt("panel/notifications_icon_size", ".notification-center{-gtk-icon-size:", "px;}");
+    new CssFromConfigInt("panel/tray_icon_size", ".tray-button{-gtk-icon-size:", "px;}");
+    new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
+    new CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "");
+    new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
+ 
+    new CssFromConfigFont("panel/battery_font", ".battery {", "}");
+    new CssFromConfigFont("panel/clock_font", ".clock {", "}");
 }
 
 void WayfirePanelApp::handle_new_output(WayfireOutput *output)
