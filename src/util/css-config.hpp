@@ -31,9 +31,11 @@ class CssFromConfigString : public CssFromConfig
 class CssFromConfigFont : public CssFromConfig
 {
     WfOption<std::string> option_value;
+    std::string css_before, css_after;
 
   public:
     CssFromConfigFont(std::string config_opt, std::string css_before, std::string css_after);
+    void set_from_string();
 };
 
 class CssFromConfigInt : public CssFromConfig
