@@ -68,7 +68,7 @@ CssFromConfigFont::CssFromConfigFont(std::string option_name, std::string css_be
     option_value{option_name}
 {
     this->css_before = css_before;
-    this->css_after = css_after;
+    this->css_after  = css_after;
     provider = Gtk::CssProvider::create();
     option_value.set_callback([=] ()
     {
@@ -84,7 +84,8 @@ void CssFromConfigFont::set_from_string()
     std::regex matcher("(.*?)(\\d+(?:pt|px|rem|em|))(.*?)");
     std::string font_name = (std::string)option_value;
     std::smatch matches;
-    if(std::regex_match(font_name, matches, matcher)){
+    if (std::regex_match(font_name, matches, matcher))
+    {
         std::ssub_match before = matches[1];
         std::string size = matches[2].str();
         std::ssub_match after = matches[3];
@@ -92,24 +93,26 @@ void CssFromConfigFont::set_from_string()
         std::string unit = "";
 
         // If we're using a bare number (ie 15) it now needs to be 15pt to match previous behaviour
-        if(size.find("px") == std::string::npos &&
-           size.find("pt") == std::string::npos &&
-           size.find("em") == std::string::npos)
+        if ((size.find("px") == std::string::npos) &&
+            (size.find("pt") == std::string::npos) &&
+            (size.find("em") == std::string::npos))
         {
             unit = "pt";
         }
-           
+
         std::stringstream ss;
-        ss << css_before << "font: " << size << unit << " " << before.str()<< " " << after.str() << ";" << css_after;
+        ss << css_before << "font: " << size << unit << " " << before.str()<< " " << after.str() << ";" << 
+        css_after;
         auto css = ss.str();
         provider->load_from_string(css);
 
-        std::cout << "Font "<< css << std::endl;
-    } else {
+        std::cout << "Font " << css << std::endl;
+    } else
+    {
         std::stringstream ss;
         ss << css_before << "font: 1rem " << font_name << ";" << css_after;
         auto css = ss.str();
         provider->load_from_string(css);
-        std::cout << "Font fallback "<< css << std::endl;
+        std::cout << "Font fallback " << css << std::endl;
     }
 }
