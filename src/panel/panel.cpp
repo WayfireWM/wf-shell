@@ -230,7 +230,7 @@ class WayfirePanel::impl
 
         if (name == "language")
         {
-            return Widget(new WayfireLanguage(shell_manager->get_kbdlayout_manager()));
+            return Widget(new WayfireLanguage(shell_manager->get_keyboard_land_manager()));
         }
 
         if (auto pixel = widget_with_value(name, "spacing"))

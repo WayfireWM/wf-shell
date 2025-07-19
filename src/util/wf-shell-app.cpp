@@ -277,7 +277,7 @@ sigc::signal<void()> WayfireOutput::toggle_menu_signal()
     return m_toggle_menu_signal;
 }
 
-/* -------------------------- WayfireOutput --------------------------------- */
+/* -------------------------- WayfireShellManager --------------------------------- */
 WayfireShellManager::WayfireShellManager(zwf_shell_manager_v2 *shell_manager)
 {
     this->wf_shell_manager = shell_manager;
@@ -288,7 +288,7 @@ zwf_output_v2* WayfireShellManager::get_wf_output(wl_output *output)
     return zwf_shell_manager_v2_get_wf_output(this->wf_shell_manager, output);
 }
 
-zwf_keyboard_lang_manager_v2* WayfireShellManager::get_kbdlayout_manager()
+zwf_keyboard_lang_manager_v2* WayfireShellManager::get_keyboard_land_manager()
 {
     return zwf_shell_manager_v2_get_wf_keyboard_lang_manager(this->wf_shell_manager);
 }
