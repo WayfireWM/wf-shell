@@ -35,7 +35,7 @@ struct WayfireShellManager
 {
     WayfireShellManager(zwf_shell_manager_v2 *wf_shell_manager);
     zwf_output_v2* get_wf_output(wl_output* output);
-    zwf_keyboard_lang_manager_v2* get_keyboard_land_manager();
+    zwf_keyboard_lang_manager_v2* get_keyboard_lang_manager();
   private:
     zwf_shell_manager_v2 *wf_shell_manager;
 };

@@ -288,7 +288,7 @@ zwf_output_v2* WayfireShellManager::get_wf_output(wl_output *output)
     return zwf_shell_manager_v2_get_wf_output(this->wf_shell_manager, output);
 }
 
-zwf_keyboard_lang_manager_v2* WayfireShellManager::get_keyboard_land_manager()
+zwf_keyboard_lang_manager_v2* WayfireShellManager::get_keyboard_lang_manager()
 {
     return zwf_shell_manager_v2_get_wf_keyboard_lang_manager(this->wf_shell_manager);
 }
