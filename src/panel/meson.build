@@ -2,6 +2,7 @@ widget_sources = ['widgets/battery.cpp',
                   'widgets/menu.cpp',
                   'widgets/clock.cpp',
                   'widgets/command-output.cpp',
+                  'widgets/language.cpp',
                   'widgets/launchers.cpp',
                   'widgets/network.cpp',
                   'widgets/spacing.cpp',
@@ -17,7 +18,7 @@ widget_sources = ['widgets/battery.cpp',
                   'widgets/tray/item.cpp',
                   'widgets/tray/host.cpp']
 
-deps = [gtkmm, wayland_client, libutil, wf_protos, wfconfig, gtklayershell, dbusmenu_gtk]
+deps = [gtkmm, wayland_client, libutil, wf_protos, wfconfig, gtklayershell, dbusmenu_gtk, xkbregistry]
 
 if libpulse.found()
   widget_sources += 'widgets/volume.cpp'

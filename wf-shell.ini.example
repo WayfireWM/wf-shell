@@ -18,7 +18,7 @@ randomize = 0
 # Special widgets are "spacing" and "separator" widgets, they can be used to add padding everywhere on the panel
 # To use them, just append the amount of pixels you want as a padding
 # to the word "spacing" or "separator" and use it as a plugin
-widgets_left = menu spacing4 launchers window-list
+widgets_left = menu spacing4 language spacing4 launchers window-list
 widgets_center = none
 widgets_right = command-output tray notifications volume network battery clock
 

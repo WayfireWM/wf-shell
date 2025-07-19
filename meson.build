@@ -22,6 +22,7 @@ gtklayershell  = dependency('gtk-layer-shell-0', version: '>= 0.6', fallback: ['
 libpulse       = dependency('libpulse', required : get_option('pulse'))
 dbusmenu_gtk   = dependency('dbusmenu-gtk3-0.4')
 libgvc         = subproject('gvc', default_options: ['static=true'], required : get_option('pulse'))
+xkbregistry    = dependency('xkbregistry')
 
 if get_option('wayland-logout') == true
   wayland_logout = subproject('wayland-logout')

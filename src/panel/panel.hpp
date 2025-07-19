@@ -6,12 +6,13 @@
 #include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
 
+#include "libutil.a.p/wayfire-shell-unstable-v2-client-protocol.h"
 #include "wf-shell-app.hpp"
 
 class WayfirePanel
 {
   public:
-    WayfirePanel(WayfireOutput *output);
+    WayfirePanel(WayfireOutput *output, ShellManager shell_manager);
 
     wl_surface *get_wl_surface();
     Gtk::Window& get_window();

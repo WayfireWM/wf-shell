@@ -1,4 +1,5 @@
 #include "wf-shell-app.hpp"
+#include "wayfire-shell-unstable-v2-client-protocol.h"
 #include <glibmm/main.h>
 #include <sys/inotify.h>
 #include <gdk/gdkwayland.h>
@@ -125,8 +126,9 @@ static void registry_add_object(void *data, struct wl_registry *registry,
     auto app = static_cast<WayfireShellApp*>(data);
     if (strcmp(interface, zwf_shell_manager_v2_interface.name) == 0)
     {
-        app->wf_shell_manager = (zwf_shell_manager_v2*)wl_registry_bind(registry, name,
+        auto shell_manager = (zwf_shell_manager_v2*)wl_registry_bind(registry, name,
             &zwf_shell_manager_v2_interface, std::min(version, 2u));
+        app->wf_shell_manager = std::make_shared<WayfireShellManager>(shell_manager);
     }
 }
 
@@ -247,15 +249,15 @@ void WayfireShellApp::run()
 
 /* -------------------------- WayfireOutput --------------------------------- */
 WayfireOutput::WayfireOutput(const GMonitor& monitor,
-    zwf_shell_manager_v2 *zwf_manager)
+    ShellManager shell_manager)
 {
     this->monitor = monitor;
     this->wo = gdk_wayland_monitor_get_wl_output(monitor->gobj());
 
-    if (zwf_manager)
+    if (shell_manager)
     {
         this->output =
-            zwf_shell_manager_v2_get_wf_output(zwf_manager, this->wo);
+            shell_manager->get_wf_output(this->wo);
     } else
     {
         this->output = nullptr;
@@ -273,4 +275,20 @@ WayfireOutput::~WayfireOutput()
 sigc::signal<void()> WayfireOutput::toggle_menu_signal()
 {
     return m_toggle_menu_signal;
+}
+
+/* -------------------------- WayfireOutput --------------------------------- */
+WayfireShellManager::WayfireShellManager(zwf_shell_manager_v2 *shell_manager)
+{
+    this->wf_shell_manager = shell_manager;
+}
+
+zwf_output_v2* WayfireShellManager::get_wf_output(wl_output *output)
+{
+    return zwf_shell_manager_v2_get_wf_output(this->wf_shell_manager, output);
+}
+
+zwf_keyboard_lang_manager_v2* WayfireShellManager::get_kbdlayout_manager()
+{
+    return zwf_shell_manager_v2_get_wf_keyboard_lang_manager(this->wf_shell_manager);
 }
