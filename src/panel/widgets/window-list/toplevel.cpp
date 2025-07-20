@@ -376,12 +376,14 @@ class WayfireToplevel::impl
     void send_rectangle_hint()
     {
         auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
-        if (panel)
+        auto w = button.get_width();
+        auto h = button.get_height();
+        if (panel && w > 0 && h > 0)
         {
             double x, y;
             button.translate_coordinates(panel->get_window(), 0, 0, x, y);
             zwlr_foreign_toplevel_handle_v1_set_rectangle(handle, panel->get_wl_surface(),
-                x, y, button.get_width(), button.get_height());
+                x, y, w, h);
         }
     }
 
