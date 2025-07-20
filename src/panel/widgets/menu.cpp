@@ -665,7 +665,11 @@ void WayfireLogoutUI::create_logout_ui_button(WayfireLogoutUIButton *button, con
     button->button.set_size_request(LOGOUT_BUTTON_SIZE, LOGOUT_BUTTON_SIZE);
     button->image.set_from_icon_name(icon);
     button->label.set_text(label);
+    button->layout.set_orientation(Gtk::Orientation::VERTICAL);
+    button->layout.set_halign(Gtk::Align::CENTER);
     button->layout.append(button->image);
+    button->image.set_icon_size(Gtk::IconSize::LARGE);
+    button->image.set_vexpand(true);
     button->layout.append(button->label);
     button->button.set_child(button->layout);
 }

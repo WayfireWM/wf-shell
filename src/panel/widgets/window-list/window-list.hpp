@@ -9,10 +9,51 @@
 
 class WayfireToplevel;
 
+class WayfireWindowListLayout : public Gtk::LayoutManager{
+  protected:
+  void allocate_vfunc(const Gtk::Widget& widget, int width, int height, int baseline) override{
+    int per_child = width / widget.get_children().size();
+
+    // TODO Bad assumptions not based on reality.
+    if(per_child < 32)
+    {
+      per_child = 32;
+    }
+    if(per_child > 100)
+    {
+      per_child = 100;
+    }
+    int count = 0;
+    for (auto child: widget.get_children())
+    {
+      auto alloc = Gtk::Allocation();
+      if(child == top_widget){
+        alloc.set_x(top_x);
+        alloc.set_y(0);
+        alloc.set_width(per_child);
+        alloc.set_height(height);
+        child->size_allocate(alloc,-1);
+        continue;
+      }
+      alloc.set_x(per_child * count);
+      alloc.set_y(0);
+      alloc.set_width(per_child);
+      alloc.set_height(height);
+      std::cout<<"PLACED"<<std::endl;
+      child->size_allocate(alloc,-1);
+    }
+  }
+
+  public:
+    int top_x = 0;
+    Gtk::Widget *top_widget = nullptr;
+
+
+};
+
 class WayfireWindowListBox : public Gtk::Box
 {
-    Gtk::Widget *top_widget = nullptr;
-    int top_x = 0;
+    std::shared_ptr<WayfireWindowListLayout> layout = std::make_shared<WayfireWindowListLayout>();
 
   public:
     WayfireWindowListBox();

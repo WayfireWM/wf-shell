@@ -7,36 +7,44 @@
 #include "panel.hpp"
 
 WayfireWindowListBox::WayfireWindowListBox()
-{}
+{
+    std::shared_ptr<Gtk::LayoutManager> layout = std::make_shared<WayfireWindowListLayout>();
+    set_layout_manager(layout);
+}
 
 void WayfireWindowListBox::set_top_widget(Gtk::Widget *top)
 {
-    this->top_widget = top;
+    this->layout->top_widget = top;
 
-    if (top_widget)
+    if (layout->top_widget)
     {
         /* Set original top_x to where the widget currently is, so that we don't
          * mess with it before the real position is set */
-        this->top_x = get_absolute_position(0, *top);
+        this->layout->top_x = get_absolute_position(0, *top);
     }
 
-    set_top_x(top_x);
+    set_top_x(layout->top_x);
 }
 
 void WayfireWindowListBox::set_top_x(int x)
 {
     /* Make sure that the widget doesn't go outside of the box */
-    if (this->top_widget)
+    if (this->layout->top_widget)
     {
-        x = std::min(x, get_allocated_width() - top_widget->get_allocated_width());
+        x = std::min(x, get_allocated_width() - layout->top_widget->get_allocated_width());
     }
 
-    if (this->top_widget)
+    if (this->layout->top_widget)
     {
         x = std::max(x, 0);
     }
 
-    this->top_x = x;
+    this->layout->top_x = x;
+
+    if (this->layout->top_widget)
+    {
+        // TODO Sensibly cause a reflow to force layout manager to move children
+    }
 
     queue_allocate();
     queue_draw();
