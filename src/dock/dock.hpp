@@ -1,12 +1,11 @@
 #ifndef WF_DOCK_HPP
 #define WF_DOCK_HPP
 
-#include <map>
 #include <gtkmm/box.h>
 #include <wayland-client.h>
 
-#include "toplevel-icon.hpp"
 #include "wf-shell-app.hpp"
+#include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
 #include <wf-option-wrap.hpp>
 
 class WfDock
@@ -45,7 +44,7 @@ class WfDockApp : public WayfireShellApp
     void handle_output_removed(WayfireOutput *output) override;
 
   private:
-    WfDockApp(int argc, char **argv);
+    WfDockApp();
 
     class impl;
     std::unique_ptr<impl> priv;
