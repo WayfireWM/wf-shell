@@ -70,7 +70,6 @@ class WayfireToplevel::impl
         button.set_tooltip_text("none");
 
         label.set_ellipsize(Pango::EllipsizeMode::END);
-        label.set_max_width_chars(30);
         label.set_hexpand(true);
 
         button.property_scale_factor().signal_changed()
@@ -209,17 +208,26 @@ class WayfireToplevel::impl
         }
 
         auto hovered_button = container.get_widget_at(x);
+        Gtk::Widget* before = container.get_widget_before(x);
 
-        if ((hovered_button != &button))
+    
+        if (hovered_button)
         {
-            if (hovered_button == nullptr)
+            // Where are we in the button?
+            auto allocation = hovered_button->get_allocation();
+            int half_width = allocation.get_width() / 2;
+            int x_in_button = x - allocation.get_x();
+            if (x_in_button < half_width) // Left Half
             {
-                gtk_box_reorder_child_after(container.gobj(), GTK_WIDGET(button.gobj()), nullptr);
-            } else
+                if(before == nullptr)
+                {
+                    gtk_box_reorder_child_after(container.gobj(), GTK_WIDGET(button.gobj()), nullptr);
+                } else 
+                {
+                    container.reorder_child_after(button, *before);
+                }
+            } else if (x_in_button > half_width) // Right Half
             {
-                // If you write the documents to say 'Argument can be null' and have null mean something
-                // important...
-                // Make sure the user can send null...
                 container.reorder_child_after(button, *hovered_button);
             }
         }
@@ -261,6 +269,17 @@ class WayfireToplevel::impl
         drag_gesture->set_state(Gtk::EventSequenceState::DENIED);
 
         send_rectangle_hints();
+    }
+
+    void set_hide_text(bool hide_text)
+    {
+        if(hide_text)
+        {
+            label.hide();
+        } else
+        {
+            label.show();
+        }
     }
 
     void on_menu_minimize(Glib::VariantBase vb)

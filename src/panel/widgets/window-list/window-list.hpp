@@ -6,50 +6,9 @@
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
 #include <gtkmm.h>
+#include "layout.hpp"
 
 class WayfireToplevel;
-
-class WayfireWindowListLayout : public Gtk::LayoutManager{
-  protected:
-  void allocate_vfunc(const Gtk::Widget& widget, int width, int height, int baseline) override{
-    int per_child = width / widget.get_children().size();
-
-    // TODO Bad assumptions not based on reality.
-    if(per_child < 32)
-    {
-      per_child = 32;
-    }
-    if(per_child > 100)
-    {
-      per_child = 100;
-    }
-    int count = 0;
-    for (auto child: widget.get_children())
-    {
-      auto alloc = Gtk::Allocation();
-      if(child == top_widget){
-        alloc.set_x(top_x);
-        alloc.set_y(0);
-        alloc.set_width(per_child);
-        alloc.set_height(height);
-        child->size_allocate(alloc,-1);
-        continue;
-      }
-      alloc.set_x(per_child * count);
-      alloc.set_y(0);
-      alloc.set_width(per_child);
-      alloc.set_height(height);
-      std::cout<<"PLACED"<<std::endl;
-      child->size_allocate(alloc,-1);
-    }
-  }
-
-  public:
-    int top_x = 0;
-    Gtk::Widget *top_widget = nullptr;
-
-
-};
 
 class WayfireWindowListBox : public Gtk::Box
 {
@@ -88,6 +47,14 @@ class WayfireWindowListBox : public Gtk::Box
      * @return The direct child widget or none if it doesn't exist
      */
     Gtk::Widget *get_widget_at(int x);
+    /** Find the direct child widget before the given box-relative coordinates,
+     * ignoring the top widget if possible, i.e if the top widget and some
+     * other widget are at the given coordinates, then the bottom widget will
+     * be returned
+     *
+     * @return The direct child widget or none if it doesn't exist
+     */
+    Gtk::Widget *get_widget_before(int x);
 };
 
 class WayfireWindowList : public WayfireWidget
