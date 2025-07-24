@@ -376,9 +376,9 @@ class WayfireToplevel::impl
     void send_rectangle_hint()
     {
         auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
-        auto w = button.get_width();
-        auto h = button.get_height();
-        if (panel && w > 0 && h > 0)
+        auto w     = button.get_width();
+        auto h     = button.get_height();
+        if (panel && (w > 0) && (h > 0))
         {
             double x, y;
             button.translate_coordinates(panel->get_window(), 0, 0, x, y);
