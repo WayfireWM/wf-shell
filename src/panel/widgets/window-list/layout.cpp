@@ -29,7 +29,6 @@ void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget, int widt
         }
 
         alloc.set_x(per_child * index);
-        alloc.set_y(0);
         child->size_allocate(alloc, -1);
         index++;
     }
