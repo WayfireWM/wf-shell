@@ -10,6 +10,10 @@ WayfireWindowListBox::WayfireWindowListBox()
 {
     layout = std::make_shared<WayfireWindowListLayout>();
     set_layout_manager(layout);
+    user_size.set_callback([=]
+    {
+        this->queue_allocate();
+    });
 }
 
 void WayfireWindowListBox::set_top_widget(Gtk::Widget *top)
