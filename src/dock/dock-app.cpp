@@ -1,7 +1,6 @@
 #include "dock.hpp"
 #include "toplevel.hpp"
 #include "toplevel-icon.hpp"
-#include "glibmm.h"
 #include <iostream>
 #include <gdk/wayland/gdkwayland.h>
 #include <css-config.hpp>
@@ -148,12 +147,11 @@ void WfDockApp::create(int argc, char **argv)
         throw std::logic_error("Running WfDockApp twice!");
     }
 
-    instance = std::unique_ptr<WfDockApp>{new WfDockApp(argc, argv)};
-    instance->run();
+    instance = std::unique_ptr<WfDockApp>{new WfDockApp()};
+    instance->run(argc, argv);
 }
 
-WfDockApp::WfDockApp(int argc, char **argv) :
-    WayfireShellApp(argc, argv), priv(new WfDockApp::impl())
+WfDockApp::WfDockApp() : WayfireShellApp(), priv(new WfDockApp::impl())
 {}
 WfDockApp::~WfDockApp() = default;
 

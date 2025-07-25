@@ -1,7 +1,6 @@
 #ifndef WF_SHELL_APP_HPP
 #define WF_SHELL_APP_HPP
 
-#include <set>
 #include <string>
 #include <wayfire/config/config-manager.hpp>
 
@@ -70,12 +69,12 @@ class WayfireShellApp
     wf::config::config_manager_t config;
     zwf_shell_manager_v2 *wf_shell_manager = nullptr;
 
-    WayfireShellApp(int argc, char **argv);
+    WayfireShellApp();
     virtual ~WayfireShellApp();
 
     virtual std::string get_config_file();
     virtual std::string get_css_config_dir();
-    virtual void run();
+    virtual void run(int argc, char **argv);
 
     virtual void on_config_reload()
     {}

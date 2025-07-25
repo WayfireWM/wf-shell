@@ -39,7 +39,7 @@ class WayfirePanelApp : public WayfireShellApp
     void on_config_reload() override;
 
   private:
-    WayfirePanelApp(int argc, char **argv);
+    WayfirePanelApp();
 
 
     class impl;

@@ -124,6 +124,7 @@ void WayfireShellApp::add_css_file(std::string file, int priority)
 bool WayfireShellApp::parse_cfgfile(const Glib::ustring & option_name,
     const Glib::ustring & value, bool has_value)
 {
+    std::cout << "%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
     std::cout << "Using custom config file " << value << std::endl;
     cmdline_config = value;
     return true;
@@ -284,8 +285,9 @@ void WayfireShellApp::rem_output(GMonitor monitor)
     }
 }
 
-WayfireShellApp::WayfireShellApp(int argc, char **argv)
+WayfireShellApp::WayfireShellApp()
 {
+    std::cout << "setting up" << std::endl;
     app = Gtk::Application::create("", Gio::Application::Flags::HANDLES_COMMAND_LINE);
     app->signal_activate().connect(
         sigc::mem_fun(*this, &WayfireShellApp::on_activate));
@@ -312,9 +314,9 @@ WayfireShellApp& WayfireShellApp::get()
     return *instance;
 }
 
-void WayfireShellApp::run()
+void WayfireShellApp::run(int argc, char **argv)
 {
-    app->run();
+    app->run(argc, argv);
 }
 
 /* -------------------------- WayfireOutput --------------------------------- */

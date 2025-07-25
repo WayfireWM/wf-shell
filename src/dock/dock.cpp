@@ -3,9 +3,6 @@
 #include <glibmm/main.h>
 #include <gdk/wayland/gdkwayland.h>
 
-#include <iostream>
-#include <map>
-
 #include <gtk-utils.hpp>
 #include <wf-shell-app.hpp>
 #include <gtk4-layer-shell.h>

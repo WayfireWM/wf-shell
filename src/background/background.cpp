@@ -630,9 +630,9 @@ class WayfireBackgroundApp : public WayfireShellApp
     static void create(int argc, char **argv)
     {
         WayfireShellApp::instance =
-            std::make_unique<WayfireBackgroundApp>(argc, argv);
+            std::make_unique<WayfireBackgroundApp>();
         g_unix_signal_add(SIGUSR1, sigusr1_handler, (void*)instance.get());
-        instance->run();
+        instance->run(argc, argv);
     }
 
     void handle_new_output(WayfireOutput *output) override

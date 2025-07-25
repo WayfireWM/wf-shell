@@ -6,16 +6,12 @@
 #include <gdk/wayland/gdkwayland.h>
 #include <gtk4-layer-shell.h>
 
-#include <stdio.h>
 #include <iostream>
 #include <sstream>
 
 #include <map>
-#include <filesystem>
 #include <css-config.hpp>
-
 #include "panel.hpp"
-#include "../util/gtk-utils.hpp"
 
 #include "widgets/battery.hpp"
 #include "widgets/command-output.hpp"
@@ -410,13 +406,12 @@ void WayfirePanelApp::create(int argc, char **argv)
         throw std::logic_error("Running WayfirePanelApp twice!");
     }
 
-    instance = std::unique_ptr<WayfireShellApp>(new WayfirePanelApp{argc, argv});
-    instance->run();
+    instance = std::unique_ptr<WayfireShellApp>(new WayfirePanelApp{});
+    instance->run(argc, argv);
 }
 
 WayfirePanelApp::~WayfirePanelApp() = default;
-WayfirePanelApp::WayfirePanelApp(int argc, char **argv) :
-    WayfireShellApp(argc, argv), priv(new impl())
+WayfirePanelApp::WayfirePanelApp() : WayfireShellApp(), priv(new impl())
 {}
 
 int main(int argc, char **argv)
