@@ -63,23 +63,26 @@ int WayfireWindowListBox::get_absolute_position(int x, Gtk::Widget& ref)
     return x;
 }
 
-Gtk::Widget* WayfireWindowListBox::get_widget_before(int x)
+Gtk::Widget*WayfireWindowListBox::get_widget_before(int x)
 {
     Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
 
     /* Widgets are stored bottom to top, so we will return the bottom-most
      * widget at the given position */
-    Gtk::Widget* previous = nullptr;
+    Gtk::Widget *previous = nullptr;
     auto children = this->get_children();
     for (auto& child : children)
     {
-        if(layout->top_widget && child == layout->top_widget){
+        if (layout->top_widget && (child == layout->top_widget))
+        {
             continue;
         }
+
         if (child->get_allocation().intersects(given_point))
         {
             return previous;
         }
+
         previous = child;
     }
 
@@ -95,9 +98,11 @@ Gtk::Widget*WayfireWindowListBox::get_widget_at(int x)
     auto children = this->get_children();
     for (auto& child : children)
     {
-        if(child == layout->top_widget){
+        if (child == layout->top_widget)
+        {
             continue;
         }
+
         if (child->get_allocation().intersects(given_point))
         {
             return child;

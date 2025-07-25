@@ -208,21 +208,20 @@ class WayfireToplevel::impl
         }
 
         auto hovered_button = container.get_widget_at(x);
-        Gtk::Widget* before = container.get_widget_before(x);
+        Gtk::Widget *before = container.get_widget_before(x);
 
-    
         if (hovered_button)
         {
             // Where are we in the button?
             auto allocation = hovered_button->get_allocation();
-            int half_width = allocation.get_width() / 2;
+            int half_width  = allocation.get_width() / 2;
             int x_in_button = x - allocation.get_x();
             if (x_in_button < half_width) // Left Half
             {
-                if(before == nullptr)
+                if (before == nullptr)
                 {
                     gtk_box_reorder_child_after(container.gobj(), GTK_WIDGET(button.gobj()), nullptr);
-                } else 
+                } else
                 {
                     container.reorder_child_after(button, *before);
                 }
@@ -273,7 +272,7 @@ class WayfireToplevel::impl
 
     void set_hide_text(bool hide_text)
     {
-        if(hide_text)
+        if (hide_text)
         {
             label.hide();
         } else
