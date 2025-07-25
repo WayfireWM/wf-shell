@@ -11,7 +11,7 @@
 class WayfireToplevel;
 
 class WayfireWindowListBox : public Gtk::Box
-{    
+{
     WfOption<int> user_size{"panel/window_list_size"};
     std::shared_ptr<WayfireWindowListLayout> layout = std::make_shared<WayfireWindowListLayout>();
 
