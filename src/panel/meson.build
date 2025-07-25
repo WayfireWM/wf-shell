@@ -9,6 +9,7 @@ widget_sources = [
   'widgets/separator.cpp',
   'widgets/window-list/window-list.cpp',
   'widgets/window-list/toplevel.cpp',
+  'widgets/window-list/layout.cpp',
   'widgets/notifications/daemon.cpp',
   'widgets/notifications/single-notification.cpp',
   'widgets/notifications/notification-info.cpp',

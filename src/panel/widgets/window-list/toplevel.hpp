@@ -31,6 +31,7 @@ class WayfireToplevel
     void set_parent(zwlr_foreign_toplevel_handle_v1*);
     std::vector<zwlr_foreign_toplevel_handle_v1*>& get_children();
     ~WayfireToplevel();
+    void set_hide_text(bool hide_text);
 
     class impl;
 

@@ -6,13 +6,13 @@
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
 #include <gtkmm.h>
+#include "layout.hpp"
 
 class WayfireToplevel;
 
 class WayfireWindowListBox : public Gtk::Box
 {
-    Gtk::Widget *top_widget = nullptr;
-    int top_x = 0;
+    std::shared_ptr<WayfireWindowListLayout> layout = std::make_shared<WayfireWindowListLayout>();
 
   public:
     WayfireWindowListBox();
@@ -47,6 +47,14 @@ class WayfireWindowListBox : public Gtk::Box
      * @return The direct child widget or none if it doesn't exist
      */
     Gtk::Widget *get_widget_at(int x);
+    /** Find the direct child widget before the given box-relative coordinates,
+     * ignoring the top widget if possible, i.e if the top widget and some
+     * other widget are at the given coordinates, then the bottom widget will
+     * be returned
+     *
+     * @return The direct child widget or none if it doesn't exist
+     */
+    Gtk::Widget *get_widget_before(int x);
 };
 
 class WayfireWindowList : public WayfireWidget
