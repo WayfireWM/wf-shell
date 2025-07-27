@@ -173,20 +173,19 @@ class WayfireToplevel::impl
 
     void on_drag_begin(double _x, double _y)
     {
-        auto& container = window_list->box;
         // Set grab start, before transforming it to absolute position
         grab_start_x = _x;
         grab_start_y = _y;
 
         set_classes(state);
-        window_list->box.set_top_widget(&button);
+        window_list->set_top_widget(&button);
 
         // Find the distance between pointer X and button origin
-        int x = container.get_absolute_position(_x, button);
+        int x = window_list->get_absolute_position(_x, button);
         grab_abs_start_x = x;
 
         // Find button corner in window-relative coords
-        int loc_x = container.get_absolute_position(0, button);
+        int loc_x = window_list->get_absolute_position(0, button);
         grab_off_x = x - loc_x;
 
         drag_exceeds_threshold = false;
@@ -195,20 +194,19 @@ class WayfireToplevel::impl
     static constexpr int DRAG_THRESHOLD = 3;
     void on_drag_update(double _x, double y)
     {
-        auto& container = window_list->box;
         /* Window was not just clicked, but also dragged. Ignore the next click,
          * which is the one that happens when the drag gesture ends. */
         set_ignore_next_click();
 
         int x = _x + grab_start_x;
-        x = container.get_absolute_position(x, button);
+        x = window_list->get_absolute_position(x, button);
         if (std::abs(x - grab_abs_start_x) > DRAG_THRESHOLD)
         {
             drag_exceeds_threshold = true;
         }
 
-        auto hovered_button = container.get_widget_at(x);
-        Gtk::Widget *before = container.get_widget_before(x);
+        auto hovered_button = window_list->get_widget_at(x);
+        Gtk::Widget *before = window_list->get_widget_before(x);
 
         if (hovered_button)
         {
@@ -220,21 +218,21 @@ class WayfireToplevel::impl
             {
                 if (before == nullptr)
                 {
-                    gtk_box_reorder_child_after(container.gobj(), GTK_WIDGET(button.gobj()), nullptr);
+                    gtk_box_reorder_child_after(window_list->gobj(), GTK_WIDGET(button.gobj()), nullptr);
                 } else
                 {
-                    container.reorder_child_after(button, *before);
+                    window_list->reorder_child_after(button, *before);
                 }
             } else if (x_in_button > half_width) // Right Half
             {
-                container.reorder_child_after(button, *hovered_button);
+                window_list->reorder_child_after(button, *hovered_button);
             }
         }
 
         /* Make sure the grabbed button always stays at the same relative position
          * to the DnD position */
         int target_x = x - grab_off_x;
-        window_list->box.set_top_x(target_x);
+        window_list->set_top_x(target_x);
     }
 
     void on_drag_end(double _x, double _y)
@@ -244,7 +242,7 @@ class WayfireToplevel::impl
         int width = button.get_allocated_width();
         int height = button.get_allocated_height();
 
-        window_list->box.set_top_widget(nullptr);
+        window_list->set_top_widget(nullptr);
         set_classes(state);
 
         /* When a button is dropped after dnd, we ignore the unclick
@@ -434,8 +432,7 @@ class WayfireToplevel::impl
 
     void remove_button()
     {
-        auto& container = window_list->box;
-        container.remove(button);
+        window_list->remove(button);
         send_rectangle_hints();
     }
 
@@ -496,20 +493,18 @@ class WayfireToplevel::impl
             return;
         }
 
-        auto& container = window_list->box;
         if (window_list->output->wo == output)
         {
-            container.append(button);
+            window_list->append(button);
             send_rectangle_hints();
         }
     }
 
     void handle_output_leave(wl_output *output)
     {
-        auto& container = window_list->box;
         if (window_list->output->wo == output)
         {
-            container.remove(button);
+            window_list->remove(button);
             send_rectangle_hints();
         }
     }
@@ -527,19 +522,14 @@ std::vector<zwlr_foreign_toplevel_handle_v1*>& WayfireToplevel::get_children()
     return pimpl->get_children();
 }
 
-zwlr_foreign_toplevel_handle_v1*WayfireToplevel::get_parent()
-{
-    return pimpl->get_parent();
-}
-
-void WayfireToplevel::set_parent(zwlr_foreign_toplevel_handle_v1 *parent)
-{
-    return pimpl->set_parent(parent);
-}
-
 uint32_t WayfireToplevel::get_state()
 {
     return pimpl->get_state();
+}
+
+void WayfireToplevel::send_rectangle_hint()
+{
+    return pimpl->send_rectangle_hint();
 }
 
 WayfireToplevel::~WayfireToplevel() = default;
