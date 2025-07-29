@@ -97,7 +97,7 @@ void WayfireLanguage::next_layout() {
     ipc->send(message.dump());
 }
 
-WayfireLanguage::WayfireLanguage(std::shared_ptr<WayfireIPC> ipc): ipc(ipc)
+WayfireLanguage::WayfireLanguage(WayfireIPC *ipc): ipc(ipc)
 {}
 
 WayfireLanguage::~WayfireLanguage() {

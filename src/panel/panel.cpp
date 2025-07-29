@@ -38,7 +38,7 @@
 class WayfirePanel::impl
 {
     std::unique_ptr<WayfireAutohidingWindow> window;
-    std::shared_ptr<WayfireIPC> ipc;
+    WayfireIPC* ipc;
 
     Gtk::HBox content_box;
     Gtk::HBox left_box, center_box, right_box;
@@ -321,7 +321,7 @@ class WayfirePanel::impl
     }
 
   public:
-    impl(WayfireOutput *output, std::shared_ptr<WayfireIPC> ipc) : ipc(ipc), output(output)
+    impl(WayfireOutput *output, WayfireIPC *ipc) : ipc(ipc), output(output)
     {
         create_window();
     }
@@ -355,7 +355,7 @@ class WayfirePanel::impl
     }
 };
 
-WayfirePanel::WayfirePanel(WayfireOutput *output, std::shared_ptr<WayfireIPC> ipc) : pimpl(new impl(output, ipc))
+WayfirePanel::WayfirePanel(WayfireOutput *output, WayfireIPC *ipc) : pimpl(new impl(output, ipc))
 {}
 
 wl_surface*WayfirePanel::get_wl_surface()

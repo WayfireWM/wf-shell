@@ -155,7 +155,7 @@ void WayfireShellApp::on_activate()
         std::exit(-1);
     }
 
-    ipc = std::make_shared<WayfireIPC>();
+    ipc = new WayfireIPC();
 
     wl_registry *registry = wl_display_get_registry(wl_display);
     wl_registry_add_listener(registry, &registry_listener, this);
@@ -235,7 +235,9 @@ WayfireShellApp::WayfireShellApp(int argc, char **argv)
 }
 
 WayfireShellApp::~WayfireShellApp()
-{}
+{
+    delete ipc;
+}
 
 std::unique_ptr<WayfireShellApp> WayfireShellApp::instance;
 WayfireShellApp& WayfireShellApp::get()

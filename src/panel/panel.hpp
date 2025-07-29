@@ -12,7 +12,7 @@
 class WayfirePanel
 {
   public:
-    WayfirePanel(WayfireOutput *output, std::shared_ptr<WayfireIPC> ipc);
+    WayfirePanel(WayfireOutput *output, WayfireIPC *ipc);
 
     wl_surface *get_wl_surface();
     Gtk::Window& get_window();

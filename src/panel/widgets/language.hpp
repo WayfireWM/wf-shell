@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <gtkmm/calendar.h>
 #include <gtkmm/label.h>
-#include <memory>
 #include <nlohmann/json_fwd.hpp>
 #include <string>
 #include <vector>
@@ -23,7 +22,7 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
     Gtk::Label label;
     Gtk::Button button;
 
-    std::shared_ptr<WayfireIPC> ipc;
+    WayfireIPC *ipc;
     uint32_t current_layout;
     std::vector<Layout> available_layouts;
 
@@ -34,7 +33,7 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
     void set_current(uint32_t index);
     void set_available(nlohmann::json layouts);
     void next_layout();
-    WayfireLanguage(std::shared_ptr<WayfireIPC> ipc);
+    WayfireLanguage(WayfireIPC *ipc);
     ~WayfireLanguage();
 };
 
