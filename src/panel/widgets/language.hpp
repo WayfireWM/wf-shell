@@ -3,36 +3,38 @@
 
 #include "../widget.hpp"
 #include "gtkmm/button.h"
-#include "wayfire-shell-unstable-v2-client-protocol.h"
+#include "wf-ipc.hpp"
 #include <cstdint>
 #include <gtkmm/calendar.h>
 #include <gtkmm/label.h>
+#include <memory>
+#include <nlohmann/json_fwd.hpp>
 #include <string>
 #include <vector>
-// #include "wayfire-shell-unstable-v2-client-protocol.h"
 
-struct Language
+struct Layout
 {
   std::string Name;
   std::string ID;
 };
 
-class WayfireLanguage : public WayfireWidget
+class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
 {
     Gtk::Label label;
     Gtk::Button button;
 
-    zwf_keyboard_lang_manager_v2 *keyboard_lang_manager;
-    uint32_t current_language;
-    std::vector<Language> available;
+    std::shared_ptr<WayfireIPC> ipc;
+    uint32_t current_layout;
+    std::vector<Layout> available_layouts;
 
   public:
     void init(Gtk::HBox *container) override;
+    void on_event(nlohmann::json data) override;
     bool update_label();
     void set_current(uint32_t index);
-    void set_available(std::vector<Language> languages);
-    void next_language();
-    WayfireLanguage(zwf_keyboard_lang_manager_v2 *kbdlayout_manager);
+    void set_available(nlohmann::json layouts);
+    void next_layout();
+    WayfireLanguage(std::shared_ptr<WayfireIPC> ipc);
     ~WayfireLanguage();
 };
 

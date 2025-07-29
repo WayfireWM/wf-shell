@@ -60,3 +60,15 @@
 .wf-panel .command-output.icon-bottom label {
     padding-bottom: 5px;
 }
+
+.wf-panel .language {
+    min-width: 48px;
+}
+
+.wf-panel .language label {
+    background-color: #24283B;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 3px; 
+    color: #41A6B5;
+}

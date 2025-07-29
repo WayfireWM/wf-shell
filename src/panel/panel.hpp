@@ -6,13 +6,13 @@
 #include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
 
-#include "libutil.a.p/wayfire-shell-unstable-v2-client-protocol.h"
+#include "wf-ipc.hpp"
 #include "wf-shell-app.hpp"
 
 class WayfirePanel
 {
   public:
-    WayfirePanel(WayfireOutput *output, ShellManager shell_manager);
+    WayfirePanel(WayfireOutput *output, std::shared_ptr<WayfireIPC> ipc);
 
     wl_surface *get_wl_surface();
     Gtk::Window& get_window();

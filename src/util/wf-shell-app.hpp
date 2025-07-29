@@ -1,8 +1,6 @@
 #ifndef WF_SHELL_APP_HPP
 #define WF_SHELL_APP_HPP
 
-#include <memory>
-#include <set>
 #include <string>
 #include <wayfire/config/config-manager.hpp>
 
@@ -10,11 +8,9 @@
 #include <gdkmm/monitor.h>
 
 #include "wayfire-shell-unstable-v2-client-protocol.h"
+#include "wf-ipc.hpp"
 
 using GMonitor = Glib::RefPtr<Gdk::Monitor>;
-
-struct WayfireShellManager; 
-using ShellManager = std::shared_ptr<WayfireShellManager>;
 
 /**
  * Represents a single output
@@ -27,17 +23,8 @@ struct WayfireOutput
     sigc::signal<void()> toggle_menu_signal();
     sigc::signal<void()> m_toggle_menu_signal;
 
-    WayfireOutput(const GMonitor& monitor,  ShellManager shell_manager);
+    WayfireOutput(const GMonitor& monitor, zwf_shell_manager_v2 *zwf_manager);
     ~WayfireOutput();
-};
-
-struct WayfireShellManager
-{
-    WayfireShellManager(zwf_shell_manager_v2 *wf_shell_manager);
-    zwf_output_v2* get_wf_output(wl_output* output);
-    zwf_keyboard_lang_manager_v2* get_keyboard_lang_manager();
-  private:
-    zwf_shell_manager_v2 *wf_shell_manager;
 };
 
 /**
@@ -79,7 +66,8 @@ class WayfireShellApp
     int inotify_fd;
     int inotify_css_fd;
     wf::config::config_manager_t config;
-    ShellManager wf_shell_manager;
+    zwf_shell_manager_v2 *wf_shell_manager = nullptr;
+    std::shared_ptr<WayfireIPC> ipc = nullptr;
 
     WayfireShellApp(int argc, char **argv);
     virtual ~WayfireShellApp();

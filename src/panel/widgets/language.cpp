@@ -1,7 +1,8 @@
+#include <cstddef>
 #include <cstdint>
 #include <glibmm.h>
-#include <iostream>
 #include <map>
+#include <nlohmann/json_fwd.hpp>
 #include <string>
 #include <vector>
 #include <xkbcommon/xkbregistry.h>
@@ -10,55 +11,62 @@
 #include "libutil.a.p/wayfire-shell-unstable-v2-client-protocol.h"
 #include "sigc++/functors/mem_fun.h"
 
-void WayfireLanguage::init(Gtk::HBox *container)
-{
-    // button = std::make_unique<Gtk::Button>("panel");
-
+void WayfireLanguage::init(Gtk::HBox *container) {
     button.get_style_context()->add_class("language");
     button.add(label);
     button.get_style_context()->add_class("flat");
     button.get_style_context()->remove_class("activated");
-    button.signal_clicked().connect_notify(sigc::mem_fun(this, &WayfireLanguage::next_language));
+    button.signal_clicked().connect_notify(sigc::mem_fun(this, &WayfireLanguage::next_layout));
     button.show();
     label.show();
 
-    update_label();
+    ipc->subscribe(this, {"keyboard-modifier-state-changed"});
+    ipc->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=](nlohmann::json data) {
+        set_available(data["possible-layouts"]);
+        set_current(data["layout-index"]);    
+    });
 
     container->pack_start(button, false, false);
 }
 
-bool WayfireLanguage::update_label()
-{
-    if (current_language >= available.size()) {
+void WayfireLanguage::on_event(nlohmann::json data) {
+    if (data["event"] == "keyboard-modifier-state-changed") {
+        if (available_layouts.size() == 0) {
+            set_available(data["state"]["possible-layouts"]);
+        }
+
+        auto state_layout = data["state"]["layout-index"];
+        if (state_layout != current_layout) {
+            current_layout = state_layout;
+            set_current(state_layout);
+        }
+    }
+}
+
+bool WayfireLanguage::update_label() {
+    if (current_layout >= available_layouts.size()) {
         return false;
     }
-
-    label.set_text(available[current_language].ID);
+    label.set_text(available_layouts[current_layout].ID);
     return true;
 }
 
-static void keyboard_lang_manager_current_layout(void *data, struct zwf_keyboard_lang_manager_v2 *keyboard_lang_manager, const uint32_t id)
-{
-    auto wf_language = (WayfireLanguage*)data;
-    wf_language->set_current(id);
-    wf_language->update_label();
+void WayfireLanguage::set_current(uint32_t index) {
+    current_layout = index;
+    update_label();
 }
 
-static void keyboard_lang_manager_available_layouts(void *data, struct zwf_keyboard_lang_manager_v2 *keyboard_lang_manager, wl_array *layouts)
-{
-    std::vector<Language> languages;
+void WayfireLanguage::set_available(nlohmann::json layouts) {
+    std::vector<Layout> layouts_available;
     std::map<std::string, uint32_t> names;
-    char *elem = (char *) layouts->data;
-    uint32_t index = 0;
-    while (elem < (char *) layouts->data + layouts->size) {
-        names[std::string(elem)] = index;
-        languages.push_back(Language{
-            .Name = elem,
+
+    for(size_t i = 0; i < layouts.size(); i++) {
+        auto elem = layouts[i];
+        names[elem] = i;
+        layouts_available.push_back(Layout{
+            .Name = (std::string)elem,
             .ID = "",
         });
-        size_t length = strlen(elem) + 1;
-        elem += length;
-        index++;
     }
 
     auto context = rxkb_context_new(RXKB_CONTEXT_NO_FLAGS);
@@ -68,45 +76,30 @@ static void keyboard_lang_manager_available_layouts(void *data, struct zwf_keybo
         auto descr = rxkb_layout_get_description(rlayout);
         auto name = names.find(descr);
         if (name != names.end()) {
-            languages[name->second].ID = rxkb_layout_get_brief(rlayout);
+            layouts_available[name->second].ID = rxkb_layout_get_brief(rlayout);
         }
     }
 
-    auto wf_language = (WayfireLanguage*)data;
-    wf_language->set_available(languages);
+    available_layouts = layouts_available;
+    update_label();
 }
 
-static zwf_keyboard_lang_manager_v2_listener listener = {
-    .current_layout = keyboard_lang_manager_current_layout,
-    .available_layouts = keyboard_lang_manager_available_layouts,
-};
-
-
-void WayfireLanguage::set_current(uint32_t index)
-{
-    current_language = index;
-}
-
-void WayfireLanguage::set_available(std::vector<Language> languages)
-{
-    available = languages;
-}
-
-void WayfireLanguage::next_language()
-{
-    uint32_t next = current_language + 1;
-    if (next >= available.size())
+void WayfireLanguage::next_layout() {
+    uint32_t next = current_layout + 1;
+    if (next >= available_layouts.size())
     {
         next = 0;
     }
 
-    zwf_keyboard_lang_manager_v2_set_layout(keyboard_lang_manager, next);
+    nlohmann::json message;
+    message["method"] = "wayfire/set-keyboard-state";
+    message["layout-index"] = next;
+    ipc->send(message.dump());
 }
 
-WayfireLanguage::WayfireLanguage(zwf_keyboard_lang_manager_v2 *keyboard_lang_manager): keyboard_lang_manager(keyboard_lang_manager)
-{
-    zwf_keyboard_lang_manager_v2_add_listener(keyboard_lang_manager, &listener, this);
-}
-
-WayfireLanguage::~WayfireLanguage()
+WayfireLanguage::WayfireLanguage(std::shared_ptr<WayfireIPC> ipc): ipc(ipc)
 {}
+
+WayfireLanguage::~WayfireLanguage() {
+    ipc->unsubscribe(this);
+}

@@ -1,5 +1,5 @@
 #include "wf-shell-app.hpp"
-#include "wayfire-shell-unstable-v2-client-protocol.h"
+#include "wf-ipc.hpp"
 #include <glibmm/main.h>
 #include <sys/inotify.h>
 #include <gdk/gdkwayland.h>
@@ -126,9 +126,8 @@ static void registry_add_object(void *data, struct wl_registry *registry,
     auto app = static_cast<WayfireShellApp*>(data);
     if (strcmp(interface, zwf_shell_manager_v2_interface.name) == 0)
     {
-        auto shell_manager = (zwf_shell_manager_v2*)wl_registry_bind(registry, name,
+        app->wf_shell_manager = (zwf_shell_manager_v2*)wl_registry_bind(registry, name,
             &zwf_shell_manager_v2_interface, std::min(version, 2u));
-        app->wf_shell_manager = std::make_shared<WayfireShellManager>(shell_manager);
     }
 }
 
@@ -155,6 +154,8 @@ void WayfireShellApp::on_activate()
             " Are you sure you are running a wayland compositor?" << std::endl;
         std::exit(-1);
     }
+
+    ipc = std::make_shared<WayfireIPC>();
 
     wl_registry *registry = wl_display_get_registry(wl_display);
     wl_registry_add_listener(registry, &registry_listener, this);
@@ -249,15 +250,15 @@ void WayfireShellApp::run()
 
 /* -------------------------- WayfireOutput --------------------------------- */
 WayfireOutput::WayfireOutput(const GMonitor& monitor,
-    ShellManager shell_manager)
+    zwf_shell_manager_v2 *zwf_manager)
 {
     this->monitor = monitor;
     this->wo = gdk_wayland_monitor_get_wl_output(monitor->gobj());
 
-    if (shell_manager)
+    if (zwf_manager)
     {
         this->output =
-            shell_manager->get_wf_output(this->wo);
+            zwf_shell_manager_v2_get_wf_output(zwf_manager, this->wo);
     } else
     {
         this->output = nullptr;
@@ -275,20 +276,4 @@ WayfireOutput::~WayfireOutput()
 sigc::signal<void()> WayfireOutput::toggle_menu_signal()
 {
     return m_toggle_menu_signal;
-}
-
-/* -------------------------- WayfireShellManager --------------------------------- */
-WayfireShellManager::WayfireShellManager(zwf_shell_manager_v2 *shell_manager)
-{
-    this->wf_shell_manager = shell_manager;
-}
-
-zwf_output_v2* WayfireShellManager::get_wf_output(wl_output *output)
-{
-    return zwf_shell_manager_v2_get_wf_output(this->wf_shell_manager, output);
-}
-
-zwf_keyboard_lang_manager_v2* WayfireShellManager::get_keyboard_lang_manager()
-{
-    return zwf_shell_manager_v2_get_wf_keyboard_lang_manager(this->wf_shell_manager);
 }

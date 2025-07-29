@@ -23,6 +23,7 @@ libpulse       = dependency('libpulse', required : get_option('pulse'))
 dbusmenu_gtk   = dependency('dbusmenu-gtk3-0.4')
 libgvc         = subproject('gvc', default_options: ['static=true'], required : get_option('pulse'))
 xkbregistry    = dependency('xkbregistry')
+json           = dependency('nlohmann_json')
 
 if get_option('wayland-logout') == true
   wayland_logout = subproject('wayland-logout')
