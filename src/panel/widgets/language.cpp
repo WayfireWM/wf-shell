@@ -8,7 +8,6 @@
 #include <xkbcommon/xkbregistry.h>
 #include "language.hpp"
 #include "gtkmm/button.h"
-#include "libutil.a.p/wayfire-shell-unstable-v2-client-protocol.h"
 #include "sigc++/functors/mem_fun.h"
 
 void WayfireLanguage::init(Gtk::HBox *container) {
