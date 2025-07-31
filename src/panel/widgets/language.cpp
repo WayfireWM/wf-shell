@@ -92,7 +92,8 @@ void WayfireLanguage::next_layout() {
 
     nlohmann::json message;
     message["method"] = "wayfire/set-keyboard-state";
-    message["layout-index"] = next;
+    message["data"] = nlohmann::json::object();
+    message["data"]["layout-index"] = next;
     ipc->send(message.dump());
 }
 
