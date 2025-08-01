@@ -107,23 +107,29 @@ void WayfireIPC::send_message(const std::string& message)
 
 bool WayfireIPC::receive(Glib::IOCondition cond)
 {
-    uint32_t length;
-    ssize_t received = ::recv(socket_fd, &length, 4, 0);
-    if (received == -1) {
-        throw std::system_error(errno, std::system_category(), "recv failed");
+    ssize_t received = 0;
+
+    if (!length_received)
+    {
+        received = ::recv(socket_fd, &length, 4, 0);
+        if (received == -1) {
+            return true;
+        }
+        if (received == 0) {
+            throw std::runtime_error("Connection closed by peer");
+        }
     }
-    if (received == 0) {
-        throw std::runtime_error("Connection closed by peer");
-    }
+    length_received = true;
 
     std::string buf(length + 1, 0);
     received = ::recv(socket_fd, &buf[0], length, 0);
     if (received == -1) {
-        throw std::system_error(errno, std::system_category(), "recv failed");
+        return true;
     }
     if (received == 0) {
         throw std::runtime_error("Connection closed by peer");
     }
+    length_received = false;
 
     auto message = nlohmann::json::parse(buf);
 

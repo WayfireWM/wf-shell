@@ -25,6 +25,8 @@ class WayfireIPC
         std::queue<std::optional<response_handler>> response_handlers;
         std::set<IIPCSubscriber*> subscribers;
         std::unordered_map<std::string, std::set<IIPCSubscriber*>> subscriptions;
+        bool length_received = false;
+        uint32_t length;
 
         void connect();
         void disconnect();
