@@ -7,6 +7,7 @@
 #include <cairomm/context.h>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
+#include "layout.hpp"
 #include "window-list.hpp"
 
 class WayfireWindowList;
@@ -27,8 +28,7 @@ class WayfireToplevel
     WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle);
 
     uint32_t get_state();
-    zwlr_foreign_toplevel_handle_v1 *get_parent();
-    void set_parent(zwlr_foreign_toplevel_handle_v1*);
+    void send_rectangle_hint();
     std::vector<zwlr_foreign_toplevel_handle_v1*>& get_children();
     ~WayfireToplevel();
     void set_hide_text(bool hide_text);

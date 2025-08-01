@@ -6,17 +6,34 @@
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
 #include <gtkmm.h>
-#include "layout.hpp"
+#include "toplevel.hpp"
 
 class WayfireToplevel;
 
-class WayfireWindowListBox : public Gtk::Box
+class WayfireWindowList : public Gtk::Box, public WayfireWidget
 {
     WfOption<int> user_size{"panel/window_list_size"};
-    std::shared_ptr<WayfireWindowListLayout> layout = std::make_shared<WayfireWindowListLayout>();
+    std::shared_ptr<WayfireWindowListLayout> layout;
 
   public:
-    WayfireWindowListBox();
+    std::map<zwlr_foreign_toplevel_handle_v1*,
+        std::unique_ptr<WayfireToplevel>> toplevels;
+
+    zwlr_foreign_toplevel_manager_v1 *manager = NULL;
+    WayfireOutput *output;
+    Gtk::ScrolledWindow scrolled_window;
+
+    WayfireWindowList(WayfireOutput *output);
+    virtual ~WayfireWindowList();
+
+    void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
+    void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
+    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
+
+    wayfire_config *get_config();
+
+    void init(Gtk::Box *container) override;
+    void add_output(WayfireOutput *output);
 
     /**
      * Set the widget which should always be rendered on top of the other child
@@ -24,13 +41,6 @@ class WayfireWindowListBox : public Gtk::Box
     void set_top_widget(Gtk::Widget *top = nullptr);
     /** Set the absolute position of the top widget */
     void set_top_x(int x);
-
-    /**
-     * Override some of Gtk::HBox's built-in layouting functions, so that we
-     * support manually dragging a button
-     */
-    // void forall_vfunc(gboolean, GtkCallback callback, gpointer callback_data) override;
-    // void on_size_allocate(Gtk::Allocation& alloc) override;
 
     /**
      * @param x the x-axis position, relative to ref
@@ -56,30 +66,6 @@ class WayfireWindowListBox : public Gtk::Box
      * @return The direct child widget or none if it doesn't exist
      */
     Gtk::Widget *get_widget_before(int x);
-};
-
-class WayfireWindowList : public WayfireWidget
-{
-  public:
-    std::map<zwlr_foreign_toplevel_handle_v1*,
-        std::unique_ptr<WayfireToplevel>> toplevels;
-
-    zwlr_foreign_toplevel_manager_v1 *manager = NULL;
-    WayfireOutput *output;
-    WayfireWindowListBox box;
-    Gtk::ScrolledWindow scrolled_window;
-
-    WayfireWindowList(WayfireOutput *output);
-    virtual ~WayfireWindowList();
-
-    void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
-    void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
-    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
-
-    wayfire_config *get_config();
-
-    void init(Gtk::Box *container) override;
-    void add_output(WayfireOutput *output);
 
   private:
     int get_default_button_width();

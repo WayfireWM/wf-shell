@@ -1,11 +1,20 @@
-#include "layout.hpp"
+#include "toplevel.hpp"
 #include <iostream>
 #include "gtk/gtklayoutmanager.h"
+
+WayfireWindowListLayout::WayfireWindowListLayout(WayfireWindowList* window_list)
+{
+    this->window_list = window_list;
+}
 
 void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int height, int baseline)
 {
     Gtk::Widget& widget_not_const = const_cast<Gtk::Widget&>(widget);
     int child_count = widget.get_children().size();
+    if (child_count <= 0)
+    {
+        return;
+    }
     int per_child   = width / child_count;
     // user preference is ignored if too small
     int preference = std::max(height, (int)user_size);
@@ -31,6 +40,14 @@ void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget, int widt
         alloc.set_x(per_child * index);
         child->size_allocate(alloc, -1);
         index++;
+    }
+
+    for (auto& t : window_list->toplevels)
+    {
+        if (t.second)
+        {
+            t.second->send_rectangle_hint();
+        }
     }
 }
 

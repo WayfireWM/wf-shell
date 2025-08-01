@@ -1,6 +1,9 @@
 #include <gtkmm.h>
+#include "toplevel.hpp"
 #include <wf-option-wrap.hpp>
 
+
+class WayfireWindowList;
 
 class WayfireWindowListLayout : public Gtk::LayoutManager
 {
@@ -11,8 +14,10 @@ class WayfireWindowListLayout : public Gtk::LayoutManager
     Gtk::SizeRequestMode get_request_mode_vfunc(const Gtk::Widget& widget) const override;
     std::shared_ptr<Gtk::LayoutManager> layout;
     WfOption<int> user_size{"panel/window_list_size"};
+    WayfireWindowList* window_list;
 
   public:
+    WayfireWindowListLayout(WayfireWindowList* window_list);
     int top_x = 0;
     Gtk::Widget *top_widget = nullptr;
 };
