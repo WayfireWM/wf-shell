@@ -544,8 +544,6 @@ void WayfireMenu::update_popover_layout()
         category_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
 
         search_entry.get_style_context()->add_class("app-search");
-        search_entry.set_icon_from_icon_name("search", Gtk::Entry::IconPosition::SECONDARY);
-        search_entry.set_can_focus(false);
 
         auto typing_gesture = Gtk::EventControllerKey::create();
         typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
