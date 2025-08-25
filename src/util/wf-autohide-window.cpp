@@ -69,11 +69,9 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     static const zwf_output_v2_listener listener = {
         .enter_fullscreen = [] (void *data, zwf_output_v2*)
         {
-            ((WayfireAutohidingWindow*)data)->increase_autohide();
         },
         .leave_fullscreen = [] (void *data, zwf_output_v2*)
         {
-            ((WayfireAutohidingWindow*)data)->decrease_autohide();
         },
         .toggle_menu = [] (void *data, zwf_output_v2*)
         {
