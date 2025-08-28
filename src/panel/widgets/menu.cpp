@@ -850,6 +850,7 @@ void WayfireMenu::init(Gtk::Box *container)
     style->add_class("menu-button");
     style->add_class("flat");
     button->get_popover()->get_style_context()->add_class("menu-popover");
+    button->get_children()[0]->get_style_context()->add_class("flat");
     button->get_popover()->signal_show().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown));
 
