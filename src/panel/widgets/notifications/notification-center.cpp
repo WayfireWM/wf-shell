@@ -11,6 +11,7 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
 {
     button = std::make_unique<WayfireMenuButton>("panel");
     button->get_style_context()->add_class("notification-center");
+    button->get_children()[0]->get_style_context()->add_class("flat");
 
     updateIcon();
     button->set_child(icon);
