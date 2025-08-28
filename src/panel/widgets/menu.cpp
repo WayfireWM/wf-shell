@@ -489,6 +489,10 @@ void WayfireMenu::on_popover_shown()
     on_search_changed();
     set_category("All");
     flowbox.unselect_all();
+
+    Gtk::Window* window = dynamic_cast<Gtk::Window*> (button->get_root());
+
+    gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
 }
 
 bool WayfireMenu::update_icon()
@@ -583,6 +587,31 @@ void WayfireMenu::update_popover_layout()
             return false;
         }, false);
         button->get_popover()->add_controller(typing_gesture);
+        button->get_popover()->signal_closed().connect([=] () 
+        {
+            Gtk::Window* window = dynamic_cast<Gtk::Window*> (button->get_root());
+            WfOption<std::string> panel_layer{"panel/layer"};
+    
+            if ((std::string)panel_layer == "overlay")
+            {
+                gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+            }
+
+            if ((std::string)panel_layer == "top")
+            {
+                gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
+            }
+
+            if ((std::string)panel_layer == "bottom")
+            {
+                gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
+            }
+
+            if ((std::string)panel_layer == "background")
+            {
+                gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
+            }
+        });
     } else
     {
         /* Layout was already initialized, make sure to remove widgets before
@@ -821,6 +850,7 @@ void WayfireMenu::init(Gtk::Box *container)
     style->add_class("menu-button");
     style->add_class("flat");
     button->get_popover()->get_style_context()->add_class("menu-popover");
+    button->get_children()[0]->get_style_context()->add_class("flat");
     button->get_popover()->signal_show().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown));
 
