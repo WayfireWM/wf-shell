@@ -416,6 +416,7 @@ void WayfireMenu::load_menu_items_all()
 void WayfireMenu::on_search_changed()
 {
     search_entry.set_text(search_contents);
+    search_entry.set_position(search_contents.length());
     if (menu_show_categories)
     {
         if (search_contents.length() == 0)
