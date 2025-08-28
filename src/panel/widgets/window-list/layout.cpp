@@ -2,7 +2,7 @@
 #include <iostream>
 #include "gtk/gtklayoutmanager.h"
 
-WayfireWindowListLayout::WayfireWindowListLayout(WayfireWindowList* window_list)
+WayfireWindowListLayout::WayfireWindowListLayout(WayfireWindowList *window_list)
 {
     this->window_list = window_list;
 }
@@ -15,7 +15,8 @@ void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget, int widt
     {
         return;
     }
-    int per_child   = width / child_count;
+
+    int per_child = width / child_count;
     // user preference is ignored if too small
     int preference = std::max(height, (int)user_size);
     // At minimum use ratio of 1:1, at max use user preference
