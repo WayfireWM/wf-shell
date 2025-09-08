@@ -71,7 +71,6 @@ void WayfireWindowList::init(Gtk::Box *container)
     zwlr_foreign_toplevel_manager_v1_add_listener(manager,
         &toplevel_manager_v1_impl, this);
 
-    this->set_homogeneous(true);
     scrolled_window.set_hexpand(true);
     scrolled_window.set_child(*this);
     scrolled_window.set_propagate_natural_width(true);

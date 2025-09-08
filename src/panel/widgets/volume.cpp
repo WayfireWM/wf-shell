@@ -251,6 +251,7 @@ void WayfireVolume::init(Gtk::Box *container)
         return true;
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    scroll_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
     button.add_controller(scroll_gesture);
 
     /* Setup popover */
@@ -258,7 +259,27 @@ void WayfireVolume::init(Gtk::Box *container)
     popover.set_child(volume_scale);
     // popover->set_modal(false);
     popover.get_style_context()->add_class("volume-popover");
-    popover.add_controller(scroll_gesture);
+    auto scroll_gesture2 = Gtk::EventControllerScroll::create();
+    scroll_gesture2->signal_scroll().connect([=] (double dx, double dy)
+    {
+        int change = 0;
+        if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
+        {
+            // +- number of clicks.
+            change = dy * max_norm * scroll_sensitivity;
+        } else
+        {
+            // Number of pixels expected to have scrolled. usually in 100s
+            change = (dy / 100.0) * max_norm * scroll_sensitivity;
+        }
+
+        set_volume(std::clamp(volume_scale.get_target_value() - change,
+            0.0, max_norm));
+        return true;
+    }, false);
+    scroll_gesture2->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    scroll_gesture2->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
+    volume_scale.add_controller(scroll_gesture2);
 
     volume_scale.set_draw_value(false);
     volume_scale.set_size_request(300, 0);
