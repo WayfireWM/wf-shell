@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:latest
     steps:
-      - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
+      - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' > /etc/apk/repositories
       - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
       - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/main' >> /etc/apk/repositories
       - run: apk --no-cache add git g++ binutils pkgconf meson ninja musl-dev gtk4.0-dev gtkmm4-dev vala gobject-introspection gobject-introspection-dev wayland-protocols wayfire-dev pulseaudio-dev libdbusmenu-glib-dev alsa-lib-dev gtk4-layer-shell-dev
