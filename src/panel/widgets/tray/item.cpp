@@ -226,8 +226,9 @@ void StatusNotifierItem::init_menu()
     {
         auto action_group = menu->get_action_group();
         insert_action_group(action_prefix, action_group);
+        popover.set_menu_model(menu->get_menu());
+
     });
-    popover.set_menu_model(menu);
     has_menu = true;
 }
 

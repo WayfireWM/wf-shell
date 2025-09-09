@@ -47,14 +47,14 @@ void DbusMenuModel::connect(const Glib::ustring & dbus_name, const Glib::ustring
 
 void DbusMenuModel::reconstitute(DbusmenuMenuitem *rootItem)
 {
-    remove_all();
+    menu = Gio::Menu::create();
     auto action_list = actions->list_actions();
     for (auto action_name : action_list)
     {
         actions->remove_action(action_name);
     }
-
-    iterate_children(this, rootItem, 0);
+    
+    iterate_children(menu.get(), rootItem, 0);
 
     signal.emit(); // Tell the SNI that the menu actions have changed. Seemed necessary, as if it was taking a
                    // copy not a ref
@@ -70,12 +70,10 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
         {
             auto child = DBUSMENU_MENUITEM(list->data);
             auto label = dbusmenu_menuitem_property_get(child, DBUSMENU_MENUITEM_PROP_LABEL);
-            if (label == nullptr) // A null label is a separator, I think...
+            if (label == nullptr) // A null label is a separator
             {
-                auto item = Gio::MenuItem::create(current_section);
-                item->set_section(current_section);
+                parent_menu->append_section(current_section);
                 current_section = Gio::Menu::create();
-                parent_menu->append_item(item);
                 continue;
             }
 
@@ -166,11 +164,7 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
 
             stupid_count++;
         }
-
-        auto item = Gio::MenuItem::create(current_section);
-        item->set_section(current_section);
-        current_section = Gio::Menu::create();
-        parent_menu->append_item(item);
+        parent_menu->append_section(current_section);
     }
 
     return stupid_count;
@@ -191,6 +185,11 @@ void DbusMenuModel::layout_updated(DbusmenuMenuitem *item)
 Glib::RefPtr<Gio::SimpleActionGroup> DbusMenuModel::get_action_group()
 {
     return actions;
+}
+
+Glib::RefPtr<Gio::Menu> DbusMenuModel::get_menu()
+{
+    return menu;
 }
 
 /*

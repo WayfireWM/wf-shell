@@ -13,7 +13,7 @@
 
 using type_signal_action_group = sigc::signal<void (void)>;
 
-class DbusMenuModel : public Gio::Menu
+class DbusMenuModel
 {
     DbusmenuClient *client;
     std::string prefix;
@@ -30,8 +30,10 @@ class DbusMenuModel : public Gio::Menu
     void reconstitute(DbusmenuMenuitem *item);
     int iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *parent, int counter);
     Glib::RefPtr<Gio::SimpleActionGroup> get_action_group();
+    Glib::RefPtr<Gio::Menu> get_menu();
 
     Glib::RefPtr<Gio::SimpleActionGroup> actions;
+    Glib::RefPtr<Gio::Menu> menu;
 
     type_signal_action_group signal_action_group();
 };
