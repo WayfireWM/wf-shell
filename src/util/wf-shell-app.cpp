@@ -270,6 +270,7 @@ void WayfireShellApp::add_output(GMonitor monitor)
         // We have an entry for this output
         return;
     }
+
     // Remove self when unplugged
     monitor->signal_invalidate().connect([=]
     {
