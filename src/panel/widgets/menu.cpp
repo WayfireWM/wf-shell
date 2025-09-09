@@ -574,6 +574,9 @@ void WayfireMenu::update_popover_layout()
                 }
 
                 return true;
+            } else if (keyval == GDK_KEY_Escape)
+            {
+                button->get_popover()->hide();
             } else
             {
                 std::string input = gdk_keyval_name(keyval);
