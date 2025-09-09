@@ -262,6 +262,14 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
 
 void WayfireShellApp::add_output(GMonitor monitor)
 {
+    auto it = std::find_if(monitors.begin(), monitors.end(),
+        [monitor] (auto& output) { return output->monitor == monitor; });
+
+    if (it != monitors.end())
+    {
+        // We have an entry for this output
+        return;
+    }
     // Remove self when unplugged
     monitor->signal_invalidate().connect([=]
     {
@@ -275,13 +283,13 @@ void WayfireShellApp::add_output(GMonitor monitor)
 
 void WayfireShellApp::rem_output(GMonitor monitor)
 {
-    auto it = std::remove_if(monitors.begin(), monitors.end(),
+    auto it = std::find_if(monitors.begin(), monitors.end(),
         [monitor] (auto& output) { return output->monitor == monitor; });
 
     if (it != monitors.end())
     {
         handle_output_removed(it->get());
-        monitors.erase(it, monitors.end());
+        monitors.erase(it);
     }
 }
 
