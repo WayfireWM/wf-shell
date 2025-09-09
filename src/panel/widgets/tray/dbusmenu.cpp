@@ -53,7 +53,7 @@ void DbusMenuModel::reconstitute(DbusmenuMenuitem *rootItem)
     {
         actions->remove_action(action_name);
     }
-    
+
     iterate_children(menu.get(), rootItem, 0);
 
     signal.emit(); // Tell the SNI that the menu actions have changed. Seemed necessary, as if it was taking a
@@ -164,6 +164,7 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
 
             stupid_count++;
         }
+
         parent_menu->append_section(current_section);
     }
 
