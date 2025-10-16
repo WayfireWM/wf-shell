@@ -54,7 +54,7 @@ std::string WayfireShellApp::get_css_config_dir()
     auto css_directory = config_dir + "/wf-shell/css/";
     /* Ensure it exists */
     std::filesystem::create_directories(css_directory);
-    
+
     return css_directory;
 }
 
