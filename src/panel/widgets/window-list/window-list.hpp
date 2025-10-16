@@ -5,18 +5,35 @@
 #include "panel.hpp"
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
-#include <gtkmm/button.h>
-#include <gtkmm/scrolledwindow.h>
+#include <gtkmm.h>
+#include "toplevel.hpp"
 
 class WayfireToplevel;
 
-class WayfireWindowListBox : public Gtk::HBox
+class WayfireWindowList : public Gtk::Box, public WayfireWidget
 {
-    Gtk::Widget *top_widget = nullptr;
-    int top_x = 0;
+    WfOption<int> user_size{"panel/window_list_size"};
+    std::shared_ptr<WayfireWindowListLayout> layout;
 
   public:
-    WayfireWindowListBox();
+    std::map<zwlr_foreign_toplevel_handle_v1*,
+        std::unique_ptr<WayfireToplevel>> toplevels;
+
+    zwlr_foreign_toplevel_manager_v1 *manager = NULL;
+    WayfireOutput *output;
+    Gtk::ScrolledWindow scrolled_window;
+
+    WayfireWindowList(WayfireOutput *output);
+    virtual ~WayfireWindowList();
+
+    void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
+    void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
+    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
+
+    wayfire_config *get_config();
+
+    void init(Gtk::Box *container) override;
+    void add_output(WayfireOutput *output);
 
     /**
      * Set the widget which should always be rendered on top of the other child
@@ -24,13 +41,6 @@ class WayfireWindowListBox : public Gtk::HBox
     void set_top_widget(Gtk::Widget *top = nullptr);
     /** Set the absolute position of the top widget */
     void set_top_x(int x);
-
-    /**
-     * Override some of Gtk::HBox's built-in layouting functions, so that we
-     * support manually dragging a button
-     */
-    void forall_vfunc(gboolean, GtkCallback callback, gpointer callback_data) override;
-    void on_size_allocate(Gtk::Allocation& alloc) override;
 
     /**
      * @param x the x-axis position, relative to ref
@@ -48,41 +58,16 @@ class WayfireWindowListBox : public Gtk::HBox
      * @return The direct child widget or none if it doesn't exist
      */
     Gtk::Widget *get_widget_at(int x);
-
-    /**
-     * Get the list of widgets sorted from left to right, i.e ignoring the top
-     * widget setting
+    /** Find the direct child widget before the given box-relative coordinates,
+     * ignoring the top widget if possible, i.e if the top widget and some
+     * other widget are at the given coordinates, then the bottom widget will
+     * be returned
+     *
+     * @return The direct child widget or none if it doesn't exist
      */
-    std::vector<Gtk::Widget*> get_unsorted_widgets();
-};
-
-class WayfireWindowList : public WayfireWidget
-{
-  public:
-    std::map<zwlr_foreign_toplevel_handle_v1*,
-        std::unique_ptr<WayfireToplevel>> toplevels;
-
-    zwlr_foreign_toplevel_manager_v1 *manager = NULL;
-    WayfireOutput *output;
-    WayfireWindowListBox box;
-    Gtk::ScrolledWindow scrolled_window;
-
-    WayfireWindowList(WayfireOutput *output);
-    virtual ~WayfireWindowList();
-
-    void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
-    void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
-    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
-
-    wayfire_config *get_config();
-
-    void init(Gtk::HBox *container) override;
-    void add_output(WayfireOutput *output);
+    Gtk::Widget *get_widget_before(int x);
 
   private:
-    void on_draw(const Cairo::RefPtr<Cairo::Context>&);
-
-    void set_button_width(int width);
     int get_default_button_width();
     int get_target_button_width();
 };

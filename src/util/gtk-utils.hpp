@@ -18,16 +18,8 @@ struct WfIconLoadOptions
     bool invert    = false;
 };
 
-/* Sets the content of the image to the pixbuf, applying device scale factor "scale" */
-void set_image_pixbuf(Gtk::Image & image, Glib::RefPtr<Gdk::Pixbuf> pixbuf, int scale);
-
-/* Sets the content of the image to the corresponding icon from the default theme,
- * using the given options */
-void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
-    const WfIconLoadOptions& options = {},
-    const Glib::RefPtr<Gtk::IconTheme>& icon_theme
-    = Gtk::IconTheme::get_default());
-
 void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff);
+
+void image_set_icon(Gtk::Image *image, std::string path);
 
 #endif /* end of include guard: WF_GTK_UTILS */

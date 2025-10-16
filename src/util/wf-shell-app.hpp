@@ -1,12 +1,12 @@
 #ifndef WF_SHELL_APP_HPP
 #define WF_SHELL_APP_HPP
 
-#include <set>
 #include <string>
 #include <wayfire/config/config-manager.hpp>
 
 #include <gtkmm/application.h>
 #include <gdkmm/monitor.h>
+#include <gtkmm/cssprovider.h>
 
 #include "wayfire-shell-unstable-v2-client-protocol.h"
 
@@ -36,6 +36,7 @@ class WayfireShellApp
 {
   private:
     std::vector<std::unique_ptr<WayfireOutput>> monitors;
+    std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
 
   protected:
     /** This should be initialized by the subclass in each program which uses
@@ -46,6 +47,7 @@ class WayfireShellApp
 
     Glib::RefPtr<Gtk::Application> app;
 
+    void output_list_updated(int pos, int rem, int add);
     virtual void add_output(GMonitor monitor);
     virtual void rem_output(GMonitor monitor);
 
@@ -67,18 +69,19 @@ class WayfireShellApp
     wf::config::config_manager_t config;
     zwf_shell_manager_v2 *wf_shell_manager = nullptr;
 
-    WayfireShellApp(int argc, char **argv);
+    WayfireShellApp();
     virtual ~WayfireShellApp();
 
     virtual std::string get_config_file();
     virtual std::string get_css_config_dir();
-    virtual void run();
+    virtual void run(int argc, char **argv);
 
     virtual void on_config_reload()
     {}
+    void on_css_reload();
+    void clear_css_rules();
+    void add_css_file(std::string file, int priority);
 
-    virtual void on_css_reload()
-    {}
 
     /**
      * WayfireShellApp is a singleton class.

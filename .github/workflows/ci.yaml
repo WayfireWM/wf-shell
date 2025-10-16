@@ -7,30 +7,35 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:latest
     steps:
-    - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
-    - run: apk --no-cache add git g++ binutils pkgconf meson ninja musl-dev gtk+3.0-dev gtkmm3-dev wayland-protocols wayfire-dev gtk-layer-shell-dev pulseaudio-dev libdbusmenu-gtk3-dev alsa-lib-dev
-    - name: wf-shell
-      uses: actions/checkout@v2
-      with:
-        repository: WayfireWM/wf-shell
-        path: wf-shell
-    - run: cd wf-shell && meson build --prefix=/usr && ninja -v -C build && ninja -v -C build install && cd ..
+      - run: echo 'http://dl-cdn.alpinelinux.org/alpine/v3.22/community' > /etc/apk/repositories
+      - run: echo 'http://dl-cdn.alpinelinux.org/alpine/v3.22/main' >> /etc/apk/repositories
+      - run: apk --no-cache add git g++ binutils pkgconf meson ninja musl-dev gtkmm4-dev vala gobject-introspection gobject-introspection-dev  pulseaudio-dev libdbusmenu-glib-dev alsa-lib-dev
+      - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
+      - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/main' >> /etc/apk/repositories
+      - run: apk --no-cache add wayland-protocols wayfire-dev gtk4-layer-shell-dev gtk4-layer-shell
+
+      - name: wf-shell
+        uses: actions/checkout@v2
+        with:
+          repository: WayfireWM/wf-shell
+          path: wf-shell
+      - run: cd wf-shell && meson setup build --prefix=/usr && ninja -v -C build && ninja -v -C build install && cd ..
   test_code_style:
     name: "Check code style with uncrustify"
     runs-on: ubuntu-latest
     steps:
-    - run: sudo apt-get update
-    - run: sudo apt-get install -y git cmake gcc make
-    - name: Build Uncrustify
-      uses: actions/checkout@v2
-      with:
-        repository: ammen99/uncrustify
-        path: uncrustify
-    - run: cd uncrustify && mkdir build && cd build && cmake .. && make && cd ../..
-    - name: Run Uncrustify Check
-      uses: actions/checkout@v2
-      with:
-        path: wf-shell
-    - run: cd wf-shell && wget https://raw.githubusercontent.com/WayfireWM/wayfire/master/uncrustify.ini
-    - run: cd wf-shell && git ls-files | grep "hpp$\|cpp$" | xargs ../uncrustify/build/uncrustify -c uncrustify.ini --no-backup --replace
-    - run: cd wf-shell && git diff --exit-code
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y git cmake gcc make
+      - name: Build Uncrustify
+        uses: actions/checkout@v2
+        with:
+          repository: ammen99/uncrustify
+          path: uncrustify
+      - run: cd uncrustify && mkdir build && cd build && cmake .. && make && cd ../..
+      - name: Run Uncrustify Check
+        uses: actions/checkout@v2
+        with:
+          path: wf-shell
+      - run: cd wf-shell && wget https://raw.githubusercontent.com/WayfireWM/wayfire/master/uncrustify.ini
+      - run: cd wf-shell && git ls-files | grep "hpp$\|cpp$" | xargs ../uncrustify/build/uncrustify -c uncrustify.ini --no-backup --replace
+      - run: cd wf-shell && git diff --exit-code

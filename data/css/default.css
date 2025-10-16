@@ -60,3 +60,99 @@
 .wf-panel .command-output.icon-bottom label {
     padding-bottom: 5px;
 }
+
+.excellent {
+    color: #00ff00;
+}
+
+.good {
+    color: #88ff00;
+}
+
+.ok {
+    color: #ffff00;
+}
+
+.weak {
+    color: #ff8800;
+}
+
+.none {
+    color: #ff0000;
+}
+
+.wf-dock,
+.wf-dock .out-box {
+    background: transparent;
+}
+
+.wf-dock .box {
+    padding-left: 1em;
+    padding-right: 1em;
+    border-radius: 1em;
+}
+
+.wf-dock image {
+    transition: 200ms;
+    -gtk-icon-transform: scale(1.0);
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.wf-dock image:hover {
+    transition: 200ms;
+    -gtk-icon-transform: scale(1.3);
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+.wf-dock .minimized image {
+    -gtk-icon-filter: grayscale(1);
+}
+
+.wf-dock image {
+    animation-name: embiggen;
+    animation-duration: 1000ms;
+    animation-timing-function: linear;
+    animation-iteration-count: 1;
+}
+
+.wf-dock .closing image {
+    animation-name: kromulent;
+    animation-duration: 1000ms;
+    animation-timing-function: linear;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+
+@keyframes embiggen {
+    to {
+        -gtk-icon-size: 64px;
+        -gtk-icon-transform: translateY(0px);
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    from {
+        -gtk-icon-size: 0px;
+        -gtk-icon-transform: translateY(64px);
+        padding-left: 0rem;
+        padding-right: 0rem;
+    }
+}
+
+@keyframes kromulent {
+    from {
+        -gtk-icon-size: 64px;
+        -gtk-icon-transform: translateY(0px);
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    to {
+        -gtk-icon-size: 0px;
+        -gtk-icon-transform: translateY(64px);
+        padding-left: 0rem;
+        padding-right: 0rem;
+    }
+}

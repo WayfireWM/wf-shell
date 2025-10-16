@@ -23,6 +23,8 @@ class WfCommandOutputButtons : public WayfireWidget
         Gtk::Label tooltip_label;
         time_t last_tooltip_update = 0;
 
+        std::string tooltip_command;
+
         WfOption<int> max_chars_opt{"panel/commands_output_max_chars"};
 
         void init();
@@ -35,21 +37,22 @@ class WfCommandOutputButtons : public WayfireWidget
         CommandOutput(const CommandOutput&) = delete;
         CommandOutput& operator =(CommandOutput&&) = delete;
         CommandOutput& operator =(const CommandOutput&) = delete;
-
+        bool query_tooltip(int i, int j, bool k, const std::shared_ptr<Gtk::Tooltip>& tooltip);
+        void update_tooltip();
         ~CommandOutput() override
         {
             timeout_connection.disconnect();
         }
     };
 
-    Gtk::HBox box;
+    Gtk::Box box;
     std::vector<std::unique_ptr<CommandOutput>> buttons;
 
     WfOption<wf::config::compound_list_t<std::string, std::string, int, std::string,
         int, std::string>> commands_list_opt{"panel/commands"};
 
   public:
-    void init(Gtk::HBox *container) override;
+    void init(Gtk::Box *container) override;
     void update_buttons();
 };
 

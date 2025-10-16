@@ -5,7 +5,7 @@ Currently it has only a GTK-based panel and background client.
 
 # Dependencies
 
-wf-shell needs the core wayland libraries and protocols (`wayland-devel` and `wayland-protocols-devel` for Fedora), gtkmm-3.0 and [wf-config](https://github.com/WayfireWM/wf-config)
+wf-shell needs the core wayland libraries and protocols (`wayland-devel` and `wayland-protocols-devel` for Fedora), gtkmm-4.0 and [wf-config](https://github.com/WayfireWM/wf-config)
 
 # Build
 

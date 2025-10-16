@@ -4,17 +4,11 @@
 #include "../widget.hpp"
 #include "wf-popover.hpp"
 #include <giomm/desktopappinfo.h>
-#include <gtkmm/entry.h>
-#include <gtkmm/image.h>
-#include <gtkmm/window.h>
-#include <gtkmm/flowbox.h>
-#include <gtkmm/scrolledwindow.h>
-#include <gtkmm/separator.h>
-#include <gtkmm/eventbox.h>
+#include <gtkmm.h>
 #include <set>
 
 class WayfireMenu;
-using AppInfo = Glib::RefPtr<Gio::AppInfo>;
+using AppInfo = Glib::RefPtr<Gio::DesktopAppInfo>;
 
 class WfMenuCategory
 {
@@ -22,7 +16,7 @@ class WfMenuCategory
     WfMenuCategory(std::string name, std::string icon_name);
     std::string get_name();
     std::string get_icon_name();
-    std::vector<Glib::RefPtr<Gio::DesktopAppInfo>> items;
+    std::vector<AppInfo> items;
 
   private:
     std::string name;
@@ -36,7 +30,7 @@ class WfMenuCategoryButton : public Gtk::Button
 
   private:
     WayfireMenu *menu;
-    Gtk::HBox m_box;
+    Gtk::Box m_box;
     Gtk::Label m_label;
     Gtk::Image m_image;
 
@@ -49,35 +43,38 @@ class WfMenuCategoryButton : public Gtk::Button
 class WfMenuMenuItem : public Gtk::FlowBoxChild
 {
   public:
-    WfMenuMenuItem(WayfireMenu *menu, Glib::RefPtr<Gio::DesktopAppInfo> app);
+    WfMenuMenuItem(WayfireMenu *menu, AppInfo app);
 
     uint32_t matches(Glib::ustring text);
     uint32_t fuzzy_match(Glib::ustring text);
     bool operator <(const WfMenuMenuItem& other);
     void set_search_value(uint32_t value);
     uint32_t get_search_value();
+    void on_click();
 
   private:
     WayfireMenu *menu;
     Gtk::Box m_left_pad, m_right_pad;
-    Gtk::HBox m_padding_box;
-    Gtk::VBox m_button_box;
-    Gtk::HBox m_list_box;
+    Gtk::Box m_padding_box;
+    Gtk::Box m_button_box;
+    Gtk::Button m_button;
+    Gtk::Box m_list_box;
     Gtk::Image m_image;
     Gtk::Label m_label;
-    Gtk::Menu m_action_menu;
+    Glib::RefPtr<Gio::Menu> m_menu;
+    Glib::RefPtr<Gio::SimpleActionGroup> m_actions;
+    Gtk::MenuButton m_extra_actions_button;
 
     bool m_has_actions = false;
     uint32_t m_search_value = 0;
 
-    Glib::RefPtr<Gio::DesktopAppInfo> m_app_info;
-    void on_click();
+    AppInfo m_app_info;
 };
 
 class WayfireLogoutUIButton
 {
   public:
-    Gtk::VBox layout;
+    Gtk::Box layout;
     Gtk::Image image;
     Gtk::Label label;
     Gtk::Button button;
@@ -93,8 +90,7 @@ class WayfireLogoutUI
     WfOption<std::string> suspend_command{"panel/suspend_command"};
     WfOption<std::string> hibernate_command{"panel/hibernate_command"};
     WfOption<std::string> switchuser_command{"panel/switchuser_command"};
-    Gtk::Window ui, bg;
-    Gtk::HBox bg_box;
+    Gtk::Window ui;
     WayfireLogoutUIButton logout;
     WayfireLogoutUIButton reboot;
     WayfireLogoutUIButton shutdown;
@@ -102,8 +98,8 @@ class WayfireLogoutUI
     WayfireLogoutUIButton hibernate;
     WayfireLogoutUIButton switchuser;
     WayfireLogoutUIButton cancel;
-    Gtk::VBox main_layout, vspacing_layout;
-    Gtk::HBox top_layout, middle_layout, bottom_layout, hspacing_layout;
+    Gtk::CenterBox hbox;
+    Gtk::Grid main_layout;
     void create_logout_ui_button(WayfireLogoutUIButton *button,
         const char *icon, const char *label);
     void on_logout_click();
@@ -115,26 +111,24 @@ class WayfireLogoutUI
     void on_cancel_click();
 };
 
-class WayfireMenuInjectionEntry : public Gtk::Entry
-{
-  public:
-    bool inject(GdkEventKey *ev);
-};
 
 class WayfireMenu : public WayfireWidget
 {
     WayfireOutput *output;
 
+    std::string search_contents = "";
+
     Gtk::Box flowbox_container;
-    Gtk::HBox hbox, hbox_bottom, scroll_pair;
-    Gtk::VBox bottom_pad;
-    Gtk::VBox popover_layout_box;
-    Gtk::VBox category_box;
+    Gtk::Box hbox, hbox_bottom, scroll_pair;
+    Gtk::Box bottom_pad;
+    Gtk::Box popover_layout_box;
+    Gtk::Box category_box;
     Gtk::Separator separator;
     Gtk::Image main_image;
-    WayfireMenuInjectionEntry search_box;
+    Gtk::SearchEntry search_entry;
     Gtk::FlowBox flowbox;
     Gtk::Button logout_button;
+    Gtk::Image logout_image;
     Gtk::ScrolledWindow app_scrolled_window, category_scrolled_window;
     std::unique_ptr<WayfireMenuButton> button;
     std::unique_ptr<WayfireLogoutUI> logout_ui;
@@ -173,7 +167,6 @@ class WayfireMenu : public WayfireWidget
     WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
     WfOption<std::string> panel_position{"panel/position"};
     WfOption<std::string> menu_icon{"panel/menu_icon"};
-    WfOption<int> menu_size{"panel/launchers_size"};
     WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     WfOption<bool> menu_show_categories{"panel/menu_show_categories"};
@@ -185,10 +178,10 @@ class WayfireMenu : public WayfireWidget
     void on_logout_click();
     void key_press_search();
     void select_first_flowbox_item();
-    void set_default_to_selection();
 
   public:
-    void init(Gtk::HBox *container) override;
+    void arrow_key(Gtk::DirectionType dir);
+    void init(Gtk::Box *container) override;
     void populate_menu_items(std::string category);
     void populate_menu_categories();
     void toggle_menu();

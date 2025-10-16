@@ -40,5 +40,10 @@
 		<_long>The distance from the cursor to the edge of screen to show the panel when it's hidden.</_long>
 		<default>20</default>
 	</option>
+	<option name="show_close" type="bool">
+	    <_short>Show Close Animations</_short>
+		<_long>Keep all window icons for up to 2 seconds to allow CSS animations.</_long>
+		<default>true</default>
+	</option>
 	</plugin>
 </wf-shell>

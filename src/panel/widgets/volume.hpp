@@ -28,20 +28,22 @@ class WayfireVolumeScale : public Gtk::Scale
     void set_target_value(double value);
     /** Set the callback when the user changes the scale value */
     void set_user_changed_callback(std::function<void()> callback);
+    /** Callback to animate volume control */
+    gboolean update_animation(Glib::RefPtr<Gdk::FrameClock> clock);
 };
 
 class WayfireVolume : public WayfireWidget
 {
     Gtk::Image main_image;
     WayfireVolumeScale volume_scale;
-    std::unique_ptr<WayfireMenuButton> button;
+    Gtk::Button button;
+    Gtk::Popover popover;
 
-    WfOption<int> icon_size{"panel/volume_icon_size"};
     WfOption<double> timeout{"panel/volume_display_timeout"};
     WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
 
-    void on_volume_scroll(GdkEventScroll *event);
-    void on_volume_button_press(GdkEventButton *event);
+    // void on_volume_scroll(GdkEventScroll *event);
+    // void on_volume_button_press(GdkEventButton *event);
     void on_volume_value_changed();
     bool on_popover_timeout(int timer);
 
@@ -79,7 +81,7 @@ class WayfireVolume : public WayfireWidget
         set_volume_flags_t flags = VOLUME_FLAG_FULL);
 
   public:
-    void init(Gtk::HBox *container) override;
+    void init(Gtk::Box *container) override;
     virtual ~WayfireVolume();
 
     /** Update the icon based on volume and muted state */
