@@ -53,36 +53,23 @@ std::string WayfireShellApp::get_css_config_dir()
 
     auto css_directory = config_dir + "/wf-shell/css/";
     /* Ensure it exists */
-    bool created = std::filesystem::create_directories(css_directory);
-    if (created)
-    {
-        std::string default_css = (std::string)RESOURCEDIR + "/css/default.css";
-        std::string destination = css_directory + "default.css";
-        if (std::filesystem::exists(default_css))
-        {
-            std::filesystem::copy(default_css, destination);
-        }
-    }
-
+    std::filesystem::create_directories(css_directory);
+    
     return css_directory;
 }
 
 void WayfireShellApp::on_css_reload()
 {
     clear_css_rules();
+    /* Add our defaults */
+    add_css_file((std::string)RESOURCEDIR + "/css/default.css", GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     /* Add user directory */
     std::string ext(".css");
     for (auto & p : std::filesystem::directory_iterator(get_css_config_dir()))
     {
         if (p.path().extension() == ext)
         {
-            int priority = GTK_STYLE_PROVIDER_PRIORITY_USER;
-            if (p.path().filename() == "default.css")
-            {
-                priority = GTK_STYLE_PROVIDER_PRIORITY_APPLICATION;
-            }
-
-            add_css_file(p.path().string(), priority);
+            add_css_file(p.path().string(), GTK_STYLE_PROVIDER_PRIORITY_USER);
         }
     }
 
