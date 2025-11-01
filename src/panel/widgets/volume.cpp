@@ -1,9 +1,6 @@
 #include <gtkmm.h>
-#include <iostream>
 #include <glibmm.h>
 #include "volume.hpp"
-#include "launchers.hpp"
-#include "gtk-utils.hpp"
 
 WayfireVolumeScale::WayfireVolumeScale()
 {

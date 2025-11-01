@@ -11,4 +11,19 @@ void WayfireSeparator::init(Gtk::Box *container)
 {
     separator.get_style_context()->add_class("separator");
     container->append(separator);
+
+    update_layout();
+}
+
+void WayfireSeparator::update_layout(){
+       if (config::is_horizontal){
+               separator.set_orientation(Gtk::Orientation::HORIZONTAL);
+       }
+       else {
+               separator.set_orientation(Gtk::Orientation::VERTICAL);
+       }
+}
+
+void WayfireSeparator::handle_config_reload(){
+       update_layout();
 }

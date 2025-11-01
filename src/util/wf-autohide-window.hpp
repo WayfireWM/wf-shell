@@ -12,6 +12,8 @@ struct zwf_hotspot_v2;
 
 #define WF_WINDOW_POSITION_TOP    "top"
 #define WF_WINDOW_POSITION_BOTTOM "bottom"
+#define WF_WINDOW_POSITION_LEFT   "left"
+#define WF_WINDOW_POSITION_RIGHT  "right"
 
 struct WayfireAutohidingWindowHotspotCallbacks;
 /**
@@ -30,6 +32,9 @@ class WayfireAutohidingWindow : public Gtk::Window
      * 2. section/autohide_duration
      * 3. section/edge_offset
      * 4. section/autohide
+     * 5. section/autohide_show_delay
+     * 6. section/autohide_hide_delay
+
      */
     WayfireAutohidingWindow(WayfireOutput *output, const std::string& section);
     WayfireAutohidingWindow(WayfireAutohidingWindow&&) = delete;
@@ -82,13 +87,17 @@ class WayfireAutohidingWindow : public Gtk::Window
     WfOption<std::string> position;
     void update_position();
 
-    wf::animation::simple_animation_t y_position;
+    wf::animation::simple_animation_t autohide_animation;
+    int (Gtk::Widget::*get_allocated_height_or_width)() const;
     bool update_margin();
 
     WfOption<int> edge_offset;
     int last_edge_offset = -1;
 
     WfOption<bool> autohide_opt;
+    WfOption<int> autohide_show_delay;
+    WfOption<int> autohide_hide_delay;
+
     bool last_autohide_value = autohide_opt;
     void setup_autohide();
     void update_autohide();
@@ -109,8 +118,9 @@ class WayfireAutohidingWindow : public Gtk::Window
     /** Show the window but hide if no pointer input */
     void m_show_uncertain();
 
-    int32_t last_hotspot_height = -1;
-    bool input_inside_panel     = false;
+	std::string last_position = "";
+    int32_t last_hotspot_size = -1;
+    bool input_inside_panel   = false;
     zwf_hotspot_v2 *edge_hotspot  = NULL;
     zwf_hotspot_v2 *panel_hotspot = NULL;
     std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> edge_callbacks;

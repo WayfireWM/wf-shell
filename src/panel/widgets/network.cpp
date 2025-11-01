@@ -432,8 +432,19 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     handle_config_reload();
 }
 
+void WayfireNetworkInfo::update_layout(){
+	if (config::is_horizontal){
+		button_content.set_orientation(Gtk::Orientation::HORIZONTAL);
+	}
+	else {
+		button_content.set_orientation(Gtk::Orientation::VERTICAL);
+	}
+}
+
 void WayfireNetworkInfo::handle_config_reload()
 {
+	update_layout();
+
     if (status_opt.value() == NETWORK_STATUS_ICON)
     {
         if (status.get_parent())

@@ -11,8 +11,11 @@
 
 #include <map>
 #include <css-config.hpp>
+
 #include "panel.hpp"
 
+#include "gtkmm/sizegroup.h"
+#include "widget.hpp"
 #include "widgets/battery.hpp"
 #include "widgets/command-output.hpp"
 #include "widgets/menu.hpp"
@@ -24,6 +27,7 @@
 #ifdef HAVE_PULSE
     #include "widgets/volume.hpp"
 #endif
+#include "widgets/wireplumber.hpp"
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
 #include "widgets/tray/tray.hpp"
@@ -36,6 +40,7 @@ class WayfirePanel::impl
 
     Gtk::CenterBox content_box;
     Gtk::Box left_box, center_box, right_box;
+    std::shared_ptr<Gtk::SizeGroup> sides_size_group;
 
     using Widget = std::unique_ptr<WayfireWidget>;
     using WidgetContainer = std::vector<Widget>;
@@ -68,23 +73,99 @@ class WayfirePanel::impl
     };
 
     WfOption<int> minimal_panel_height{"panel/minimal_height"};
+    WfOption<int> minimal_panel_width{"panel/minimal_width"};
+    WfOption<bool> full_edge{"panel/span_full_edge"};
+    WfOption<bool> force_center{"panel/force_center"};
+
+    WfOption<std::string> panel_position{"panel/position"};
+    WfOption<std::string> panel_orientation{"panel/orientation"};
+
+    void set_boxes_orientation(Gtk::Orientation orientation){
+
+		content_box.set_orientation(orientation);
+		left_box.set_orientation(orientation);
+		center_box.set_orientation(orientation);
+		right_box.set_orientation(orientation);
+
+    }
+
+	void update_orientation(){
+		bool is_horizontal = !((std::string)panel_position == "left" or (std::string)panel_position == "right"); // not the most pretty, but if the value is top, down or something invalid, it works the same
+		WayfireWidget::config::panel_position = panel_position;
+		WayfireWidget::config::is_horizontal = is_horizontal;
+		WayfireWidget::config::panel_orientation = panel_orientation;
+
+        if (is_horizontal){
+            // if the panel is supposed to expand trough the whole edge, set anchors to stretch it
+            gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, full_edge);
+            gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, full_edge);
+
+	        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
+	        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
+
+            set_boxes_orientation(Gtk::Orientation::HORIZONTAL);
+            sides_size_group->set_mode(Gtk::SizeGroup::Mode::HORIZONTAL);
+
+            if (force_center){
+                sides_size_group->set_mode(Gtk::SizeGroup::Mode::HORIZONTAL);
+                left_box.set_halign(Gtk::Align::END);
+                right_box.set_halign(Gtk::Align::START);
+                left_box.set_valign(Gtk::Align::CENTER);
+                right_box.set_valign(Gtk::Align::CENTER);
+            }
+            else {
+                sides_size_group->set_mode(Gtk::SizeGroup::Mode::NONE);
+                left_box.set_valign(Gtk::Align::START);
+                right_box.set_valign(Gtk::Align::END);
+                left_box.set_halign(Gtk::Align::CENTER);
+                right_box.set_halign(Gtk::Align::CENTER);
+            }
+		}
+        else{
+			gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_TOP, full_edge);
+			gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, full_edge);
+
+	        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_TOP, 0);
+	        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, 0);
+
+			set_boxes_orientation(Gtk::Orientation::VERTICAL);
+			sides_size_group->set_mode(Gtk::SizeGroup::Mode::VERTICAL);
+
+            if (force_center){
+                sides_size_group->set_mode(Gtk::SizeGroup::Mode::VERTICAL);
+                left_box.set_valign(Gtk::Align::END);
+                right_box.set_valign(Gtk::Align::START);
+                left_box.set_halign(Gtk::Align::CENTER);
+                right_box.set_halign(Gtk::Align::CENTER);
+            }
+            else {
+                sides_size_group->set_mode(Gtk::SizeGroup::Mode::NONE);
+                left_box.set_halign(Gtk::Align::START);
+                right_box.set_halign(Gtk::Align::END);
+                left_box.set_valign(Gtk::Align::CENTER);
+                right_box.set_valign(Gtk::Align::CENTER);
+            }
+		}
+	}
 
     void create_window()
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
 
-        window->set_default_size(0, minimal_panel_height);
+        window->set_default_size(minimal_panel_width, minimal_panel_height); // addition of minimal panel width for the panel on the left or right instead of reusing m. p. height allows for the inclusion of non-stretched bar (like the gnome dock, or the kde setting to let the bar contract)
         window->get_style_context()->add_class("wf-panel");
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
+
+        update_orientation();
 
         window->present();
+
         init_widgets();
         init_layout();
+
+        // window->signal_close_request().connect(
+        // sigc::mem_fun(*this, &WayfirePanel::impl::on_delete));
     }
 
     void init_layout()
@@ -92,19 +173,21 @@ class WayfirePanel::impl
         left_box.get_style_context()->add_class("left");
         right_box.get_style_context()->add_class("right");
         center_box.get_style_context()->add_class("center");
+
         content_box.set_start_widget(left_box);
         if (!center_box.get_children().empty())
         {
             content_box.set_center_widget(center_box);
         }
-
         content_box.set_end_widget(right_box);
 
         content_box.set_hexpand(true);
+        content_box.set_vexpand(true);
 
-        left_box.set_halign(Gtk::Align::START);
         center_box.set_halign(Gtk::Align::CENTER);
-        right_box.set_halign(Gtk::Align::END);
+
+        sides_size_group->add_widget(left_box);
+        sides_size_group->add_widget(right_box);
 
         window->set_child(content_box);
     }
@@ -162,6 +245,11 @@ class WayfirePanel::impl
             std::cerr << "Built without pulse support, volume widget "
                          " is not available." << std::endl;
 #endif
+        }
+
+        if (name == "wireplumber")
+        {
+            return Widget(new WayfireWireplumber());
         }
 
         if (name == "window-list")
@@ -284,6 +372,26 @@ class WayfirePanel::impl
   public:
     impl(WayfireOutput *output) : output(output)
     {
+        sides_size_group = Gtk::SizeGroup::create(Gtk::SizeGroup::Mode::NONE);
+
+        // Intentionally leaking feels bad.
+        new CssFromConfigInt("panel/launchers_size", ".menu-button,.launcher{-gtk-icon-size:", "px;}");
+        new CssFromConfigInt("panel/launchers_spacing", ".launcher{padding: 0px ", "px;}");
+        new CssFromConfigInt("panel/battery_icon_size", ".battery image{-gtk-icon-size:", "px;}");
+        new CssFromConfigInt("panel/network_icon_size", ".network{-gtk-icon-size:", "px;}");
+        new CssFromConfigInt("panel/volume_icon_size", ".volume{-gtk-icon-size:", "px;}");
+        new CssFromConfigInt("panel/notifications_icon_size", ".notification-center{-gtk-icon-size:", "px;}");
+        new CssFromConfigInt("panel/tray_icon_size", ".tray-button{-gtk-icon-size:", "px;}");
+        new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
+        new CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "");
+        new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
+
+        // People will probably need to update sizes to have a measure
+        // 16px, 1.1rem, 1em .
+        // So on
+        new CssFromConfigFont("panel/battery_font", ".battery {", "}");
+        new CssFromConfigFont("panel/clock_font", ".clock {", "}");
+
         create_window();
     }
 
@@ -299,6 +407,8 @@ class WayfirePanel::impl
 
     void handle_config_reload()
     {
+		update_orientation();
+
         for (auto& w : left_widgets)
         {
             w->handle_config_reload();

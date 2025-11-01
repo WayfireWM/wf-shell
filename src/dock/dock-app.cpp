@@ -5,7 +5,6 @@
 #include <gdk/wayland/gdkwayland.h>
 #include <css-config.hpp>
 
-
 namespace
 {
 extern zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl;
@@ -43,6 +42,13 @@ class WfDockApp::impl
 
     zwlr_foreign_toplevel_manager_v1 *toplevel_manager = NULL;
 };
+
+void WfDockApp::on_config_reload(){
+    for (auto& d : priv->docks)
+    {
+        d.second->handle_config_reload();
+    }
+}
 
 void WfDockApp::on_activate()
 {

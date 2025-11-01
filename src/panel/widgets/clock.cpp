@@ -1,5 +1,4 @@
 #include <glibmm.h>
-#include <iostream>
 #include "clock.hpp"
 
 void WayfireClock::init(Gtk::Box *container)
