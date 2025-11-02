@@ -249,6 +249,88 @@
 	</option>
 	</group>
 	<group>
+	<_short>Wireplumber mixer</_short>
+	<option name="wp_display_timeout" type="double">
+		<_short>Display timeout</_short>
+		<default>2.5</default>
+	</option>
+	<option name="wp_scroll_sensitivity" type="double">
+		<_short>Scroll sensitivity</_short>
+		<default>1</default>
+	</option>
+	<option name="wp_invert_scroll" type="bool">
+		<_short>Invert scroll</_short>
+		<_long>
+			Inverts which scroll direction raises and lowers volume
+		</_long>
+		<default>false</default>
+	</option>
+	<option name="wp_face_choice" type="string">
+		<_short>Quick action target</_short>
+		<_long>
+			Which audio control will be the target of the "Quick action" (choice for the click action)
+		</_long>
+		<default>last_change</default>
+		<desc>
+			<value>last_change</value>
+			<_name>Last changed volume<_name>
+		</desc>
+		<desc>
+			<value>default_sink</value>
+			<_name>Default sink<_name>
+		</desc>
+		<desc>
+			<value>default_source</value>
+			<_name>Default source<_name>
+		</desc>
+	</option>
+	</option>
+	<option name="wp_left_click_action" type="string">
+		<_short>Left click action</_short>
+		<default>show_mixer</default>
+		<desc>
+			<value>show_mixer</value>
+			<_name>Show full mixer</_name>
+		</desc>
+		<desc>
+			<value>show_face</value>
+			<_name>Show quick action target<_name>
+		</desc>
+	</option>
+	<option name="wp_right_click_action" type="string">
+		<_short>Right click action</_short>
+		<default>show_face</default>
+		<desc>
+			<value>show_mixer</value>
+			<_name>Show full mixer</_name>
+		</desc>
+		<desc>
+			<value>show_face</value>
+			<_name>Show quick action target<_name>
+		</desc>
+		<desc>
+			<value>mute_face</value>
+			<_name>Mute quick action target<_name>
+		</desc>
+	</option>
+	<option name="wp_middle_click_action" type="string">
+		<_short>Middle click action</_short>
+		<default>mute_face</default>
+		<desc>
+			<value>show_mixer</value>
+			<_name>Show full mixer</_name>
+		</desc>
+		<desc>
+			<value>show_face</value>
+			<_name>Show quick action target<_name>
+		</desc>
+		<desc>
+			<value>mute_face</value>
+			<_name>Mute quick action target<_name>
+		</desc>
+	</option>
+	</group>
+	<group>
 	<_short>Notifications</_short>
 	<option name="notifications_autohide_timeout" type="double">
 		<_short>Notifications Display Timeout</_short>
