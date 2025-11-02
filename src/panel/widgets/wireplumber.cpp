@@ -132,6 +132,14 @@ WfWpControl::WfWpControl(WpPipewireObject* obj, WayfireWireplumber* parent_widge
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     add_controller(scroll_gesture);
 
+    auto middle_click_gesture = Gtk::GestureClick::create();
+    middle_click_gesture->set_button(2);
+    middle_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        button.set_active(!button.get_active());
+    });
+    add_controller(middle_click_gesture);
+
     // initialise the values
     GVariant* v = NULL;
     g_signal_emit_by_name(WpCommon::mixer_api, "get-volume", id, &v);
@@ -306,6 +314,14 @@ void WayfireWireplumber::init(Gtk::Box *container){
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     button->add_controller(scroll_gesture);
+
+    auto middle_click_gesture = Gtk::GestureClick::create();
+    middle_click_gesture->set_button(2);
+    middle_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        face->button.set_active(!face->button.get_active());
+    });
+    button->add_controller(middle_click_gesture);
 
     // boxes hierarchy and labeling
     Gtk::Orientation r1, r2;
