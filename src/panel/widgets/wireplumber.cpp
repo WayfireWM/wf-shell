@@ -5,6 +5,7 @@
 #include "glib-object.h"
 #include "glib.h"
 #include "gtkmm/enums.h"
+#include "gtkmm/gestureclick.h"
 #include "gtkmm/label.h"
 #include "gtkmm/separator.h"
 #include "gtkmm/togglebutton.h"
@@ -25,6 +26,20 @@ enum VolumeLevel
     VOLUME_LEVEL_MED,
     VOLUME_LEVEL_HIGH,
     VOLUME_LEVEL_OOR, /* Out of range */
+};
+
+enum class FaceChoice
+{
+    LAST_CHANGE,
+    DEFAULT_SINK,
+    DEFAULT_SOURCE,
+};
+
+enum class ClickAction
+{
+    SHOW_MIXER,
+    SHOW_FACE,
+    MUTE_FACE,
 };
 
 static const gchar *DEFAULT_NODE_MEDIA_CLASSES[] = {
@@ -100,7 +115,7 @@ WfWpControl::WfWpControl(WpPipewireObject* obj, WayfireWireplumber* parent_widge
     scale.set_user_changed_callback(
         [this, id](){
             GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
-            g_variant_builder_add(&gvb, "{sv}", "volume", g_variant_new_double(std::pow(scale.get_target_value(), 3))); // see line x
+            g_variant_builder_add(&gvb, "{sv}", "volume", g_variant_new_double(std::pow(scale.get_target_value(), 3))); // see line 612
             GVariant* v = g_variant_builder_end(&gvb);
             gboolean res FALSE;
             g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
@@ -110,20 +125,21 @@ WfWpControl::WfWpControl(WpPipewireObject* obj, WayfireWireplumber* parent_widge
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
-        dy = dy * -1; // for the same scrolling as volume widget, which we will agree it is more intuitive for more people. TODO : make this configurable
+        dy = parent->invert_scroll ? dy * -1 : dy; // for the same scrolling as volume widget, which we will agree it is more intuitive for more people
         double change = 0;
+        const double SCROLL_MULT = 20; // corrects the scrolling to have the default scroll sensitivity as 1
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
         {
             // +- number of clicks.
-            change = (dy * scroll_sensitivity) / 10;
+            change = (dy * parent->scroll_sensitivity * SCROLL_MULT) / 10;
         } else
         {
             // Number of pixels expected to have scrolled. usually in 100s
-            change = (dy * scroll_sensitivity) / 100;
+            change = (dy * parent->scroll_sensitivity * SCROLL_MULT) / 100;
         }
         guint32 id = wp_proxy_get_bound_id(WP_PROXY(object));
         GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
-        g_variant_builder_add(&gvb, "{sv}", "volume", g_variant_new_double(std::pow(get_scale_target_value() + change, 3))); // see line x
+        g_variant_builder_add(&gvb, "{sv}", "volume", g_variant_new_double(std::pow(get_scale_target_value() + change, 3))); // see line 612
         GVariant* v = g_variant_builder_end(&gvb);
         gboolean res FALSE;
         g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
@@ -152,7 +168,7 @@ WfWpControl::WfWpControl(WpPipewireObject* obj, WayfireWireplumber* parent_widge
     g_variant_lookup(v, "mute", "b", &mute);
     g_clear_pointer(&v, g_variant_unref);
     set_btn_status_no_callbk(mute);
-    set_scale_target_value(std::cbrt(volume)); // see line x
+    set_scale_target_value(std::cbrt(volume)); // see line 612
 
     update_icon();
 }
@@ -267,73 +283,53 @@ void WayfireWireplumber::check_set_popover_timeout()
         &WayfireWireplumber::on_popover_timeout), 0), timeout * 1000);
 }
 
-void WayfireWireplumber::init(Gtk::Box *container){
-    // sets up the « widget part »
+void WayfireWireplumber::show_mixer_action(){
+    // lambdas for the click actions
+    std::cout << "here\n";
+    if (popover->get_child() != (Gtk::Widget*)&master_box){
+        popover->set_child(master_box);
+        popover_timeout.disconnect();
+    }
+}
 
-    button = std::make_unique<WayfireMenuButton>("panel");
-    button->get_style_context()->add_class("volume");
-    button->get_style_context()->add_class("flat");
-    button->set_child(main_image);
-    button->show();
-    button->get_popover()->set_child(master_box);
-    popover = button->get_popover();
-    popover->set_autohide(false);
-    popover->signal_closed().connect(
-        [&]{
-            // when the widget is clicked during the « small » popup, replace by full mixer
-            // if the popover child is the master box, it was already closed and we don’t interfere
-            if (popover->get_child() != (Gtk::Widget*)&master_box){
-                popover->set_child(master_box);
-                popover_timeout.disconnect();
-            }
+void WayfireWireplumber::show_face_action(){
+    std::cout << "there\n";
+    if (!face) return; // no face means we have nothing to show
+    if (popover->get_child() != face){
+        popover->set_child(*face);
+        popover_timeout.disconnect();
+    }
+}
+
+void WayfireWireplumber::mute_face_action(){
+    std::cout << "everywhere\n";
+    if (!face) return; // no face means we have nothing to change by clicking
+    face->button.set_active(!face->button.get_active());
+}
+
+void WayfireWireplumber::update_layout(){
+    std::vector<Gtk::Box*> do_not_reset = {&sinks_box, &sources_box, &streams_box};
+    for (Gtk::Widget* widget : master_box.get_children()){
+        if (std::find(do_not_reset.begin(), do_not_reset.end(), widget)
+            !=
+            do_not_reset.end()
+        ){
+            master_box.remove(*widget);
+            return;
         }
-    );
 
-    auto scroll_gesture = Gtk::EventControllerScroll::create();
-    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
-    {
-        if (!face) return false; // no face means we have nothing to change by scrolling
-        dy = dy * -1; // for the same scrolling as volume widget, which we will agree it is more intuitive for more people. TODO : make this configurable
-        double change = 0;
-        if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
-        {
-            // +- number of clicks.
-            change = (dy * scroll_sensitivity) / 10;
-        } else
-        {
-            // Number of pixels expected to have scrolled. usually in 100s
-            change = (dy * scroll_sensitivity) / 100;
-        }
-        guint32 id = wp_proxy_get_bound_id(WP_PROXY(face->object));
-        GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
-        g_variant_builder_add(&gvb, "{sv}", "volume", g_variant_new_double(std::pow(face->get_scale_target_value() + change, 3))); // see line x
-        GVariant* v = g_variant_builder_end(&gvb);
-        gboolean res FALSE;
-        g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
-        return true;
-    }, true);
-    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
-    button->add_controller(scroll_gesture);
+        delete widget;
+    }
 
-    auto middle_click_gesture = Gtk::GestureClick::create();
-    middle_click_gesture->set_button(2);
-    middle_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
-    {
-        face->button.set_active(!face->button.get_active());
-    });
-    button->add_controller(middle_click_gesture);
-
-    // boxes hierarchy and labeling
     Gtk::Orientation r1, r2;
-    // if (config::is_horizontal){ // todo : make this configurable
-
+    if (config::is_horizontal){
         r1 = Gtk::Orientation::HORIZONTAL;
         r2 = Gtk::Orientation::VERTICAL;
-    // }
-    // else {
-    //     r1 = Gtk::Orientation::VERTICAL;
-    //     r2 = Gtk::Orientation::HORIZONTAL;
-    // }
+    }
+    else { // todo : align sections properly in this case
+        r1 = Gtk::Orientation::VERTICAL;
+        r2 = Gtk::Orientation::HORIZONTAL;
+    }
     master_box.set_orientation(r1);
     // TODO : only show the boxes which have stuff in them
     master_box.append(sinks_box);
@@ -350,6 +346,157 @@ void WayfireWireplumber::init(Gtk::Box *container){
     streams_box.set_orientation(r2);
     streams_box.append(*new Gtk::Label("Audio streams"));
     streams_box.append(*new Gtk::Separator(r2));
+}
+
+void WayfireWireplumber::reload_config(){
+    WfOption<std::string> str_face_choice{"panel/wp_face_choice"};
+    WfOption<std::string> str_wp_left_click_action{"panel/wp_left_click_action"};
+    WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
+    WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
+
+    if ((std::string)str_face_choice == (std::string)"last_change")
+        face_choice = FaceChoice::LAST_CHANGE;
+    if ((std::string)str_face_choice == (std::string)"default_sink"){
+        face_choice = FaceChoice::DEFAULT_SINK;
+        face = nullptr;
+        WpCommon::on_default_nodes_changed(WpCommon::default_nodes_api, NULL);
+    }
+    if ((std::string)str_face_choice == (std::string)"default_source"){
+        face_choice = FaceChoice::DEFAULT_SOURCE;
+        face = nullptr;
+        WpCommon::on_default_nodes_changed(WpCommon::default_nodes_api, NULL);
+    }
+
+    auto left_click_gesture = Gtk::GestureClick::create();
+    left_click_gesture->set_button(1);
+    auto right_click_gesture = Gtk::GestureClick::create();
+    right_click_gesture->set_button(3);
+    auto middle_click_gesture = Gtk::GestureClick::create();
+    middle_click_gesture->set_button(2);
+
+    auto show_mixer_action = [&](int count, double x, double y){
+        if (popover->get_child() == (Gtk::Widget*)&master_box && popover->is_visible()){
+            popover->popdown();
+            return;
+        }
+        if (!popover->is_visible()) popover->popup();
+        if (popover->get_child() != (Gtk::Widget*)&master_box){
+            popover->set_child(master_box);
+            popover_timeout.disconnect();
+        }
+    };
+
+    auto show_face_action = [&](int count, double x, double y){
+        if (!face) return; // no face means we have nothing to show
+        if (popover->get_child() == face && popover->is_visible()){
+            popover->popdown();
+            return;
+        }
+        if (!popover->is_visible()) popover->popup();
+        if (popover->get_child() != face){
+            popover->set_child(*face);
+            popover_timeout.disconnect();
+        }
+    };
+
+
+    // the left click case is a bit special, since it’s supposed to show the popover.
+    // (this is also why the mute action is not available for the left click)
+    // this is not the prettiest, but the alternative is way worse
+    if ((std::string)str_wp_left_click_action == (std::string)"show_mixer")
+        left_click_gesture->signal_pressed().connect(
+            [&](int c, double x, double y){popover->set_child(master_box);});
+
+    if ((std::string)str_wp_left_click_action == (std::string)"show_face")
+        left_click_gesture->signal_pressed().connect(
+            [&](int c, double x, double y){
+                if (!face) return;
+                popover->set_child(*face);
+            });
+
+
+    if ((std::string)str_wp_right_click_action == (std::string)"show_mixer")
+        right_click_gesture->signal_pressed().connect(show_mixer_action);
+
+    if ((std::string)str_wp_right_click_action == (std::string)"show_face")
+        right_click_gesture->signal_pressed().connect(show_face_action);
+
+    if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
+        right_click_gesture->signal_pressed().connect(
+            [&](int count, double x, double y){
+                if (!face) return; // no face means we have nothing to change by clicking
+                face->button.set_active(!face->button.get_active());
+            });
+
+
+    if ((std::string)str_wp_middle_click_action == (std::string)"show_mixer")
+        middle_click_gesture->signal_pressed().connect(show_mixer_action);
+
+    if ((std::string)str_wp_middle_click_action == (std::string)"show_face")
+        middle_click_gesture->signal_pressed().connect(show_face_action);
+
+    if ((std::string)str_wp_middle_click_action == (std::string)"mute_face")
+        middle_click_gesture->signal_pressed().connect(
+            [&](int count, double x, double y){
+                if (!face) return; // no face means we have nothing to change by clicking
+                face->button.set_active(!face->button.get_active());
+            });
+
+    button->add_controller(left_click_gesture);
+    button->add_controller(right_click_gesture);
+    button->add_controller(middle_click_gesture);
+}
+
+void WayfireWireplumber::on_config_reload(){
+    reload_config();
+    update_layout();
+}
+
+void WayfireWireplumber::init(Gtk::Box *container){
+    // sets up the « widget part »
+
+    button = std::make_unique<WayfireMenuButton>("panel");
+    button->get_style_context()->add_class("volume");
+    button->get_style_context()->add_class("flat");
+    button->set_child(main_image);
+    button->show();
+    button->get_popover()->set_child(master_box);
+    popover = button->get_popover();
+    popover->set_autohide(false);
+
+    // scroll to change volume
+    auto scroll_gesture = Gtk::EventControllerScroll::create();
+    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
+    {
+        if (!face) return false; // no face means we have nothing to change by scrolling
+        dy = invert_scroll ? dy * -1 : dy; // for the same scrolling as volume widget, which we will agree it is more intuitive for more people
+        double change = 0;
+        const double SCROLL_MULT = 20; // corrects the scrolling to have the default scroll sensitivity as 1
+        if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
+        {
+            // +- number of clicks.
+            change = (dy * scroll_sensitivity * SCROLL_MULT) / 10;
+        } else
+        {
+            // Number of pixels expected to have scrolled. usually in 100s
+            change = (dy * scroll_sensitivity * SCROLL_MULT) / 100;
+        }
+        guint32 id = wp_proxy_get_bound_id(WP_PROXY(face->object));
+        GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
+        g_variant_builder_add(&gvb, "{sv}", "volume", g_variant_new_double(std::pow(face->get_scale_target_value() + change, 3))); // see line 612
+        GVariant* v = g_variant_builder_end(&gvb);
+        gboolean res FALSE;
+        g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
+        return true;
+    }, true);
+    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    button->add_controller(scroll_gesture);
+
+    // config options
+    reload_config();
+
+    // boxes hierarchy and labeling
+    update_layout();
 
     /* Setup popover */
     popover->set_child(master_box);
@@ -579,8 +726,31 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data){
         }
 
         control->set_btn_status_no_callbk(mute);
-        control->set_scale_target_value(std::cbrt(volume)); // see line x
+        control->set_scale_target_value(std::cbrt(volume)); // see line 612
         control->update_icon();
+
+        if (widget->face_choice == FaceChoice::DEFAULT_SINK
+            ||
+            widget->face_choice == FaceChoice::DEFAULT_SOURCE
+        ){
+            if (
+                control->object
+                !=
+                ((WfWpControl*)(widget->popover->get_child()))->object
+            ){
+                widget->face->set_btn_status_no_callbk(mute);
+                widget->face->set_scale_target_value(std::cbrt(volume)); // see line 612
+                widget->update_icon();
+            }
+
+            // if it was hidden, show it
+            if (!widget->popover->is_visible()){
+                widget->button->set_active(true);
+            }
+
+            // in all cases, (re-)schedule hiding
+            widget->check_set_popover_timeout();
+        }
 
         // if we have the *full* mixer in the popover
         if ((Gtk::Widget*)&(widget->master_box)
@@ -607,7 +777,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data){
         else {
             // update the face’s values ; else because the WfWpControl constructor already syncs the values
             widget->face->set_btn_status_no_callbk(mute);
-            widget->face->set_scale_target_value(std::cbrt(volume)); // see line x
+            widget->face->set_scale_target_value(std::cbrt(volume)); // see line 612
             widget->update_icon();
         }
 
@@ -622,7 +792,6 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data){
 }
 
 void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer data){
-    std::cout << "default nodes changed\n";
     std::vector<guint32> defaults;
     guint32 id = SPA_ID_INVALID;
 
@@ -652,9 +821,20 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
 
             // if the control is not for a sink or source (non WfWpControlDevice), don’t try to set status
             const gchar* type = wp_pipewire_object_get_property(obj, PW_KEY_MEDIA_CLASS);
+
             if (g_strcmp0(type, "Audio/Sink") == 0 || g_strcmp0(type, "Audio/Source") == 0){
                 ctrl->set_def_status_no_callbk(false);
             }
+
+            if (widget->face_choice == FaceChoice::DEFAULT_SINK
+                &&
+                g_strcmp0(type, "Audio/Sink") == 0
+            ) widget->face = ctrl;
+
+            if (widget->face_choice == FaceChoice::DEFAULT_SOURCE
+                &&
+                g_strcmp0(type, "Audio/Source") == 0
+            ) widget->face = ctrl;
         }
     }
 }

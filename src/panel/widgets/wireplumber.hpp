@@ -4,17 +4,17 @@
 #include "../widget.hpp"
 #include "gtkmm/togglebutton.h"
 #include "wf-popover.hpp"
-#include "wf-shell-app.hpp"
 #include "wp/proxy-interfaces.h"
 #include <gtkmm/image.h>
 #include <gtkmm/scale.h>
 extern "C" {
     #include <wp/wp.h>
-    #include <gdk/gdk.h>
-    #include <gdk/wayland/gdkwayland.h>
 }
 #include <wayfire/util/duration.hpp>
 #include <map>
+
+enum class FaceChoice;
+enum class ClickAction;
 
 class WayfireWireplumber;
 
@@ -26,7 +26,6 @@ class WfWpControl : public Gtk::Grid{
         Gtk::Image volume_icon;
         sigc::connection mute_conn;
         WayfireWireplumber* parent;
-        WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
 
     public:
         WfWpControl(WpPipewireObject* obj, WayfireWireplumber* parent_widget);
@@ -62,8 +61,11 @@ class WayfireWireplumber : public WayfireWidget{
     private:
         Gtk::Image main_image;
 
-        WfOption<double> timeout{"panel/volume_display_timeout"};
-        WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
+        WfOption<double> timeout{"panel/wp_display_timeout"};
+
+        void show_mixer_action();
+        void show_face_action();
+        void mute_face_action();
 
         void on_volume_value_changed();
         bool on_popover_timeout(int timer);
@@ -77,6 +79,12 @@ class WayfireWireplumber : public WayfireWidget{
     public:
         void init(Gtk::Box *container) override;
 
+        WfOption<double> scroll_sensitivity{"panel/wp_scroll_sensitivity"};
+        WfOption<bool> invert_scroll{"panel/wp_invert_scroll"};
+
+        FaceChoice face_choice;
+        ClickAction right_click_action, middle_click_action;
+
         std::unique_ptr<WayfireMenuButton> button;
         Gtk::Popover* popover;
 
@@ -84,7 +92,7 @@ class WayfireWireplumber : public WayfireWidget{
             the « face » is the representation of the audio channel that shows it’s
             volume level on the widget icon and is concerned by the quick actions.
             currently, it is the last channel to have been updated.
-            TODO : make this configurable, other ideas : default source/sink. Pinning ?
+            TODO : add pinning ?
         */
         WfWpControl* face;
 
@@ -104,6 +112,10 @@ class WayfireWireplumber : public WayfireWidget{
         * a timer to hide it
         */
         void check_set_popover_timeout();
+
+        void update_layout();
+        void reload_config();
+        void on_config_reload();
 
         virtual ~WayfireWireplumber();
 };
