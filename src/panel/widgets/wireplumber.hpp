@@ -27,6 +27,7 @@ class WfWpControl : public Gtk::Grid{
         Gtk::Image volume_icon;
         sigc::connection mute_conn;
         WayfireWireplumber* parent;
+        WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
 
     public:
         WfWpControl(WpPipewireObject* obj, WayfireWireplumber* parent_widget);

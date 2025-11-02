@@ -107,6 +107,31 @@ WfWpControl::WfWpControl(WpPipewireObject* obj, WayfireWireplumber* parent_widge
         }
     );
 
+    auto scroll_gesture = Gtk::EventControllerScroll::create();
+    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
+    {
+        dy = dy * -1; // for the same scrolling as volume widget, which we will agree it is more intuitive for more people. TODO : make this configurable
+        double change = 0;
+        if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
+        {
+            // +- number of clicks.
+            change = (dy * scroll_sensitivity) / 10;
+        } else
+        {
+            // Number of pixels expected to have scrolled. usually in 100s
+            change = (dy * scroll_sensitivity) / 100;
+        }
+        guint32 id = wp_proxy_get_bound_id(WP_PROXY(object));
+        GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
+        g_variant_builder_add(&gvb, "{sv}", "volume", g_variant_new_double(std::pow(get_scale_target_value() + change, 3))); // see line x
+        GVariant* v = g_variant_builder_end(&gvb);
+        gboolean res FALSE;
+        g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
+        return true;
+    }, true);
+    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    add_controller(scroll_gesture);
+
     // initialise the values
     GVariant* v = NULL;
     g_signal_emit_by_name(WpCommon::mixer_api, "get-volume", id, &v);
@@ -206,7 +231,6 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject* obj, WayfireWireplumber* 
             }
         }
     );
-
 }
 
 void WfWpControlDevice::set_def_status_no_callbk(bool state){
@@ -331,6 +355,7 @@ void WayfireWireplumber::init(Gtk::Box *container){
         WpCommon::catch_up_to_current_state(this);
         return;
     }
+
 	WpCommon::init_wp();
 }
 
@@ -417,7 +442,6 @@ void WpCommon::catch_up_to_current_state(WayfireWireplumber *widget){
         on_object_added(object_manager, (gpointer)g_value_get_object(&item), &widget);
         g_value_unset(&item);
     }
-
 }
 
 void WpCommon::on_mixer_plugin_loaded(WpCore* core, GAsyncResult* res, void* data){
@@ -437,7 +461,6 @@ void WpCommon::on_mixer_plugin_loaded(WpCore* core, GAsyncResult* res, void* dat
         (GAsyncReadyCallback)on_default_nodes_plugin_loaded,
         NULL
     );
-
 }
 
 void WpCommon::on_default_nodes_plugin_loaded(WpCore* core, GAsyncResult* res, void* data){
