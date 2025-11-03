@@ -15,8 +15,7 @@ static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1
 }
 
 static void handle_manager_finished(void *data, zwlr_foreign_toplevel_manager_v1 *manager)
-{
-}
+{}
 
 zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
     .toplevel = handle_manager_toplevel,
@@ -39,8 +38,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
 }
 
 static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
-{
-}
+{}
 
 static struct wl_registry_listener registry_listener =
 {
