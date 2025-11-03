@@ -349,51 +349,50 @@ void WayfireWireplumber::mute_face_action()
     face->button.set_active(!face->button.get_active());
 }
 
-// this is pending on pr 306, adding options to attach the panel to the sides of the screen
-// void WayfireWireplumber::update_layout()
-// {
-//     std::vector<Gtk::Box*> do_not_reset = {&sinks_box, &sources_box, &streams_box};
-//     for (Gtk::Widget *widget : master_box.get_children())
-//     {
-//         if (std::find(do_not_reset.begin(), do_not_reset.end(), widget)
-//             !=
-//             do_not_reset.end())
-//         {
-//             master_box.remove(*widget);
-//             return;
-//         }
+void WayfireWireplumber::update_layout()
+{
+    std::vector<Gtk::Box*> do_not_reset = {&sinks_box, &sources_box, &streams_box};
+    for (Gtk::Widget *widget : master_box.get_children())
+    {
+        if (std::find(do_not_reset.begin(), do_not_reset.end(), widget)
+            !=
+            do_not_reset.end())
+        {
+            master_box.remove(*widget);
+            return;
+        }
 
-//         delete widget;
-//     }
+        delete widget;
+    }
 
-//     Gtk::Orientation r1, r2;
-//     if (config::is_horizontal)
-//     {
-//         r1 = Gtk::Orientation::HORIZONTAL;
-//         r2 = Gtk::Orientation::VERTICAL;
-//     } else // todo : align sections properly in this case
-//     {
-//         r1 = Gtk::Orientation::VERTICAL;
-//         r2 = Gtk::Orientation::HORIZONTAL;
-//     }
+    Gtk::Orientation r1, r2;
+    if (config::is_horizontal)
+    {
+        r1 = Gtk::Orientation::HORIZONTAL;
+        r2 = Gtk::Orientation::VERTICAL;
+    } else // todo : align sections properly in this case
+    {
+        r1 = Gtk::Orientation::VERTICAL;
+        r2 = Gtk::Orientation::HORIZONTAL;
+    }
 
-//     master_box.set_orientation(r1);
-//     // TODO : only show the boxes which have stuff in them
-//     master_box.append(sinks_box);
-//     master_box.append(*new Gtk::Separator(r1));
-//     master_box.append(sources_box);
-//     master_box.append(*new Gtk::Separator(r1));
-//     master_box.append(streams_box);
-//     sinks_box.set_orientation(r2);
-//     sinks_box.append(*new Gtk::Label("Output devices"));
-//     sinks_box.append(*new Gtk::Separator(r2));
-//     sources_box.set_orientation(r2);
-//     sources_box.append(*new Gtk::Label("Input devices"));
-//     sources_box.append(*new Gtk::Separator(r2));
-//     streams_box.set_orientation(r2);
-//     streams_box.append(*new Gtk::Label("Audio streams"));
-//     streams_box.append(*new Gtk::Separator(r2));
-// }
+    master_box.set_orientation(r1);
+    // TODO : only show the boxes which have stuff in them
+    master_box.append(sinks_box);
+    master_box.append(*new Gtk::Separator(r1));
+    master_box.append(sources_box);
+    master_box.append(*new Gtk::Separator(r1));
+    master_box.append(streams_box);
+    sinks_box.set_orientation(r2);
+    sinks_box.append(*new Gtk::Label("Output devices"));
+    sinks_box.append(*new Gtk::Separator(r2));
+    sources_box.set_orientation(r2);
+    sources_box.append(*new Gtk::Label("Input devices"));
+    sources_box.append(*new Gtk::Separator(r2));
+    streams_box.set_orientation(r2);
+    streams_box.append(*new Gtk::Label("Audio streams"));
+    streams_box.append(*new Gtk::Separator(r2));
+}
 
 void WayfireWireplumber::reload_config()
 {
@@ -552,7 +551,7 @@ void WayfireWireplumber::reload_config()
 void WayfireWireplumber::on_config_reload()
 {
     reload_config();
-    // update_layout();
+    update_layout();
 }
 
 void WayfireWireplumber::init(Gtk::Box *container)
@@ -607,26 +606,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     reload_config();
 
     // boxes hierarchy and labeling
-    // update_layout();
-    auto r1 = Gtk::Orientation::HORIZONTAL;
-    auto r2 = Gtk::Orientation::VERTICAL;
-
-    master_box.set_orientation(r1);
-    // TODO : only show the boxes which have stuff in them
-    master_box.append(sinks_box);
-    master_box.append(*new Gtk::Separator(r1));
-    master_box.append(sources_box);
-    master_box.append(*new Gtk::Separator(r1));
-    master_box.append(streams_box);
-    sinks_box.set_orientation(r2);
-    sinks_box.append(*new Gtk::Label("Output devices"));
-    sinks_box.append(*new Gtk::Separator(r2));
-    sources_box.set_orientation(r2);
-    sources_box.append(*new Gtk::Label("Input devices"));
-    sources_box.append(*new Gtk::Separator(r2));
-    streams_box.set_orientation(r2);
-    streams_box.append(*new Gtk::Label("Audio streams"));
-    streams_box.append(*new Gtk::Separator(r2));
+    update_layout();
 
     /* Setup popover */
     popover->set_child(master_box);
