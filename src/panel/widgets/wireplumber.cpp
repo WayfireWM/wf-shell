@@ -121,7 +121,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     {
         GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
         g_variant_builder_add(&gvb, "{sv}", "volume",
-            g_variant_new_double(std::pow(scale.get_target_value(), 3))); // see line 612
+            g_variant_new_double(std::pow(scale.get_target_value(), 3))); // see on_mixer_plugin_loaded
         GVariant *v = g_variant_builder_end(&gvb);
         gboolean res FALSE;
         g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
@@ -147,7 +147,8 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
         guint32 id = wp_proxy_get_bound_id(WP_PROXY(object));
         GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
         g_variant_builder_add(&gvb, "{sv}", "volume",
-            g_variant_new_double(std::pow(get_scale_target_value() + change, 3))); // see line 612
+            g_variant_new_double(std::pow(get_scale_target_value() + change, 3))); // see
+                                                                                   // on_mixer_plugin_loaded
         GVariant *v = g_variant_builder_end(&gvb);
         gboolean res FALSE;
         g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
@@ -172,7 +173,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     g_variant_lookup(v, "mute", "b", &mute);
     g_clear_pointer(&v, g_variant_unref);
     set_btn_status_no_callbk(mute);
-    set_scale_target_value(std::cbrt(volume)); // see line 612
+    set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
 
     update_icon();
 }
@@ -433,7 +434,17 @@ void WayfireWireplumber::reload_config()
     if ((std::string)str_wp_left_click_action == (std::string)"show_mixer")
     {
         left_click_gesture->signal_pressed().connect(
-            [&] (int c, double x, double y) {popover->set_child(master_box);});
+            [&] (int c, double x, double y)
+        {
+            if (popover->get_child() != (Gtk::Widget*)&master_box)
+            {
+                popover->set_child(master_box);
+                // popdown so that when the click is processed, the popover is down, and thus pops up
+                // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
+                // how to make it better
+                popover->popdown();
+            }
+        });
         button->add_controller(left_click_gesture);
     }
 
@@ -447,7 +458,14 @@ void WayfireWireplumber::reload_config()
                 return;
             }
 
-            popover->set_child(*face);
+            if (popover->get_child() != face)
+            {
+                popover->set_child(*face);
+                // popdown so that when the click is processed, the popover is down, and thus pops up
+                // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
+                // how to make it better
+                popover->popdown();
+            }
         });
         button->add_controller(left_click_gesture);
     }
@@ -555,7 +573,8 @@ void WayfireWireplumber::init(Gtk::Box *container)
         guint32 id = wp_proxy_get_bound_id(WP_PROXY(face->object));
         GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
         g_variant_builder_add(&gvb, "{sv}", "volume",
-            g_variant_new_double(std::pow(face->get_scale_target_value() + change, 3))); // see line 612
+            g_variant_new_double(std::pow(face->get_scale_target_value() + change, 3))); // see
+                                                                                         // on_mixer_plugin_loaded
         GVariant *v = g_variant_builder_end(&gvb);
         gboolean res FALSE;
         g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
@@ -821,7 +840,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         }
 
         control->set_btn_status_no_callbk(mute);
-        control->set_scale_target_value(std::cbrt(volume)); // see line 612
+        control->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
         control->update_icon();
 
         if ((widget->face_choice == FaceChoice::DEFAULT_SINK)
@@ -834,7 +853,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 ((WfWpControl*)(widget->popover->get_child()))->object)
             {
                 widget->face->set_btn_status_no_callbk(mute);
-                widget->face->set_scale_target_value(std::cbrt(volume)); // see line 612
+                widget->face->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
                 widget->update_icon();
             }
 
@@ -882,7 +901,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         {
             // update the face’s values ; else because the WfWpControl constructor already syncs the values
             widget->face->set_btn_status_no_callbk(mute);
-            widget->face->set_scale_target_value(std::cbrt(volume)); // see line 612
+            widget->face->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
             widget->update_icon();
         }
 
