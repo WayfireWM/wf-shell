@@ -12,46 +12,46 @@
 const auto introspection_data =
     Gio::DBus::NodeInfo::create_for_xml("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                                         "<node name=\"" FDN_PATH "\">"
-                                        "    <interface name=\"" FDN_NAME "\">"
+                                                                 "    <interface name=\"" FDN_NAME "\">"
 
-                                        "        <method name=\"GetCapabilities\">"
-                                        "            <arg direction=\"out\" name=\"capabilities\"    type=\"as\"/>"
-                                        "        </method>"
+                                                                                                   "        <method name=\"GetCapabilities\">"
+                                                                                                   "            <arg direction=\"out\" name=\"capabilities\"    type=\"as\"/>"
+                                                                                                   "        </method>"
 
-                                        "        <method name=\"Notify\">"
-                                        "            <arg direction=\"in\"  name=\"app_name\"        type=\"s\"/>"
-                                        "            <arg direction=\"in\"  name=\"replaces_id\"     type=\"u\"/>"
-                                        "            <arg direction=\"in\"  name=\"app_icon\"        type=\"s\"/>"
-                                        "            <arg direction=\"in\"  name=\"summary\"         type=\"s\"/>"
-                                        "            <arg direction=\"in\"  name=\"body\"            type=\"s\"/>"
-                                        "            <arg direction=\"in\"  name=\"actions\"         type=\"as\"/>"
-                                        "            <arg direction=\"in\"  name=\"hints\"           type=\"a{sv}\"/>"
-                                        "            <arg direction=\"in\"  name=\"expire_timeout\"  type=\"i\"/>"
-                                        "            <arg direction=\"out\" name=\"id\"              type=\"u\"/>"
-                                        "        </method>"
+                                                                                                   "        <method name=\"Notify\">"
+                                                                                                   "            <arg direction=\"in\"  name=\"app_name\"        type=\"s\"/>"
+                                                                                                   "            <arg direction=\"in\"  name=\"replaces_id\"     type=\"u\"/>"
+                                                                                                   "            <arg direction=\"in\"  name=\"app_icon\"        type=\"s\"/>"
+                                                                                                   "            <arg direction=\"in\"  name=\"summary\"         type=\"s\"/>"
+                                                                                                   "            <arg direction=\"in\"  name=\"body\"            type=\"s\"/>"
+                                                                                                   "            <arg direction=\"in\"  name=\"actions\"         type=\"as\"/>"
+                                                                                                   "            <arg direction=\"in\"  name=\"hints\"           type=\"a{sv}\"/>"
+                                                                                                   "            <arg direction=\"in\"  name=\"expire_timeout\"  type=\"i\"/>"
+                                                                                                   "            <arg direction=\"out\" name=\"id\"              type=\"u\"/>"
+                                                                                                   "        </method>"
 
-                                        "        <method name=\"CloseNotification\">"
-                                        "            <arg direction=\"in\"  name=\"id\"              type=\"u\"/>"
-                                        "        </method>"
+                                                                                                   "        <method name=\"CloseNotification\">"
+                                                                                                   "            <arg direction=\"in\"  name=\"id\"              type=\"u\"/>"
+                                                                                                   "        </method>"
 
-                                        "        <method name=\"GetServerInformation\">"
-                                        "            <arg direction=\"out\" name=\"name\"            type=\"s\"/>"
-                                        "            <arg direction=\"out\" name=\"vendor\"          type=\"s\"/>"
-                                        "            <arg direction=\"out\" name=\"version\"         type=\"s\"/>"
-                                        "            <arg direction=\"out\" name=\"spec_version\"    type=\"s\"/>"
-                                        "        </method>"
+                                                                                                   "        <method name=\"GetServerInformation\">"
+                                                                                                   "            <arg direction=\"out\" name=\"name\"            type=\"s\"/>"
+                                                                                                   "            <arg direction=\"out\" name=\"vendor\"          type=\"s\"/>"
+                                                                                                   "            <arg direction=\"out\" name=\"version\"         type=\"s\"/>"
+                                                                                                   "            <arg direction=\"out\" name=\"spec_version\"    type=\"s\"/>"
+                                                                                                   "        </method>"
 
-                                        "        <signal name=\"NotificationClosed\">"
-                                        "            <arg name=\"id\"         type=\"u\"/>"
-                                        "            <arg name=\"reason\"     type=\"u\"/>"
-                                        "        </signal>"
+                                                                                                   "        <signal name=\"NotificationClosed\">"
+                                                                                                   "            <arg name=\"id\"         type=\"u\"/>"
+                                                                                                   "            <arg name=\"reason\"     type=\"u\"/>"
+                                                                                                   "        </signal>"
 
-                                        "        <signal name=\"ActionInvoked\">"
-                                        "            <arg name=\"id\"         type=\"u\"/>"
-                                        "            <arg name=\"action_key\" type=\"s\"/>"
-                                        "        </signal>"
-                                        "    </interface>"
-                                        "</node>")
+                                                                                                   "        <signal name=\"ActionInvoked\">"
+                                                                                                   "            <arg name=\"id\"         type=\"u\"/>"
+                                                                                                   "            <arg name=\"action_key\" type=\"s\"/>"
+                                                                                                   "        </signal>"
+                                                                                                   "    </interface>"
+                                                                                                   "</node>")
     ->lookup_interface();
 
 dbus_method(Daemon::GetCapabilities)
@@ -116,8 +116,8 @@ void Daemon::on_interface_method_call(const Glib::RefPtr<Gio::DBus::Connection> 
     const Glib::RefPtr<Gio::DBus::MethodInvocation> & invocation)
 {
 #define try_invoke_method(_name)                                                                                       \
-        if (method_name == #_name)                                                                                         \
-        _name ## dbus_method(sender, parameters, invocation)
+    if (method_name == #_name)                                                                                         \
+    _name ## dbus_method(sender, parameters, invocation)
 
     try_invoke_method(GetCapabilities);
     try_invoke_method(Notify);
