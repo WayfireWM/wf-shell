@@ -28,8 +28,7 @@ class WayfirePanelApp : public WayfireShellApp
     WayfirePanel *panel_for_wl_output(wl_output *output);
     static WayfirePanelApp& get();
 
-    /* Starts the program. get() is valid afterward the first (and the only)
-     * call to create() */
+    /* Starts the program. get() is valid afterward the first (and the only) call to create() */
     static void create(int argc, char **argv);
     ~WayfirePanelApp();
 

@@ -16,7 +16,8 @@ static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1
 }
 
 static void handle_manager_finished(void *data, zwlr_foreign_toplevel_manager_v1 *manager)
-{}
+{
+}
 
 zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
     .toplevel = handle_manager_toplevel,
@@ -39,7 +40,8 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
 }
 
 static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
-{}
+{
+}
 
 static struct wl_registry_listener registry_listener =
 {
@@ -84,8 +86,8 @@ void WayfireWindowList::set_top_widget(Gtk::Widget *top)
 
     if (layout->top_widget)
     {
-        /* Set original top_x to where the widget currently is, so that we don't
-         * mess with it before the real position is set */
+        /* Set original top_x to where the widget currently is, so that we don't mess with it before the real
+         * position is set */
         this->layout->top_x = get_absolute_position(0, *top);
     }
 
@@ -133,8 +135,7 @@ Gtk::Widget*WayfireWindowList::get_widget_before(int x)
 {
     Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
 
-    /* Widgets are stored bottom to top, so we will return the bottom-most
-     * widget at the given position */
+    /* Widgets are stored bottom to top, so we will return the bottom-most widget at the given position */
     Gtk::Widget *previous = nullptr;
     auto children = this->get_children();
     for (auto& child : children)
@@ -159,8 +160,7 @@ Gtk::Widget*WayfireWindowList::get_widget_at(int x)
 {
     Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
 
-    /* Widgets are stored bottom to top, so we will return the bottom-most
-     * widget at the given position */
+    /* Widgets are stored bottom to top, so we will return the bottom-most widget at the given position */
     auto children = this->get_children();
     for (auto& child : children)
     {

@@ -35,11 +35,10 @@ class WfToplevel::impl
         /* This catches two edge cases:
          * 1. The dock on the given output simply was closed by the user
          *
-         * 2. The wl_output has been bound multiple times - this happens because
-         * gtk will bind each output once, and then we bind it second time. So
-         * the compositor will actually send the output_enter/leave at least
-         * twice, and the one time when we get it with the output resource bound
-         * by gtk, we need to ignore the request */
+         * 2. The wl_output has been bound multiple times - this happens because gtk will bind each output
+         * once, and then we bind it second time. So the compositor will actually send the output_enter/leave
+         * at least twice, and the one time when we get it with the output resource bound by gtk, we need to
+         * ignore the request */
         if (!dock)
         {
             return;
@@ -137,8 +136,7 @@ static void handle_toplevel_output_leave(void *data, toplevel_t, wl_output *outp
     impl->handle_output_leave(output);
 }
 
-/* wl_array_for_each isn't supported in C++, so we have to manually
- * get the data from wl_array, see:
+/* wl_array_for_each isn't supported in C++, so we have to manually get the data from wl_array, see:
  *
  * https://gitlab.freedesktop.org/wayland/wayland/issues/34 */
 template<class T>

@@ -135,7 +135,7 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
     {
         for (uint i = 0; i + 1 < notification.actions.size(); ++++ i)
         {
-            if (const auto action_key = notification.actions[i];action_key != "default")
+            if (const auto action_key = notification.actions[i];(action_key != "default"))
             {
                 auto action_button = Glib::RefPtr<Gtk::Button>(new Gtk::Button(notification.actions[i + 1]));
                 action_button->signal_clicked().connect(

@@ -43,8 +43,8 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         return false;
     }
 
-	m_icon.set_halign(Gtk::Align::CENTER);
-	m_icon.set_valign(Gtk::Align::CENTER);
+    m_icon.set_halign(Gtk::Align::CENTER);
+    m_icon.set_valign(Gtk::Align::CENTER);
 
     button.set_child(m_icon);
 
@@ -118,8 +118,7 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
             auto icon_option = section->get_option_or(file_icon_prefix + launcher_name);
             if (icon_option)
             {
-                /* bingo, found command + icon
-                 * now look for the corresponding label  */
+                /* bingo, found command + icon now look for the corresponding label  */
                 auto label_option = section->get_option_or(file_label_prefix + launcher_name);
                 if (label_option)
                 {
@@ -133,8 +132,8 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
             }
         }
 
-        /* an entry is a deskop-file entry if the it has the desktop prefix
-         * but not the file_icon, file_cmd or file_label prefix */
+        /* an entry is a deskop-file entry if the it has the desktop prefix but not the file_icon, file_cmd or
+         * file_label prefix */
         if (begins_with(opt->get_name(), desktop_prefix) &&
             !begins_with(opt->get_name(), file_icon_prefix) &&
             !begins_with(opt->get_name(), file_cmd_prefix) &&
@@ -154,23 +153,27 @@ void WayfireLaunchers::init(Gtk::Box *container)
     container->append(box);
 
     box.set_halign(Gtk::Align::CENTER);
-	box.set_valign(Gtk::Align::CENTER);
+    box.set_valign(Gtk::Align::CENTER);
 
     handle_config_reload();
 }
 
-void WayfireLaunchers::update_layout(){
-       if (config::is_horizontal){
-               box.set_orientation(Gtk::Orientation::HORIZONTAL);
-       }
-       else {
-               box.set_orientation(Gtk::Orientation::VERTICAL);
-       }
+void WayfireLaunchers::update_layout()
+{
+    std::string panel_position = WfOption<std::string>{"panel/position"};
+
+    if (panel_position == PANEL_POSITION_LEFT or panel_position == PANEL_POSITION_RIGHT)
+    {
+        box.set_orientation(Gtk::Orientation::VERTICAL);
+    } else
+    {
+        box.set_orientation(Gtk::Orientation::HORIZONTAL);
+    }
 }
 
 void WayfireLaunchers::handle_config_reload()
 {
-	update_layout();
+    update_layout();
 
     for (auto child : box.get_children())
     {

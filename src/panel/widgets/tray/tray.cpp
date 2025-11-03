@@ -3,7 +3,7 @@
 
 void WayfireStatusNotifier::init(Gtk::Box *container)
 {
-	update_layout();
+    update_layout();
     icons_box.set_halign(Gtk::Align::FILL);
     icons_box.set_valign(Gtk::Align::FILL);
     icons_box.set_expand(true);
@@ -35,18 +35,20 @@ void WayfireStatusNotifier::remove_item(const Glib::ustring & service)
     items.erase(service);
 }
 
-void WayfireStatusNotifier::update_layout(){
-    std::string panel_position = WfOption<std::string> {"panel/position"};
+void WayfireStatusNotifier::update_layout()
+{
+    std::string panel_position = WfOption<std::string>{"panel/position"};
 
-    if (panel_position == PANEL_POSITION_LEFT or panel_position == PANEL_POSITION_RIGHT){
+    if (panel_position == PANEL_POSITION_LEFT or panel_position == PANEL_POSITION_RIGHT)
+    {
         icons_box.set_orientation(Gtk::Orientation::VERTICAL);
-    }
-
-    else {
+    } else
+    {
         icons_box.set_orientation(Gtk::Orientation::HORIZONTAL);
     }
 }
 
-void WayfireStatusNotifier::handle_config_reload(){
+void WayfireStatusNotifier::handle_config_reload()
+{
     update_layout();
 }

@@ -11,8 +11,8 @@ enum WfToplevelState
     WF_TOPLEVEL_STATE_MINIMIZED = (1 << 2),
 };
 
-/* Represents a single opened toplevel window.
- * It displays the window icon on all outputs' docks that it is visible on */
+/* Represents a single opened toplevel window. It displays the window icon on all outputs' docks that it is
+ * visible on */
 class WfToplevel
 {
   public:

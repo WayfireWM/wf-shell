@@ -84,79 +84,87 @@ class WayfirePanel::impl
     WfOption<std::string> panel_position{"panel/position"};
     WfOption<std::string> panel_orientation{"panel/orientation"};
 
-    void set_boxes_orientation(Gtk::Orientation orientation){
-
-		content_box.set_orientation(orientation);
-		left_box.set_orientation(orientation);
-		center_box.set_orientation(orientation);
-		right_box.set_orientation(orientation);
-
+    void set_boxes_orientation(Gtk::Orientation orientation)
+    {
+        content_box.set_orientation(orientation);
+        left_box.set_orientation(orientation);
+        center_box.set_orientation(orientation);
+        right_box.set_orientation(orientation);
     }
 
-	void update_orientation(){
-		bool is_horizontal = !((std::string)panel_position == "left" or (std::string)panel_position == "right"); // not the most pretty, but if the value is top, down or something invalid, it works the same
-		WayfireWidget::config::panel_position = panel_position;
-		WayfireWidget::config::is_horizontal = is_horizontal;
-		WayfireWidget::config::panel_orientation = panel_orientation;
+    void update_orientation()
+    {
+        bool is_horizontal = !((std::string)panel_position == "left" or (std::string)panel_position ==
+            "right"); // not the most pretty, but if the value is top, down or something invalid, it works the
+                      // same
 
-        if (is_horizontal){
+        if (is_horizontal)
+        {
             // if the panel is supposed to expand trough the whole edge, set anchors to stretch it
             gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, full_edge);
             gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, full_edge);
 
-	        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
-	        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
+            gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
+            gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
 
             set_boxes_orientation(Gtk::Orientation::HORIZONTAL);
-            sides_size_group->set_mode(Gtk::SizeGroup::Mode::HORIZONTAL);
 
-            if (force_center){
+            if (force_center)
+            {
                 sides_size_group->set_mode(Gtk::SizeGroup::Mode::HORIZONTAL);
                 left_box.set_halign(Gtk::Align::END);
                 right_box.set_halign(Gtk::Align::START);
                 left_box.set_valign(Gtk::Align::CENTER);
                 right_box.set_valign(Gtk::Align::CENTER);
-            }
-            else {
+            } else
+            {
                 sides_size_group->set_mode(Gtk::SizeGroup::Mode::NONE);
                 left_box.set_valign(Gtk::Align::START);
                 right_box.set_valign(Gtk::Align::END);
                 left_box.set_halign(Gtk::Align::CENTER);
                 right_box.set_halign(Gtk::Align::CENTER);
             }
-		}
-        else{
-			gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_TOP, full_edge);
-			gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, full_edge);
+        } else
+        {
+            gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_TOP, full_edge);
+            gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, full_edge);
 
-	        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_TOP, 0);
-	        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, 0);
+            gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_TOP, 0);
+            gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, 0);
 
-			set_boxes_orientation(Gtk::Orientation::VERTICAL);
-			sides_size_group->set_mode(Gtk::SizeGroup::Mode::VERTICAL);
+            set_boxes_orientation(Gtk::Orientation::VERTICAL);
+            sides_size_group->set_mode(Gtk::SizeGroup::Mode::VERTICAL);
 
-            if (force_center){
+            if (force_center)
+            {
                 sides_size_group->set_mode(Gtk::SizeGroup::Mode::VERTICAL);
                 left_box.set_valign(Gtk::Align::END);
                 right_box.set_valign(Gtk::Align::START);
                 left_box.set_halign(Gtk::Align::CENTER);
                 right_box.set_halign(Gtk::Align::CENTER);
-            }
-            else {
+            } else
+            {
                 sides_size_group->set_mode(Gtk::SizeGroup::Mode::NONE);
                 left_box.set_halign(Gtk::Align::START);
                 right_box.set_halign(Gtk::Align::END);
                 left_box.set_valign(Gtk::Align::CENTER);
                 right_box.set_valign(Gtk::Align::CENTER);
             }
-		}
-	}
+        }
+    }
 
     void create_window()
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
 
-        window->set_default_size(minimal_panel_width, minimal_panel_height); // addition of minimal panel width for the panel on the left or right instead of reusing m. p. height allows for the inclusion of non-stretched bar (like the gnome dock, or the kde setting to let the bar contract)
+        window->set_default_size(minimal_panel_width, minimal_panel_height); // addition of minimal panel
+                                                                             // width for the panel on the
+                                                                             // left or right instead of
+                                                                             // reusing m. p. height allows
+                                                                             // for the inclusion of
+                                                                             // non-stretched bar (like the
+                                                                             // gnome dock, or the kde setting
+                                                                             // to let the bar contract)
         window->get_style_context()->add_class("wf-panel");
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
@@ -183,6 +191,7 @@ class WayfirePanel::impl
         {
             content_box.set_center_widget(center_box);
         }
+
         content_box.set_end_widget(right_box);
 
         content_box.set_hexpand(true);
@@ -411,7 +420,7 @@ class WayfirePanel::impl
 
     void handle_config_reload()
     {
-		update_orientation();
+        update_orientation();
 
         for (auto& w : left_widgets)
         {
