@@ -29,7 +29,8 @@ static const auto introspection_data = Gio::DBus::NodeInfo::create_for_xml(
         <signal name="StatusNotifierHostRegistered"/>
     </interface>
 </node>
-)")->lookup_interface();
+)")
+    ->lookup_interface();
 
 Watcher::Watcher() :
     dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SESSION, SNW_NAME,
@@ -118,8 +119,8 @@ void Watcher::register_status_notifier_host(const Glib::RefPtr<Gio::DBus::Connec
                 Glib::Variant<std::tuple<Glib::ustring, std::map<Glib::ustring, Glib::VariantBase>,
                     std::vector<Glib::ustring>>>::
                 create({SNW_IFACE,
-                    {{"IsStatusNotifierHostRegistered", Glib::Variant<bool>::create(true)}},
-                    {}}));
+                        {{"IsStatusNotifierHostRegistered", Glib::Variant<bool>::create(true)}},
+                        {}}));
         }
     },
             [this] (const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name)

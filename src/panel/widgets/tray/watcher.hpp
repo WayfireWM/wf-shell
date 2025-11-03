@@ -18,15 +18,13 @@ class Watcher
     /*!
      * Initializes and launches the watcher, if needed.
      *
-     * Returns a shared pointer to the instance.
-     * Once there are no alive shared pointers to the instance,
-     * the Watcher is automatically destroyed.
+     * Returns a shared pointer to the instance. Once there are no alive shared pointers to the instance, the
+     * Watcher is automatically destroyed.
      */
     static std::shared_ptr<Watcher> Launch();
 
     /*!
-     * Returns a pointer to the Watcher's instance if it exists
-     * or an empty `shared_ptr` otherwise.
+     * Returns a pointer to the Watcher's instance if it exists or an empty `shared_ptr` otherwise.
      */
     static std::shared_ptr<Watcher> Instance();
 

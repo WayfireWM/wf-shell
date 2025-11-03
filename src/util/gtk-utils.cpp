@@ -73,9 +73,12 @@ void image_set_icon(Gtk::Image *image, std::string path)
     }
 }
 
-void apply_rotation(Gtk::Widget& widget, std::string rotation){
-    // doing this allows having rotated wigdets without a css file, with the Gtk::Widget::set_angle now being deprecated
-	static auto orientation_css = R"(
+void apply_rotation(Gtk::Widget& widget, std::string rotation)
+{
+    // doing this allows having rotated wigdets without a css file, with the Gtk::Widget::set_angle now being
+    // deprecated
+    static auto orientation_css =
+        R"(
 		.left {
 			transform: rotate(270deg);
 		}
@@ -83,21 +86,24 @@ void apply_rotation(Gtk::Widget& widget, std::string rotation){
 			transform: rotate(90deg);
 		}
 	)";
-	auto orientation_provider = Gtk::CssProvider::create();
-	orientation_provider->load_from_data(orientation_css);
-	Gtk::StyleContext::add_provider_for_display(Gdk::Display::get_default(), orientation_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
+    auto orientation_provider = Gtk::CssProvider::create();
+    orientation_provider->load_from_data(orientation_css);
+    Gtk::StyleContext::add_provider_for_display(Gdk::Display::get_default(), orientation_provider,
+        GTK_STYLE_PROVIDER_PRIORITY_USER);
 
-	if (widget.get_style_context()->has_class(ROTATION_LEFT)){
-		widget.get_style_context()->remove_class(ROTATION_LEFT);
-	}
-	else if (widget.get_style_context()->has_class(ROTATION_RIGHT)){
-		widget.get_style_context()->remove_class(ROTATION_RIGHT);
-	}
+    if (widget.get_style_context()->has_class(ROTATION_LEFT))
+    {
+        widget.get_style_context()->remove_class(ROTATION_LEFT);
+    } else if (widget.get_style_context()->has_class(ROTATION_RIGHT))
+    {
+        widget.get_style_context()->remove_class(ROTATION_RIGHT);
+    }
 
-	if (rotation == ROTATION_LEFT){
-		widget.get_style_context()->add_class(ROTATION_LEFT);
-	}
-	else if (rotation == ROTATION_RIGHT){
-		widget.get_style_context()->add_class(ROTATION_RIGHT);
-	}
+    if (rotation == ROTATION_LEFT)
+    {
+        widget.get_style_context()->add_class(ROTATION_LEFT);
+    } else if (rotation == ROTATION_RIGHT)
+    {
+        widget.get_style_context()->add_class(ROTATION_RIGHT);
+    }
 }

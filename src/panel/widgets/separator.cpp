@@ -15,15 +15,20 @@ void WayfireSeparator::init(Gtk::Box *container)
     update_layout();
 }
 
-void WayfireSeparator::update_layout(){
-       if (config::is_horizontal){
-               separator.set_orientation(Gtk::Orientation::HORIZONTAL);
-       }
-       else {
-               separator.set_orientation(Gtk::Orientation::VERTICAL);
-       }
+void WayfireSeparator::update_layout()
+{
+    std::string panel_position = WfOption<std::string>{"panel/position"};
+
+    if (panel_position == PANEL_POSITION_LEFT or panel_position == PANEL_POSITION_RIGHT)
+    {
+        separator.set_orientation(Gtk::Orientation::VERTICAL);
+    } else
+    {
+        separator.set_orientation(Gtk::Orientation::HORIZONTAL);
+    }
 }
 
-void WayfireSeparator::handle_config_reload(){
-       update_layout();
+void WayfireSeparator::handle_config_reload()
+{
+    update_layout();
 }

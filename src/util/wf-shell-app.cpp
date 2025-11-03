@@ -177,7 +177,8 @@ static void registry_add_object(void *data, struct wl_registry *registry,
 
 static void registry_remove_object(void *data, struct wl_registry *registry,
     uint32_t name)
-{}
+{
+}
 
 static struct wl_registry_listener registry_listener =
 {

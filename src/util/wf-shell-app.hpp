@@ -29,8 +29,7 @@ struct WayfireOutput
 /**
  * A basic shell application.
  *
- * It is suitable for applications that need to show one or more windows
- * per monitor.
+ * It is suitable for applications that need to show one or more windows per monitor.
  */
 class WayfireShellApp
 {
@@ -39,8 +38,7 @@ class WayfireShellApp
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
 
   protected:
-    /** This should be initialized by the subclass in each program which uses
-     * wf-shell-app */
+    /** This should be initialized by the subclass in each program which uses wf-shell-app */
     static std::unique_ptr<WayfireShellApp> instance;
     std::optional<std::string> cmdline_config;
     std::optional<std::string> cmdline_css;
@@ -51,17 +49,19 @@ class WayfireShellApp
     virtual void add_output(GMonitor monitor);
     virtual void rem_output(GMonitor monitor);
 
-    /* The following functions can be overridden in the shell implementation to
-     * handle the events */
+    /* The following functions can be overridden in the shell implementation to handle the events */
     virtual void on_activate();
     virtual bool parse_cfgfile(const Glib::ustring & option_name,
         const Glib::ustring & value, bool has_value);
     virtual bool parse_cssfile(const Glib::ustring & option_name,
         const Glib::ustring & value, bool has_value);
     virtual void handle_new_output(WayfireOutput *output)
-    {}
+    {
+    }
+
     virtual void handle_output_removed(WayfireOutput *output)
-    {}
+    {
+    }
 
   public:
     int inotify_fd;
@@ -77,16 +77,17 @@ class WayfireShellApp
     virtual void run(int argc, char **argv);
 
     virtual void on_config_reload()
-    {}
+    {
+    }
+
     void on_css_reload();
     void clear_css_rules();
     void add_css_file(std::string file, int priority);
 
 
     /**
-     * WayfireShellApp is a singleton class.
-     * Using this function, any part of the application can get access to the
-     * shell app.
+     * WayfireShellApp is a singleton class. Using this function, any part of the application can get access
+     * to the shell app.
      */
     static WayfireShellApp& get();
 };

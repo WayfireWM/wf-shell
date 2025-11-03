@@ -104,7 +104,7 @@ class WfToplevelIcon::impl
         Gtk::Widget *widget = &this->button;
 
         int x = 0, y = 0;
-        int width = image.get_allocated_width();
+        int width  = image.get_allocated_width();
         int height = image.get_allocated_height();
 
         while (widget)
@@ -263,8 +263,8 @@ bool set_custom_icon(Gtk::Image& image, std::string app_id, int size, int scale)
 
 /* Gio::DesktopAppInfo
  *
- * Usually knowing the app_id, we can get a desktop app info from Gio
- * The filename is either the app_id + ".desktop" or lower_app_id + ".desktop" */
+ * Usually knowing the app_id, we can get a desktop app info from Gio The filename is either the app_id +
+ * ".desktop" or lower_app_id + ".desktop" */
 Icon get_from_desktop_app_info(std::string app_id)
 {
     Glib::RefPtr<Gio::DesktopAppInfo> app_info;
@@ -319,8 +319,8 @@ void set_image_from_icon(Gtk::Image& image,
 
     bool found_icon = false;
 
-    /* Wayfire sends a list of app-id's in space separated format, other compositors
-     * send a single app-id, but in any case this works fine */
+    /* Wayfire sends a list of app-id's in space separated format, other compositors send a single app-id, but
+     * in any case this works fine */
     auto display = image.get_display();
     while (stream >> app_id)
     {

@@ -35,8 +35,7 @@ class WfDockApp : public WayfireShellApp
 
     static WfDockApp& get();
 
-    /* Starts the program. get() is valid afterward the first (and the only)
-     * call to run() */
+    /* Starts the program. get() is valid afterward the first (and the only) call to run() */
     static void create(int argc, char **argv);
     virtual ~WfDockApp();
 

@@ -205,17 +205,22 @@ bool WayfireBatteryInfo::setup_dbus()
     return false;
 }
 
-void WayfireBatteryInfo::update_layout(){
-       if (config::is_horizontal){
-               button_box.set_orientation(Gtk::Orientation::HORIZONTAL);
-       }
-       else {
-               button_box.set_orientation(Gtk::Orientation::VERTICAL);
-       }
+void WayfireBatteryInfo::update_layout()
+{
+    std::string panel_position = WfOption<std::string>{"panel/position"};
+
+    if (panel_position == PANEL_POSITION_LEFT or panel_position == PANEL_POSITION_RIGHT)
+    {
+        button_box.set_orientation(Gtk::Orientation::VERTICAL);
+    } else
+    {
+        button_box.set_orientation(Gtk::Orientation::HORIZONTAL);
+    }
 }
 
-void WayfireBatteryInfo::handle_config_reload(){
-       update_layout();
+void WayfireBatteryInfo::handle_config_reload()
+{
+    update_layout();
 }
 
 // TODO: simplify config loading

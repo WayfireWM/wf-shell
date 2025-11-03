@@ -194,8 +194,8 @@ class WayfireToplevel::impl
     static constexpr int DRAG_THRESHOLD = 3;
     void on_drag_update(double _x, double y)
     {
-        /* Window was not just clicked, but also dragged. Ignore the next click,
-         * which is the one that happens when the drag gesture ends. */
+        /* Window was not just clicked, but also dragged. Ignore the next click, which is the one that happens
+         * when the drag gesture ends. */
         set_ignore_next_click();
 
         int x = _x + grab_start_x;
@@ -229,8 +229,7 @@ class WayfireToplevel::impl
             }
         }
 
-        /* Make sure the grabbed button always stays at the same relative position
-         * to the DnD position */
+        /* Make sure the grabbed button always stays at the same relative position to the DnD position */
         int target_x = x - grab_off_x;
         window_list->set_top_x(target_x);
     }
@@ -245,18 +244,16 @@ class WayfireToplevel::impl
         window_list->set_top_widget(nullptr);
         set_classes(state);
 
-        /* When a button is dropped after dnd, we ignore the unclick
-         * event so action doesn't happen in addition to dropping.
-         * If the drag ends and the unclick event happens outside
-         * the button, unset ignore_next_click or else the next
-         * click on the button won't cause action. */
+        /* When a button is dropped after dnd, we ignore the unclick event so action doesn't happen in
+         * addition to dropping. If the drag ends and the unclick event happens outside the button, unset
+         * ignore_next_click or else the next click on the button won't cause action. */
         if ((x < 0) || (x > width) || (y < 0) || (y > height))
         {
             unset_ignore_next_click();
         }
 
-        /* When dragging with touch or pen, we allow some small movement while
-         * still counting the action as button press as opposed to only dragging. */
+        /* When dragging with touch or pen, we allow some small movement while still counting the action as
+         * button press as opposed to only dragging. */
         if (!drag_exceeds_threshold)
         {
             unset_ignore_next_click();
@@ -314,8 +311,8 @@ class WayfireToplevel::impl
     {
         ignore_next_click = true;
 
-        /* Make sure that the view doesn't show clicked on animations while
-         * dragging (this happens only on some themes) */
+        /* Make sure that the view doesn't show clicked on animations while dragging (this happens only on
+         * some themes) */
         button.set_state_flags(Gtk::StateFlags::SELECTED |
             Gtk::StateFlags::DROP_ACTIVE | Gtk::StateFlags::PRELIGHT);
     }
@@ -329,8 +326,8 @@ class WayfireToplevel::impl
 
     void on_clicked()
     {
-        /* If the button was dragged, we don't want to register the click.
-         * Subsequent clicks should be handled though. */
+        /* If the button was dragged, we don't want to register the click. Subsequent clicks should be handled
+         * though. */
         if (ignore_next_click)
         {
             unset_ignore_next_click();
@@ -559,8 +556,7 @@ static void handle_toplevel_output_leave(void *data, toplevel_t, wl_output *outp
     impl->handle_output_leave(output);
 }
 
-/* wl_array_for_each isn't supported in C++, so we have to manually
- * get the data from wl_array, see:
+/* wl_array_for_each isn't supported in C++, so we have to manually get the data from wl_array, see:
  *
  * https://gitlab.freedesktop.org/wayland/wayland/issues/34 */
 template<class T>
@@ -681,8 +677,8 @@ std::string tolower(std::string str)
 
 /* Gio::DesktopAppInfo
  *
- * Usually knowing the app_id, we can get a desktop app info from Gio
- * The filename is either the app_id + ".desktop" or lower_app_id + ".desktop" */
+ * Usually knowing the app_id, we can get a desktop app info from Gio The filename is either the app_id +
+ * ".desktop" or lower_app_id + ".desktop" */
 Icon get_from_desktop_app_info(std::string app_id)
 {
     Glib::RefPtr<Gio::DesktopAppInfo> app_info;
@@ -724,8 +720,7 @@ Icon get_from_desktop_app_info(std::string app_id)
     return Icon{};
 }
 
-/* Second method: Just look up the built-in icon theme,
- * perhaps some icon can be found there */
+/* Second method: Just look up the built-in icon theme, perhaps some icon can be found there */
 
 void set_image_from_icon(Gtk::Image& image,
     std::string app_id_list, int size, int scale)
@@ -733,8 +728,8 @@ void set_image_from_icon(Gtk::Image& image,
     std::string app_id;
     std::istringstream stream(app_id_list);
 
-    /* Wayfire sends a list of app-id's in space separated format, other compositors
-     * send a single app-id, but in any case this works fine */
+    /* Wayfire sends a list of app-id's in space separated format, other compositors send a single app-id, but
+     * in any case this works fine */
     auto display = image.get_display();
     while (stream >> app_id)
     {
@@ -742,8 +737,8 @@ void set_image_from_icon(Gtk::Image& image,
         std::string icon_name = "unknown";
         if (!icon)
         {
-            /* Perhaps no desktop app info, but we might still be able to
-             * get an icon directly from the icon theme */
+            /* Perhaps no desktop app info, but we might still be able to get an icon directly from the icon
+             * theme */
             if (Gtk::IconTheme::get_for_display(display)->lookup_icon(app_id, size))
             {
                 icon_name = app_id;

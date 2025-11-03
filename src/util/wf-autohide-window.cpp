@@ -18,7 +18,6 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     autohide_opt{section + "/autohide"},
     autohide_show_delay{section + "/autohide_show_delay"},
     autohide_hide_delay{section + "/autohide_hide_delay"}
-
 {
     this->output = output;
     this->set_decorated(false);
@@ -101,46 +100,54 @@ wl_surface*WayfireAutohidingWindow::get_wl_surface() const
 /** Verify that position is correct and return a correct position */
 static std::string check_position(std::string position)
 {
-	if (position == WF_WINDOW_POSITION_TOP){
-		return WF_WINDOW_POSITION_TOP;
-	}
+    if (position == WF_WINDOW_POSITION_TOP)
+    {
+        return WF_WINDOW_POSITION_TOP;
+    }
 
-	if (position == WF_WINDOW_POSITION_BOTTOM){
-		return WF_WINDOW_POSITION_BOTTOM;
-	}
+    if (position == WF_WINDOW_POSITION_BOTTOM)
+    {
+        return WF_WINDOW_POSITION_BOTTOM;
+    }
 
-	if (position == WF_WINDOW_POSITION_LEFT){
-		return WF_WINDOW_POSITION_LEFT;
-	}
+    if (position == WF_WINDOW_POSITION_LEFT)
+    {
+        return WF_WINDOW_POSITION_LEFT;
+    }
 
-	if (position == WF_WINDOW_POSITION_RIGHT){
-		return WF_WINDOW_POSITION_RIGHT;
-	}
+    if (position == WF_WINDOW_POSITION_RIGHT)
+    {
+        return WF_WINDOW_POSITION_RIGHT;
+    }
 
-	std::cerr << "Bad position in config file, defaulting to top" << std::endl;
-	return WF_WINDOW_POSITION_TOP;
+    std::cerr << "Bad position in config file, defaulting to top" << std::endl;
+    return WF_WINDOW_POSITION_TOP;
 }
 
 static GtkLayerShellEdge get_anchor_edge(std::string position)
 {
-	position = check_position(position);
-	if (position == WF_WINDOW_POSITION_TOP){
-		return GTK_LAYER_SHELL_EDGE_TOP;
-	}
+    position = check_position(position);
+    if (position == WF_WINDOW_POSITION_TOP)
+    {
+        return GTK_LAYER_SHELL_EDGE_TOP;
+    }
 
-	if (position == WF_WINDOW_POSITION_BOTTOM){
-		return GTK_LAYER_SHELL_EDGE_BOTTOM;
-	}
+    if (position == WF_WINDOW_POSITION_BOTTOM)
+    {
+        return GTK_LAYER_SHELL_EDGE_BOTTOM;
+    }
 
-	if (position == WF_WINDOW_POSITION_LEFT){
-		return GTK_LAYER_SHELL_EDGE_LEFT;
-	}
+    if (position == WF_WINDOW_POSITION_LEFT)
+    {
+        return GTK_LAYER_SHELL_EDGE_LEFT;
+    }
 
-	if (position == WF_WINDOW_POSITION_RIGHT){
-		return GTK_LAYER_SHELL_EDGE_RIGHT;
-	}
+    if (position == WF_WINDOW_POSITION_RIGHT)
+    {
+        return GTK_LAYER_SHELL_EDGE_RIGHT;
+    }
 
-	assert(false); // not reached because check_position()
+    assert(false); // not reached because check_position()
 }
 
 void WayfireAutohidingWindow::m_show_uncertain()
@@ -177,12 +184,12 @@ void WayfireAutohidingWindow::update_position()
     /* When the position changes, show an animation from the new edge. */
     if (anchor == GTK_LAYER_SHELL_EDGE_LEFT or anchor == GTK_LAYER_SHELL_EDGE_LEFT)
     {
-		get_allocated_height_or_width = &Gtk::Widget::get_allocated_width;
-	}
-    else
+        get_allocated_height_or_width = &Gtk::Widget::get_allocated_width;
+    } else
     {
- 		get_allocated_height_or_width = &Gtk::Widget::get_allocated_height;
-	}
+        get_allocated_height_or_width = &Gtk::Widget::get_allocated_height;
+    }
+
     autohide_animation.animate(-(this->*get_allocated_height_or_width)(), 0);
     start_draw_timer();
     m_show_uncertain();
@@ -213,12 +220,11 @@ static zwf_hotspot_v2_listener hotspot_listener = {
 };
 
 /**
- * An autohide window needs 2 hotspots.
- * One of them is used to trigger autohide and is generally a tiny strip on the
- * edge of the output.
+ * An autohide window needs 2 hotspots. One of them is used to trigger autohide and is generally a tiny strip
+ * on the edge of the output.
  *
- * The other hotspot covers the whole window. It is used primarily to know when
- * the input leaves the window, in which case we need to hide the window again.
+ * The other hotspot covers the whole window. It is used primarily to know when the input leaves the window,
+ * in which case we need to hide the window again.
  */
 
 void WayfireAutohidingWindow::setup_hotspot()
@@ -227,14 +233,13 @@ void WayfireAutohidingWindow::setup_hotspot()
 
     auto position = check_position(this->position);
 
- 	int allocated;
+    int allocated;
     if (position == WF_WINDOW_POSITION_LEFT or position == WF_WINDOW_POSITION_RIGHT)
     {
-		allocated = this->get_allocated_width();
-    }
-    else
+        allocated = this->get_allocated_width();
+    } else
     {
-		allocated = this->get_allocated_height();
+        allocated = this->get_allocated_height();
     }
 
     if ((allocated == last_hotspot_size) && (edge_offset == last_edge_offset) && (position == last_position))
@@ -256,19 +261,17 @@ void WayfireAutohidingWindow::setup_hotspot()
     }
 
     uint32_t edge;
-    if (position == WF_WINDOW_POSITION_TOP){
+    if (position == WF_WINDOW_POSITION_TOP)
+    {
         edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP;
-    }
-
-    else if (position == WF_WINDOW_POSITION_BOTTOM){
+    } else if (position == WF_WINDOW_POSITION_BOTTOM)
+    {
         edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
-    }
-
-    else if (position == WF_WINDOW_POSITION_LEFT){
+    } else if (position == WF_WINDOW_POSITION_LEFT)
+    {
         edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_LEFT;
-    }
-
-    else if (position == WF_WINDOW_POSITION_RIGHT){
+    } else if (position == WF_WINDOW_POSITION_RIGHT)
+    {
         edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_RIGHT;
     }
 
@@ -478,12 +481,12 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
     /*
      *  if (should_grab_focus)
      *  {
-     *   // First, set exclusive mode to grab input
-     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+     *   // First, set exclusive mode to grab input gtk_layer_set_keyboard_mode(this->gobj(),
+     * GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
      *   wl_surface_commit(get_wl_surface());
      *
      *   // Next, allow releasing of focus when clicking outside of the panel
-     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+     * gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
      *  }
      */
     // TODO come back for intentional focus steal
