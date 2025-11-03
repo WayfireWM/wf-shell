@@ -130,10 +130,10 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
-        dy = parent->invert_scroll ? dy * -1 : dy; // for the same scrolling as volume widget, which we will
+        dy = parent->invert_scroll ? dy : dy * -1; // for the same scrolling as volume widget, which we will
                                                    // agree it is more intuitive for more people
         double change = 0;
-        const double SCROLL_MULT = 20; // corrects the scrolling to have the default scroll sensitivity as 1
+        const double SCROLL_MULT = 0.2; // corrects the scrolling to have the default scroll sensitivity as 1
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
         {
             // +- number of clicks.
@@ -405,11 +405,11 @@ void WayfireWireplumber::reload_config()
         face_choice = FaceChoice::LAST_CHANGE;
     }
 
-    auto left_click_gesture = Gtk::GestureClick::create();
+    static auto left_click_gesture = Gtk::GestureClick::create();
     left_click_gesture->set_button(1);
-    auto right_click_gesture = Gtk::GestureClick::create();
+    static auto right_click_gesture = Gtk::GestureClick::create();
     right_click_gesture->set_button(3);
-    auto middle_click_gesture = Gtk::GestureClick::create();
+    static auto middle_click_gesture = Gtk::GestureClick::create();
     middle_click_gesture->set_button(2);
 
     button->remove_controller(left_click_gesture);
@@ -572,10 +572,10 @@ void WayfireWireplumber::init(Gtk::Box *container)
             return false; // no face means we have nothing to change by scrolling
         }
 
-        dy = invert_scroll ? dy * -1 : dy; // for the same scrolling as volume widget, which we will agree it
+        dy = invert_scroll ? dy : dy * -1; // for the same scrolling as volume widget, which we will agree it
                                            // is more intuitive for more people
         double change = 0;
-        const double SCROLL_MULT = 20; // corrects the scrolling to have the default scroll sensitivity as 1
+        const double SCROLL_MULT = 0.2; // corrects the scrolling to have the default scroll sensitivity as 1
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
         {
             // +- number of clicks.

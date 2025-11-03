@@ -280,17 +280,16 @@
 		<default>last_change</default>
 		<desc>
 			<value>last_change</value>
-			<_name>Last changed volume<_name>
+			<_name>Last changed volume</_name>
 		</desc>
 		<desc>
 			<value>default_sink</value>
-			<_name>Default sink<_name>
+			<_name>Default sink</_name>
 		</desc>
 		<desc>
 			<value>default_source</value>
-			<_name>Default source<_name>
+			<_name>Default source</_name>
 		</desc>
-	</option>
 	</option>
 	<option name="wp_left_click_action" type="string">
 		<_short>Left click action</_short>
@@ -301,23 +300,7 @@
 		</desc>
 		<desc>
 			<value>show_face</value>
-			<_name>Show quick action target<_name>
-		</desc>
-	</option>
-	<option name="wp_right_click_action" type="string">
-		<_short>Right click action</_short>
-		<default>show_face</default>
-		<desc>
-			<value>show_mixer</value>
-			<_name>Show full mixer</_name>
-		</desc>
-		<desc>
-			<value>show_face</value>
-			<_name>Show quick action target<_name>
-		</desc>
-		<desc>
-			<value>mute_face</value>
-			<_name>Mute quick action target<_name>
+			<_name>Show quick action target</_name>
 		</desc>
 	</option>
 	<option name="wp_middle_click_action" type="string">
@@ -329,11 +312,27 @@
 		</desc>
 		<desc>
 			<value>show_face</value>
-			<_name>Show quick action target<_name>
+			<_name>Show quick action target</_name>
 		</desc>
 		<desc>
 			<value>mute_face</value>
-			<_name>Mute quick action target<_name>
+			<_name>Mute quick action target</_name>
+		</desc>
+	</option>
+	<option name="wp_right_click_action" type="string">
+		<_short>Right click action</_short>
+		<default>show_face</default>
+		<desc>
+			<value>show_mixer</value>
+			<_name>Show full mixer</_name>
+		</desc>
+		<desc>
+			<value>show_face</value>
+			<_name>Show quick action target</_name>
+		</desc>
+		<desc>
+			<value>mute_face</value>
+			<_name>Mute quick action target</_name>
 		</desc>
 	</option>
 	</group>
