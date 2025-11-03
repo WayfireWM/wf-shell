@@ -181,8 +181,8 @@ void WayfireAutohidingWindow::update_position()
         return;
     }
 
-    /* When the position changes, show an animation from the new edge. */
-    if (anchor == GTK_LAYER_SHELL_EDGE_LEFT or anchor == GTK_LAYER_SHELL_EDGE_LEFT)
+    // need different measurements depending on position
+    if (anchor == GTK_LAYER_SHELL_EDGE_LEFT or anchor == GTK_LAYER_SHELL_EDGE_RIGHT)
     {
         get_allocated_height_or_width = &Gtk::Widget::get_allocated_width;
     } else
@@ -190,6 +190,7 @@ void WayfireAutohidingWindow::update_position()
         get_allocated_height_or_width = &Gtk::Widget::get_allocated_height;
     }
 
+    /* When the position changes, show an animation from the new edge. */
     autohide_animation.animate(-(this->*get_allocated_height_or_width)(), 0);
     start_draw_timer();
     m_show_uncertain();
