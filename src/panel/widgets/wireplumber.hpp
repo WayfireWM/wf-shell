@@ -72,10 +72,6 @@ class WayfireWireplumber : public WayfireWidget
 
     WfOption<double> timeout{"panel/wp_display_timeout"};
 
-    void show_mixer_action();
-    void show_face_action();
-    void mute_face_action();
-
     void on_volume_value_changed();
     bool on_popover_timeout(int timer);
 

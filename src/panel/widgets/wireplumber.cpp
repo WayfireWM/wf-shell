@@ -346,43 +346,6 @@ void WayfireWireplumber::check_set_popover_timeout()
         &WayfireWireplumber::on_popover_timeout), 0), timeout * 1000);
 }
 
-void WayfireWireplumber::show_mixer_action()
-{
-    // lambdas for the click actions
-    std::cout << "here\n";
-    if (popover->get_child() != (Gtk::Widget*)&master_box)
-    {
-        popover->set_child(master_box);
-        popover_timeout.disconnect();
-    }
-}
-
-void WayfireWireplumber::show_face_action()
-{
-    std::cout << "there\n";
-    if (!face)
-    {
-        return; // no face means we have nothing to show
-    }
-
-    if (popover->get_child() != face)
-    {
-        popover->set_child(*face);
-        popover_timeout.disconnect();
-    }
-}
-
-void WayfireWireplumber::mute_face_action()
-{
-    std::cout << "everywhere\n";
-    if (!face)
-    {
-        return; // no face means we have nothing to change by clicking
-    }
-
-    face->button.set_active(!face->button.get_active());
-}
-
 void WayfireWireplumber::reload_config()
 {
     WfOption<std::string> str_face_choice{"panel/wp_face_choice"};
