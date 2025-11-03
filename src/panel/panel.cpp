@@ -9,7 +9,6 @@
 #include <iostream>
 #include <sstream>
 
-#include <map>
 #include <css-config.hpp>
 
 #include "panel.hpp"
@@ -27,7 +26,6 @@
 #ifdef HAVE_PULSE
     #include "widgets/volume.hpp"
 #endif
-#include "widgets/wireplumber.hpp"
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
 #include "widgets/tray/tray.hpp"
@@ -245,11 +243,6 @@ class WayfirePanel::impl
             std::cerr << "Built without pulse support, volume widget "
                          " is not available." << std::endl;
 #endif
-        }
-
-        if (name == "wireplumber")
-        {
-            return Widget(new WayfireWireplumber());
         }
 
         if (name == "window-list")
