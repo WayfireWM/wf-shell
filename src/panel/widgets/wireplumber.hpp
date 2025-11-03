@@ -116,7 +116,6 @@ class WayfireWireplumber : public WayfireWidget
      */
     void check_set_popover_timeout();
 
-    void update_layout();
     void reload_config();
     void on_config_reload();
 
