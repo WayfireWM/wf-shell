@@ -40,6 +40,10 @@ class WfWpControl : public Gtk::Grid
     double get_scale_target_value();
     void update_icon();
     bool is_muted();
+
+    void update_gestures();
+    void on_config_reload();
+
     WfWpControl *copy();
 };
 

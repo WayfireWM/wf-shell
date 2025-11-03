@@ -156,13 +156,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     add_controller(scroll_gesture);
 
-    auto middle_click_gesture = Gtk::GestureClick::create();
-    middle_click_gesture->set_button(2);
-    middle_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
-    {
-        button.set_active(!button.get_active());
-    });
-    add_controller(middle_click_gesture);
+    update_gestures();
 
     // initialise the values
     GVariant *v = NULL;
@@ -229,6 +223,44 @@ double WfWpControl::get_scale_target_value()
 bool WfWpControl::is_muted()
 {
     return button.get_active();
+}
+
+void WfWpControl::update_gestures()
+{
+    WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
+    WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
+
+    static auto right_click_mute = Gtk::GestureClick::create();
+    right_click_mute->set_button(3);
+    right_click_mute->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        button.set_active(!button.get_active());
+    });
+
+    static auto middle_click_mute = Gtk::GestureClick::create();
+    middle_click_mute->set_button(2);
+    middle_click_mute->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        button.set_active(!button.get_active());
+    });
+
+    remove_controller(right_click_mute);
+    remove_controller(middle_click_mute);
+
+    if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
+    {
+        add_controller(right_click_mute);
+    }
+
+    if ((std::string)str_wp_middle_click_action == (std::string)"mute_face")
+    {
+        add_controller(middle_click_mute);
+    }
+}
+
+void WfWpControl::on_config_reload()
+{
+    update_gestures();
 }
 
 WfWpControl*WfWpControl::copy()
@@ -505,6 +537,10 @@ void WayfireWireplumber::reload_config()
 void WayfireWireplumber::on_config_reload()
 {
     reload_config();
+    for (auto [name, control] : objects_to_controls)
+    {
+        control->on_config_reload();
+    }
 }
 
 void WayfireWireplumber::init(Gtk::Box *container)
@@ -829,12 +865,17 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 widget->update_icon();
             }
 
-            if (!widget->popup_on_change) return;
+            if (!widget->popup_on_change)
+            {
+                return;
+            }
+
             // if it was hidden, show it
             if (!widget->popover->is_visible())
             {
                 widget->button->set_active(true);
             }
+
             return;
             // in all cases, (re-)schedule hiding
             widget->check_set_popover_timeout();
