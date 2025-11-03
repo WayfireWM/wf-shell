@@ -829,12 +829,13 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 widget->update_icon();
             }
 
+            if (!widget->popup_on_change) return;
             // if it was hidden, show it
             if (!widget->popover->is_visible())
             {
                 widget->button->set_active(true);
             }
-
+            return;
             // in all cases, (re-)schedule hiding
             widget->check_set_popover_timeout();
         }
@@ -872,7 +873,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         }
 
         // if it was hidden, show it
-        if (!widget->popover->is_visible())
+        if (widget->popup_on_change && !widget->popover->is_visible())
         {
             widget->button->set_active(true);
         }

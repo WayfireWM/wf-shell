@@ -86,6 +86,7 @@ class WayfireWireplumber : public WayfireWidget
 
     WfOption<double> scroll_sensitivity{"panel/wp_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/wp_invert_scroll"};
+    WfOption<bool> popup_on_change{"panel/wp_popup_on_change"};
 
     FaceChoice face_choice;
     ClickAction right_click_action, middle_click_action;
