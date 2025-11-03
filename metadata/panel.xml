@@ -250,6 +250,13 @@
 	</group>
 	<group>
 	<_short>Wireplumber mixer</_short>
+	<option name="wp_popup_on_change" type="bool">
+		<_short>Pop up on change</_short>
+		<_long>
+			Wether to show a popup with the new values upon a change to the quick action target
+		</_long>
+		<default>true</default>
+	</option>
 	<option name="wp_display_timeout" type="double">
 		<_short>Display timeout</_short>
 		<default>2.5</default>
