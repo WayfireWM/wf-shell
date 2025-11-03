@@ -261,7 +261,7 @@ void WfWpControl::update_gestures()
     }
 }
 
-void WfWpControl::on_config_reload()
+void WfWpControl::handle_config_reload()
 {
     update_gestures();
 }
@@ -544,12 +544,12 @@ void WayfireWireplumber::reload_config()
     }
 }
 
-void WayfireWireplumber::on_config_reload()
+void WayfireWireplumber::handle_config_reload()
 {
     reload_config();
     for (auto [name, control] : objects_to_controls)
     {
-        control->on_config_reload();
+        control->handle_config_reload();
     }
 }
 

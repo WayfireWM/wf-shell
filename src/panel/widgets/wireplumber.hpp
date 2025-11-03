@@ -42,7 +42,7 @@ class WfWpControl : public Gtk::Grid
     bool is_muted();
 
     void update_gestures();
-    void on_config_reload();
+    void handle_config_reload();
 
     WfWpControl *copy();
 };
@@ -122,7 +122,7 @@ class WayfireWireplumber : public WayfireWidget
     void check_set_popover_timeout();
 
     void reload_config();
-    void on_config_reload();
+    void handle_config_reload();
 
     virtual ~WayfireWireplumber();
 };
