@@ -119,8 +119,8 @@ void Watcher::register_status_notifier_host(const Glib::RefPtr<Gio::DBus::Connec
                 Glib::Variant<std::tuple<Glib::ustring, std::map<Glib::ustring, Glib::VariantBase>,
                     std::vector<Glib::ustring>>>::
                 create({SNW_IFACE,
-                        {{"IsStatusNotifierHostRegistered", Glib::Variant<bool>::create(true)}},
-                        {}}));
+                    {{"IsStatusNotifierHostRegistered", Glib::Variant<bool>::create(true)}},
+                    {}}));
         }
     },
             [this] (const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name)
