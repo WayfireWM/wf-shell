@@ -40,4 +40,3 @@ void WayfireAnimatedScale::set_user_changed_callback(
 {
     this->user_changed_callback = callback;
 }
-

@@ -1,9 +1,6 @@
 #include <gtkmm.h>
-#include <iostream>
 #include <glibmm.h>
 #include "volume.hpp"
-#include "launchers.hpp"
-#include "gtk-utils.hpp"
 
 enum VolumeLevel
 {
@@ -157,8 +154,7 @@ void WayfireVolume::on_default_sink_changed()
     volume_scale.set_increments(max_norm * scroll_sensitivity,
         max_norm * scroll_sensitivity * 2);
 
-    /* Finally, update the displayed volume. However, do not show the
-     * popup */
+    /* Finally, update the displayed volume. However, do not show the popup */
     set_volume(gvc_mixer_stream_get_volume(gvc_stream), VOLUME_FLAG_NO_ACTION);
 }
 
