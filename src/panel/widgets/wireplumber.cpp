@@ -9,7 +9,6 @@
 #include "gtkmm/label.h"
 #include "gtkmm/separator.h"
 #include "gtkmm/togglebutton.h"
-#include "animated-scale.hpp"
 #include "widget.hpp"
 #include "wp/proxy-interfaces.h"
 #include "wp/proxy.h"
@@ -233,7 +232,7 @@ bool WfWpControl::is_muted()
     return button.get_active();
 }
 
-WfWpControl* WfWpControl::copy()
+WfWpControl *WfWpControl::copy()
 {
     WfWpControl *copy = new WfWpControl(object, parent);
     return copy;
@@ -292,7 +291,7 @@ void WfWpControlDevice::set_def_status_no_callbk(bool state)
     def_conn.block(false);
 }
 
-WfWpControlDevice* WfWpControlDevice::copy()
+WfWpControlDevice *WfWpControlDevice::copy()
 {
     WfWpControlDevice *copy = new WfWpControlDevice(object, parent);
     return copy;

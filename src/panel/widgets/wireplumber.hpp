@@ -40,7 +40,7 @@ class WfWpControl : public Gtk::Grid
     double get_scale_target_value();
     void update_icon();
     bool is_muted();
-    WfWpControl * copy();
+    WfWpControl *copy();
 };
 
 // todo : add a WfWpControlStream class that presents a dropdown to select which sink a stream goes to
@@ -57,7 +57,7 @@ class WfWpControlDevice : public WfWpControl
     WfWpControlDevice(WpPipewireObject *obj, WayfireWireplumber *parent_widget);
     Gtk::ToggleButton default_btn;
     void set_def_status_no_callbk(bool state);
-    WfWpControlDevice * copy();
+    WfWpControlDevice *copy();
 };
 
 class wayfire_config;
