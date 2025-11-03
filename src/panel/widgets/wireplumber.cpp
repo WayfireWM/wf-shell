@@ -390,20 +390,19 @@ void WayfireWireplumber::reload_config()
     if ((std::string)str_face_choice == (std::string)"last_change")
     {
         face_choice = FaceChoice::LAST_CHANGE;
-    }
-
-    if ((std::string)str_face_choice == (std::string)"default_sink")
+    } else if ((std::string)str_face_choice == (std::string)"default_sink")
     {
         face_choice = FaceChoice::DEFAULT_SINK;
         face = nullptr;
         WpCommon::on_default_nodes_changed(WpCommon::default_nodes_api, NULL);
-    }
-
-    if ((std::string)str_face_choice == (std::string)"default_source")
+    } else if ((std::string)str_face_choice == (std::string)"default_source")
     {
         face_choice = FaceChoice::DEFAULT_SOURCE;
         face = nullptr;
         WpCommon::on_default_nodes_changed(WpCommon::default_nodes_api, NULL);
+    } else // default if no match
+    {
+        face_choice = FaceChoice::LAST_CHANGE;
     }
 
     auto left_click_gesture = Gtk::GestureClick::create();
@@ -412,6 +411,10 @@ void WayfireWireplumber::reload_config()
     right_click_gesture->set_button(3);
     auto middle_click_gesture = Gtk::GestureClick::create();
     middle_click_gesture->set_button(2);
+
+    button->remove_controller(left_click_gesture);
+    button->remove_controller(right_click_gesture);
+    button->remove_controller(middle_click_gesture);
 
     auto show_mixer_action = [&] (int count, double x, double y)
     {
@@ -465,6 +468,7 @@ void WayfireWireplumber::reload_config()
     {
         left_click_gesture->signal_pressed().connect(
             [&] (int c, double x, double y) {popover->set_child(master_box);});
+        button->add_controller(left_click_gesture);
     }
 
     if ((std::string)str_wp_left_click_action == (std::string)"show_face")
@@ -479,16 +483,19 @@ void WayfireWireplumber::reload_config()
 
             popover->set_child(*face);
         });
+        button->add_controller(left_click_gesture);
     }
 
     if ((std::string)str_wp_right_click_action == (std::string)"show_mixer")
     {
         right_click_gesture->signal_pressed().connect(show_mixer_action);
+        button->add_controller(right_click_gesture);
     }
 
     if ((std::string)str_wp_right_click_action == (std::string)"show_face")
     {
         right_click_gesture->signal_pressed().connect(show_face_action);
+        button->add_controller(right_click_gesture);
     }
 
     if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
@@ -503,16 +510,19 @@ void WayfireWireplumber::reload_config()
 
             face->button.set_active(!face->button.get_active());
         });
+        button->add_controller(right_click_gesture);
     }
 
     if ((std::string)str_wp_middle_click_action == (std::string)"show_mixer")
     {
         middle_click_gesture->signal_pressed().connect(show_mixer_action);
+        button->add_controller(middle_click_gesture);
     }
 
     if ((std::string)str_wp_middle_click_action == (std::string)"show_face")
     {
         middle_click_gesture->signal_pressed().connect(show_face_action);
+        button->add_controller(middle_click_gesture);
     }
 
     if ((std::string)str_wp_middle_click_action == (std::string)"mute_face")
@@ -527,11 +537,8 @@ void WayfireWireplumber::reload_config()
 
             face->button.set_active(!face->button.get_active());
         });
+        button->add_controller(middle_click_gesture);
     }
-
-    button->add_controller(left_click_gesture);
-    button->add_controller(right_click_gesture);
-    button->add_controller(middle_click_gesture);
 }
 
 void WayfireWireplumber::on_config_reload()
