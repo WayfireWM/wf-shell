@@ -148,14 +148,9 @@ class WfDock::impl
 
     void add_child(Gtk::Widget& widget)
     {
+        // create a box if the last one is full or there is none
         if (((int)(out_box.get_children().size()) == 0) ||
-            ((int)((out_box.*first_or_last_child)()->get_children().size()) == entries_per_line)) // create a
-                                                                                                  // new box
-                                                                                                  // if the
-                                                                                                  // last one
-                                                                                                  // is full,
-                                                                                                  // or there
-                                                                                                  // is none
+            ((int)((out_box.*first_or_last_child)()->get_children().size()) == entries_per_line))
         {
             Gtk::Box new_box;
             prepare_new_layer(new_box);
