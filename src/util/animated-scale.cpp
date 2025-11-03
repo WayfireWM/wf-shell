@@ -1,7 +1,5 @@
-#include <iostream>
 #include <glibmm.h>
-#include "gtk-utils.hpp"
-#include "animated_scale.hpp"
+#include "animated-scale.hpp"
 
 WayfireAnimatedScale::WayfireAnimatedScale()
 {
