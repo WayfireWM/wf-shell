@@ -230,12 +230,15 @@ void WfWpControl::update_gestures()
     WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
     WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
 
-    static auto right_click_mute = Gtk::GestureClick::create();
-    right_click_mute->set_button(3);
-    right_click_mute->signal_pressed().connect([=] (int count, double x, double y)
+    auto mute_action =
+        [&] (int count, double x, double y)
     {
         button.set_active(!button.get_active());
-    });
+    };
+
+    static auto right_click_mute = Gtk::GestureClick::create();
+    right_click_mute->set_button(3);
+    right_click_mute->signal_pressed().connect(mute_action);
 
     static auto middle_click_mute = Gtk::GestureClick::create();
     middle_click_mute->set_button(2);
