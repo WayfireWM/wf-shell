@@ -35,7 +35,7 @@ class WfDock::impl
 
     void (Gtk::Box::*ap_or_pre_pend)(Gtk::Widget&); // pointer to Gtk::Box::prepend or Gtk::Box::append,
                                                     // updated by update_layout
-    Gtk::Widget*(Gtk::Widget::*first_or_last_child)();// same, for get_first_child and get_last_child
+    Gtk::Widget*(Gtk::Widget::*first_or_last_child)(); // same, for get_first_child and get_last_child
     bool reverse_iteration;
 
   public:

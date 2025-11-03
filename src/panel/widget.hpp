@@ -26,8 +26,7 @@ class WayfireWidget
     virtual void init(Gtk::Box *container) = 0;
 
     virtual void handle_config_reload()
-    {
-    }
+    {}
 
     virtual ~WayfireWidget()
     {}

@@ -58,12 +58,10 @@ class WayfireShellApp
     virtual bool parse_cssfile(const Glib::ustring & option_name,
         const Glib::ustring & value, bool has_value);
     virtual void handle_new_output(WayfireOutput *output)
-    {
-    }
+    {}
 
     virtual void handle_output_removed(WayfireOutput *output)
-    {
-    }
+    {}
 
   public:
     int inotify_fd;
@@ -79,8 +77,7 @@ class WayfireShellApp
     virtual void run(int argc, char **argv);
 
     virtual void on_config_reload()
-    {
-    }
+    {}
 
     void on_css_reload();
     void clear_css_rules();
