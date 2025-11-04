@@ -285,9 +285,16 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
     is_def_icon.set_from_icon_name("emblem-default");
     default_btn.set_child(is_def_icon);
 
+    // we are not using ToggleButton groups because on_default_nodes_changed will be called anyway to set the status of all devices
     def_conn = default_btn.signal_clicked().connect(
-        [proxy] ()
+        [this, proxy] ()
     {
+        // keep the button down when it is selected to prevent inconsistency of visuals with actual status
+        if (default_btn.get_active() == false)
+        {
+            set_def_status_no_callbk(true);
+            return;
+        }
         const gchar *media_class = wp_pipewire_object_get_property(
             WP_PIPEWIRE_OBJECT(proxy),
             PW_KEY_MEDIA_CLASS);
