@@ -53,7 +53,6 @@ class WfWpControl : public Gtk::Grid
 class WfWpControlDevice : public WfWpControl
 {
   private:
-    // todo : add port stuff
     sigc::connection def_conn;
     Gtk::Image is_def_icon;
 
