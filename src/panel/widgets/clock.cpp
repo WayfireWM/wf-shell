@@ -1,5 +1,4 @@
 #include <glibmm.h>
-#include <iostream>
 #include "clock.hpp"
 
 void WayfireClock::init(Gtk::Box *container)
@@ -8,7 +7,7 @@ void WayfireClock::init(Gtk::Box *container)
     button->get_style_context()->add_class("clock");
     button->set_child(label);
     button->show();
-    label.set_justify(Gtk::JUSTIFY_CENTER);
+    label.set_justify(Gtk::Justification::CENTER);
     label.show();
 
     update_label();
