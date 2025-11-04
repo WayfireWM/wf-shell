@@ -15,7 +15,6 @@ extern "C" {
 #include <map>
 
 enum class FaceChoice;
-enum class ClickAction;
 
 class WayfireWireplumber;
 

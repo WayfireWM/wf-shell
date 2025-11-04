@@ -33,13 +33,6 @@ enum class FaceChoice
     DEFAULT_SOURCE,
 };
 
-enum class ClickAction
-{
-    SHOW_MIXER,
-    SHOW_FACE,
-    MUTE_FACE,
-};
-
 static const gchar *DEFAULT_NODE_MEDIA_CLASSES[] = {
     "Audio/Sink",
     "Audio/Source",
@@ -285,7 +278,8 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
     is_def_icon.set_from_icon_name("emblem-default");
     default_btn.set_child(is_def_icon);
 
-    // we are not using ToggleButton groups because on_default_nodes_changed will be called anyway to set the status of all devices
+    // we are not using ToggleButton groups because on_default_nodes_changed
+    // will be called anyway to set the status of all devices
     def_conn = default_btn.signal_clicked().connect(
         [this, proxy] ()
     {
@@ -850,37 +844,27 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         control->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
         control->update_icon();
 
-        if ((widget->face_choice == FaceChoice::DEFAULT_SINK)
-            ||
-            (widget->face_choice == FaceChoice::DEFAULT_SOURCE))
+        // correct the face
+        // ensure the control in the popover is the one that was updated
+        if (
+            control->object
+            !=
+            ((WfWpControl*)(widget->popover->get_child()))->object)
         {
-            if (
-                control->object
-                !=
-                ((WfWpControl*)(widget->popover->get_child()))->object)
+            // in the other two cases, the face choice, if existant, is already in the face
+            if (widget->face_choice == FaceChoice::LAST_CHANGE)
             {
-                widget->face->set_btn_status_no_callbk(mute);
-                widget->face->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
-                widget->update_icon();
+                widget->face = control->copy();
             }
-
-            if (!widget->popup_on_change)
-            {
-                return;
-            }
-
-            // if it was hidden, show it
-            if (!widget->popover->is_visible())
-            {
-                widget->button->set_active(true);
-            }
-
-            return;
-            // in all cases, (re-)schedule hiding
-            widget->check_set_popover_timeout();
+        } else
+        {
+            // update the face’s values ; note the WfWpControl constructor already syncs the values
+            widget->face->set_btn_status_no_callbk(mute);
+            widget->face->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
         }
+        widget->update_icon();
 
-        // if we have the *full* mixer in the popover
+        // if we have the full mixer in the popover
         if ((Gtk::Widget*)&(widget->master_box)
             ==
             (Gtk::Widget*)widget->popover->get_child())
@@ -891,25 +875,8 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 return;
             }
 
-            // if hidden, replace by the popover
-            widget->face = control->copy();
+            // if hidden, replace by the face
             widget->popover->set_child(*widget->face);
-        }
-
-        // ensure the control in the popover is the one that was updated
-        if (
-            control->object
-            !=
-            ((WfWpControl*)(widget->popover->get_child()))->object)
-        {
-            widget->face = control->copy();
-            widget->popover->set_child(*widget->face);
-        } else
-        {
-            // update the face’s values ; else because the WfWpControl constructor already syncs the values
-            widget->face->set_btn_status_no_callbk(mute);
-            widget->face->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
-            widget->update_icon();
         }
 
         // if it was hidden, show it
