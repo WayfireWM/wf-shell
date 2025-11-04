@@ -157,14 +157,8 @@ class WayfirePanel::impl
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
 
-        window->set_default_size(minimal_panel_width, minimal_panel_height); // addition of minimal panel
-                                                                             // width for the panel on the
-                                                                             // left or right instead of
-                                                                             // reusing m. p. height allows
-                                                                             // for the inclusion of
-                                                                             // non-stretched bar (like the
-                                                                             // gnome dock, or the kde setting
-                                                                             // to let the bar contract)
+        window->set_default_size(minimal_panel_width, minimal_panel_height);
+
         window->get_style_context()->add_class("wf-panel");
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
@@ -175,9 +169,6 @@ class WayfirePanel::impl
 
         init_widgets();
         init_layout();
-
-        // window->signal_close_request().connect(
-        // sigc::mem_fun(*this, &WayfirePanel::impl::on_delete));
     }
 
     void init_layout()

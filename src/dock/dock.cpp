@@ -20,6 +20,7 @@ class WfDock::impl
     wl_surface *_wl_surface;
     Gtk::Box out_box;
     Gtk::Box box;
+    // for having multiple layers in the dock (max_per_line setting)
     // flowbox doesn’t really cut it unfortunately. can’t center the inner widgets and can’t complete the
     // down/right row first
     // listbox neither, since it can’t even be oriented
@@ -35,7 +36,7 @@ class WfDock::impl
 
     void (Gtk::Box::*ap_or_pre_pend)(Gtk::Widget&); // pointer to Gtk::Box::prepend or Gtk::Box::append,
                                                     // updated by update_layout
-    Gtk::Widget*(Gtk::Widget::*first_or_last_child)(); // same, for get_first_child and get_last_child
+    Gtk::Widget*(Gtk::Widget::*first_or_last_child)(); // similar, for get_first_child and get_last_child
     bool reverse_iteration;
 
   public:
@@ -124,6 +125,7 @@ class WfDock::impl
             reverse_iteration   = false;
         }
 
+        // again, goes with fallback being top and horizontal
         std::string widget_rotation = "horizontal";
         if (((std::string)rotation == ROTATION_LEFT) || ((std::string)rotation == "match") &&
             ((std::string)position == "right"))
