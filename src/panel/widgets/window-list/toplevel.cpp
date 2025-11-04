@@ -68,6 +68,7 @@ class WayfireToplevel::impl
         button_contents.set_spacing(5);
         button.set_child(button_contents);
         button.set_tooltip_text("none");
+        set_state(0); // will set the appropriate button style
 
         label.set_ellipsize(Pango::EllipsizeMode::END);
         label.set_hexpand(true);
