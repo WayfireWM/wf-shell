@@ -21,7 +21,8 @@ class WayfireWireplumber;
 
 class WfWpControl : public Gtk::Grid
 {
-  // Custom grid to facilitate handling
+    // Custom grid to facilitate handling
+
   protected:
     WayfireAnimatedScale scale;
     Gtk::Label label;
