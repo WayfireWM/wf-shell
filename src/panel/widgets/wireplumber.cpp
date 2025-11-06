@@ -1,3 +1,4 @@
+#include <fontconfig/fontconfig.h>
 #include <gtkmm.h>
 #include <iostream>
 #include <glibmm.h>
@@ -224,7 +225,7 @@ void WfWpControl::update_gestures()
     WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
     WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
 
-    auto mute_action =
+    static auto mute_action =
         [&] (int count, double x, double y)
     {
         button.set_active(!button.get_active());
@@ -380,12 +381,24 @@ void WayfireWireplumber::reload_config()
     static auto middle_click_gesture = Gtk::GestureClick::create();
     middle_click_gesture->set_button(2);
 
-    button->remove_controller(left_click_gesture);
-    button->remove_controller(right_click_gesture);
-    button->remove_controller(middle_click_gesture);
-
-    auto show_mixer_action = [&] (int count, double x, double y)
+    // run only the first time around
+    static auto done = false;
+    if (done)
     {
+        done = true;
+        button->add_controller(left_click_gesture);
+        button->add_controller(right_click_gesture);
+        button->add_controller(middle_click_gesture);
+    }
+
+    static auto dud = [](int c, double x, double y){};
+    left_click_gesture->signal_pressed().connect(dud); // dud
+    middle_click_gesture->signal_pressed().connect(dud); // dud
+    right_click_gesture->signal_pressed().connect(dud); // dud
+
+    static auto show_mixer_action = [&] (int c, double x, double y)
+    {
+        std::cout << "here\n";
         if ((popover->get_child() == (Gtk::Widget*)&master_box) && popover->is_visible())
         {
             popover->popdown();
@@ -404,8 +417,9 @@ void WayfireWireplumber::reload_config()
         }
     };
 
-    auto show_face_action = [&] (int count, double x, double y)
+    static auto show_face_action = [&] (int c, double x, double y)
     {
+        std::cout << "there\n";
         if (!face)
         {
             return; // no face means we have nothing to show
@@ -429,6 +443,18 @@ void WayfireWireplumber::reload_config()
         }
     };
 
+    static auto mute_action = [&] (int c, double x, double y)
+        {
+        std::cout << "everywhere\n";
+            if (!face)
+            {
+                return; // no face means we have nothing to change by clicking
+            }
+
+            face->button.set_active(!face->button.get_active());
+        };
+
+
     // the left click case is a bit special, since it’s supposed to show the popover.
     // (this is also why the mute action is not available for the left click)
     // this is not the prettiest, but the alternative is way worse
@@ -443,10 +469,10 @@ void WayfireWireplumber::reload_config()
                 // popdown so that when the click is processed, the popover is down, and thus pops up
                 // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
                 // how to make it better
-                popover->popdown();
+                popover->signal_hide().emission_stop();
+                // popover->popdown();
             }
         });
-        button->add_controller(left_click_gesture);
     }
 
     if ((std::string)str_wp_left_click_action == (std::string)"show_face")
@@ -465,64 +491,40 @@ void WayfireWireplumber::reload_config()
                 // popdown so that when the click is processed, the popover is down, and thus pops up
                 // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
                 // how to make it better
-                popover->popdown();
+                popover->signal_hide().emission_stop();
+                // popover->popdown();
             }
         });
-        button->add_controller(left_click_gesture);
     }
 
     if ((std::string)str_wp_right_click_action == (std::string)"show_mixer")
     {
         right_click_gesture->signal_pressed().connect(show_mixer_action);
-        button->add_controller(right_click_gesture);
     }
 
     if ((std::string)str_wp_right_click_action == (std::string)"show_face")
     {
         right_click_gesture->signal_pressed().connect(show_face_action);
-        button->add_controller(right_click_gesture);
     }
 
     if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
     {
-        right_click_gesture->signal_pressed().connect(
-            [&] (int count, double x, double y)
-        {
-            if (!face)
-            {
-                return; // no face means we have nothing to change by clicking
-            }
-
-            face->button.set_active(!face->button.get_active());
-        });
-        button->add_controller(right_click_gesture);
+        right_click_gesture->signal_pressed().connect(mute_action);
     }
 
     if ((std::string)str_wp_middle_click_action == (std::string)"show_mixer")
     {
         middle_click_gesture->signal_pressed().connect(show_mixer_action);
-        button->add_controller(middle_click_gesture);
     }
 
     if ((std::string)str_wp_middle_click_action == (std::string)"show_face")
     {
         middle_click_gesture->signal_pressed().connect(show_face_action);
-        button->add_controller(middle_click_gesture);
     }
 
     if ((std::string)str_wp_middle_click_action == (std::string)"mute_face")
     {
-        middle_click_gesture->signal_pressed().connect(
-            [&] (int count, double x, double y)
-        {
-            if (!face)
-            {
-                return; // no face means we have nothing to change by clicking
-            }
-
-            face->button.set_active(!face->button.get_active());
-        });
-        button->add_controller(middle_click_gesture);
+        middle_click_gesture->signal_pressed().connect(mute_action);
     }
 }
 
@@ -618,7 +620,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     button->set_child(main_image);
 
     /*
-     *   if the core is already set, we are another widget, wether on another monitor or on the same wf-panel.
+     * If the core is already set, we are another widget, wether on another monitor or on the same wf-panel.
      * We re-use the core, manager and all other objects
      */
 
@@ -805,6 +807,10 @@ void WpCommon::on_object_added(WpObjectManager *manager, gpointer object, gpoint
 
         widget->objects_to_controls.insert({obj, control});
         which_box->append((Gtk::Widget&)*control);
+        // try to not be faceless
+        if (!widget->face){
+            widget->face = control->copy();
+        }
     }
 }
 
@@ -813,7 +819,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
     // update the visual of the appropriate WfWpControl according to external changes
 
     GVariant *v = NULL;
-    // ask the mixer-api for the up-to-date data
+    // query the new data
     g_signal_emit_by_name(WpCommon::mixer_api, "get-volume", id, &v);
     if (!v)
     {
@@ -897,6 +903,7 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
 
     for (guint32 i = 0; i < G_N_ELEMENTS(DEFAULT_NODE_MEDIA_CLASSES); i++)
     {
+        // query the new data
         g_signal_emit_by_name(default_nodes_api, "get-default-node", DEFAULT_NODE_MEDIA_CLASSES[i], &id);
         if (id != SPA_ID_INVALID)
         {
@@ -935,18 +942,17 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
                 ctrl->set_def_status_no_callbk(false);
             }
 
-            if ((widget->face_choice == FaceChoice::DEFAULT_SINK)
+            if ( // if the settings call for it, refresh the face
+                (
+                    ((widget->face_choice == FaceChoice::DEFAULT_SINK) && (g_strcmp0(type, "Audio/Sink") == 0))
+                    ||
+                    ((widget->face_choice == FaceChoice::DEFAULT_SOURCE) && (g_strcmp0(type, "Audio/Source") == 0))
+                )
                 &&
-                (g_strcmp0(type, "Audio/Sink") == 0))
+                widget->face->object == ctrl->object
+            )
             {
-                widget->face = ctrl;
-            }
-
-            if ((widget->face_choice == FaceChoice::DEFAULT_SOURCE)
-                &&
-                (g_strcmp0(type, "Audio/Source") == 0))
-            {
-                widget->face = ctrl;
+                widget->face = ctrl->copy();
             }
         }
     }

@@ -20,8 +20,7 @@ class WayfireWireplumber;
 
 class WfWpControl : public Gtk::Grid
 {
-    // Custom grid to facilitate handling
-
+  // Custom grid to facilitate handling
   protected:
     WayfireAnimatedScale scale;
     Gtk::Label label;
@@ -87,7 +86,6 @@ class WayfireWireplumber : public WayfireWidget
     WfOption<bool> popup_on_change{"panel/wp_popup_on_change"};
 
     FaceChoice face_choice;
-    ClickAction right_click_action, middle_click_action;
 
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::Popover *popover;
