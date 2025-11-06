@@ -29,6 +29,9 @@ class WfWpControl : public Gtk::Grid
     Gtk::Image volume_icon;
     sigc::connection mute_conn;
     WayfireWireplumber *parent;
+    std::shared_ptr<Gtk::GestureClick> middle_click_mute, right_click_mute;
+    sigc::connection middle_conn, right_conn;
+    bool gestures_initialised = false;
 
   public:
     WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widget);
@@ -79,6 +82,10 @@ class WayfireWireplumber : public WayfireWidget
     gulong notify_default_sink_changed = 0;
     sigc::connection popover_timeout;
     sigc::connection volume_changed_signal;
+
+    bool gestures_initialised = false;
+    std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
+    sigc::connection left_conn, middle_conn, right_conn;
 
   public:
     void init(Gtk::Box *container) override;

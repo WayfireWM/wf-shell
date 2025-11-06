@@ -227,34 +227,33 @@ void WfWpControl::update_gestures()
     WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
     WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
 
-    static auto mute_action =
+    auto mute_action =
         [&] (int count, double x, double y)
     {
         button.set_active(!button.get_active());
     };
 
-    static auto right_click_mute = Gtk::GestureClick::create();
-    right_click_mute->set_button(3);
-    right_click_mute->signal_pressed().connect(mute_action);
-
-    static auto middle_click_mute = Gtk::GestureClick::create();
-    middle_click_mute->set_button(2);
-    middle_click_mute->signal_pressed().connect([=] (int count, double x, double y)
-    {
-        button.set_active(!button.get_active());
-    });
-
-    remove_controller(right_click_mute);
-    remove_controller(middle_click_mute);
-
-    if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
-    {
+    if (!gestures_initialised){
+        middle_click_mute = Gtk::GestureClick::create();
+        right_click_mute = Gtk::GestureClick::create();
+        middle_click_mute->set_button(2);
+        right_click_mute->set_button(3);
+        add_controller(middle_click_mute);
         add_controller(right_click_mute);
+    } else
+    {
+        middle_conn.disconnect();
+        right_conn.disconnect();
     }
 
     if ((std::string)str_wp_middle_click_action == (std::string)"mute_face")
     {
-        add_controller(middle_click_mute);
+        middle_conn = middle_click_mute->signal_pressed().connect(mute_action);
+    }
+
+    if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
+    {
+        right_conn = right_click_mute->signal_pressed().connect(mute_action);
     }
 }
 
@@ -377,14 +376,10 @@ void WayfireWireplumber::reload_config()
         face_choice = FaceChoice::LAST_CHANGE;
     }
 
-    static std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
-    static sigc::connection left_conn, middle_conn, right_conn;
-
     // run only the first time around
-    static auto done = false;
-    if (!done)
+    if (!gestures_initialised)
     {
-        done = true;
+        gestures_initialised = true;
         left_click_gesture   = Gtk::GestureClick::create();
         right_click_gesture  = Gtk::GestureClick::create();
         middle_click_gesture = Gtk::GestureClick::create();
@@ -401,9 +396,8 @@ void WayfireWireplumber::reload_config()
         right_conn.disconnect();
     }
 
-    static auto show_mixer_action = [&] (int c, double x, double y)
+    auto show_mixer_action = [&] (int c, double x, double y)
     {
-        std::cout << "here\n";
         if ((popover->get_child() == (Gtk::Widget*)&master_box) && popover->is_visible())
         {
             popover->popdown();
@@ -422,9 +416,8 @@ void WayfireWireplumber::reload_config()
         }
     };
 
-    static auto show_face_action = [&] (int c, double x, double y)
+    auto show_face_action = [&] (int c, double x, double y)
     {
-        std::cout << "there\n";
         if (!face)
         {
             return; // no face means we have nothing to show
@@ -448,9 +441,8 @@ void WayfireWireplumber::reload_config()
         }
     };
 
-    static auto mute_action = [&] (int c, double x, double y)
+    auto mute_action = [&] (int c, double x, double y)
     {
-        std::cout << "everywhere\n";
         if (!face)
         {
             return; // no face means we have nothing to change by clicking
