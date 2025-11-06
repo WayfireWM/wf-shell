@@ -10,9 +10,11 @@
 #include "gtkmm/label.h"
 #include "gtkmm/separator.h"
 #include "gtkmm/togglebutton.h"
+#include "sigc++/connection.h"
 #include "wp/proxy-interfaces.h"
 #include "wp/proxy.h"
 
+#include <memory>
 #include <pipewire/keys.h>
 
 #include "wireplumber.hpp"
@@ -374,27 +376,29 @@ void WayfireWireplumber::reload_config()
         face_choice = FaceChoice::LAST_CHANGE;
     }
 
-    static auto left_click_gesture = Gtk::GestureClick::create();
-    left_click_gesture->set_button(1);
-    static auto right_click_gesture = Gtk::GestureClick::create();
-    right_click_gesture->set_button(3);
-    static auto middle_click_gesture = Gtk::GestureClick::create();
-    middle_click_gesture->set_button(2);
+    static std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
+    static sigc::connection left_conn, middle_conn, right_conn;
 
     // run only the first time around
     static auto done = false;
-    if (done)
+    if (!done)
     {
         done = true;
+        left_click_gesture = Gtk::GestureClick::create();
+        right_click_gesture = Gtk::GestureClick::create();
+        middle_click_gesture = Gtk::GestureClick::create();
+        left_click_gesture->set_button(1);
+        middle_click_gesture->set_button(2);
+        right_click_gesture->set_button(3);
         button->add_controller(left_click_gesture);
         button->add_controller(right_click_gesture);
         button->add_controller(middle_click_gesture);
     }
-
-    static auto dud = [](int c, double x, double y){};
-    left_click_gesture->signal_pressed().connect(dud); // dud
-    middle_click_gesture->signal_pressed().connect(dud); // dud
-    right_click_gesture->signal_pressed().connect(dud); // dud
+    else {
+        left_conn.disconnect();
+        middle_conn.disconnect();
+        right_conn.disconnect();
+    }
 
     static auto show_mixer_action = [&] (int c, double x, double y)
     {
@@ -407,7 +411,7 @@ void WayfireWireplumber::reload_config()
 
         if (!popover->is_visible())
         {
-            popover->popup();
+            button->set_active(true);
         }
 
         if (popover->get_child() != (Gtk::Widget*)&master_box)
@@ -433,7 +437,7 @@ void WayfireWireplumber::reload_config()
 
         if (!popover->is_visible())
         {
-            popover->popup();
+            button->set_active(true);
         }
 
         if (popover->get_child() != face)
@@ -460,7 +464,7 @@ void WayfireWireplumber::reload_config()
     // this is not the prettiest, but the alternative is way worse
     if ((std::string)str_wp_left_click_action == (std::string)"show_mixer")
     {
-        left_click_gesture->signal_pressed().connect(
+        left_conn = left_click_gesture->signal_pressed().connect(
             [&] (int c, double x, double y)
         {
             if (popover->get_child() != (Gtk::Widget*)&master_box)
@@ -469,15 +473,14 @@ void WayfireWireplumber::reload_config()
                 // popdown so that when the click is processed, the popover is down, and thus pops up
                 // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
                 // how to make it better
-                popover->signal_hide().emission_stop();
-                // popover->popdown();
+                button->set_active(false);
             }
         });
     }
 
     if ((std::string)str_wp_left_click_action == (std::string)"show_face")
     {
-        left_click_gesture->signal_pressed().connect(
+        left_conn = left_click_gesture->signal_pressed().connect(
             [&] (int c, double x, double y)
         {
             if (!face)
@@ -491,40 +494,40 @@ void WayfireWireplumber::reload_config()
                 // popdown so that when the click is processed, the popover is down, and thus pops up
                 // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
                 // how to make it better
-                popover->signal_hide().emission_stop();
-                // popover->popdown();
+                button->signal_activate().emission_stop();
+                button->set_active(false);
             }
         });
     }
 
-    if ((std::string)str_wp_right_click_action == (std::string)"show_mixer")
-    {
-        right_click_gesture->signal_pressed().connect(show_mixer_action);
-    }
-
-    if ((std::string)str_wp_right_click_action == (std::string)"show_face")
-    {
-        right_click_gesture->signal_pressed().connect(show_face_action);
-    }
-
-    if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
-    {
-        right_click_gesture->signal_pressed().connect(mute_action);
-    }
-
     if ((std::string)str_wp_middle_click_action == (std::string)"show_mixer")
     {
-        middle_click_gesture->signal_pressed().connect(show_mixer_action);
+        middle_conn = middle_click_gesture->signal_pressed().connect(show_mixer_action);
     }
 
     if ((std::string)str_wp_middle_click_action == (std::string)"show_face")
     {
-        middle_click_gesture->signal_pressed().connect(show_face_action);
+        middle_conn = middle_click_gesture->signal_pressed().connect(show_face_action);
     }
 
     if ((std::string)str_wp_middle_click_action == (std::string)"mute_face")
     {
-        middle_click_gesture->signal_pressed().connect(mute_action);
+        middle_conn = middle_click_gesture->signal_pressed().connect(mute_action);
+    }
+
+    if ((std::string)str_wp_right_click_action == (std::string)"show_mixer")
+    {
+        right_conn = right_click_gesture->signal_pressed().connect(show_mixer_action);
+    }
+
+    if ((std::string)str_wp_right_click_action == (std::string)"show_face")
+    {
+        right_conn = right_click_gesture->signal_pressed().connect(show_face_action);
+    }
+
+    if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
+    {
+        right_conn = right_click_gesture->signal_pressed().connect(mute_action);
     }
 }
 
