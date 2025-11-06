@@ -486,7 +486,6 @@ void WayfireWireplumber::reload_config()
                 // popdown so that when the click is processed, the popover is down, and thus pops up
                 // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
                 // how to make it better
-                button->signal_activate().emission_stop();
                 button->set_active(false);
             }
         });
