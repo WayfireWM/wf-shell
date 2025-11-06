@@ -233,9 +233,10 @@ void WfWpControl::update_gestures()
         button.set_active(!button.get_active());
     };
 
-    if (!gestures_initialised){
+    if (!gestures_initialised)
+    {
         middle_click_mute = Gtk::GestureClick::create();
-        right_click_mute = Gtk::GestureClick::create();
+        right_click_mute  = Gtk::GestureClick::create();
         middle_click_mute->set_button(2);
         right_click_mute->set_button(3);
         add_controller(middle_click_mute);
