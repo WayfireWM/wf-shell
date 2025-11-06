@@ -292,6 +292,7 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
             set_def_status_no_callbk(true);
             return;
         }
+
         const gchar *media_class = wp_pipewire_object_get_property(
             WP_PIPEWIRE_OBJECT(proxy),
             PW_KEY_MEDIA_CLASS);
@@ -384,8 +385,8 @@ void WayfireWireplumber::reload_config()
     if (!done)
     {
         done = true;
-        left_click_gesture = Gtk::GestureClick::create();
-        right_click_gesture = Gtk::GestureClick::create();
+        left_click_gesture   = Gtk::GestureClick::create();
+        right_click_gesture  = Gtk::GestureClick::create();
         middle_click_gesture = Gtk::GestureClick::create();
         left_click_gesture->set_button(1);
         middle_click_gesture->set_button(2);
@@ -393,8 +394,8 @@ void WayfireWireplumber::reload_config()
         button->add_controller(left_click_gesture);
         button->add_controller(right_click_gesture);
         button->add_controller(middle_click_gesture);
-    }
-    else {
+    } else
+    {
         left_conn.disconnect();
         middle_conn.disconnect();
         right_conn.disconnect();
@@ -448,16 +449,15 @@ void WayfireWireplumber::reload_config()
     };
 
     static auto mute_action = [&] (int c, double x, double y)
-        {
+    {
         std::cout << "everywhere\n";
-            if (!face)
-            {
-                return; // no face means we have nothing to change by clicking
-            }
+        if (!face)
+        {
+            return; // no face means we have nothing to change by clicking
+        }
 
-            face->button.set_active(!face->button.get_active());
-        };
-
+        face->button.set_active(!face->button.get_active());
+    };
 
     // the left click case is a bit special, since it’s supposed to show the popover.
     // (this is also why the mute action is not available for the left click)
@@ -811,7 +811,8 @@ void WpCommon::on_object_added(WpObjectManager *manager, gpointer object, gpoint
         widget->objects_to_controls.insert({obj, control});
         which_box->append((Gtk::Widget&)*control);
         // try to not be faceless
-        if (!widget->face){
+        if (!widget->face)
+        {
             widget->face = control->copy();
         }
     }
@@ -871,6 +872,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             widget->face->set_btn_status_no_callbk(mute);
             widget->face->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
         }
+
         widget->update_icon();
 
         // if we have the full mixer in the popover
@@ -947,13 +949,14 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
 
             if ( // if the settings call for it, refresh the face
                 (
-                    ((widget->face_choice == FaceChoice::DEFAULT_SINK) && (g_strcmp0(type, "Audio/Sink") == 0))
+                    ((widget->face_choice == FaceChoice::DEFAULT_SINK) &&
+                     (g_strcmp0(type, "Audio/Sink") == 0))
                     ||
-                    ((widget->face_choice == FaceChoice::DEFAULT_SOURCE) && (g_strcmp0(type, "Audio/Source") == 0))
+                    ((widget->face_choice == FaceChoice::DEFAULT_SOURCE) &&
+                     (g_strcmp0(type, "Audio/Source") == 0))
                 )
                 &&
-                widget->face->object == ctrl->object
-            )
+                (widget->face->object == ctrl->object))
             {
                 widget->face = ctrl->copy();
             }
