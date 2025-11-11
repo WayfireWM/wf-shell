@@ -6,8 +6,15 @@
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
+#include <gtkmm/popover.h>
+#include <gtkmm/box.h>
+#include <gtkmm/scrolledwindow.h>
+#include <gtkmm/entry.h>
+#include <gtkmm.h>
+#include <memory>
 
 #include "../widget.hpp"
+#include "../util/wf-popover.hpp" // assumes WayfireMenuButton header lives here
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
 using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
@@ -56,10 +63,18 @@ class WayfireNetworkInfo : public WayfireWidget
 
     std::unique_ptr<WfNetworkConnectionInfo> info;
 
-    Gtk::Button button;
+    // Use WayfireMenuButton like notification-center
+    std::unique_ptr<WayfireMenuButton> button;
     Gtk::Box button_content;
     Gtk::Image icon;
     Gtk::Label status;
+
+    // Popover UI (owned by WayfireMenuButton)
+    Gtk::Box popover_box;            // top-level box in popover
+    Gtk::ScrolledWindow pop_scrolled;
+    Gtk::Box pop_list_box;           // list of networks
+    Gtk::Box pop_pass_box;           // inline password prompt
+    Gtk::Label pop_status_label;     // show temporary messages
 
     bool enabled = true;
     WfOption<std::string> status_opt{"panel/network_status"};
@@ -73,6 +88,12 @@ class WayfireNetworkInfo : public WayfireWidget
         DBusPropList invalidated);
 
     void on_click();
+
+    // wifi helper methods (use nmcli)
+    void show_wifi_popover();
+    void populate_wifi_list();
+    void show_password_prompt_for(const std::string& ssid, const std::string& security);
+    void attempt_connect_ssid(const std::string& ssid, const std::string& password = "");
 
   public:
     void update_icon();
