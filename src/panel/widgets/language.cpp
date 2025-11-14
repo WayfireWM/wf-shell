@@ -13,15 +13,13 @@
 #include "gtkmm/button.h"
 #include "sigc++/functors/mem_fun.h"
 
-void WayfireLanguage::init(Gtk::HBox *container)
+void WayfireLanguage::init(Gtk::Box *container)
 {
     button.get_style_context()->add_class("language");
-    button.add(label);
     button.get_style_context()->add_class("flat");
     button.get_style_context()->remove_class("activated");
-    button.signal_clicked().connect_notify(sigc::mem_fun(this, &WayfireLanguage::next_layout));
+    button.signal_clicked().connect(sigc::mem_fun(*this, &WayfireLanguage::next_layout));
     button.show();
-    label.show();
 
     ipc->subscribe(this, {"keyboard-modifier-state-changed"});
     ipc->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (json_t data)
@@ -30,7 +28,7 @@ void WayfireLanguage::init(Gtk::HBox *container)
         set_current(data["layout-index"]);
     });
 
-    container->pack_start(button, false, false);
+    container->append(button);
 }
 
 void WayfireLanguage::on_event(json_t data)
@@ -63,7 +61,7 @@ bool WayfireLanguage::update_label()
         return false;
     }
 
-    label.set_text(available_layouts[current_layout].ID);
+    button.set_label(available_layouts[current_layout].ID);
     return true;
 }
 

@@ -1,8 +1,6 @@
 #include "json.hpp"
 #include <cassert>
 #include <stdexcept>
-#include <wayfire/dassert.hpp>
-#include <wayfire/debug.hpp>
 #include <yyjson.h>
 #include <limits>
 

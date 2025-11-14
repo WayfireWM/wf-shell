@@ -170,7 +170,7 @@ class WayfirePanel::impl
 
         if (name == "window-list")
         {
-            return Widget(new WayfireWindowList(output, ipc_manager->get_IPC()));
+            return Widget(new WayfireWindowList(output));
         }
 
         if (name == "notifications")

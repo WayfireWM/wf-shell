@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <functional>
+#include <glibmm-2.4/glibmm/iochannel.h>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -31,7 +32,7 @@ WayfireIPC::WayfireIPC()
     connect();
 
     sig_connection = Glib::signal_io().connect(
-        sigc::mem_fun(this, &WayfireIPC::receive),
+        sigc::mem_fun(*this, &WayfireIPC::receive),
         connection->get_socket()->get_fd(),
         Glib::IO_IN);
 }
@@ -99,7 +100,7 @@ void WayfireIPC::write_next()
 
     writing = true;
     sig_connection = Glib::signal_io().connect(
-        sigc::mem_fun(this, &WayfireIPC::send_queue),
+        sigc::mem_fun(*this, &WayfireIPC::send_queue),
         connection->get_socket()->get_fd(),
         Glib::IO_OUT);
 }

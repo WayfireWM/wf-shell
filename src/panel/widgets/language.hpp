@@ -19,7 +19,7 @@ struct Layout
 
 class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
 {
-    Gtk::Label label;
+    // Gtk::Label label;
     Gtk::Button button;
 
     std::shared_ptr<WayfireIPC> ipc;
@@ -27,7 +27,7 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
     std::vector<Layout> available_layouts;
 
   public:
-    void init(Gtk::HBox *container) override;
+    void init(Gtk::Box *container);
     void on_event(json_t data) override;
     bool update_label();
     void set_current(uint32_t index);
