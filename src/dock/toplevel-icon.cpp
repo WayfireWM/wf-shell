@@ -1,12 +1,12 @@
 #include <giomm/desktopappinfo.h>
 #include <gtkmm/button.h>
-#include <gtkmm/hvbox.h>
+#include <gtkmm/box.h>
 #include <gtkmm/icontheme.h>
 #include <gtkmm/image.h>
 
 #include <gdkmm/display.h>
 #include <gdkmm/seat.h>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
 
 #include "dock.hpp"
 #include "toplevel.hpp"
@@ -29,6 +29,7 @@ class WfToplevelIcon::impl
     wl_output *output;
 
     uint32_t state;
+    bool closing = false;
 
     Gtk::Button button;
     Gtk::Image image;
@@ -41,17 +42,13 @@ class WfToplevelIcon::impl
         this->handle = handle;
         this->output = output;
 
-        button.add(image);
+        button.set_child(image);
         button.set_tooltip_text("none");
         button.get_style_context()->add_class("flat");
-        button.show_all();
+        button.get_style_context()->add_class("toplevel-icon");
 
-        button.signal_clicked().connect_notify(
-            sigc::mem_fun(this, &WfToplevelIcon::impl::on_clicked));
-        button.signal_size_allocate().connect_notify(
-            sigc::mem_fun(this, &WfToplevelIcon::impl::on_allocation_changed));
-        button.property_scale_factor().signal_changed()
-            .connect(sigc::mem_fun(this, &WfToplevelIcon::impl::on_scale_update));
+        button.signal_clicked().connect(
+            sigc::mem_fun(*this, &WfToplevelIcon::impl::on_clicked));
 
         auto dock = WfDockApp::get().dock_for_wl_output(output);
         assert(dock); // ToplevelIcon is created only for existing outputs
@@ -60,6 +57,11 @@ class WfToplevelIcon::impl
 
     void on_clicked()
     {
+        if (closing)
+        {
+            return;
+        }
+
         if (!(state & WF_TOPLEVEL_STATE_ACTIVATED))
         {
             auto gseat = Gdk::Display::get_default()->get_default_seat();
@@ -78,18 +80,13 @@ class WfToplevelIcon::impl
         }
     }
 
-    void on_allocation_changed(Gtk::Allocation& alloc)
-    {
-        send_rectangle_hint();
-    }
-
-    void on_scale_update()
-    {
-        set_app_id(app_id);
-    }
-
     void set_app_id(std::string app_id)
     {
+        if (closing)
+        {
+            return;
+        }
+
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image,
             app_id,
@@ -99,6 +96,11 @@ class WfToplevelIcon::impl
 
     void send_rectangle_hint()
     {
+        if (closing)
+        {
+            return;
+        }
+
         Gtk::Widget *widget = &this->button;
 
         int x = 0, y = 0;
@@ -124,21 +126,55 @@ class WfToplevelIcon::impl
 
     void set_title(std::string title)
     {
+        if (closing)
+        {
+            return;
+        }
+
         button.set_tooltip_text(title);
+    }
+
+    void close()
+    {
+        button.get_style_context()->add_class("closing");
+        closing = true;
     }
 
     void set_state(uint32_t state)
     {
+        if (closing)
+        {
+            return;
+        }
+
         bool was_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
         this->state = state;
         bool is_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
-
+        bool is_min = state & WF_TOPLEVEL_STATE_MINIMIZED;
+        bool is_max = state & WF_TOPLEVEL_STATE_MAXIMIZED;
+        auto style  = this->button.get_style_context();
         if (!was_activated && is_activated)
         {
-            this->button.get_style_context()->remove_class("flat");
+            style->remove_class("flat");
         } else if (was_activated && !is_activated)
         {
-            this->button.get_style_context()->add_class("flat");
+            style->add_class("flat");
+        }
+
+        if (is_min)
+        {
+            style->add_class("minimized");
+        } else
+        {
+            style->remove_class("minimized");
+        }
+
+        if (is_max)
+        {
+            style->add_class("maximized");
+        } else
+        {
+            style->remove_class("maximized");
         }
     }
 
@@ -170,6 +206,11 @@ void WfToplevelIcon::set_app_id(std::string app_id)
 void WfToplevelIcon::set_state(uint32_t state)
 {
     return pimpl->set_state(state);
+}
+
+void WfToplevelIcon::close()
+{
+    return pimpl->close();
 }
 
 /* Icon loading functions */
@@ -216,13 +257,7 @@ bool set_custom_icon(Gtk::Image& image, std::string app_id, int size, int scale)
         return false;
     }
 
-    auto pb = load_icon_pixbuf_safe(custom_icons[app_id], size * scale);
-    if (!pb.get())
-    {
-        return false;
-    }
-
-    set_image_pixbuf(image, pb, scale);
+    image_set_icon(&image, custom_icons[app_id]);
     return true;
 }
 
@@ -239,14 +274,19 @@ Icon get_from_desktop_app_info(std::string app_id)
         "/usr/share/applications/",
         "/usr/share/applications/kde/",
         "/usr/share/applications/org.kde.",
+        "/usr/share/applications/org.gnome.",
         "/usr/local/share/applications/",
         "/usr/local/share/applications/org.kde.",
+        "/usr/local/share/applications/org.gnome.",
     };
 
     std::vector<std::string> app_id_variations = {
         app_id,
         tolower(app_id),
+        tolower(app_id),
     };
+    // e.g. org.gnome.Evince.desktop
+    app_id_variations[2][0] = std::toupper(app_id_variations[2][0]);
 
     std::vector<std::string> suffixes = {
         "",
@@ -264,6 +304,22 @@ Icon get_from_desktop_app_info(std::string app_id)
                     app_info = Gio::DesktopAppInfo
                         ::create_from_filename(prefix + id + suffix);
                 }
+            }
+        }
+    }
+
+    if (!app_info)
+    {
+        // special treatment for snap apps
+        std::string prefix = "/var/lib/snapd/desktop/applications/";
+        auto& id = app_id_variations[1]; // seems to be lower case
+        for (auto& suffix : suffixes)
+        {
+            app_info = Gio::DesktopAppInfo::create_from_filename(
+                prefix + id + "_" + id + suffix);
+            if (app_info)
+            {
+                break;
             }
         }
     }
@@ -286,6 +342,7 @@ void set_image_from_icon(Gtk::Image& image,
 
     /* Wayfire sends a list of app-id's in space separated format, other compositors
      * send a single app-id, but in any case this works fine */
+    auto display = image.get_display();
     while (stream >> app_id)
     {
         /* Try first method: custom icon file provided by the user */
@@ -302,7 +359,7 @@ void set_image_from_icon(Gtk::Image& image,
         if (!icon)
         {
             /* Finally try directly looking up the icon, if it exists */
-            if (Gtk::IconTheme::get_default()->lookup_icon(app_id, 24))
+            if (Gtk::IconTheme::get_for_display(display)->lookup_icon(app_id, 24))
             {
                 icon_name = app_id;
             }
@@ -313,7 +370,7 @@ void set_image_from_icon(Gtk::Image& image,
 
         WfIconLoadOptions options;
         options.user_scale = scale;
-        set_image_icon(image, icon_name, size, options);
+        image_set_icon(&image, icon_name);
 
         /* finally found some icon */
         if (icon_name != "unknown")

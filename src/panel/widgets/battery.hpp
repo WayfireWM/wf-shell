@@ -3,7 +3,7 @@
 
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
-#include <gtkmm/hvbox.h>
+#include <gtkmm/box.h>
 #include <gtkmm/label.h>
 
 #include <giomm/dbusproxy.h>
@@ -22,13 +22,10 @@ class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
     WfOption<std::string> status_opt{"panel/battery_status"};
-    WfOption<std::string> font_opt{"panel/battery_font"};
-    WfOption<int> size_opt{"panel/battery_icon_size"};
-    WfOption<bool> invert_opt{"panel/battery_icon_invert"};
 
     Gtk::Button button;
     Gtk::Label label;
-    Gtk::HBox button_box;
+    Gtk::Box button_box;
 
     Gtk::Image icon;
 
@@ -37,7 +34,6 @@ class WayfireBatteryInfo : public WayfireWidget
 
     bool setup_dbus();
 
-    void update_font();
     void update_icon();
     void update_details();
     void update_state();
@@ -47,7 +43,7 @@ class WayfireBatteryInfo : public WayfireWidget
         const std::vector<Glib::ustring>& invalidated);
 
   public:
-    virtual void init(Gtk::HBox *container);
+    virtual void init(Gtk::Box *container);
     virtual ~WayfireBatteryInfo() = default;
 };
 

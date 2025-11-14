@@ -1,29 +1,30 @@
 project(
 	'wf-shell',
-    'c',
+	'c',
 	'cpp',
-	version: '0.10.0',
+	version: '0.11.0',
 	license: 'MIT',
 	meson_version: '>=0.51.0',
 	default_options: [
 		'cpp_std=c++17',
-        'c_std=c11',
+		'c_std=c11',
 		'warning_level=2',
 		'werror=false',
 	],
 )
 
-wayfire        = dependency('wayfire')
+wayfire = dependency('wayfire')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols')
-gtkmm          = dependency('gtkmm-3.0', version: '>=3.24')
-wfconfig       = dependency('wf-config', version: '>=0.7.0') #TODO fallback submodule
-gtklayershell  = dependency('gtk-layer-shell-0', version: '>= 0.6', fallback: ['gtk-layer-shell', 'gtk_layer_shell'])
-libpulse       = dependency('libpulse', required : get_option('pulse'))
-dbusmenu_gtk   = dependency('dbusmenu-gtk3-0.4')
-libgvc         = subproject('gvc', default_options: ['static=true'], required : get_option('pulse'))
-xkbregistry    = dependency('xkbregistry')
-json           = dependency('yyjson', required: false)
+gtkmm = dependency('gtkmm-4.0', version: '>=4.12')
+wfconfig = dependency('wf-config', version: '>=0.7.0') #TODO fallback submodule
+epoxy = dependency('epoxy')
+gtklayershell = dependency('gtk4-layer-shell-0', fallback: ['gtk4-layer-shell'])
+libpulse = dependency('libpulse', required: get_option('pulse'))
+dbusmenu_gtk = dependency('dbusmenu-glib-0.4')
+libgvc = subproject('gvc', default_options: ['static=true'], required: get_option('pulse'))
+xkbregistry = dependency('xkbregistry')
+json = dependency('yyjson', required: false)
 
 if not json.found()
 	cmake = import('cmake')
@@ -34,28 +35,31 @@ if not json.found()
 endif
 
 if get_option('wayland-logout') == true
-  wayland_logout = subproject('wayland-logout')
+	wayland_logout = subproject('wayland-logout')
 endif
 
 if libpulse.found()
-  libgvc = libgvc.get_variable('libgvc_dep')
-  add_project_arguments('-DHAVE_PULSE=1', language : 'cpp')
+	libgvc = libgvc.get_variable('libgvc_dep')
+	add_project_arguments('-DHAVE_PULSE=1', language: 'cpp')
 endif
 
 needs_libinotify = ['freebsd', 'dragonfly'].contains(host_machine.system())
-libinotify       = dependency('libinotify', required: needs_libinotify)
+libinotify = dependency('libinotify', required: needs_libinotify)
 
-add_project_arguments(['-Wno-pedantic', '-Wno-unused-parameter', '-Wno-parentheses'], language: 'cpp')
+add_project_arguments(
+	['-Wno-pedantic', '-Wno-unused-parameter', '-Wno-parentheses'],
+	language: 'cpp',
+)
 
 resource_dir = join_paths(get_option('prefix'), 'share', 'wayfire')
 metadata_dir = join_paths(resource_dir, 'metadata', 'wf-shell')
 sysconf_dir = join_paths(get_option('prefix'), get_option('sysconfdir'))
 
 icon_dir = join_paths(get_option('prefix'), 'share', 'wayfire', 'icons')
-add_project_arguments('-DICONDIR="' + icon_dir + '"', language : 'cpp')
-add_project_arguments('-DRESOURCEDIR="' + resource_dir + '"', language : 'cpp')
-add_project_arguments('-DMETADATA_DIR="' + metadata_dir + '"', language : 'cpp')
-add_project_arguments('-DSYSCONF_DIR="' + sysconf_dir + '"', language : 'cpp')
+add_project_arguments('-DICONDIR="' + icon_dir + '"', language: 'cpp')
+add_project_arguments('-DRESOURCEDIR="' + resource_dir + '"', language: 'cpp')
+add_project_arguments('-DMETADATA_DIR="' + metadata_dir + '"', language: 'cpp')
+add_project_arguments('-DSYSCONF_DIR="' + sysconf_dir + '"', language: 'cpp')
 
 subdir('metadata')
 subdir('proto')

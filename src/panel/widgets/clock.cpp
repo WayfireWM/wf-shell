@@ -1,32 +1,28 @@
 #include <glibmm.h>
-#include <iostream>
 #include "clock.hpp"
 
-void WayfireClock::init(Gtk::HBox *container)
+void WayfireClock::init(Gtk::Box *container)
 {
     button = std::make_unique<WayfireMenuButton>("panel");
     button->get_style_context()->add_class("clock");
-    button->add(label);
+    button->set_child(label);
     button->show();
+    label.set_justify(Gtk::Justification::CENTER);
     label.show();
 
     update_label();
 
     calendar.show();
     button->get_popover()->get_style_context()->add_class("clock-popover");
-    button->get_popover()->add(calendar);
-    button->get_popover()->signal_show().connect_notify(
-        sigc::mem_fun(this, &WayfireClock::on_calendar_shown));
+    button->get_children()[0]->get_style_context()->add_class("flat");
+    button->get_popover()->set_child(calendar);
+    button->get_popover()->signal_show().connect(
+        sigc::mem_fun(*this, &WayfireClock::on_calendar_shown));
 
-    container->pack_start(*button, false, false);
+    container->append(*button);
 
     timeout = Glib::signal_timeout().connect_seconds(
-        sigc::mem_fun(this, &WayfireClock::update_label), 1);
-
-    // initially set font
-    set_font();
-
-    font.set_callback([=] () { set_font(); });
+        sigc::mem_fun(*this, &WayfireClock::update_label), 1);
 }
 
 void WayfireClock::on_calendar_shown()
@@ -34,8 +30,8 @@ void WayfireClock::on_calendar_shown()
     auto now = Glib::DateTime::create_now_local();
 
     /* GDateTime uses month in 1-12 format while GClender uses 0-11  */
-    calendar.select_month(now.get_month() - 1, now.get_year());
-    calendar.select_day(now.get_day_of_month());
+    // calendar.set_month(now.get_month() - 1, now.get_year());
+    calendar.select_day(now);
 }
 
 bool WayfireClock::update_label()
@@ -57,17 +53,6 @@ bool WayfireClock::update_label()
 
     label.set_text(text.substr(i));
     return 1;
-}
-
-void WayfireClock::set_font()
-{
-    if ((std::string)font == "default")
-    {
-        label.unset_font();
-    } else
-    {
-        label.override_font(Pango::FontDescription((std::string)font));
-    }
 }
 
 WayfireClock::~WayfireClock()

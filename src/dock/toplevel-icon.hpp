@@ -12,6 +12,7 @@ class WfToplevelIcon
     void set_app_id(std::string app_id);
     void set_title(std::string title);
     void set_state(uint32_t state);
+    void close();
 
     class impl;
 

@@ -1,2 +1,12 @@
-option('pulse', type: 'feature', value: 'auto', description: 'Build pulseaudio volume widget')
-option('wayland-logout', type: 'boolean', value: 'true', description: 'Install wayland-logout')
+option(
+    'pulse',
+    type: 'feature',
+    value: 'auto',
+    description: 'Build pulseaudio volume widget',
+)
+option(
+    'wayland-logout',
+    type: 'boolean',
+    value: true,
+    description: 'Install wayland-logout',
+)

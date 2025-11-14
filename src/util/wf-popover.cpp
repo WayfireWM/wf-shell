@@ -6,21 +6,21 @@ WayfireMenuButton::WayfireMenuButton(const std::string& section) :
     panel_position{section + "/position"}
 {
     get_style_context()->add_class("flat");
-    m_popover.set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
+    // m_popover.set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
 
     auto cb = [=] ()
     {
-        set_direction((std::string)panel_position == "top" ?
-            Gtk::ARROW_DOWN : Gtk::ARROW_UP);
+        // set_direction((std::string)panel_position == "top" ?
+        // Gtk::Arrow::DOWN : Gtk::Arrow::UP);
 
         this->unset_popover();
-        m_popover.set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
+        // m_popover.set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
         set_popover(m_popover);
     };
     panel_position.set_callback(cb);
     cb();
 
-    m_popover.signal_show().connect_notify([=]
+    m_popover.signal_show().connect([=]
     {
         set_active_on_window();
     });

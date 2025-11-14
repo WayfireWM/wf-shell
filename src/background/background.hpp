@@ -7,18 +7,34 @@
 #include <wf-option-wrap.hpp>
 #include <wayfire/util/duration.hpp>
 
+#include <epoxy/gl.h>
+
 class WayfireBackground;
+
+class BackgroundImageAdjustments
+{
+  public:
+    GLfloat scale_x = -1, scale_y = -1;
+    GLfloat x, y;
+};
 
 class BackgroundImage
 {
   public:
-    double scale;
-    double x, y;
-    Cairo::RefPtr<Cairo::Surface> source;
+    BackgroundImage();
+    ~BackgroundImage();
+    Glib::RefPtr<Gdk::Pixbuf> source;
+    std::string fill_type;
+    Glib::RefPtr<BackgroundImageAdjustments> adjustments;
+
+    void generate_adjustments(int width, int height);
+    GLuint tex_id = 0;
 };
 
-class BackgroundDrawingArea : public Gtk::DrawingArea
+class BackgroundGLArea : public Gtk::GLArea
 {
+    WayfireBackground *background;
+    GLuint program = 0;
     wf::animation::simple_animation_t fade;
     WfOption<int> fade_duration{"background/fade_duration"};
 
@@ -28,15 +44,28 @@ class BackgroundDrawingArea : public Gtk::DrawingArea
      * pbuf is the current image to which we are fading and
      * pbuf2 is the image from which we are fading. x and y
      * are used as offsets when preserve aspect is set. */
-    BackgroundImage to_image, from_image;
+    Glib::RefPtr<BackgroundImage> to_image, from_image;
 
   public:
-    BackgroundDrawingArea();
-    void show_image(Glib::RefPtr<Gdk::Pixbuf> image,
-        double offset_x, double offset_y, double image_scale);
+    BackgroundGLArea(WayfireBackground *background);
+    void realize();
+    bool render(const Glib::RefPtr<Gdk::GLContext>& context);
+    void show_image(Glib::RefPtr<BackgroundImage> image);
+    Glib::RefPtr<BackgroundImage> get_current_image()
+    {
+        return to_image;
+    }
+};
+
+class BackgroundWindow : public Gtk::Window
+{
+    WayfireBackground *background;
+
+  public:
+    BackgroundWindow(WayfireBackground *background);
 
   protected:
-    bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr) override;
+    void size_allocate_vfunc(int width, int height, int baseline) override;
 };
 
 class WayfireBackground
@@ -44,14 +73,11 @@ class WayfireBackground
     WayfireShellApp *app;
     WayfireOutput *output;
 
-    BackgroundDrawingArea drawing_area;
+    Glib::RefPtr<BackgroundGLArea> gl_area;
     std::vector<std::string> images;
-    Gtk::Window window;
+    Glib::RefPtr<Gtk::Window> window;
 
-    int scale;
-    double offset_x, offset_y;
-    double image_scale = 1.0;
-    bool inhibited     = false;
+    bool inhibited = false;
     uint current_background;
     sigc::connection change_bg_conn;
 
@@ -60,18 +86,21 @@ class WayfireBackground
     WfOption<bool> background_randomize{"background/randomize"};
     WfOption<std::string> background_fill_mode{"background/fill_mode"};
 
-    Glib::RefPtr<Gdk::Pixbuf> create_from_file_safe(std::string path);
+    Glib::RefPtr<BackgroundImage> create_from_file_safe(std::string path);
     bool background_transition_frame(int timer);
     bool load_images_from_dir(std::string path);
-    bool load_next_background(Glib::RefPtr<Gdk::Pixbuf> & pbuf, std::string & path);
+    Glib::RefPtr<BackgroundImage> load_next_background();
     void reset_background();
-    void set_background();
+    void update_background();
     void reset_cycle_timeout();
 
     void setup_window();
 
   public:
+    guint window_width  = 0;
+    guint window_height = 0;
     WayfireBackground(WayfireShellApp *app, WayfireOutput *output);
+    void set_background();
     bool change_background();
     ~WayfireBackground();
 };

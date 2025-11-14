@@ -1,9 +1,10 @@
 #include "wf-autohide-window.hpp"
 #include "wayfire-shell-unstable-v2-client-protocol.h"
 
-#include <gtk-layer-shell.h>
+#include <gtk4-layer-shell.h>
 #include <wf-shell-app.hpp>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
+#include <gtkmm.h>
 
 #include <glibmm.h>
 #include <iostream>
@@ -21,7 +22,6 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
 {
     this->output = output;
     this->set_decorated(false);
-    this->set_resizable(false);
 
     gtk_layer_init_for_window(this->gobj());
     gtk_layer_set_monitor(this->gobj(), output->monitor->gobj());
@@ -30,17 +30,27 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     this->position.set_callback([=] () { this->update_position(); });
     this->update_position();
 
-    this->signal_draw().connect_notify(
-        [=] (const Cairo::RefPtr<Cairo::Context>&) { update_margin(); });
-
-    this->signal_focus_out_event().connect_notify(
-        [=] (const GdkEventFocus*)
+    auto pointer_gesture = Gtk::EventControllerMotion::create();
+    pointer_gesture->signal_enter().connect([=] (double x, double y)
     {
-        if (this->active_button)
+        if (this->pending_hide.connected())
         {
-            unset_active_popover(*this->active_button);
+            this->pending_hide.disconnect();
+        }
+
+        this->input_inside_panel = true;
+        y_position.animate(0);
+        start_draw_timer();
+    });
+    pointer_gesture->signal_leave().connect([=]
+    {
+        this->input_inside_panel = false;
+        if (this->should_autohide())
+        {
+            this->schedule_hide(AUTOHIDE_HIDE_DELAY);
         }
     });
+    this->add_controller(pointer_gesture);
 
     this->setup_autohide();
 
@@ -58,13 +68,9 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
 
     static const zwf_output_v2_listener listener = {
         .enter_fullscreen = [] (void *data, zwf_output_v2*)
-        {
-            ((WayfireAutohidingWindow*)data)->increase_autohide();
-        },
+        {},
         .leave_fullscreen = [] (void *data, zwf_output_v2*)
-        {
-            ((WayfireAutohidingWindow*)data)->decrease_autohide();
-        },
+        {},
         .toggle_menu = [] (void *data, zwf_output_v2*)
         {
             ((WayfireAutohidingWindow*)data)->output->toggle_menu_signal().emit();
@@ -88,8 +94,8 @@ WayfireAutohidingWindow::~WayfireAutohidingWindow()
 
 wl_surface*WayfireAutohidingWindow::get_wl_surface() const
 {
-    auto gdk_window = const_cast<GdkWindow*>(this->get_window()->gobj());
-    return gdk_wayland_window_get_wl_surface(gdk_window);
+    auto wsurf = GDK_WAYLAND_SURFACE(this->get_surface()->gobj());
+    return gdk_wayland_surface_get_wl_surface(wsurf);
 }
 
 /** Verify that position is correct and return a correct position */
@@ -155,7 +161,8 @@ void WayfireAutohidingWindow::update_position()
     }
 
     /* When the position changes, show an animation from the new edge. */
-    y_position.animate(-this->get_allocated_height(), -this->get_allocated_height());
+    y_position.animate(-this->get_allocated_height(), 0);
+    start_draw_timer();
     m_show_uncertain();
     setup_hotspot();
 }
@@ -276,13 +283,12 @@ void WayfireAutohidingWindow::setup_auto_exclusive_zone()
 
 void WayfireAutohidingWindow::update_auto_exclusive_zone()
 {
-    int allocated_height = get_allocated_height();
-    int new_zone_size    = this->auto_exclusive_zone ? allocated_height : 0;
-
-    if (new_zone_size != this->auto_exclusive_zone_size)
+    if (this->auto_exclusive_zone)
     {
-        gtk_layer_set_exclusive_zone(this->gobj(), new_zone_size);
-        this->auto_exclusive_zone_size = new_zone_size;
+        gtk_layer_auto_exclusive_zone_enable(this->gobj());
+    } else
+    {
+        gtk_layer_set_exclusive_zone(this->gobj(), 0);
     }
 }
 
@@ -324,8 +330,22 @@ bool WayfireAutohidingWindow::should_autohide() const
 bool WayfireAutohidingWindow::m_do_hide()
 {
     y_position.animate(-get_allocated_height());
+    start_draw_timer();
     update_margin();
     return false; // disconnect
+}
+
+void WayfireAutohidingWindow::start_draw_timer()
+{
+    add_tick_callback(sigc::mem_fun(*this, &WayfireAutohidingWindow::update_animation));
+}
+
+gboolean WayfireAutohidingWindow::update_animation(Glib::RefPtr<Gdk::FrameClock> frame_clock)
+{
+    update_margin();
+    // this->queue_draw();
+    // Once we've finished fading, stop this callback
+    return y_position.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 
 void WayfireAutohidingWindow::schedule_hide(int delay)
@@ -340,13 +360,14 @@ void WayfireAutohidingWindow::schedule_hide(int delay)
     if (!pending_hide.connected())
     {
         pending_hide = Glib::signal_timeout().connect(
-            sigc::mem_fun(this, &WayfireAutohidingWindow::m_do_hide), delay);
+            sigc::mem_fun(*this, &WayfireAutohidingWindow::m_do_hide), delay);
     }
 }
 
 bool WayfireAutohidingWindow::m_do_show()
 {
-    y_position.animate(std::fmin(0, y_position + 1), 0);
+    y_position.animate(0);
+    start_draw_timer();
     update_margin();
     return false; // disconnect
 }
@@ -363,7 +384,7 @@ void WayfireAutohidingWindow::schedule_show(int delay)
     if (!pending_show.connected())
     {
         pending_show = Glib::signal_timeout().connect(
-            sigc::mem_fun(this, &WayfireAutohidingWindow::m_do_show), delay);
+            sigc::mem_fun(*this, &WayfireAutohidingWindow::m_do_show), delay);
     }
 }
 
@@ -375,7 +396,7 @@ bool WayfireAutohidingWindow::update_margin()
             get_anchor_edge(position), y_position);
         // queue_draw does not work when the panel is hidden
         // so calling wl_surface_commit to make WM show the panel back
-        if (get_window())
+        if (get_surface())
         {
             wl_surface_commit(get_wl_surface());
         }
@@ -400,21 +421,24 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
 
         this->active_button = &button;
         this->popover_hide  =
-            this->active_button->m_popover.signal_hide().connect_notify(
+            this->active_button->m_popover.signal_hide().connect(
                 [this, &button] () { unset_active_popover(button); });
     }
 
     const bool should_grab_focus = this->active_button->is_keyboard_interactive();
 
-    if (should_grab_focus)
-    {
-        // First, set exclusive mode to grab input
-        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
-        wl_surface_commit(get_wl_surface());
-
-        // Next, allow releasing of focus when clicking outside of the panel
-        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
-    }
+    /*
+     *  if (should_grab_focus)
+     *  {
+     *   // First, set exclusive mode to grab input
+     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+     *   wl_surface_commit(get_wl_surface());
+     *
+     *   // Next, allow releasing of focus when clicking outside of the panel
+     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+     *  }
+     */
+    // TODO come back for intentional focus steal
 
     this->active_button->set_has_focus(should_grab_focus);
     schedule_show(0);
@@ -429,7 +453,6 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
 
     this->active_button->set_has_focus(false);
     this->active_button->set_active(false);
-    this->active_button->get_popover()->popdown();
     this->active_button = nullptr;
     this->popover_hide.disconnect();
 
@@ -454,20 +477,7 @@ void WayfireAutohidingWindow::setup_autohide()
     this->set_auto_exclusive_zone(!(output->output && autohide_opt));
     this->update_autohide();
 
-    this->signal_size_allocate().connect_notify(
-        [=] (Gtk::Allocation&)
-    {
-        // std::cerr << "set_auto_exclusive_zone: " << this->auto_exclusive_zone << std::endl;
-        this->update_auto_exclusive_zone();
-
-        // We have to check here as well, otherwise it enables hotspot when it shouldn't
-        if (!output->output || !(output->output && autohide_opt))
-        {
-            return;
-        }
-
-        this->setup_hotspot();
-    });
+    this->update_auto_exclusive_zone();
 }
 
 void WayfireAutohidingWindow::update_autohide()
