@@ -38,7 +38,7 @@
 class WayfirePanel::impl
 {
     std::unique_ptr<WayfireAutohidingWindow> window;
-    WayfireIPC* ipc;
+    std::shared_ptr<WayfireIPCManager> ipc_manager;
 
     Gtk::HBox content_box;
     Gtk::HBox left_box, center_box, right_box;
@@ -211,7 +211,7 @@ class WayfirePanel::impl
 
         if (name == "window-list")
         {
-            return Widget(new WayfireWindowList(output));
+            return Widget(new WayfireWindowList(output, ipc_manager->get_IPC()));
         }
 
         if (name == "notifications")
@@ -231,7 +231,7 @@ class WayfirePanel::impl
 
         if (name == "language")
         {
-            return Widget(new WayfireLanguage(ipc));
+            return Widget(new WayfireLanguage(ipc_manager->get_IPC()));
         }
 
         if (auto pixel = widget_with_value(name, "spacing"))
@@ -321,7 +321,7 @@ class WayfirePanel::impl
     }
 
   public:
-    impl(WayfireOutput *output, WayfireIPC *ipc) : ipc(ipc), output(output)
+    impl(WayfireOutput *output, std::shared_ptr<WayfireIPCManager> ipc) : ipc_manager(ipc), output(output)
     {
         create_window();
     }
@@ -355,7 +355,7 @@ class WayfirePanel::impl
     }
 };
 
-WayfirePanel::WayfirePanel(WayfireOutput *output, WayfireIPC *ipc) : pimpl(new impl(output, ipc))
+WayfirePanel::WayfirePanel(WayfireOutput *output, std::shared_ptr<WayfireIPCManager> ipc_manager) : pimpl(new impl(output, ipc_manager))
 {}
 
 wl_surface*WayfirePanel::get_wl_surface()
@@ -446,7 +446,7 @@ void WayfirePanelApp::add_css_file(std::string file, int priority)
 void WayfirePanelApp::handle_new_output(WayfireOutput *output)
 {
     priv->panels[output] = std::unique_ptr<WayfirePanel>(
-        new WayfirePanel(output, ipc));
+        new WayfirePanel(output, ipc_manager));
 }
 
 WayfirePanel*WayfirePanelApp::panel_for_wl_output(wl_output *output)

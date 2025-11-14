@@ -7,14 +7,14 @@
 #include <cstdint>
 #include <gtkmm/calendar.h>
 #include <gtkmm/label.h>
-#include <nlohmann/json_fwd.hpp>
+#include "json.hpp"
 #include <string>
 #include <vector>
 
 struct Layout
 {
-  std::string Name;
-  std::string ID;
+    std::string Name;
+    std::string ID;
 };
 
 class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
@@ -22,18 +22,18 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
     Gtk::Label label;
     Gtk::Button button;
 
-    WayfireIPC *ipc;
+    std::shared_ptr<WayfireIPC> ipc;
     uint32_t current_layout;
     std::vector<Layout> available_layouts;
 
   public:
     void init(Gtk::HBox *container) override;
-    void on_event(nlohmann::json data) override;
+    void on_event(json_t data) override;
     bool update_label();
     void set_current(uint32_t index);
-    void set_available(nlohmann::json layouts);
+    void set_available(json_t layouts);
     void next_layout();
-    WayfireLanguage(WayfireIPC *ipc);
+    WayfireLanguage(std::shared_ptr<WayfireIPC> ipc);
     ~WayfireLanguage();
 };
 

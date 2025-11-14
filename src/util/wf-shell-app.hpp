@@ -1,6 +1,7 @@
 #ifndef WF_SHELL_APP_HPP
 #define WF_SHELL_APP_HPP
 
+#include <memory>
 #include <string>
 #include <wayfire/config/config-manager.hpp>
 
@@ -67,7 +68,7 @@ class WayfireShellApp
     int inotify_css_fd;
     wf::config::config_manager_t config;
     zwf_shell_manager_v2 *wf_shell_manager = nullptr;
-    WayfireIPC *ipc = nullptr;
+    std::shared_ptr<WayfireIPCManager> ipc_manager;
 
     WayfireShellApp(int argc, char **argv);
     virtual ~WayfireShellApp();

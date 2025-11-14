@@ -23,7 +23,15 @@ libpulse       = dependency('libpulse', required : get_option('pulse'))
 dbusmenu_gtk   = dependency('dbusmenu-gtk3-0.4')
 libgvc         = subproject('gvc', default_options: ['static=true'], required : get_option('pulse'))
 xkbregistry    = dependency('xkbregistry')
-json           = dependency('nlohmann_json')
+json           = dependency('yyjson', required: false)
+
+if not json.found()
+	cmake = import('cmake')
+	cmake_opts = cmake.subproject_options()
+	cmake_opts.add_cmake_defines({'CMAKE_POSITION_INDEPENDENT_CODE': true})
+	sub_proj = cmake.subproject('yyjson', options: cmake_opts)
+	json = sub_proj.dependency('yyjson')
+endif
 
 if get_option('wayland-logout') == true
   wayland_logout = subproject('wayland-logout')
