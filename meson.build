@@ -19,7 +19,7 @@ wayland_protos = dependency('wayland-protocols')
 gtkmm = dependency('gtkmm-4.0', version: '>=4.12')
 wfconfig = dependency('wf-config', version: '>=0.7.0') #TODO fallback submodule
 epoxy = dependency('epoxy')
-gtklayershell = dependency('gtk4-layer-shell')
+gtklayershell = dependency('gtk4-layer-shell-0', fallback: ['gtk4-layer-shell'])
 libpulse = dependency('libpulse', required: get_option('pulse'))
 dbusmenu_gtk = dependency('dbusmenu-glib-0.4')
 libgvc = subproject('gvc', default_options: ['static=true'], required: get_option('pulse'))
