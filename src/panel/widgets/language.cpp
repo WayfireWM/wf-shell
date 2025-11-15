@@ -3,7 +3,6 @@
 #include <glibmm.h>
 #include <iostream>
 #include <map>
-#include "json.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -22,7 +21,7 @@ void WayfireLanguage::init(Gtk::Box *container)
     button.show();
 
     ipc->subscribe(this, {"keyboard-modifier-state-changed"});
-    ipc->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (json_t data)
+    ipc->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (wf::json_t data)
     {
         set_available(data["possible-layouts"]);
         set_current(data["layout-index"]);
@@ -31,26 +30,21 @@ void WayfireLanguage::init(Gtk::Box *container)
     container->append(button);
 }
 
-void WayfireLanguage::on_event(json_t data)
+void WayfireLanguage::on_event(wf::json_t data)
 {
-    try {
-        if (data["event"].as_string() == "keyboard-modifier-state-changed")
-        {
-            if (available_layouts.size() == 0)
-            {
-                set_available(data["state"]["possible-layouts"]);
-            }
-
-            auto state_layout = data["state"]["layout-index"].as_uint();
-            if (state_layout != current_layout)
-            {
-                current_layout = state_layout;
-                set_current(state_layout);
-            }
-        }
-    } catch (const JSONException& e)
+    if (data["event"].as_string() == "keyboard-modifier-state-changed")
     {
-        LOGE("Handle event JSON error: ", e.what());
+        if (available_layouts.size() == 0)
+        {
+            set_available(data["state"]["possible-layouts"]);
+        }
+
+        auto state_layout = data["state"]["layout-index"].as_uint();
+        if (state_layout != current_layout)
+        {
+            current_layout = state_layout;
+            set_current(state_layout);
+        }
     }
 }
 
@@ -71,7 +65,7 @@ void WayfireLanguage::set_current(uint32_t index)
     update_label();
 }
 
-void WayfireLanguage::set_available(json_t layouts)
+void WayfireLanguage::set_available(wf::json_t layouts)
 {
     std::vector<Layout> layouts_available;
     std::map<std::string, uint32_t> names;
@@ -111,9 +105,9 @@ void WayfireLanguage::next_layout()
         next = 0;
     }
 
-    json_t message;
+    wf::json_t message;
     message["method"] = "wayfire/set-keyboard-state";
-    message["data"]   = json_t();
+    message["data"]   = wf::json_t();
     message["data"]["layout-index"] = next;
     ipc->send(message.serialize());
 }

@@ -7,3 +7,6 @@
 [submodule "subprojects/gtk4-layer-shell"]
 	path = subprojects/gtk4-layer-shell
 	url = https://github.com/wmww/gtk4-layer-shell.git
+[submodule "subprojects/wf-json"]
+	path = subprojects/wf-json
+	url = https://github.com/WayfireWM/wf-json

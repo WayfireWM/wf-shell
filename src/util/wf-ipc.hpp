@@ -6,7 +6,7 @@
 #include "giomm/socketconnection.h"
 #include "glibmm/iochannel.h"
 #include "glibmm/refptr.h"
-#include "json.hpp"
+#include <wayfire/nonstd/json.hpp>
 #include "sigc++/connection.h"
 #include <functional>
 #include <memory>
@@ -20,10 +20,10 @@
 class IIPCSubscriber
 {
   public:
-    virtual void on_event(json_t) = 0;
+    virtual void on_event(wf::json_t) = 0;
 };
 
-using response_handler = std::function<void (json_t)>;
+using response_handler = std::function<void (wf::json_t)>;
 
 class WayfireIPC
 {

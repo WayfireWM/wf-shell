@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <gtkmm/calendar.h>
 #include <gtkmm/label.h>
-#include "json.hpp"
+#include <wayfire/nonstd/json.hpp>
 #include <string>
 #include <vector>
 
@@ -28,10 +28,10 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
 
   public:
     void init(Gtk::Box *container);
-    void on_event(json_t data) override;
+    void on_event(wf::json_t data) override;
     bool update_label();
     void set_current(uint32_t index);
-    void set_available(json_t layouts);
+    void set_available(wf::json_t layouts);
     void next_layout();
     WayfireLanguage(std::shared_ptr<WayfireIPC> ipc);
     ~WayfireLanguage();

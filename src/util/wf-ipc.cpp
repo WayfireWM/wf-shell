@@ -24,7 +24,6 @@
 #include "glibmm/error.h"
 #include "glibmm/iochannel.h"
 #include "glibmm/main.h"
-#include "json.hpp"
 #include "sigc++/functors/mem_fun.h"
 
 WayfireIPC::WayfireIPC()
@@ -185,8 +184,8 @@ bool WayfireIPC::receive(Glib::IOCondition cond)
                 return false;
             }
 
-            json_t message;
-            auto err = json_t::parse_string(buf, message);
+            wf::json_t message;
+            auto err = wf::json_t::parse_string(buf, message);
             if (err.has_value())
             {
                 LOGE("Parse error: ", err.value(), " message: ", buf, " length: ", buf.length());
@@ -221,9 +220,6 @@ bool WayfireIPC::receive(Glib::IOCondition cond)
     {
         LOGE("GIO Error: ", e.what());
         return false;
-    } catch (const JSONException& e)
-    {
-        LOGE("JSON error: ", e.what());
     }
 
     return true;
@@ -233,16 +229,16 @@ void WayfireIPC::subscribe_all(IIPCSubscriber *subscriber)
 {
     subscribers.insert(subscriber);
 
-    json_t new_subs;
+    wf::json_t new_subs;
     new_subs["method"] = "window-rules/events/watch";
     send(new_subs.serialize());
 }
 
 void WayfireIPC::subscribe(IIPCSubscriber *subscriber, const std::vector<std::string>& events)
 {
-    json_t new_subs;
+    wf::json_t new_subs;
     new_subs["method"] = "window-rules/events/watch";
-    new_subs["events"] = json_t::array();
+    new_subs["events"] = wf::json_t::array();
 
     for (auto event : events)
     {
