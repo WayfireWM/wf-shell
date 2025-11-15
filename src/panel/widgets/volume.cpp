@@ -1,47 +1,6 @@
 #include <gtkmm.h>
-#include <iostream>
 #include <glibmm.h>
 #include "volume.hpp"
-#include "launchers.hpp"
-#include "gtk-utils.hpp"
-
-WayfireVolumeScale::WayfireVolumeScale()
-{
-    value_changed = this->signal_value_changed().connect([=] ()
-    {
-        this->current_volume.animate(this->get_value(), this->get_value());
-        if (this->user_changed_callback)
-        {
-            this->user_changed_callback();
-        }
-    });
-}
-
-void WayfireVolumeScale::set_target_value(double value)
-{
-    this->current_volume.animate(value);
-    add_tick_callback(sigc::mem_fun(*this, &WayfireVolumeScale::update_animation));
-}
-
-gboolean WayfireVolumeScale::update_animation(Glib::RefPtr<Gdk::FrameClock> frame_clock)
-{
-    value_changed.block();
-    this->set_value(this->current_volume);
-    value_changed.unblock();
-    // Once we've finished fading, stop this callback
-    return this->current_volume.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
-}
-
-double WayfireVolumeScale::get_target_value() const
-{
-    return this->current_volume.end;
-}
-
-void WayfireVolumeScale::set_user_changed_callback(
-    std::function<void()> callback)
-{
-    this->user_changed_callback = callback;
-}
 
 enum VolumeLevel
 {
@@ -195,8 +154,7 @@ void WayfireVolume::on_default_sink_changed()
     volume_scale.set_increments(max_norm * scroll_sensitivity,
         max_norm * scroll_sensitivity * 2);
 
-    /* Finally, update the displayed volume. However, do not show the
-     * popup */
+    /* Finally, update the displayed volume. However, do not show the popup */
     set_volume(gvc_mixer_stream_get_volume(gvc_stream), VOLUME_FLAG_NO_ACTION);
 }
 
