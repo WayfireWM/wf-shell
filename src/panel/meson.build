@@ -3,6 +3,7 @@ widget_sources = [
   'widgets/menu.cpp',
   'widgets/clock.cpp',
   'widgets/command-output.cpp',
+  'widgets/language.cpp',
   'widgets/launchers.cpp',
   'widgets/network.cpp',
   'widgets/spacing.cpp',
@@ -29,6 +30,7 @@ deps = [
   wfconfig,
   gtklayershell,
   dbusmenu_gtk,
+  xkbregistry,
 ]
 
 if libpulse.found()
