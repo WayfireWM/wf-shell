@@ -4,8 +4,7 @@
 #include "wf-shell-app.hpp"
 
 /**
- * An implementation of wf::base_option_wrapper_t for wf-shell-app based
- * programs.
+ * An implementation of wf::base_option_wrapper_t for wf-shell-app based programs.
  */
 template<class Type>
 class WfOption : public wf::base_option_wrapper_t<Type>

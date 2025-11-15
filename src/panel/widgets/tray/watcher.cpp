@@ -29,7 +29,8 @@ static const auto introspection_data = Gio::DBus::NodeInfo::create_for_xml(
         <signal name="StatusNotifierHostRegistered"/>
     </interface>
 </node>
-)")->lookup_interface();
+)")
+    ->lookup_interface();
 
 Watcher::Watcher() :
     dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SESSION, SNW_NAME,

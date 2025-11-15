@@ -1,7 +1,6 @@
 #include "battery.hpp"
 #include <gtk-utils.hpp>
 #include <iostream>
-#include <algorithm>
 
 #define UPOWER_NAME "org.freedesktop.UPower"
 #define DISPLAY_DEVICE "/org/freedesktop/UPower/devices/DisplayDevice"
@@ -206,6 +205,24 @@ bool WayfireBatteryInfo::setup_dbus()
     return false;
 }
 
+void WayfireBatteryInfo::update_layout()
+{
+    std::string panel_position = WfOption<std::string>{"panel/position"};
+
+    if (panel_position == PANEL_POSITION_LEFT or panel_position == PANEL_POSITION_RIGHT)
+    {
+        button_box.set_orientation(Gtk::Orientation::VERTICAL);
+    } else
+    {
+        button_box.set_orientation(Gtk::Orientation::HORIZONTAL);
+    }
+}
+
+void WayfireBatteryInfo::handle_config_reload()
+{
+    update_layout();
+}
+
 // TODO: simplify config loading
 
 void WayfireBatteryInfo::init(Gtk::Box *container)
@@ -231,4 +248,6 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
     button.set_child(button_box);
     button.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(*this, &WayfireBatteryInfo::update_icon));
+
+    update_layout();
 }

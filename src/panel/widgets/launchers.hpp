@@ -34,6 +34,9 @@ class WayfireLaunchers : public WayfireWidget
 
   public:
     virtual void init(Gtk::Box *container);
+
+    void update_layout();
+
     virtual void handle_config_reload();
     virtual ~WayfireLaunchers()
     {}

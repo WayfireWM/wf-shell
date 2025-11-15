@@ -4,7 +4,6 @@
 
 #include "toplevel.hpp"
 #include "window-list.hpp"
-#include "panel.hpp"
 
 #define DEFAULT_SIZE_PC 0.1
 
@@ -84,8 +83,8 @@ void WayfireWindowList::set_top_widget(Gtk::Widget *top)
 
     if (layout->top_widget)
     {
-        /* Set original top_x to where the widget currently is, so that we don't
-         * mess with it before the real position is set */
+        /* Set original top_x to where the widget currently is, so that we don't mess with it before the real
+         * position is set */
         this->layout->top_x = get_absolute_position(0, *top);
     }
 
@@ -133,8 +132,7 @@ Gtk::Widget*WayfireWindowList::get_widget_before(int x)
 {
     Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
 
-    /* Widgets are stored bottom to top, so we will return the bottom-most
-     * widget at the given position */
+    /* Widgets are stored bottom to top, so we will return the bottom-most widget at the given position */
     Gtk::Widget *previous = nullptr;
     auto children = this->get_children();
     for (auto& child : children)
@@ -159,8 +157,7 @@ Gtk::Widget*WayfireWindowList::get_widget_at(int x)
 {
     Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
 
-    /* Widgets are stored bottom to top, so we will return the bottom-most
-     * widget at the given position */
+    /* Widgets are stored bottom to top, so we will return the bottom-most widget at the given position */
     auto children = this->get_children();
     for (auto& child : children)
     {

@@ -9,7 +9,6 @@
 #include <glib-object.h>
 #include <giomm/dbusmenumodel.h>
 
-#include <iostream>
 #include <cassert>
 
 static std::pair<Glib::ustring, Glib::ustring> name_and_obj_path(const Glib::ustring & service)
@@ -288,10 +287,9 @@ std::string StatusNotifierItem::get_unique_name()
 }
 
 /*
- *  DBUS names are in the format of :1.61
- *  I have no idea what this means, I frankly don't care, but I need a way to generate an acceptable action
- * group name from this
- *  such that it always gets the same unique output for the same input
+ *  DBUS names are in the format of :1.61 I have no idea what this means, I frankly don't care, but I need a
+ * way to generate an acceptable action group name from this such that it always gets the same unique output
+ * for the same input
  */
 
 const std::string CHARS_IN  = ":0123456789.";

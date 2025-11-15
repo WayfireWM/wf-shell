@@ -10,7 +10,6 @@
 
 #include "menu.hpp"
 #include "gtk-utils.hpp"
-#include "launchers.hpp"
 #include "wf-autohide-window.hpp"
 
 const std::string default_icon = "wayfire";
@@ -156,10 +155,9 @@ uint32_t WfMenuMenuItem::get_search_value()
 }
 
 /* Fuzzy search for pattern in text. We use a greedy algorithm as follows:
- * As long as the pattern isn't matched, try to match the leftmost unmatched
- * character in pattern with the first occurence of this character after the
- * partial match. In the end, we just check if we successfully matched all
- * characters */
+ * As long as the pattern isn't matched, try to match the leftmost unmatched character in pattern with the
+ * first occurence of this character after the partial match. In the end, we just check if we successfully
+ * matched all characters */
 static bool fuzzy_match(Glib::ustring text, Glib::ustring pattern)
 {
     size_t i = 0, // next character in pattern to match
@@ -174,8 +172,7 @@ static bool fuzzy_match(Glib::ustring text, Glib::ustring pattern)
             ++j;
         } else
         {
-            /* Try to match current unmatched character in pattern with the next
-             * character in text */
+            /* Try to match current unmatched character in pattern with the next character in text */
             ++j;
         }
     }
@@ -275,8 +272,7 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
 
     auto name = app_info->get_name();
     auto exec = app_info->get_executable();
-    /* If we don't have the following, then the entry won't be useful anyway,
-     * so we should skip it */
+    /* If we don't have the following, then the entry won't be useful anyway, so we should skip it */
     if (name.empty() || !app_info->get_icon() || exec.empty())
     {
         return;
@@ -290,8 +286,8 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
 
     loaded_apps.insert({name, exec});
 
-    /* Check if this has a 'OnlyShownIn' for a different desktop env
-    *  If so, we throw it in a pile at the bottom just to be safe */
+    /* Check if this has a 'OnlyShownIn' for a different desktop env If so, we throw it in a pile at the
+     * bottom just to be safe */
     if (!app_info->should_show())
     {
         add_category_app("Hidden", app_info);
@@ -618,8 +614,7 @@ void WayfireMenu::update_popover_layout()
         });
     } else
     {
-        /* Layout was already initialized, make sure to remove widgets before
-         * adding them again */
+        /* Layout was already initialized, make sure to remove widgets before adding them again */
         popover_layout_box.remove(search_entry);
         popover_layout_box.remove(scroll_pair);
         popover_layout_box.remove(separator);
@@ -807,9 +802,9 @@ static void app_info_changed(GAppInfoMonitor *gappinfomonitor, gpointer user_dat
 
 void WayfireMenu::init(Gtk::Box *container)
 {
-    /* https://specifications.freedesktop.org/menu-spec/latest/apa.html#main-category-registry
-     * Using the 'Main' categories, with names and icons assigned
-     * Any Categories in .desktop files that are not in this list are ignored */
+    /* https://specifications.freedesktop.org/menu-spec/latest/apa.html#main-category-registry Using the
+     * 'Main' categories, with names and icons assigned Any Categories in .desktop files that are not in this
+     * list are ignored */
     category_list["All"]     = std::make_unique<WfMenuCategory>("All", "applications-other");
     category_list["Network"] = std::make_unique<WfMenuCategory>("Internet",
         "applications-internet");
