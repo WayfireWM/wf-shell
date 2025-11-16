@@ -270,12 +270,12 @@ void WfWpControl::update_gestures()
         right_conn.disconnect();
     }
 
-    if ((std::string)str_wp_middle_click_action == (std::string)"mute_face")
+    if (str_wp_middle_click_action.value() == "mute_face")
     {
         middle_conn = middle_click_mute->signal_pressed().connect(mute_action);
     }
 
-    if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
+    if (str_wp_right_click_action.value() == "mute_face")
     {
         right_conn = right_click_mute->signal_pressed().connect(mute_action);
     }
@@ -382,15 +382,15 @@ void WayfireWireplumber::reload_config()
     WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
     WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
 
-    if ((std::string)str_face_choice == (std::string)"last_change")
+    if (str_face_choice.value() == "last_change")
     {
         face_choice = FaceChoice::LAST_CHANGE;
-    } else if ((std::string)str_face_choice == (std::string)"default_sink")
+    } else if (str_face_choice.value() == "default_sink")
     {
         face_choice = FaceChoice::DEFAULT_SINK;
         face = nullptr;
         WpCommon::on_default_nodes_changed(WpCommon::default_nodes_api, NULL);
-    } else if ((std::string)str_face_choice == (std::string)"default_source")
+    } else if (str_face_choice.value() == "default_source")
     {
         face_choice = FaceChoice::DEFAULT_SOURCE;
         face = nullptr;
@@ -478,7 +478,7 @@ void WayfireWireplumber::reload_config()
     // the left click case is a bit special, since it’s supposed to show the popover.
     // (this is also why the mute action is not available for the left click)
     // this is not the prettiest, but the alternative is way worse
-    if ((std::string)str_wp_left_click_action == (std::string)"show_mixer")
+    if (str_wp_left_click_action.value() == "show_mixer")
     {
         left_conn = left_click_gesture->signal_pressed().connect(
             [&] (int c, double x, double y)
@@ -494,7 +494,7 @@ void WayfireWireplumber::reload_config()
         });
     }
 
-    if ((std::string)str_wp_left_click_action == (std::string)"show_face")
+    if (str_wp_left_click_action.value() == "show_face")
     {
         left_conn = left_click_gesture->signal_pressed().connect(
             [&] (int c, double x, double y)
@@ -515,32 +515,32 @@ void WayfireWireplumber::reload_config()
         });
     }
 
-    if ((std::string)str_wp_middle_click_action == (std::string)"show_mixer")
+    if (str_wp_middle_click_action.value() == "show_mixer")
     {
         middle_conn = middle_click_gesture->signal_pressed().connect(show_mixer_action);
     }
 
-    if ((std::string)str_wp_middle_click_action == (std::string)"show_face")
+    if (str_wp_middle_click_action.value() == "show_face")
     {
         middle_conn = middle_click_gesture->signal_pressed().connect(show_face_action);
     }
 
-    if ((std::string)str_wp_middle_click_action == (std::string)"mute_face")
+    if (str_wp_middle_click_action.value() == "mute_face")
     {
         middle_conn = middle_click_gesture->signal_pressed().connect(mute_action);
     }
 
-    if ((std::string)str_wp_right_click_action == (std::string)"show_mixer")
+    if (str_wp_right_click_action.value() == "show_mixer")
     {
         right_conn = right_click_gesture->signal_pressed().connect(show_mixer_action);
     }
 
-    if ((std::string)str_wp_right_click_action == (std::string)"show_face")
+    if (str_wp_right_click_action.value() == "show_face")
     {
         right_conn = right_click_gesture->signal_pressed().connect(show_face_action);
     }
 
-    if ((std::string)str_wp_right_click_action == (std::string)"mute_face")
+    if (str_wp_right_click_action.value() == "mute_face")
     {
         right_conn = right_click_gesture->signal_pressed().connect(mute_action);
     }
