@@ -128,25 +128,4 @@ class WayfireWireplumber : public WayfireWidget
     virtual ~WayfireWireplumber();
 };
 
-namespace WpCommon
-{
-static WpCore *core = nullptr;
-static WpObjectManager *object_manager;
-static WpPlugin *mixer_api;
-static WpPlugin *default_nodes_api;
-
-static std::vector<WayfireWireplumber*> widgets;
-
-static void init_wp();
-static void catch_up_to_current_state(WayfireWireplumber *widget);
-static void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
-static void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
-static void on_all_plugins_loaded();
-static void on_om_installed(WpObjectManager *manager, gpointer data);
-static void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
-static void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
-static void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
-static void on_object_removed(WpObjectManager *manager, gpointer node, gpointer data);
-}
-
 #endif // WIDGETS_PIPEWIRE_HPP
