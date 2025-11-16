@@ -62,6 +62,15 @@ static const gchar *DEFAULT_NODE_MEDIA_CLASSES[] = {
     "Audio/Source",
 };
 
+const std::map<VolumeLevel, std::string> icon_name_from_state = {
+    {VOLUME_LEVEL_MUTE, "audio-volume-muted"},
+    {VOLUME_LEVEL_LOW, "audio-volume-low"},
+    {VOLUME_LEVEL_MED, "audio-volume-medium"},
+    {VOLUME_LEVEL_HIGH, "audio-volume-high"},
+    {VOLUME_LEVEL_OOR, "audio-volume-muted"},
+};
+
+
 static VolumeLevel volume_icon_for(double volume)
 {
     double max = 1.0;
@@ -221,14 +230,6 @@ void WfWpControl::update_icon()
         volume_icon.set_from_icon_name("audio-volume-muted");
         return;
     }
-
-    std::map<VolumeLevel, std::string> icon_name_from_state = {
-        {VOLUME_LEVEL_MUTE, "audio-volume-muted"},
-        {VOLUME_LEVEL_LOW, "audio-volume-low"},
-        {VOLUME_LEVEL_MED, "audio-volume-medium"},
-        {VOLUME_LEVEL_HIGH, "audio-volume-high"},
-        {VOLUME_LEVEL_OOR, "audio-volume-muted"},
-    };
 
     volume_icon.set_from_icon_name(icon_name_from_state.at(current));
 }
@@ -660,14 +661,6 @@ void WayfireWireplumber::update_icon()
         main_image.set_from_icon_name("audio-volume-muted");
         return;
     }
-
-    std::map<VolumeLevel, std::string> icon_name_from_state = {
-        {VOLUME_LEVEL_MUTE, "audio-volume-muted"},
-        {VOLUME_LEVEL_LOW, "audio-volume-low"},
-        {VOLUME_LEVEL_MED, "audio-volume-medium"},
-        {VOLUME_LEVEL_HIGH, "audio-volume-high"},
-        {VOLUME_LEVEL_OOR, "audio-volume-muted"},
-    };
 
     main_image.set_from_icon_name(icon_name_from_state.at(current));
 }
