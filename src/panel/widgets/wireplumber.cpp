@@ -205,11 +205,6 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     update_icon();
 }
 
-Glib::ustring WfWpControl::get_name()
-{
-    return label.get_text();
-}
-
 void WfWpControl::set_btn_status_no_callbk(bool state)
 {
     mute_conn.block(true);
@@ -226,7 +221,7 @@ void WfWpControl::update_icon()
 {
     VolumeLevel current = volume_icon_for(get_scale_target_value());
 
-    if (is_muted())
+    if (button.get_active())
     {
         volume_icon.set_from_icon_name("audio-volume-muted");
         return;
@@ -238,11 +233,6 @@ void WfWpControl::update_icon()
 double WfWpControl::get_scale_target_value()
 {
     return scale.get_target_value();
-}
-
-bool WfWpControl::is_muted()
-{
-    return button.get_active();
 }
 
 void WfWpControl::update_gestures()
@@ -616,7 +606,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     sources_box.set_orientation(Gtk::Orientation::VERTICAL);
     streams_box.set_orientation(Gtk::Orientation::VERTICAL);
 
-    // assemble master box (TODO: only show boxes that have contents)
+    // assemble master box (todo: only show boxes that have contents)
     master_box.append(sinks_box);
     master_box.append(out_in_wall);
     master_box.append(sources_box);
@@ -637,7 +627,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     streams_box.append(streams);
     streams_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     streams_box.append(streams_sep);
-    
+
     /* Setup popover */
     popover->set_child(master_box);
     popover->get_style_context()->add_class("volume-popover");
@@ -667,7 +657,7 @@ void WayfireWireplumber::update_icon()
 {
     VolumeLevel current = volume_icon_for(face->get_scale_target_value());
 
-    if (!face || face->is_muted())
+    if (!face || face->button.get_active())
     {
         main_image.set_from_icon_name("audio-volume-muted");
         return;
@@ -805,6 +795,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject* object, WayfireWireplumber
     if (type == "Audio/Sink")
     {
         which_box = &(widget->sinks_box);
+
         control   = new WfWpControlDevice(object, widget);
     } else if (type == "Audio/Source")
     {
@@ -831,7 +822,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject* object, WayfireWireplumber
 
 void WpCommon::on_object_added(WpObjectManager *manager, gpointer object, gpointer data)
 {
-    WpPipewireObject *obj = (WpPipewireObject*)object;
+    auto *obj = (WpPipewireObject*)object;
 
     for (auto widget : widgets)
     {
@@ -997,7 +988,7 @@ void WpCommon::on_object_removed(WpObjectManager *manager, gpointer object, gpoi
         }
 
         WfWpControl *control = it->second.get();
-        Gtk::Box *box = (Gtk::Box*)control->get_parent();
+        auto *box = (Gtk::Box*)control->get_parent();
         if (box)
             box->remove(*control);
 
