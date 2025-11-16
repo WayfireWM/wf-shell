@@ -32,19 +32,17 @@ class WfWpControl : public Gtk::Grid
     std::shared_ptr<Gtk::GestureClick> middle_click_mute, right_click_mute;
     sigc::connection middle_conn, right_conn;
     bool gestures_initialised = false;
+    void update_gestures();
 
   public:
     WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widget);
     WpPipewireObject *object;
-    Glib::ustring get_name();
     Gtk::ToggleButton button;
     void set_btn_status_no_callbk(bool state);
     void set_scale_target_value(double volume);
     double get_scale_target_value();
     void update_icon();
-    bool is_muted();
 
-    void update_gestures();
     void handle_config_reload();
 
     std::unique_ptr<WfWpControl> copy();
@@ -70,6 +68,8 @@ class wayfire_config;
 class WayfireWireplumber : public WayfireWidget
 {
   private:
+    void init(Gtk::Box *container) override;
+
     Gtk::Image main_image;
 
     WfOption<double> timeout{"panel/wp_display_timeout"};
@@ -77,6 +77,7 @@ class WayfireWireplumber : public WayfireWidget
     void on_volume_value_changed();
     bool on_popover_timeout(int timer);
 
+    // signals for the configurable actions on click
     gulong notify_volume_signal   = 0;
     gulong notify_is_muted_signal = 0;
     gulong notify_default_sink_changed = 0;
@@ -87,11 +88,13 @@ class WayfireWireplumber : public WayfireWidget
     std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
     sigc::connection left_conn, middle_conn, right_conn;
 
+    // mixer display widgets
     Gtk::Label output, input, streams;
     Gtk::Separator out_in_wall, in_streams_wall, out_sep, in_sep, streams_sep;
 
+    void reload_config();
+
   public:
-    void init(Gtk::Box *container) override;
 
     WfOption<double> scroll_sensitivity{"panel/wp_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/wp_invert_scroll"};
@@ -105,12 +108,12 @@ class WayfireWireplumber : public WayfireWidget
     /*
      *   the "face" is the representation of the audio channel that shows it’s volume level on the widget
      * icon and is concerned by the quick actions.
-     *   currently, it is the last channel to have been updated. TODO: add pinning?
+     *  configured by panel/wp_face_choice. idea: add pinning?
      */
     std::unique_ptr<WfWpControl> face;
 
     Gtk::Box master_box, sinks_box, sources_box, streams_box;
-    // TODO: add a category for stuff that listens to an audio source
+    // possible: add a category for stuff that listens to an audio source
 
     std::map<WpPipewireObject*, std::unique_ptr<WfWpControl>> objects_to_controls;
 
@@ -125,8 +128,7 @@ class WayfireWireplumber : public WayfireWidget
      */
     void check_set_popover_timeout();
 
-    void reload_config();
-    void handle_config_reload();
+    void handle_config_reload() override;
 
     virtual ~WayfireWireplumber();
 };
