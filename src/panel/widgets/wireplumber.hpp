@@ -50,7 +50,7 @@ class WfWpControl : public Gtk::Grid
     WfWpControl *copy();
 };
 
-// todo : add a WfWpControlStream class that presents a dropdown to select which sink a stream goes to
+// todo: add a WfWpControlStream class that presents a dropdown to select which sink a stream goes to
 
 // sinks and sources
 class WfWpControlDevice : public WfWpControl
@@ -100,14 +100,14 @@ class WayfireWireplumber : public WayfireWidget
     Gtk::Popover *popover;
 
     /*
-     *   the « face » is the representation of the audio channel that shows it’s volume level on the widget
+     *   the "face" is the representation of the audio channel that shows it’s volume level on the widget
      * icon and is concerned by the quick actions.
-     *   currently, it is the last channel to have been updated. TODO : add pinning ?
+     *   currently, it is the last channel to have been updated. TODO: add pinning?
      */
     WfWpControl *face;
 
     Gtk::Box master_box, sinks_box, sources_box, streams_box;
-    // TODO : add a category for stuff that listens to an audio source
+    // TODO: add a category for stuff that listens to an audio source
 
     std::map<WpPipewireObject*, WfWpControl*> objects_to_controls;
 

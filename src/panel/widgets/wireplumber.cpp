@@ -556,7 +556,7 @@ void WayfireWireplumber::handle_config_reload()
 
 void WayfireWireplumber::init(Gtk::Box *container)
 {
-    // sets up the « widget part »
+    // sets up the "widget part"
 
     button = std::make_unique<WayfireMenuButton>("panel");
     button->get_style_context()->add_class("volume");
@@ -611,7 +611,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     auto r2 = Gtk::Orientation::VERTICAL;
 
     master_box.set_orientation(r1);
-    // TODO : only show the boxes which have stuff in them
+    // TODO: only show the boxes which have stuff in them
     master_box.append(sinks_box);
     master_box.append(*new Gtk::Separator(r1));
     master_box.append(sources_box);
@@ -878,7 +878,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             }
         } else
         {
-            // update the face’s values ; note the WfWpControl constructor already syncs the values
+            // update the face’s values; note the WfWpControl constructor already syncs the values
             widget->face->set_btn_status_no_callbk(mute);
             widget->face->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
         }
