@@ -87,6 +87,9 @@ class WayfireWireplumber : public WayfireWidget
     std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
     sigc::connection left_conn, middle_conn, right_conn;
 
+    Gtk::Label output, input, streams;
+    Gtk::Separator out_in_wall, in_streams_wall, out_sep, in_sep, streams_sep;
+
   public:
     void init(Gtk::Box *container) override;
 

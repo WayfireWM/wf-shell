@@ -613,19 +613,24 @@ void WayfireWireplumber::init(Gtk::Box *container)
     master_box.set_orientation(r1);
     // TODO: only show the boxes which have stuff in them
     master_box.append(sinks_box);
-    master_box.append(*new Gtk::Separator(r1));
+    master_box.append(out_in_wall);
+    out_in_wall.set_orientation(r2);
     master_box.append(sources_box);
-    master_box.append(*new Gtk::Separator(r1));
+    in_streams_wall.set_orientation(r2);
+    master_box.append(in_streams_wall);
     master_box.append(streams_box);
     sinks_box.set_orientation(r2);
-    sinks_box.append(*new Gtk::Label("Output devices"));
-    sinks_box.append(*new Gtk::Separator(r2));
+    sinks_box.append(output);
+    out_sep.set_orientation(r1);
+    sinks_box.append(out_sep);
     sources_box.set_orientation(r2);
-    sources_box.append(*new Gtk::Label("Input devices"));
-    sources_box.append(*new Gtk::Separator(r2));
+    sources_box.append(input);
+    in_sep.set_orientation(r1);
+    sources_box.append(in_sep);
     streams_box.set_orientation(r2);
-    streams_box.append(*new Gtk::Label("Audio streams"));
-    streams_box.append(*new Gtk::Separator(r2));
+    streams_box.append(streams);
+    streams_sep.set_orientation(r1);
+    streams_box.append(streams_sep);
 
     /* Setup popover */
     popover->set_child(master_box);
