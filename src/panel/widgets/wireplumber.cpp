@@ -607,31 +607,37 @@ void WayfireWireplumber::init(Gtk::Box *container)
     reload_config();
 
     // boxes hierarchy and labeling
-    auto r1 = Gtk::Orientation::HORIZONTAL;
-    auto r2 = Gtk::Orientation::VERTICAL;
+    master_box.set_orientation(Gtk::Orientation::HORIZONTAL);
 
-    master_box.set_orientation(r1);
-    // TODO: only show the boxes which have stuff in them
+    // column orientations
+    out_in_wall.set_orientation(Gtk::Orientation::VERTICAL);
+    in_streams_wall.set_orientation(Gtk::Orientation::VERTICAL);
+    sinks_box.set_orientation(Gtk::Orientation::VERTICAL);
+    sources_box.set_orientation(Gtk::Orientation::VERTICAL);
+    streams_box.set_orientation(Gtk::Orientation::VERTICAL);
+
+    // assemble master box (TODO: only show boxes that have contents)
     master_box.append(sinks_box);
     master_box.append(out_in_wall);
-    out_in_wall.set_orientation(r2);
     master_box.append(sources_box);
-    in_streams_wall.set_orientation(r2);
     master_box.append(in_streams_wall);
     master_box.append(streams_box);
-    sinks_box.set_orientation(r2);
-    sinks_box.append(output);
-    out_sep.set_orientation(r1);
-    sinks_box.append(out_sep);
-    sources_box.set_orientation(r2);
-    sources_box.append(input);
-    in_sep.set_orientation(r1);
-    sources_box.append(in_sep);
-    streams_box.set_orientation(r2);
-    streams_box.append(streams);
-    streams_sep.set_orientation(r1);
-    streams_box.append(streams_sep);
 
+    // sinks
+    sinks_box.append(output);
+    out_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
+    sinks_box.append(out_sep);
+
+    // sources
+    sources_box.append(input);
+    in_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
+    sources_box.append(in_sep);
+
+    // streams
+    streams_box.append(streams);
+    streams_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
+    streams_box.append(streams_sep);
+    
     /* Setup popover */
     popover->set_child(master_box);
     popover->get_style_context()->add_class("volume-popover");
