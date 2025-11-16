@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <pipewire/keys.h>
+#include <string_view>
 
 #include "wireplumber.hpp"
 
@@ -315,12 +316,12 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
             return;
         }
 
-        const gchar *media_class = wp_pipewire_object_get_property(
+        const std::string_view media_class{wp_pipewire_object_get_property(
             WP_PIPEWIRE_OBJECT(proxy),
-            PW_KEY_MEDIA_CLASS);
+            PW_KEY_MEDIA_CLASS)};
         for (guint i = 0; i < G_N_ELEMENTS(DEFAULT_NODE_MEDIA_CLASSES); i++)
         {
-            if (g_strcmp0(media_class, DEFAULT_NODE_MEDIA_CLASSES[i]))
+            if (media_class == DEFAULT_NODE_MEDIA_CLASSES[i])
             {
                 continue;
             }
@@ -787,19 +788,19 @@ void WpCommon::on_all_plugins_loaded()
 void WpCommon::add_object_to_widget(WpPipewireObject* object, WayfireWireplumber* widget){
     // adds a new widget to the appropriate section
 
-    const gchar *type = wp_pipewire_object_get_property(object, PW_KEY_MEDIA_CLASS);
+    const std::string_view type {wp_pipewire_object_get_property(object, PW_KEY_MEDIA_CLASS)};
 
     WfWpControl *control;
     Gtk::Box *which_box;
-    if (g_strcmp0(type, "Audio/Sink") == 0)
+    if (type == "Audio/Sink")
     {
         which_box = &(widget->sinks_box);
         control   = new WfWpControlDevice(object, widget);
-    } else if (g_strcmp0(type, "Audio/Source") == 0)
+    } else if (type == "Audio/Source")
     {
         which_box = &(widget->sources_box);
         control   = new WfWpControlDevice(object, widget);
-    } else if (g_strcmp0(type, "Stream/Output/Audio") == 0)
+    } else if (type == "Stream/Output/Audio")
     {
         which_box = &(widget->streams_box);
         control   = new WfWpControl(object, (WayfireWireplumber*)widget);
@@ -950,20 +951,20 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
             }
 
             // if the control is not for a sink or source (non WfWpControlDevice), don’t try to set status
-            const gchar *type = wp_pipewire_object_get_property(obj, PW_KEY_MEDIA_CLASS);
+            const std::string_view type{wp_pipewire_object_get_property(obj, PW_KEY_MEDIA_CLASS)};
 
-            if ((g_strcmp0(type, "Audio/Sink") == 0) || (g_strcmp0(type, "Audio/Source") == 0))
+            if (type == "Audio/Sink" || type == "Audio/Source")
             {
                 ctrl->set_def_status_no_callbk(false);
             }
 
             if ( // if the settings call for it, refresh the face
                 (
-                    ((widget->face_choice == FaceChoice::DEFAULT_SINK) &&
-                     (g_strcmp0(type, "Audio/Sink") == 0))
+                    (widget->face_choice == FaceChoice::DEFAULT_SINK) &&
+                     (type == "Audio/Sink")
                     ||
-                    ((widget->face_choice == FaceChoice::DEFAULT_SOURCE) &&
-                     (g_strcmp0(type, "Audio/Source") == 0))
+                    (widget->face_choice == FaceChoice::DEFAULT_SOURCE) &&
+                     (type == "Audio/Source")
                 )
                 &&
                 (widget->face->object == ctrl->object))
