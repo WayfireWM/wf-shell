@@ -1,56 +1,8 @@
 #include <gtkmm.h>
-#include <iostream>
 #include <glibmm.h>
 #include "volume.hpp"
-#include "launchers.hpp"
-#include "gtk-utils.hpp"
 
-WayfireVolumeScale::WayfireVolumeScale()
-{
-    value_changed = this->signal_value_changed().connect([=] ()
-    {
-        this->current_volume.animate(this->get_value(), this->get_value());
-        if (this->user_changed_callback)
-        {
-            this->user_changed_callback();
-        }
-    });
-}
-
-void WayfireVolumeScale::set_target_value(double value)
-{
-    this->current_volume.animate(value);
-    add_tick_callback(sigc::mem_fun(*this, &WayfireVolumeScale::update_animation));
-}
-
-gboolean WayfireVolumeScale::update_animation(Glib::RefPtr<Gdk::FrameClock> frame_clock)
-{
-    value_changed.block();
-    this->set_value(this->current_volume);
-    value_changed.unblock();
-    // Once we've finished fading, stop this callback
-    return this->current_volume.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
-}
-
-double WayfireVolumeScale::get_target_value() const
-{
-    return this->current_volume.end;
-}
-
-void WayfireVolumeScale::set_user_changed_callback(
-    std::function<void()> callback)
-{
-    this->user_changed_callback = callback;
-}
-
-enum VolumeLevel
-{
-    VOLUME_LEVEL_MUTE = 0,
-    VOLUME_LEVEL_LOW,
-    VOLUME_LEVEL_MED,
-    VOLUME_LEVEL_HIGH,
-    VOLUME_LEVEL_OOR, /* Out of range */
-};
+#include "volume-level.hpp"
 
 static VolumeLevel get_volume_level(pa_volume_t volume, pa_volume_t max)
 {
@@ -82,14 +34,6 @@ void WayfireVolume::update_icon()
         main_image.set_from_icon_name("audio-volume-muted");
         return;
     }
-
-    std::map<VolumeLevel, std::string> icon_name_from_state = {
-        {VOLUME_LEVEL_MUTE, "audio-volume-muted"},
-        {VOLUME_LEVEL_LOW, "audio-volume-low"},
-        {VOLUME_LEVEL_MED, "audio-volume-medium"},
-        {VOLUME_LEVEL_HIGH, "audio-volume-high"},
-        {VOLUME_LEVEL_OOR, "audio-volume-muted"},
-    };
 
     main_image.set_from_icon_name(icon_name_from_state.at(current));
 }
@@ -195,8 +139,7 @@ void WayfireVolume::on_default_sink_changed()
     volume_scale.set_increments(max_norm * scroll_sensitivity,
         max_norm * scroll_sensitivity * 2);
 
-    /* Finally, update the displayed volume. However, do not show the
-     * popup */
+    /* Finally, update the displayed volume. However, do not show the popup */
     set_volume(gvc_mixer_stream_get_volume(gvc_stream), VOLUME_FLAG_NO_ACTION);
 }
 

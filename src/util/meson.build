@@ -6,6 +6,7 @@ util = static_library(
         'wf-autohide-window.cpp',
         'wf-popover.cpp',
         'css-config.cpp',
+		'animated-scale.cpp'
     ],
     dependencies: [wf_protos, gtklayershell, wayland_client, gtkmm, wfconfig, libinotify],
 )
