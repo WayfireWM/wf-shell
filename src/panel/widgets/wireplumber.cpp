@@ -19,6 +19,27 @@
 
 #include "wireplumber.hpp"
 
+namespace WpCommon
+{
+    WpCore *core = nullptr;
+    WpObjectManager *object_manager;
+    WpPlugin *mixer_api;
+    WpPlugin *default_nodes_api;
+
+    std::vector<WayfireWireplumber*> widgets;
+
+    void init_wp();
+    void catch_up_to_current_state(WayfireWireplumber *widget);
+    void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
+    void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
+    void on_all_plugins_loaded();
+    void on_om_installed(WpObjectManager *manager, gpointer data);
+    void add_object_to_widget(WpPipewireObject* object, WayfireWireplumber* widget);
+    void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
+    void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
+    void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
+    void on_object_removed(WpObjectManager *manager, gpointer node, gpointer data);
+}
 
 enum VolumeLevel
 {
@@ -710,7 +731,7 @@ void WpCommon::catch_up_to_current_state(WayfireWireplumber *widget)
     GValue item = G_VALUE_INIT;
     while (wp_iterator_next(reg_objs, &item))
     {
-        on_object_added(object_manager, (gpointer)g_value_get_object(&item), &widget);
+        add_object_to_widget((WpPipewireObject*)g_value_get_object(&item), widget);
         g_value_unset(&item);
     }
 }
@@ -770,43 +791,47 @@ void WpCommon::on_all_plugins_loaded()
     wp_core_install_object_manager(core, object_manager);
 }
 
-void WpCommon::on_object_added(WpObjectManager *manager, gpointer object, gpointer data)
-{
+void WpCommon::add_object_to_widget(WpPipewireObject* object, WayfireWireplumber* widget){
     // adds a new widget to the appropriate section
 
-    WpPipewireObject *obj = (WpPipewireObject*)object;
+    const gchar *type = wp_pipewire_object_get_property(object, PW_KEY_MEDIA_CLASS);
 
-    const gchar *type = wp_pipewire_object_get_property(obj, PW_KEY_MEDIA_CLASS);
+    WfWpControl *control;
+    Gtk::Box *which_box;
+    if (g_strcmp0(type, "Audio/Sink") == 0)
+    {
+        which_box = &(widget->sinks_box);
+        control   = new WfWpControlDevice(object, widget);
+    } else if (g_strcmp0(type, "Audio/Source") == 0)
+    {
+        which_box = &(widget->sources_box);
+        control   = new WfWpControlDevice(object, widget);
+    } else if (g_strcmp0(type, "Stream/Output/Audio") == 0)
+    {
+        which_box = &(widget->streams_box);
+        control   = new WfWpControl(object, (WayfireWireplumber*)widget);
+    } else
+    {
+        std::cout << "Could not match pipewire object media class, ignoring\n";
+        return;
+    }
+
+    widget->objects_to_controls.insert({object, control});
+    which_box->append((Gtk::Widget&)*control);
+    // try to not be faceless
+    if (!widget->face)
+    {
+        widget->face = control->copy();
+    }
+}
+
+void WpCommon::on_object_added(WpObjectManager *manager, gpointer object, gpointer data)
+{
+    WpPipewireObject *obj = (WpPipewireObject*)object;
 
     for (auto widget : widgets)
     {
-        WfWpControl *control;
-        Gtk::Box *which_box;
-        if (g_strcmp0(type, "Audio/Sink") == 0)
-        {
-            which_box = &(widget->sinks_box);
-            control   = new WfWpControlDevice(obj, widget);
-        } else if (g_strcmp0(type, "Audio/Source") == 0)
-        {
-            which_box = &(widget->sources_box);
-            control   = new WfWpControlDevice(obj, widget);
-        } else if (g_strcmp0(type, "Stream/Output/Audio") == 0)
-        {
-            which_box = &(widget->streams_box);
-            control   = new WfWpControl(obj, (WayfireWireplumber*)widget);
-        } else
-        {
-            std::cout << "Could not match pipewire object media class, ignoring\n";
-            return;
-        }
-
-        widget->objects_to_controls.insert({obj, control});
-        which_box->append((Gtk::Widget&)*control);
-        // try to not be faceless
-        if (!widget->face)
-        {
-            widget->face = control->copy();
-        }
+        add_object_to_widget(obj, widget);
     }
 }
 
