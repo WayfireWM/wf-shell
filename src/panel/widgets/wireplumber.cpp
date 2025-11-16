@@ -1,23 +1,12 @@
-#include <fontconfig/fontconfig.h>
 #include <gtkmm.h>
 #include <iostream>
-#include <glibmm.h>
-#include "gio/gio.h"
-#include "glib-object.h"
-#include "glib.h"
-#include "gtkmm/enums.h"
-#include "gtkmm/gestureclick.h"
-#include "gtkmm/label.h"
-#include "gtkmm/separator.h"
-#include "gtkmm/togglebutton.h"
-#include "sigc++/connection.h"
-#include "wp/proxy-interfaces.h"
-#include "wp/proxy.h"
+#include <wp/proxy-interfaces.h>
+#include <wp/proxy.h>
 
-#include <memory>
 #include <pipewire/keys.h>
 #include <string_view>
 
+#include "volume-level.hpp"
 #include "wireplumber.hpp"
 
 namespace WpCommon
@@ -42,15 +31,6 @@ namespace WpCommon
     void on_object_removed(WpObjectManager *manager, gpointer node, gpointer data);
 }
 
-enum VolumeLevel
-{
-    VOLUME_LEVEL_MUTE = 0,
-    VOLUME_LEVEL_LOW,
-    VOLUME_LEVEL_MED,
-    VOLUME_LEVEL_HIGH,
-    VOLUME_LEVEL_OOR, /* Out of range */
-};
-
 enum class FaceChoice
 {
     LAST_CHANGE,
@@ -62,15 +42,6 @@ static const gchar *DEFAULT_NODE_MEDIA_CLASSES[] = {
     "Audio/Sink",
     "Audio/Source",
 };
-
-const std::map<VolumeLevel, std::string> icon_name_from_state = {
-    {VOLUME_LEVEL_MUTE, "audio-volume-muted"},
-    {VOLUME_LEVEL_LOW, "audio-volume-low"},
-    {VOLUME_LEVEL_MED, "audio-volume-medium"},
-    {VOLUME_LEVEL_HIGH, "audio-volume-high"},
-    {VOLUME_LEVEL_OOR, "audio-volume-muted"},
-};
-
 
 static VolumeLevel volume_icon_for(double volume)
 {
@@ -122,8 +93,6 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     {
         name = "Unnamed";
     }
-
-    name = g_strdup_printf("%s %d", name, id);
 
     label.set_text(Glib::ustring(name));
 
