@@ -47,7 +47,7 @@ class WfWpControl : public Gtk::Grid
     void update_gestures();
     void handle_config_reload();
 
-    WfWpControl *copy();
+    std::unique_ptr<WfWpControl> copy();
 };
 
 // todo: add a WfWpControlStream class that presents a dropdown to select which sink a stream goes to
@@ -63,7 +63,7 @@ class WfWpControlDevice : public WfWpControl
     WfWpControlDevice(WpPipewireObject *obj, WayfireWireplumber *parent_widget);
     Gtk::ToggleButton default_btn;
     void set_def_status_no_callbk(bool state);
-    WfWpControlDevice *copy();
+    std::unique_ptr<WfWpControlDevice> copy();
 };
 
 class wayfire_config;
@@ -104,12 +104,12 @@ class WayfireWireplumber : public WayfireWidget
      * icon and is concerned by the quick actions.
      *   currently, it is the last channel to have been updated. TODO: add pinning?
      */
-    WfWpControl *face;
+    std::unique_ptr<WfWpControl> face;
 
     Gtk::Box master_box, sinks_box, sources_box, streams_box;
     // TODO: add a category for stuff that listens to an audio source
 
-    std::map<WpPipewireObject*, WfWpControl*> objects_to_controls;
+    std::map<WpPipewireObject*, std::unique_ptr<WfWpControl>> objects_to_controls;
 
     /** Update the icon based on volume and muted state of the face widget */
     void update_icon();

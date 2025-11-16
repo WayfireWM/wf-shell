@@ -286,10 +286,9 @@ void WfWpControl::handle_config_reload()
     update_gestures();
 }
 
-WfWpControl*WfWpControl::copy()
+std::unique_ptr<WfWpControl> WfWpControl::copy()
 {
-    WfWpControl *copy = new WfWpControl(object, parent);
-    return copy;
+    return std::make_unique<WfWpControl>(object, parent);
 }
 
 WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
@@ -354,10 +353,9 @@ void WfWpControlDevice::set_def_status_no_callbk(bool state)
     def_conn.block(false);
 }
 
-WfWpControlDevice*WfWpControlDevice::copy()
+std::unique_ptr<WfWpControlDevice> WfWpControlDevice::copy()
 {
-    WfWpControlDevice *copy = new WfWpControlDevice(object, parent);
-    return copy;
+    return std::make_unique<WfWpControlDevice>(object, parent);
 }
 
 bool WayfireWireplumber::on_popover_timeout(int timer)
@@ -447,7 +445,7 @@ void WayfireWireplumber::reload_config()
             return; // no face means we have nothing to show
         }
 
-        if ((popover->get_child() == face) && popover->is_visible())
+        if ((popover->get_child() == face.get()) && popover->is_visible())
         {
             popover->popdown();
             return;
@@ -458,7 +456,7 @@ void WayfireWireplumber::reload_config()
             button->set_active(true);
         }
 
-        if (popover->get_child() != face)
+        if (popover->get_child() != face.get())
         {
             popover->set_child(*face);
             popover_timeout.disconnect();
@@ -504,7 +502,7 @@ void WayfireWireplumber::reload_config()
                 return;
             }
 
-            if (popover->get_child() != face)
+            if (popover->get_child() != face.get())
             {
                 popover->set_child(*face);
                 // popdown so that when the click is processed, the popover is down, and thus pops up
@@ -549,8 +547,9 @@ void WayfireWireplumber::reload_config()
 void WayfireWireplumber::handle_config_reload()
 {
     reload_config();
-    for (auto [name, control] : objects_to_controls)
+    for (auto &entry : objects_to_controls)
     {
+        auto &control = entry.second;
         control->handle_config_reload();
     }
 }
@@ -810,7 +809,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject* object, WayfireWireplumber
         return;
     }
 
-    widget->objects_to_controls.insert({object, control});
+    widget->objects_to_controls.insert({object, std::unique_ptr<WfWpControl>(control)});
     which_box->append((Gtk::Widget&)*control);
     // try to not be faceless
     if (!widget->face)
@@ -854,7 +853,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         for (auto & it : widget->objects_to_controls)
         {
             WpPipewireObject *obj = it.first;
-            control = it.second;
+            control = it.second.get();
             if (wp_proxy_get_bound_id(WP_PROXY(obj)) == id)
             {
                 break;
@@ -932,7 +931,7 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
         for (const auto & entry : widget->objects_to_controls)
         {
             auto obj  = WP_PIPEWIRE_OBJECT(entry.first);
-            auto ctrl = (WfWpControlDevice*)entry.second;
+            auto ctrl = static_cast<WfWpControlDevice*>(entry.second.get());
 
             guint32 bound_id = wp_proxy_get_bound_id(WP_PROXY(obj));
             if (bound_id == SPA_ID_INVALID)
@@ -986,12 +985,19 @@ void WpCommon::on_object_removed(WpObjectManager *manager, gpointer object, gpoi
             return;
         }
 
-        WfWpControl *control = it->second;
+        WfWpControl *control = it->second.get();
         Gtk::Box *box = (Gtk::Box*)control->get_parent();
-        box->remove(*control);
+        if (box)
+            box->remove(*control);
 
-        delete control;
-        widget->objects_to_controls.erase((WpPipewireObject*)object);
+        // if face points to the removed control we should handle it.
+        if (widget->face && widget->face->object == it->first)
+        {
+            // reset face to nullptr
+            widget->face = nullptr;
+        }
+
+        widget->objects_to_controls.erase(it);
     }
 }
 
