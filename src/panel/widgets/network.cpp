@@ -1,5 +1,4 @@
 #include "network.hpp"
-#include <atomic>
 #include <cassert>
 #include <gio/gio.h> // sometimes needed for lower-level variant helpers
 #include <giomm.h>
@@ -16,7 +15,6 @@
 #include <gdkmm/rgba.h>
 #include <glibmm/markup.h>
 #include <iostream>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -92,554 +90,143 @@ static std::string rgba_to_hex(const Gdk::RGBA &c) {
 
 void WayfireNetworkInfo::trigger_wifi_scan_async(
     std::function<void()> callback) {
-  // Use existing connection or create a new one synchronously
-  Glib::RefPtr<Gio::DBus::Connection> conn = connection;
-  if (!conn) {
-    try {
-      conn = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM);
-    } catch (const Glib::Error &e) {
-      std::cerr << "D-Bus connection error: " << e.what() << std::endl;
-      callback();
-      return;
-    }
+  if (!nm_proxy) {
+    callback();
+    return;
   }
+  try {
+    // Get devices synchronously
+    auto reply = nm_proxy->call_sync("GetDevices", Glib::VariantContainerBase());
+    auto device_child = reply.get_child(0);
+    auto devices_variant = Glib::VariantBase::cast_dynamic<
+        Glib::Variant<std::vector<Glib::DBusObjectPathString>>>(device_child);
+    auto device_paths = devices_variant.get();
 
-  // Create NetworkManager proxy asynchronously
-  Gio::DBus::Proxy::create(
-      conn, NM_DBUS_NAME, "/org/freedesktop/NetworkManager",
-      "org.freedesktop.NetworkManager",
-      [callback, conn](const Glib::RefPtr<Gio::AsyncResult> &result) {
-        try {
-          auto nm_proxy = Gio::DBus::Proxy::create_finish(result);
+    bool triggered = false;
+    for (const auto &path : device_paths) {
+      auto dev_proxy = Gio::DBus::Proxy::create_sync(
+          connection, NM_DBUS_NAME, path,
+          "org.freedesktop.NetworkManager.Device");
+      if (!dev_proxy)
+        continue;
+      Glib::VariantBase dev_type_variant;
+      dev_proxy->get_cached_property(dev_type_variant, "DeviceType");
+      guint32 dev_type = 0;
+      if (dev_type_variant) {
+        dev_type = Glib::VariantBase::cast_dynamic<Glib::Variant<guint32>>(dev_type_variant).get();
+      }
+      if (dev_type != 2)
+        continue; // not Wi-Fi
 
-          // Get devices to find WiFi device
-          nm_proxy->call(
-              "GetDevices",
-              [callback, conn,
-               nm_proxy](const Glib::RefPtr<Gio::AsyncResult> &result) {
-                try {
-                  Glib::VariantContainerBase reply =
-                      nm_proxy->call_finish(result);
-                  auto device_child = reply.get_child(0);
-                  auto devices_variant = Glib::VariantBase::cast_dynamic<
-                      Glib::Variant<std::vector<Glib::DBusObjectPathString>>>(
-                      device_child);
-                  std::vector<Glib::DBusObjectPathString> device_paths =
-                      devices_variant.get();
+      auto wifi_proxy = Gio::DBus::Proxy::create_sync(
+          connection, NM_DBUS_NAME, path,
+          "org.freedesktop.NetworkManager.Device.Wireless");
+      if (!wifi_proxy)
+        continue;
 
-                  // Find WiFi device and trigger scan
-                  auto scan_state = std::make_shared<std::atomic<bool>>(false);
-                  auto devices_checked = std::make_shared<std::atomic<int>>(0);
-                  int total_devices = device_paths.size();
-
-                  if (total_devices == 0) {
-                    callback(); // No devices found
-                    return;
-                  }
-
-                  for (const auto &path : device_paths) {
-                    Gio::DBus::Proxy::create(
-                        conn, NM_DBUS_NAME, path,
-                        "org.freedesktop.NetworkManager.Device",
-                        [callback, conn, path, scan_state, devices_checked,
-                         total_devices](
-                            const Glib::RefPtr<Gio::AsyncResult> &result) {
-                          try {
-                            auto dev_proxy =
-                                Gio::DBus::Proxy::create_finish(result);
-
-                            // Check device type
-                            Glib::VariantBase dev_type_variant;
-                            dev_proxy->get_cached_property(dev_type_variant,
-                                                           "DeviceType");
-                            guint32 dev_type = 0;
-                            if (dev_type_variant) {
-                              Glib::Variant<guint32> vtype =
-                                  Glib::VariantBase::cast_dynamic<
-                                      Glib::Variant<guint32>>(dev_type_variant);
-                              dev_type = vtype.get();
-                            }
-
-                            if (dev_type == 2) // NM_DEVICE_TYPE_WIFI
-                            {
-                              // Create wireless device proxy and trigger scan
-                              Gio::DBus::Proxy::create(
-                                  conn, NM_DBUS_NAME, path,
-                                  "org.freedesktop.NetworkManager.Device."
-                                  "Wireless",
-                                  [callback, scan_state, devices_checked,
-                                   total_devices](
-                                      const Glib::RefPtr<Gio::AsyncResult>
-                                          &result) {
-                                    try {
-                                      auto wifi_proxy =
-                                          Gio::DBus::Proxy::create_finish(
-                                              result);
-                                      // Trigger scan (RequestScan takes (a{sv})
-                                      // - a tuple with an empty dict) Create
-                                      // empty dictionary a{sv}
-                                      std::map<Glib::ustring, Glib::VariantBase>
-                                          scan_options;
-                                      auto scan_options_variant = Glib::Variant<
-                                          std::map<Glib::ustring,
-                                                   Glib::VariantBase>>::
-                                          create(scan_options);
-                                      // Wrap in tuple (a{sv})
-                                      std::vector<Glib::VariantBase> args_vec =
-                                          {scan_options_variant};
-                                      auto args = Glib::VariantContainerBase::
-                                          create_tuple(args_vec);
-
-                                      wifi_proxy->call(
-                                          "RequestScan",
-                                          [callback, wifi_proxy, scan_state](
-                                              const Glib::RefPtr<
-                                                  Gio::AsyncResult> &result) {
-                                            try {
-                                              wifi_proxy->call_finish(result);
-                                              scan_state->store(true);
-                                              // Scan triggered successfully,
-                                              // wait a bit for it to complete
-                                              Glib::signal_timeout()
-                                                  .connect_once(
-                                                      [callback]() {
-                                                        callback();
-                                                      },
-                                                      1000); // Wait 1 second
-                                                             // for scan to
-                                                             // complete
-                                            } catch (const Glib::Error &e) {
-                                              std::cerr << "RequestScan error: "
-                                                        << e.what()
-                                                        << std::endl;
-                                              // Continue anyway - might have
-                                              // already scanned
-                                              Glib::signal_timeout()
-                                                  .connect_once(
-                                                      [callback]() {
-                                                        callback();
-                                                      },
-                                                      500);
-                                            }
-                                          },
-                                          args);
-                                    } catch (const Glib::Error &e) {
-                                      std::cerr
-                                          << "Failed to create wireless proxy: "
-                                          << e.what() << std::endl;
-                                      int checked = ++(*devices_checked);
-                                      if (checked >= total_devices &&
-                                          !scan_state->load()) {
-                                        callback();
-                                      }
-                                    }
-                                  });
-                            } else {
-                              int checked = ++(*devices_checked);
-                              if (checked >= total_devices &&
-                                  !scan_state->load()) {
-                                callback(); // No WiFi device found
-                              }
-                            }
-                          } catch (const Glib::Error &e) {
-                            int checked = ++(*devices_checked);
-                            if (checked >= total_devices &&
-                                !scan_state->load()) {
-                              callback();
-                            }
-                          }
-                        });
-                  }
-                } catch (const Glib::Error &e) {
-                  std::cerr << "GetDevices error: " << e.what() << std::endl;
-                  callback();
-                }
-              },
-              Glib::VariantContainerBase());
-        } catch (const Glib::Error &e) {
-          std::cerr << "Failed to create NM proxy: " << e.what() << std::endl;
-          callback();
-        }
-      });
+      // Build empty a{sv} tuple
+      std::map<Glib::ustring, Glib::VariantBase> scan_options;
+      auto scan_options_variant = Glib::Variant<
+          std::map<Glib::ustring, Glib::VariantBase>>::create(scan_options);
+      auto args = Glib::VariantContainerBase::create_tuple({scan_options_variant});
+      try {
+        wifi_proxy->call_sync("RequestScan", args);
+        triggered = true;
+      } catch (const Glib::Error &e) {
+        std::cerr << "RequestScan error: " << e.what() << std::endl;
+      }
+    }
+    Glib::signal_timeout().connect_once([callback]() { callback(); },
+                                        triggered ? 1000 : 500);
+  } catch (const Glib::Error &e) {
+    std::cerr << "GetDevices/scan error: " << e.what() << std::endl;
+    callback();
+  }
 }
 
 void WayfireNetworkInfo::get_available_networks_async(
     std::function<void(const std::vector<NetworkInfo> &)> callback) {
-  // Use shared state to safely track progress across async callbacks
-  struct ScanState {
-    std::vector<NetworkInfo> all_networks;
-    std::atomic<int> devices_processed{0};
-    int total_devices = 0;
-    std::function<void(const std::vector<NetworkInfo> &)> final_callback;
-    std::mutex networks_mutex; // Protect all_networks vector
+  std::vector<NetworkInfo> networks;
+  if (!nm_proxy) {
+    callback(networks);
+    return;
+  }
+  try {
+    auto reply = nm_proxy->call_sync("GetDevices", Glib::VariantContainerBase());
+    auto device_child = reply.get_child(0);
+    auto devices_variant = Glib::VariantBase::cast_dynamic<
+        Glib::Variant<std::vector<Glib::DBusObjectPathString>>>(device_child);
+    auto device_paths = devices_variant.get();
 
-    ScanState(std::function<void(const std::vector<NetworkInfo> &)> cb)
-        : final_callback(cb) {}
+    for (const auto &path : device_paths) {
+      auto dev_proxy = Gio::DBus::Proxy::create_sync(
+          connection, NM_DBUS_NAME, path,
+          "org.freedesktop.NetworkManager.Device");
+      if (!dev_proxy)
+        continue;
+      Glib::VariantBase dev_type_variant;
+      dev_proxy->get_cached_property(dev_type_variant, "DeviceType");
+      guint32 dev_type = 0;
+      if (dev_type_variant)
+        dev_type = Glib::VariantBase::cast_dynamic<Glib::Variant<guint32>>(dev_type_variant).get();
+      if (dev_type != 2)
+        continue; // only Wi-Fi
 
-    void check_complete() {
-      if (devices_processed.load() >= total_devices) {
-        final_callback(all_networks);
+      auto wifi_proxy = Gio::DBus::Proxy::create_sync(
+          connection, NM_DBUS_NAME, path,
+          "org.freedesktop.NetworkManager.Device.Wireless");
+      if (!wifi_proxy)
+        continue;
+
+      auto aps_reply = wifi_proxy->call_sync("GetAllAccessPoints",
+                                            Glib::VariantContainerBase());
+      auto ap_child = aps_reply.get_child(0);
+      auto ap_paths_variant = Glib::VariantBase::cast_dynamic<
+          Glib::Variant<std::vector<Glib::DBusObjectPathString>>>(ap_child);
+      auto ap_paths = ap_paths_variant.get();
+
+      for (const auto &ap_path : ap_paths) {
+        try {
+          auto ap_proxy = Gio::DBus::Proxy::create_sync(
+              connection, NM_DBUS_NAME, ap_path,
+              "org.freedesktop.NetworkManager.AccessPoint");
+          if (!ap_proxy)
+            continue;
+          Glib::VariantBase ssid_var, wpa_var, rsn_var, strength_var;
+          ap_proxy->get_cached_property(ssid_var, "Ssid");
+          ap_proxy->get_cached_property(wpa_var, "WpaFlags");
+          ap_proxy->get_cached_property(rsn_var, "RsnFlags");
+          ap_proxy->get_cached_property(strength_var, "Strength");
+
+          std::string ssid;
+          if (ssid_var) {
+            auto ssid_bytes = Glib::VariantBase::cast_dynamic<
+                Glib::Variant<std::vector<guint8>>>(ssid_var);
+            auto vec = ssid_bytes.get();
+            ssid.assign(vec.begin(), vec.end());
+          }
+          guint32 wpa_flags = 0, rsn_flags = 0;
+          if (wpa_var)
+            wpa_flags = Glib::VariantBase::cast_dynamic<Glib::Variant<guint32>>(wpa_var).get();
+          if (rsn_var)
+            rsn_flags = Glib::VariantBase::cast_dynamic<Glib::Variant<guint32>>(rsn_var).get();
+          int strength = 0;
+          if (strength_var)
+            strength = Glib::VariantBase::cast_dynamic<Glib::Variant<guchar>>(strength_var).get();
+          bool secured = (wpa_flags || rsn_flags);
+          if (!ssid.empty()) {
+            networks.push_back({ssid, ap_proxy->get_object_path(), strength, secured});
+          }
+        } catch (const Glib::Error &e) {
+          // ignore AP-level errors
+        }
       }
     }
-  };
-
-  auto state = std::make_shared<ScanState>(callback);
-
-  // Use existing connection or create a new one synchronously
-  // (The async work is in the D-Bus method calls, not the connection)
-  Glib::RefPtr<Gio::DBus::Connection> conn = connection;
-  if (!conn) {
-    try {
-      conn = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM);
-    } catch (const Glib::Error &e) {
-      std::cerr << "D-Bus connection error: " << e.what() << std::endl;
-      callback({});
-      return;
-    }
+  } catch (const Glib::Error &e) {
+    std::cerr << "D-Bus error in get_available_networks_async(): " << e.what()
+              << std::endl;
   }
-
-  // Create NetworkManager proxy asynchronously
-  Gio::DBus::Proxy::create(
-      conn, NM_DBUS_NAME, "/org/freedesktop/NetworkManager",
-      "org.freedesktop.NetworkManager",
-      [state](const Glib::RefPtr<Gio::AsyncResult> &result) {
-        try {
-          auto nm_proxy = Gio::DBus::Proxy::create_finish(result);
-
-          // Call GetDevices asynchronously (no parameters)
-          nm_proxy
-              ->call(
-                  "GetDevices",
-                  [state,
-                   nm_proxy](const Glib::RefPtr<Gio::AsyncResult> &result) {
-                    try {
-                      Glib::VariantContainerBase reply =
-                          nm_proxy->call_finish(result);
-                      auto device_child = reply.get_child(0);
-                      auto devices_variant =
-                          Glib::VariantBase::cast_dynamic<Glib::Variant<
-                              std::vector<Glib::DBusObjectPathString>>>(
-                              device_child);
-                      std::vector<Glib::DBusObjectPathString> device_paths =
-                          devices_variant.get();
-
-                      state->total_devices = device_paths.size();
-
-                      if (state->total_devices == 0) {
-                        state->final_callback({});
-                        return;
-                      }
-
-                      // Process each device asynchronously
-                      for (const auto &path : device_paths) {
-                        // Create device proxy
-                        Gio::
-                            DBus::
-                                Proxy::
-                                    create(
-                                        nm_proxy->get_connection(),
-                                        NM_DBUS_NAME, path,
-                                        "org.freedesktop.NetworkManager.Device",
-                                        [state, path, nm_proxy](
-                                            const Glib::RefPtr<Gio::AsyncResult>
-                                                &result) {
-                                          try {
-                                            auto dev_proxy =
-                                                Gio::DBus::Proxy::create_finish(
-                                                    result);
-
-                                            // Check device type
-                                            Glib::VariantBase dev_type_variant;
-                                            dev_proxy->get_cached_property(
-                                                dev_type_variant, "DeviceType");
-                                            guint32 dev_type = 0;
-                                            if (dev_type_variant) {
-                                              Glib::Variant<guint32> vtype =
-                                                  Glib::VariantBase::
-                                                      cast_dynamic<
-                                                          Glib::Variant<
-                                                              guint32>>(
-                                                          dev_type_variant);
-                                              dev_type = vtype.get();
-                                            }
-
-                                            if (dev_type !=
-                                                2) // NM_DEVICE_TYPE_WIFI
-                                            {
-                                              state->devices_processed++;
-                                              state->check_complete();
-                                              return;
-                                            }
-
-                                            // Create wireless device proxy
-                                            Gio::DBus::Proxy::create(dev_proxy
-                                                                         ->get_connection(),
-                                                                     NM_DBUS_NAME,
-                                                                     path,
-                                                                     "org."
-                                                                     "freedeskt"
-                                                                     "op."
-                                                                     "NetworkMa"
-                                                                     "nager."
-                                                                     "Device."
-                                                                     "Wireless",
-                                                                     [state,
-                                                                      path](const Glib::
-                                                                                RefPtr<
-                                                                                    Gio::
-                                                                                        AsyncResult>
-                                                                                    &
-                                                                                        result) {
-                                                                       try {
-                                                                         auto wifi_proxy =
-                                                                             Gio::DBus::
-                                                                                 Proxy::create_finish(
-                                                                                     result);
-
-                                                                         // Get
-                                                                         // all
-                                                                         // access
-                                                                         // points
-                                                                         // (no
-                                                                         // parameters)
-                                                                         wifi_proxy
-                                                                             ->call(
-                                                                                 "GetAllAccessPoints",
-                                                                                 [state,
-                                                                                  wifi_proxy](
-                                                                                     const Glib::RefPtr<
-                                                                                         Gio::
-                                                                                             AsyncResult>
-                                                                                         &result) {
-                                                                                   try {
-                                                                                     Glib::VariantContainerBase
-                                                                                         aps_reply =
-                                                                                             wifi_proxy
-                                                                                                 ->call_finish(
-                                                                                                     result);
-                                                                                     auto ap_child =
-                                                                                         aps_reply
-                                                                                             .get_child(
-                                                                                                 0);
-                                                                                     auto ap_paths_variant =
-                                                                                         Glib::VariantBase::cast_dynamic<
-                                                                                             Glib::Variant<
-                                                                                                 std::vector<
-                                                                                                     Glib::
-                                                                                                         DBusObjectPathString>>>(
-                                                                                             ap_child);
-                                                                                     std::vector<
-                                                                                         Glib::
-                                                                                             DBusObjectPathString>
-                                                                                         ap_paths =
-                                                                                             ap_paths_variant
-                                                                                                 .get();
-
-                                                                                     int total_aps =
-                                                                                         ap_paths
-                                                                                             .size();
-                                                                                     auto aps_processed =
-                                                                                         std::make_shared<
-                                                                                             std::atomic<
-                                                                                                 int>>(
-                                                                                             0);
-
-                                                                                     if (total_aps ==
-                                                                                         0) {
-                                                                                       state
-                                                                                           ->devices_processed++;
-                                                                                       state
-                                                                                           ->check_complete();
-                                                                                       return;
-                                                                                     }
-
-                                                                                     // Process each access point
-                                                                                     for (
-                                                                                         const auto
-                                                                                             &ap_path :
-                                                                                         ap_paths) {
-                                                                                       Gio::DBus::
-                                                                                           Proxy::create(
-                                                                                               wifi_proxy
-                                                                                                   ->get_connection(),
-                                                                                               NM_DBUS_NAME,
-                                                                                               ap_path,
-                                                                                               "org.freedesktop.NetworkManager.AccessPoint",
-                                                                                               [state,
-                                                                                                total_aps,
-                                                                                                aps_processed](
-                                                                                                   const Glib::RefPtr<
-                                                                                                       Gio::
-                                                                                                           AsyncResult>
-                                                                                                       &result) {
-                                                                                                 try {
-                                                                                                   auto ap_proxy =
-                                                                                                       Gio::DBus::
-                                                                                                           Proxy::create_finish(
-                                                                                                               result);
-                                                                                                   if (ap_proxy) {
-                                                                                                     Glib::VariantBase
-                                                                                                         ssid_var,
-                                                                                                         wpa_var,
-                                                                                                         rsn_var,
-                                                                                                         strength_var;
-                                                                                                     ap_proxy
-                                                                                                         ->get_cached_property(
-                                                                                                             ssid_var,
-                                                                                                             "Ssid");
-                                                                                                     ap_proxy
-                                                                                                         ->get_cached_property(
-                                                                                                             wpa_var,
-                                                                                                             "WpaFlags");
-                                                                                                     ap_proxy
-                                                                                                         ->get_cached_property(
-                                                                                                             rsn_var,
-                                                                                                             "RsnFlags");
-                                                                                                     ap_proxy
-                                                                                                         ->get_cached_property(
-                                                                                                             strength_var,
-                                                                                                             "Strength");
-
-                                                                                                     std::string
-                                                                                                         ssid;
-                                                                                                     if (ssid_var) {
-                                                                                                       Glib::Variant<
-                                                                                                           std::vector<
-                                                                                                               guint8>>
-                                                                                                           ssid_bytes = Glib::VariantBase::cast_dynamic<
-                                                                                                               Glib::Variant<
-                                                                                                                   std::vector<
-                                                                                                                       guint8>>>(
-                                                                                                               ssid_var);
-                                                                                                       auto vec =
-                                                                                                           ssid_bytes
-                                                                                                               .get();
-                                                                                                       ssid.assign(
-                                                                                                           vec.begin(),
-                                                                                                           vec.end());
-                                                                                                     }
-
-                                                                                                     guint32
-                                                                                                         wpa_flags =
-                                                                                                             0,
-                                                                                                         rsn_flags =
-                                                                                                             0;
-                                                                                                     if (wpa_var)
-                                                                                                       wpa_flags =
-                                                                                                           Glib::VariantBase::cast_dynamic<
-                                                                                                               Glib::Variant<
-                                                                                                                   guint32>>(
-                                                                                                               wpa_var)
-                                                                                                               .get();
-                                                                                                     if (rsn_var)
-                                                                                                       rsn_flags =
-                                                                                                           Glib::VariantBase::cast_dynamic<
-                                                                                                               Glib::Variant<
-                                                                                                                   guint32>>(
-                                                                                                               rsn_var)
-                                                                                                               .get();
-
-                                                                                                     int strength =
-                                                                                                         0;
-                                                                                                     if (strength_var)
-                                                                                                       strength =
-                                                                                                           Glib::VariantBase::cast_dynamic<
-                                                                                                               Glib::Variant<
-                                                                                                                   guchar>>(
-                                                                                                               strength_var)
-                                                                                                               .get();
-
-                                                                                                     bool secured =
-                                                                                                         (wpa_flags ||
-                                                                                                          rsn_flags);
-
-                                                                                                     if (!ssid.empty()) {
-                                                                                                       std::lock_guard<
-                                                                                                           std::
-                                                                                                               mutex>
-                                                                                                           lock(
-                                                                                                               state
-                                                                                                                   ->networks_mutex);
-                                                                                                       state
-                                                                                                           ->all_networks
-                                                                                                           .push_back(
-                                                                                                               {ssid,
-                                                                                                                ap_proxy
-                                                                                                                    ->get_object_path(),
-                                                                                                                strength,
-                                                                                                                secured});
-                                                                                                     }
-                                                                                                   }
-
-                                                                                                   int processed =
-                                                                                                       ++(*aps_processed);
-                                                                                                   if (processed >=
-                                                                                                       total_aps) {
-                                                                                                     state
-                                                                                                         ->devices_processed++;
-                                                                                                     state
-                                                                                                         ->check_complete();
-                                                                                                   }
-                                                                                                 } catch (
-                                                                                                     const Glib::Error
-                                                                                                         &e) {
-                                                                                                   // Ignore errors for individual access points
-                                                                                                   int processed =
-                                                                                                       ++(*aps_processed);
-                                                                                                   if (processed >=
-                                                                                                       total_aps) {
-                                                                                                     state
-                                                                                                         ->devices_processed++;
-                                                                                                     state
-                                                                                                         ->check_complete();
-                                                                                                   }
-                                                                                                 }
-                                                                                               });
-                                                                                     }
-                                                                                   } catch (
-                                                                                       const Glib::Error
-                                                                                           &e) {
-                                                                                     std::cerr
-                                                                                         << "Error getting access points: "
-                                                                                         << e.what()
-                                                                                         << std::
-                                                                                                endl;
-                                                                                     state
-                                                                                         ->devices_processed++;
-                                                                                     state
-                                                                                         ->check_complete();
-                                                                                   }
-                                                                                 },
-                                                                                 Glib::
-                                                                                     VariantContainerBase());
-                                                                       } catch (
-                                                                           const Glib::Error
-                                                                               &e) {
-                                                                         state
-                                                                             ->devices_processed++;
-                                                                         state
-                                                                             ->check_complete();
-                                                                       }
-                                                                     });
-                                          } catch (const Glib::Error &e) {
-                                            state->devices_processed++;
-                                            state->check_complete();
-                                          }
-                                        });
-                      }
-                    } catch (const Glib::Error &e) {
-                      std::cerr
-                          << "D-Bus error in get_available_networks_async(): "
-                          << e.what() << std::endl;
-                      state->final_callback({});
-                    }
-                  },
-                  Glib::VariantContainerBase());
-        } catch (const Glib::Error &e) {
-          std::cerr << "Failed to create NM proxy: " << e.what() << std::endl;
-          state->final_callback({});
-        }
-      });
+  callback(networks);
 }
 
 std::string WfNetworkConnectionInfo::get_control_center_section(DBusProxy &nm) {
@@ -1496,7 +1083,7 @@ void WayfireNetworkInfo::show_connected_details() {
 
   // Active connection IP config objects
   auto get_ip4_details = [this]() {
-    struct IP4Info { std::string addr; int prefix = -1; std::string gateway; std::vector<std::string> dns; } info; 
+    struct IP4Info { std::string addr; int prefix = -1; std::string gateway; std::vector<std::string> dns; } info;
     try {
       Glib::Variant<Glib::ustring> ip4_path_var;
       active_connection_proxy->get_cached_property(ip4_path_var, "Ip4Config");
@@ -1620,3 +1207,4 @@ void WayfireNetworkInfo::show_connected_details() {
 }
 
 WayfireNetworkInfo::~WayfireNetworkInfo() {}
+
