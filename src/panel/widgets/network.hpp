@@ -11,8 +11,8 @@
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/entry.h>
 #include <gtkmm.h>
+#include <sigc++/sigc++.h>
 #include <memory>
-#include <thread>
 #include <vector>
 #include <string>
 
@@ -68,7 +68,6 @@ class WayfireNetworkInfo : public WayfireWidget
     DBusProxy nm_proxy, active_connection_proxy;
 
     std::unique_ptr<WfNetworkConnectionInfo> info;
-    std::string run_iwd_cmd(const std::string &cmd);
 
     // Use WayfireMenuButton like notification-center
     std::unique_ptr<WayfireMenuButton> button;
@@ -83,6 +82,10 @@ class WayfireNetworkInfo : public WayfireWidget
     Gtk::Box pop_pass_box;       // inline password prompt
     Gtk::Label pop_status_label; // show temporary messages
 
+Glib::DBusObjectPathString current_ap_path;
+
+
+
     bool enabled = true;
     WfOption<std::string> status_opt{"panel/network_status"};
     WfOption<bool> status_color_opt{"panel/network_status_use_color"};
@@ -95,6 +98,7 @@ class WayfireNetworkInfo : public WayfireWidget
                                   DBusPropList invalidated);
 
     void on_click();
+void disconnect_current_network();
 
     // wifi helper methods (use nmcli)
     void show_wifi_popover();
@@ -102,6 +106,7 @@ class WayfireNetworkInfo : public WayfireWidget
     void show_password_prompt_for(const std::string &ssid);
     void attempt_connect_ssid(const std::string &ssid,
                               const std::string &password = "");
+    void show_connected_details();
 
 public:
     void update_icon();
@@ -110,17 +115,14 @@ public:
     void init(Gtk::Box *container);
     void handle_config_reload();
     virtual ~WayfireNetworkInfo();
-
 private:
     // Async scanning UI state
-    Gtk::Popover m_popover;
-    Gtk::Box m_popover_box{Gtk::Orientation::VERTICAL, 6};
-    Gtk::Label m_status_label{"Scanning for networks..."};
-    Gtk::Spinner m_spinner;
-    bool scanning = false;
+
+
 
     // Async scanning helper functions
-    void scan_networks_async();
+    void trigger_wifi_scan_async(std::function<void()> callback);
+    void get_available_networks_async(std::function<void(const std::vector<struct NetworkInfo>&)> callback);
     void update_network_list(const std::vector<std::string> &networks);
     void show_error(const std::string &message);
 };
