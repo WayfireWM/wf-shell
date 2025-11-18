@@ -23,11 +23,11 @@ widget_sources = [
 
 deps = [
   gtkmm,
+  gtklayershell,
   wayland_client,
   libutil,
   wf_protos,
   wfconfig,
-  gtklayershell,
   dbusmenu_gtk,
 ]
 

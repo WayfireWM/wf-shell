@@ -7,7 +7,7 @@ util = static_library(
         'wf-popover.cpp',
         'css-config.cpp',
     ],
-    dependencies: [wf_protos, wayland_client, gtkmm, wfconfig, libinotify, gtklayershell],
+    dependencies: [wf_protos, gtklayershell, wayland_client, gtkmm, wfconfig, libinotify],
 )
 
 util_includes = include_directories('.')
