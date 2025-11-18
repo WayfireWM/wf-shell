@@ -15,6 +15,7 @@
 #include <gdkmm/rgba.h>
 #include <glibmm/markup.h>
 #include <iostream>
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -226,6 +227,11 @@ void WayfireNetworkInfo::get_available_networks_async(
     std::cerr << "D-Bus error in get_available_networks_async(): " << e.what()
               << std::endl;
   }
+  // Sort by strength (descending). Tie-break by SSID for stable order.
+  std::sort(networks.begin(), networks.end(), [](const NetworkInfo &a, const NetworkInfo &b) {
+    if (a.strength != b.strength) return a.strength > b.strength;
+    return a.ssid < b.ssid;
+  });
   callback(networks);
 }
 
@@ -628,18 +634,19 @@ void WayfireNetworkInfo::populate_wifi_list() {
           row->append(*name_lbl);
 
           if (is_connected) {
-            // Info button (shows details of current connection)
-            auto info_btn = Gtk::make_managed<Gtk::Button>();
-            info_btn->add_css_class("flat");
-            info_btn->set_tooltip_text("Connection details");
-            auto info_img = Gtk::make_managed<Gtk::Image>();
-            info_img->set_from_icon_name("dialog-information-symbolic");
-            info_img->set_pixel_size(14);
-            info_btn->set_child(*info_img);
-            info_btn->signal_clicked().connect([this]() { show_connected_details(); });
-            row->append(*info_btn);
+            // Wrap the content row in a button to get button visuals
+            auto main_btn = Gtk::make_managed<Gtk::Button>();
+            main_btn->set_child(*row);
+            main_btn->set_halign(Gtk::Align::FILL);
+            main_btn->set_hexpand(true);
+            main_btn->signal_clicked().connect([this]() { show_connected_details(); });
 
-            // Disconnect button
+            // Place main button and disconnect button side-by-side
+            auto line = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+            line->set_halign(Gtk::Align::FILL);
+            line->set_hexpand(true);
+            line->append(*main_btn);
+
             auto disc_btn = Gtk::make_managed<Gtk::Button>();
             disc_btn->add_css_class("flat");
             disc_btn->set_tooltip_text("Disconnect");
@@ -649,9 +656,9 @@ void WayfireNetworkInfo::populate_wifi_list() {
             disc_btn->set_child(*disc_img);
             disc_btn->signal_clicked().connect(
                 [this]() { disconnect_current_network(); });
-            row->append(*disc_btn);
+            line->append(*disc_btn);
 
-            pop_list_box.append(*row);
+            pop_list_box.append(*line);
           } else {
             if (net.secured) {
               auto lock_img = Gtk::make_managed<Gtk::Image>();
@@ -1023,9 +1030,9 @@ void WayfireNetworkInfo::show_connected_details() {
   popover_box.append(*title);
 
   auto content = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 4);
-  content->set_margin_start(8);
-  content->set_margin_end(8);
-  content->set_margin_bottom(8);
+  content->set_margin_start(6);
+  content->set_margin_end(6);
+  content->set_margin_bottom(12);
 
   auto add_row = [content](const std::string &label, const std::string &value) {
     auto h = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
@@ -1207,4 +1214,3 @@ void WayfireNetworkInfo::show_connected_details() {
 }
 
 WayfireNetworkInfo::~WayfireNetworkInfo() {}
-
