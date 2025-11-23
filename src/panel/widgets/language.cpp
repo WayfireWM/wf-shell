@@ -11,6 +11,7 @@
 #include "language.hpp"
 #include "gtkmm/button.h"
 #include "sigc++/functors/mem_fun.h"
+#include "wf-ipc.hpp"
 
 void WayfireLanguage::init(Gtk::Box *container)
 {
@@ -20,8 +21,8 @@ void WayfireLanguage::init(Gtk::Box *container)
     button.signal_clicked().connect(sigc::mem_fun(*this, &WayfireLanguage::next_layout));
     button.show();
 
-    ipc->subscribe(this, {"keyboard-modifier-state-changed"});
-    ipc->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (wf::json_t data)
+    ipc_client->subscribe(this, {"keyboard-modifier-state-changed"});
+    ipc_client->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (wf::json_t data)
     {
         set_available(data["possible-layouts"]);
         set_current(data["layout-index"]);
@@ -109,13 +110,15 @@ void WayfireLanguage::next_layout()
     message["method"] = "wayfire/set-keyboard-state";
     message["data"]   = wf::json_t();
     message["data"]["layout-index"] = next;
-    ipc->send(message.serialize());
+    ipc_client->send(message.serialize());
 }
 
-WayfireLanguage::WayfireLanguage(std::shared_ptr<WayfireIPC> ipc) : ipc(ipc)
-{}
+WayfireLanguage::WayfireLanguage()
+{
+    ipc_client = WayfireIPC::get_instance()->create_client();
+}
 
 WayfireLanguage::~WayfireLanguage()
 {
-    ipc->unsubscribe(this);
+    ipc_client->unsubscribe(this);
 }

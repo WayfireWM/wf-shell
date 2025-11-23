@@ -22,7 +22,7 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
     // Gtk::Label label;
     Gtk::Button button;
 
-    std::shared_ptr<WayfireIPC> ipc;
+    std::shared_ptr<IPCClient> ipc_client;
     uint32_t current_layout;
     std::vector<Layout> available_layouts;
 
@@ -33,7 +33,7 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
     void set_current(uint32_t index);
     void set_available(wf::json_t layouts);
     void next_layout();
-    WayfireLanguage(std::shared_ptr<WayfireIPC> ipc);
+    WayfireLanguage();
     ~WayfireLanguage();
 };
 

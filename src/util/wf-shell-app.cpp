@@ -1,5 +1,4 @@
 #include "wf-shell-app.hpp"
-#include "wf-ipc.hpp"
 #include <glibmm/main.h>
 #include <sys/inotify.h>
 #include <gdk/wayland/gdkwayland.h>
@@ -199,8 +198,6 @@ void WayfireShellApp::on_activate()
             " Are you sure you are running a wayland compositor?" << std::endl;
         std::exit(-1);
     }
-
-    ipc_manager = std::make_shared<WayfireIPCManager>();
 
     wl_registry *registry = wl_display_get_registry(wl_display);
     wl_registry_add_listener(registry, &registry_listener, this);

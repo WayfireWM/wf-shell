@@ -2,10 +2,12 @@
 #define WF_IPC_HPP
 
 #include "gio/gio.h"
+#include "giomm/cancellable.h"
 #include "giomm/outputstream.h"
 #include "giomm/socketconnection.h"
 #include "glibmm/iochannel.h"
 #include "glibmm/refptr.h"
+#include <iostream>
 #include <wayfire/nonstd/json.hpp>
 #include "sigc++/connection.h"
 #include <functional>
@@ -25,11 +27,29 @@ class IIPCSubscriber
 
 using response_handler = std::function<void (wf::json_t)>;
 
-class WayfireIPC
-{
-    std::queue<std::optional<response_handler>> response_handlers;
+class WayfireIPC;
+class IPCClient {
+  int id;
+  std::shared_ptr<WayfireIPC> ipc;
+  std::queue<response_handler> response_handlers;
+  public:
+    IPCClient(int id, std::shared_ptr<WayfireIPC> ipc) : id(id), ipc(ipc) {}
+    ~IPCClient();
+    int get_id();
+    void handle_response(wf::json_t response);
+    void send(const std::string& message);
+    void send(const std::string& message, response_handler cb);
+    void subscribe(IIPCSubscriber *subscriber, const std::vector<std::string>& events);
+    void subscribe_all(IIPCSubscriber *subscriber);
+    void unsubscribe(IIPCSubscriber *subscriber);
+};
+
+class WayfireIPC : public std::enable_shared_from_this<WayfireIPC> {
+    std::queue<int> response_handlers;
     std::set<IIPCSubscriber*> subscribers;
     std::unordered_map<std::string, std::set<IIPCSubscriber*>> subscriptions;
+    int next_client_id{1};
+    std::unordered_map<int, IPCClient*> clients;
     uint32_t length;
     sigc::connection sig_connection;
     Glib::RefPtr<Gio::SocketConnection> connection;
@@ -48,22 +68,16 @@ class WayfireIPC
 
   public:
     void send(const std::string& message);
-    void send(const std::string& message, response_handler);
+    void send(const std::string& message, int response_handler);
     void subscribe(IIPCSubscriber *subscriber, const std::vector<std::string>& events);
     void subscribe_all(IIPCSubscriber *subscriber);
     void unsubscribe(IIPCSubscriber *subscriber);
+    std::shared_ptr<IPCClient> create_client();
+    void client_destroyed(int id);
+
+    static std::shared_ptr<WayfireIPC> get_instance();
     WayfireIPC();
     ~WayfireIPC();
-};
-
-class WayfireIPCManager
-{
-    uint counter    = 0;
-    WayfireIPC *ipc = nullptr;
-    void release();
-
-  public:
-    std::shared_ptr<WayfireIPC> get_IPC();
 };
 
 #endif // WF_IPC_HPP

@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <vector>
+#include <wayfire/nonstd/json.hpp>
 #include <wayfire/util/log.hpp>
 
 #include "wf-ipc.hpp"
@@ -39,6 +40,7 @@ WayfireIPC::WayfireIPC()
 WayfireIPC::~WayfireIPC()
 {
     disconnect();
+    LOGI("IPC destroyed");
 }
 
 void WayfireIPC::connect()
@@ -68,13 +70,13 @@ void WayfireIPC::disconnect()
 void WayfireIPC::send(const std::string& message)
 {
     send_message(message);
-    response_handlers.push(std::nullopt);
+    response_handlers.push(0);
 }
 
-void WayfireIPC::send(const std::string& message, response_handler cb)
+void WayfireIPC::send(const std::string& message, int response_handler)
 {
     send_message(message);
-    response_handlers.push(cb);
+    response_handlers.push(response_handler);
 }
 
 void WayfireIPC::send_message(const std::string& message)
@@ -109,6 +111,9 @@ void WayfireIPC::write_stream(const std::string& message)
     try {
         writing = true;
         uint32_t length = message.size();
+        // Pointer to data must be valid until completely wrote and
+        // slot is called, as documented for write_all_async.
+        // So we pin it with a shared pointer, destroyed *after* slot is called.
         auto all_data   = std::make_shared<std::string>((char*)&length, 4);
         *all_data += message;
         output->write_all_async(all_data->data(), all_data->size(),
@@ -210,9 +215,10 @@ bool WayfireIPC::receive(Glib::IOCondition cond)
             {
                 auto handler = response_handlers.front();
                 response_handlers.pop();
-                if (handler.has_value())
+                auto client = clients.find(handler);
+                if (client != clients.end())
                 {
-                    handler.value()(message);
+                    client->second->handle_response(message);
                 }
             }
         }
@@ -267,27 +273,74 @@ void WayfireIPC::unsubscribe(IIPCSubscriber *subscriber)
     }
 }
 
-// WayfireIPCManager
-std::shared_ptr<WayfireIPC> WayfireIPCManager::get_IPC()
+std::shared_ptr<IPCClient> WayfireIPC::create_client()
 {
-    if (ipc == nullptr)
+    auto client = new IPCClient(next_client_id, shared_from_this());
+    clients[next_client_id++] = client;
+    
+    // Zero is reserved for NO CLIENT id, so just in case :)
+    if (next_client_id == 0)
     {
-        ipc = new WayfireIPC();
+        next_client_id++;
     }
 
-    counter++;
-    return std::shared_ptr<WayfireIPC>(ipc, [this] (WayfireIPC*)
-    {
-        release();
-    });
+    return std::shared_ptr<IPCClient>(client);
 }
 
-void WayfireIPCManager::release()
+void WayfireIPC::client_destroyed(int id)
 {
-    counter--;
-    if (counter == 0)
+        clients.erase(id);
+}
+
+std::shared_ptr<WayfireIPC> WayfireIPC::get_instance()
+{
+    static std::weak_ptr<WayfireIPC> ipc;
+
+    auto instance = ipc.lock();
+    if (!instance)
     {
-        delete ipc;
-        ipc = nullptr;
+        instance = std::shared_ptr<WayfireIPC>(new WayfireIPC());
+        ipc = instance;
     }
+    
+    return instance;
+}
+
+// IPCClient
+IPCClient::~IPCClient()
+{
+    ipc->client_destroyed(id);
+}
+
+void IPCClient::send(const std::string& message)
+{
+    ipc->send(message);
+}
+
+void IPCClient::send(const std::string& message, response_handler cb)
+{
+    response_handlers.push(cb);
+    ipc->send(message, id);
+}
+
+void IPCClient::handle_response(wf::json_t response)
+{
+    auto handler = response_handlers.front();
+    response_handlers.pop();
+    handler(response);
+}
+
+void IPCClient::subscribe(IIPCSubscriber *subscriber, const std::vector<std::string>& events)
+{
+    ipc->subscribe(subscriber, events);
+}
+
+void IPCClient::subscribe_all(IIPCSubscriber *subscriber)
+{
+    ipc->subscribe_all(subscriber);
+}
+
+void IPCClient::unsubscribe(IIPCSubscriber *subscriber)
+{
+    ipc->unsubscribe(subscriber);
 }

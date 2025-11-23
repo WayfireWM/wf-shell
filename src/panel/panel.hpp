@@ -6,13 +6,12 @@
 #include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
 
-#include "wf-ipc.hpp"
 #include "wf-shell-app.hpp"
 
 class WayfirePanel
 {
   public:
-    WayfirePanel(WayfireOutput *output, std::shared_ptr<WayfireIPCManager> ipc);
+    WayfirePanel(WayfireOutput *output);
 
     wl_surface *get_wl_surface();
     Gtk::Window& get_window();

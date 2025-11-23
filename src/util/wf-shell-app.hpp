@@ -71,7 +71,6 @@ class WayfireShellApp
     int inotify_css_fd;
     wf::config::config_manager_t config;
     zwf_shell_manager_v2 *wf_shell_manager = nullptr;
-    std::shared_ptr<WayfireIPCManager> ipc_manager;
 
     WayfireShellApp();
     virtual ~WayfireShellApp();
