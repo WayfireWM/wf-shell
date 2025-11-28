@@ -50,11 +50,11 @@ class WayfireIPC : public std::enable_shared_from_this<WayfireIPC> {
     std::unordered_map<std::string, std::set<IIPCSubscriber*>> subscriptions;
     int next_client_id{1};
     std::unordered_map<int, IPCClient*> clients;
-    uint32_t length;
     sigc::connection sig_connection;
     Glib::RefPtr<Gio::SocketConnection> connection;
     Glib::RefPtr<Gio::InputStream> input;
     Glib::RefPtr<Gio::OutputStream> output;
+    Glib::RefPtr<Gio::Cancellable> cancel;
     std::queue<std::string> write_queue;
     bool writing = false;
 

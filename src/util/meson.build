@@ -8,7 +8,7 @@ util = static_library(
         'css-config.cpp',
         'wf-ipc.cpp',
     ],
-    dependencies: [wf_protos, wayland_client, gtkmm, wfconfig, libinotify, gtklayershell, json],
+    dependencies: [wf_protos, gtklayershell, wayland_client, gtkmm, wfconfig, libinotify, json],
 )
 
 util_includes = include_directories('.')

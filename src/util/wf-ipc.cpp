@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <functional>
+#include <giomm-2.4/giomm/enums.h>
 #include <glibmm-2.4/glibmm/iochannel.h>
 #include <memory>
 #include <optional>
@@ -18,6 +19,7 @@
 #include <wayfire/util/log.hpp>
 
 #include "wf-ipc.hpp"
+#include "giomm/cancellable.h"
 #include "giomm/error.h"
 #include "giomm/socketclient.h"
 #include "giomm/unixsocketaddress.h"
@@ -40,7 +42,6 @@ WayfireIPC::WayfireIPC()
 WayfireIPC::~WayfireIPC()
 {
     disconnect();
-    LOGI("IPC destroyed");
 }
 
 void WayfireIPC::connect()
@@ -57,13 +58,13 @@ void WayfireIPC::connect()
     connection->get_socket()->set_blocking(false);
     output = connection->get_output_stream();
     input  = connection->get_input_stream();
+    cancel = Gio::Cancellable::create();
 }
 
 void WayfireIPC::disconnect()
 {
+    cancel->cancel();
     sig_connection.disconnect();
-    input->close();
-    output->close();
     connection->close();
 }
 
@@ -94,7 +95,7 @@ void WayfireIPC::send_message(const std::string& message)
 
 void WayfireIPC::write_next()
 {
-    if (writing)
+    if (writing || cancel->is_cancelled())
     {
         return;
     }
@@ -124,19 +125,29 @@ void WayfireIPC::write_stream(const std::string& message)
                 auto success = output->write_all_finish(result, written);
                 if (!success)
                 {
-                    LOGE("Write failed. Bytes written: ", written);
+                    LOGE("IPC error: write failed. Bytes written: ", written);
                 }
 
                 this->writing = false;
-                write_next();
+                if (!cancel->is_cancelled())
+                {
+                    write_next();
+                }
             } catch (const Glib::Error& e)
             {
-                LOGE("Write failed: ", e.what());
+                if (e.code() == Gio::IO_ERROR_CANCELLED)
+                {
+                    // Intended behavior
+                    return;
+                } else
+                {
+                    LOGE("IPC error: write failed: ", e.what());
+                }
             }
-        });
+        }, cancel);
     } catch (const Gio::Error& e)
     {
-        LOGE("GIO Error: ", e.what());
+        LOGE("IPC error: ", e.what());
     }
 }
 
@@ -159,19 +170,30 @@ bool WayfireIPC::receive(Glib::IOCondition cond)
 {
     try {
         ssize_t received = 0;
+        uint32_t length;
 
+        // TODO: Input buffer can(?) contain incomplete message
         while (connection->get_socket()->get_available_bytes() > 0)
         {
-            received = input->read(&length, 4);
+            received = input->read(&length, sizeof(length));
             if (received == -1)
             {
-                LOGE("Receive message length failed");
+                LOGE("IPC error: Receive message length failed");
                 return false;
             }
 
             if (received == 0)
             {
-                LOGE("Disconnected");
+                LOGE("IPC error: Disconnected");
+                return false;
+            }
+
+            if (received != sizeof(length))
+            {
+                LOGE("IPC error: failed to read message. Expected (bytes): ",
+                     sizeof(length), 
+                     ", was read (bytes)", 
+                     received);
                 return false;
             }
 
@@ -179,13 +201,22 @@ bool WayfireIPC::receive(Glib::IOCondition cond)
             received = input->read(&buf[0], length);
             if (received == -1)
             {
-                LOGE("Receive message body failed");
+                LOGE("IPC error: receive message body failed");
                 return false;
             }
 
             if (received == 0)
             {
-                LOGE("Disconnected");
+                LOGE("IPC error: Disconnected");
+                return false;
+            }
+
+            if (received != length)
+            {
+                LOGE("IPC error: failed to read message. Expected (bytes): ",
+                     length, 
+                     ", was read (bytes)", 
+                     received);
                 return false;
             }
 
@@ -193,7 +224,7 @@ bool WayfireIPC::receive(Glib::IOCondition cond)
             auto err = wf::json_t::parse_string(buf, message);
             if (err.has_value())
             {
-                LOGE("Parse error: ", err.value(), " message: ", buf, " length: ", buf.length());
+                LOGE("IPC error: JSON parse: ", err.value(), " message: ", buf, " length: ", buf.length());
                 return false;
             }
 
@@ -224,7 +255,7 @@ bool WayfireIPC::receive(Glib::IOCondition cond)
         }
     } catch (const Gio::Error& e)
     {
-        LOGE("GIO Error: ", e.what());
+        LOGE("IPC error: ", e.what());
         return false;
     }
 
