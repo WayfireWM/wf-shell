@@ -12,12 +12,15 @@
 #include <glibmm/varianttype.h>
 #include <gtk-utils.hpp>
 #include <gtkmm/gestureclick.h>
+#include <gtkmm/passwordentry.h>
+#include <gtkmm/spinner.h>
 #include <gdkmm/rgba.h>
 #include <glibmm/markup.h>
 #include <iostream>
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #define NM_DBUS_NAME "org.freedesktop.NetworkManager"
 #define ACTIVE_CONNECTION "PrimaryConnection"
@@ -29,16 +32,26 @@ struct NetworkInfo {
   int strength = 0;     // Wi-Fi signal strength (0–100)
   bool secured = false; // True if the network requires authentication
 };
-// Map 0-100 strength to GNOME symbolic icon names
-static std::string icon_name_for_strength(int value) {
+// Unified strength bucketing (0-100) used for labels and icons
+static const char *strength_bucket(int value) {
   if (value > 80)
-    return "network-wireless-signal-excellent-symbolic";
+    return "excellent";
   if (value > 55)
-    return "network-wireless-signal-good-symbolic";
+    return "good";
   if (value > 30)
-    return "network-wireless-signal-ok-symbolic";
+    return "ok";
   if (value > 5)
-    return "network-wireless-signal-weak-symbolic";
+    return "weak";
+  return "none";
+}
+
+// Map bucketing to GNOME symbolic icon names
+static std::string icon_name_for_strength(int value) {
+  std::string b = strength_bucket(value);
+  if (b == "excellent") return "network-wireless-signal-excellent-symbolic";
+  if (b == "good")      return "network-wireless-signal-good-symbolic";
+  if (b == "ok")        return "network-wireless-signal-ok-symbolic";
+  if (b == "weak")      return "network-wireless-signal-weak-symbolic";
   return "network-wireless-signal-none-symbolic";
 }
 
@@ -228,6 +241,23 @@ void WayfireNetworkInfo::get_available_networks_async(
               << std::endl;
   }
   // Sort by strength (descending). Tie-break by SSID for stable order.
+  // Deduplicate by SSID: keep the strongest AP for each SSID
+  if (!networks.empty()) {
+    std::unordered_map<std::string, NetworkInfo> best_by_ssid;
+    best_by_ssid.reserve(networks.size());
+    for (const auto &n : networks) {
+      auto it = best_by_ssid.find(n.ssid);
+      if (it == best_by_ssid.end() || n.strength > it->second.strength) {
+        best_by_ssid[n.ssid] = n;
+      } else if (it != best_by_ssid.end()) {
+        // propagate secured=true if any AP for the SSID is secured
+        it->second.secured = it->second.secured || n.secured;
+      }
+    }
+    networks.clear();
+    networks.reserve(best_by_ssid.size());
+    for (auto &kv : best_by_ssid) networks.push_back(std::move(kv.second));
+  }
   std::sort(networks.begin(), networks.end(), [](const NetworkInfo &a, const NetworkInfo &b) {
     if (a.strength != b.strength) return a.strength > b.strength;
     return a.ssid < b.ssid;
@@ -305,19 +335,7 @@ struct WifiConnectionInfo : public WfNetworkConnectionInfo {
     return vstr.get();
   }
 
-  std::string get_strength_str() {
-    int value = get_strength();
-
-    if (value > 80)
-      return "excellent";
-    if (value > 55)
-      return "good";
-    if (value > 30)
-      return "ok";
-    if (value > 5)
-      return "weak";
-    return "none";
-  }
+  std::string get_strength_str() { return strength_bucket(get_strength()); }
 
   virtual std::string get_icon_name(WfConnectionState state) {
     if ((state <= CSTATE_ACTIVATING) || (state == CSTATE_DEACTIVATING))
@@ -440,6 +458,17 @@ void WayfireNetworkInfo::update_status() {
   } else {
     status.set_use_markup(false);
     status.set_text(description);
+  }
+
+  // Sync CSS classes with strength buckets (like network.cpp.txt)
+  auto ctx = status.get_style_context();
+  ctx->remove_class("excellent");
+  ctx->remove_class("good");
+  ctx->remove_class("ok");
+  ctx->remove_class("weak");
+  ctx->remove_class("none");
+  if (status_color_opt) {
+    ctx->add_class(info->get_strength_str());
   }
 }
 
@@ -583,18 +612,78 @@ void WayfireNetworkInfo::populate_wifi_list() {
   for (auto *child : pop_list_box.get_children())
     pop_list_box.remove(*child);
 
-  // Header
-  auto header = Gtk::make_managed<Gtk::Label>("Available WiFi Networks");
-  // header->set_margin_bottom(0);
-  pop_list_box.append(*header);
+  // Header placeholder: show scanning text + spinner here while scanning,
+  // then replace with the title when results arrive
+  auto header_line = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+  header_line->set_halign(Gtk::Align::CENTER);
+  header_line->set_hexpand(false);
+  auto header_label = Gtk::make_managed<Gtk::Label>("Scanning for networks…");
+  header_label->set_halign(Gtk::Align::CENTER);
+  header_label->set_xalign(0.5);
+  auto header_spinner = Gtk::make_managed<Gtk::Spinner>();
+  header_spinner->set_spinning(true);
+  header_line->append(*header_label);
+  header_line->append(*header_spinner);
+  pop_list_box.append(*header_line);
 
   // Show scanning message
-  pop_status_label.set_text("Scanning for networks…");
+  pop_status_label.set_text("");
   pop_list_box.set_sensitive(false);
-  trigger_wifi_scan_async([this]() {
+  // While scanning: show only the currently connected network (if any)
+  if (!current_ap_path.empty() && info) {
+    NetworkInfo cur{info->connection_name, current_ap_path, info->get_connection_strength(), true};
+    auto row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
+    row->set_halign(Gtk::Align::FILL);
+    row->set_hexpand(true);
+    auto sig_img = Gtk::make_managed<Gtk::Image>();
+    sig_img->set_from_icon_name(icon_name_for_strength(cur.strength));
+    sig_img->set_pixel_size(16);
+    row->append(*sig_img);
+    auto name_lbl = Gtk::make_managed<Gtk::Label>(cur.ssid);
+    name_lbl->set_halign(Gtk::Align::START);
+    name_lbl->set_hexpand(true);
+    auto escaped = Glib::Markup::escape_text(cur.ssid);
+    name_lbl->set_use_markup(true);
+    name_lbl->set_markup("<span foreground='#33c15e' weight='bold'>" + escaped + "</span>");
+    row->append(*name_lbl);
+    auto main_btn = Gtk::make_managed<Gtk::Button>();
+    main_btn->set_child(*row);
+    main_btn->set_halign(Gtk::Align::FILL);
+    main_btn->set_hexpand(true);
+    main_btn->signal_clicked().connect([this]() { show_connected_details(); });
+    auto line = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+    line->set_halign(Gtk::Align::FILL);
+    line->set_hexpand(true);
+    line->append(*main_btn);
+    auto disc_btn = Gtk::make_managed<Gtk::Button>();
+    disc_btn->add_css_class("flat");
+    disc_btn->set_tooltip_text("Disconnect");
+    auto disc_img = Gtk::make_managed<Gtk::Image>();
+    disc_img->set_from_icon_name("network-offline-symbolic");
+    disc_img->set_pixel_size(14);
+    disc_btn->set_child(*disc_img);
+    disc_btn->signal_clicked().connect([this]() { disconnect_current_network(); });
+    line->append(*disc_btn);
+    pop_list_box.append(*line);
+  }
+
+  trigger_wifi_scan_async([this, header_label, header_spinner]() {
     // Launch network scan asynchronously using D-Bus async interface
-    get_available_networks_async([this](
+    get_available_networks_async([this, header_label, header_spinner](
                                      const std::vector<NetworkInfo> &networks) {
+      // Clear current temporary rows (including the connected preview)
+      for (auto *child : pop_list_box.get_children())
+        pop_list_box.remove(*child);
+
+      // Rebuild header as final title
+      auto final_header_line = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+      final_header_line->set_halign(Gtk::Align::CENTER);
+      final_header_line->set_hexpand(false);
+      auto final_header_label = Gtk::make_managed<Gtk::Label>("Available WiFi Networks");
+      final_header_label->set_halign(Gtk::Align::CENTER);
+      final_header_label->set_xalign(0.5);
+      final_header_line->append(*final_header_label);
+      pop_list_box.append(*final_header_line);
       if (networks.empty()) {
         auto lbl = Gtk::make_managed<Gtk::Label>("No networks found");
         lbl->set_margin(6);
@@ -602,9 +691,20 @@ void WayfireNetworkInfo::populate_wifi_list() {
       } else {
         // Find connected entry (if any) so we can render it first
         int connected_index = -1;
+        // Prefer matching by AP object path
         if (!current_ap_path.empty()) {
           for (size_t i = 0; i < networks.size(); ++i) {
             if (Glib::ustring{networks[i].path} == current_ap_path) {
+              connected_index = static_cast<int>(i);
+              break;
+            }
+          }
+        }
+        // Fallback: match by SSID when backend reports a different AP path
+        if (connected_index < 0 && info) {
+          const std::string connected_ssid = info->connection_name;
+          for (size_t i = 0; i < networks.size(); ++i) {
+            if (networks[i].ssid == connected_ssid) {
               connected_index = static_cast<int>(i);
               break;
             }
@@ -701,11 +801,11 @@ void WayfireNetworkInfo::populate_wifi_list() {
 
       pop_list_box.set_sensitive(true);
       pop_status_label.set_text(""); // Clear scanning message
+      pop_status_label.set_margin_top(6);
+      pop_list_box.append(pop_status_label);
     });
   });
-  // Status label at the bottom
-  pop_status_label.set_margin_top(6);
-  pop_list_box.append(pop_status_label);
+  // Status label will be appended after results to avoid duplication
 }
 
 void WayfireNetworkInfo::show_password_prompt_for(const std::string &ssid) {
@@ -725,14 +825,14 @@ void WayfireNetworkInfo::show_password_prompt_for(const std::string &ssid) {
   auto pass_label = Gtk::make_managed<Gtk::Label>("Password:");
   popover_box.append(*pass_label);
 
-  auto entry = Gtk::make_managed<Gtk::Entry>();
-  entry->set_visibility(false);
+  auto entry = Gtk::make_managed<Gtk::PasswordEntry>();
+  entry->set_show_peek_icon(true);
   entry->set_hexpand(true);
   popover_box.append(*entry);
 
   // Buttons
   auto hbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
-  hbox->set_halign(Gtk::Align::END);
+  hbox->set_halign(Gtk::Align::CENTER);
 
   auto cancel_btn = Gtk::make_managed<Gtk::Button>("Cancel");
   cancel_btn->signal_clicked().connect([this]() {
@@ -910,7 +1010,8 @@ void WayfireNetworkInfo::init(Gtk::Box *container) {
   button->get_children()[0]->get_style_context()->add_class("flat");
 
   update_icon();
-  button->set_child(icon);
+  // Use a container with icon + status so idle state shows connection info
+  button->set_child(button_content);
   container->append(*button);
 
   button->set_tooltip_text("Click to open Wi-Fi selector");
@@ -1142,7 +1243,6 @@ void WayfireNetworkInfo::show_connected_details() {
   std::string netmask = ip4.prefix >= 0 ? prefix_to_netmask(ip4.prefix) : "";
   add_row("IPv4 Prefix", ip4.prefix >= 0 ? std::to_string(ip4.prefix) : "");
   add_row("Subnet Mask", netmask);
-  add_row("Gateway", ip4.gateway);
   if (!ip4.dns.empty()) {
     std::string dns_join;
     for (size_t i = 0; i < ip4.dns.size(); ++i) {
@@ -1153,36 +1253,6 @@ void WayfireNetworkInfo::show_connected_details() {
     add_row("DNS", dns_join);
   } else {
     add_row("DNS", "");
-  }
-
-  // IPv6 (simplified)
-  try {
-    Glib::Variant<Glib::ustring> ip6_path_var;
-    active_connection_proxy->get_cached_property(ip6_path_var, "Ip6Config");
-    auto path6 = ip6_path_var.get();
-    std::string ipv6_addr;
-    if (!path6.empty() && path6 != "/") {
-      auto ip6_proxy = Gio::DBus::Proxy::create_sync(connection, NM_DBUS_NAME, path6, "org.freedesktop.NetworkManager.IP6Config");
-      if (ip6_proxy) {
-        Glib::VariantBase addr6_var;
-        ip6_proxy->get_cached_property(addr6_var, "AddressData");
-        if (addr6_var) {
-          typedef std::map<Glib::ustring, Glib::VariantBase> Dict;
-          auto array_variant = Glib::VariantBase::cast_dynamic<Glib::Variant<std::vector<Dict>>>(addr6_var);
-          auto vec = array_variant.get();
-          if (!vec.empty()) {
-            auto &first = vec.front();
-            auto it = first.find("address");
-            if (it != first.end()) {
-              ipv6_addr = Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::ustring>>(it->second).get();
-            }
-          }
-        }
-      }
-    }
-    add_row("IPv6 Address", ipv6_addr);
-  } catch (...) {
-    add_row("IPv6 Address", "");
   }
 
   popover_box.append(*content);
