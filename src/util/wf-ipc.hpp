@@ -28,12 +28,15 @@ class IIPCSubscriber
 using response_handler = std::function<void (wf::json_t)>;
 
 class WayfireIPC;
-class IPCClient {
-  int id;
-  std::shared_ptr<WayfireIPC> ipc;
-  std::queue<response_handler> response_handlers;
+class IPCClient
+{
+    int id;
+    std::shared_ptr<WayfireIPC> ipc;
+    std::queue<response_handler> response_handlers;
+
   public:
-    IPCClient(int id, std::shared_ptr<WayfireIPC> ipc) : id(id), ipc(ipc) {}
+    IPCClient(int id, std::shared_ptr<WayfireIPC> ipc) : id(id), ipc(ipc)
+    {}
     ~IPCClient();
     int get_id();
     void handle_response(wf::json_t response);
@@ -44,7 +47,8 @@ class IPCClient {
     void unsubscribe(IIPCSubscriber *subscriber);
 };
 
-class WayfireIPC : public std::enable_shared_from_this<WayfireIPC> {
+class WayfireIPC : public std::enable_shared_from_this<WayfireIPC>
+{
     std::queue<int> response_handlers;
     std::set<IIPCSubscriber*> subscribers;
     std::unordered_map<std::string, std::set<IIPCSubscriber*>> subscriptions;

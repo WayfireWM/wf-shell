@@ -115,7 +115,7 @@ void WayfireIPC::write_stream(const std::string& message)
         // Pointer to data must be valid until completely wrote and
         // slot is called, as documented for write_all_async.
         // So we pin it with a shared pointer, destroyed *after* slot is called.
-        auto all_data   = std::make_shared<std::string>((char*)&length, 4);
+        auto all_data = std::make_shared<std::string>((char*)&length, 4);
         *all_data += message;
         output->write_all_async(all_data->data(), all_data->size(),
             [this, all_data] (Glib::RefPtr<Gio::AsyncResult>& result)
@@ -191,9 +191,9 @@ bool WayfireIPC::receive(Glib::IOCondition cond)
             if (received != sizeof(length))
             {
                 LOGE("IPC error: failed to read message. Expected (bytes): ",
-                     sizeof(length), 
-                     ", was read (bytes)", 
-                     received);
+                    sizeof(length),
+                    ", was read (bytes)",
+                    received);
                 return false;
             }
 
@@ -214,9 +214,9 @@ bool WayfireIPC::receive(Glib::IOCondition cond)
             if (received != length)
             {
                 LOGE("IPC error: failed to read message. Expected (bytes): ",
-                     length, 
-                     ", was read (bytes)", 
-                     received);
+                    length,
+                    ", was read (bytes)",
+                    received);
                 return false;
             }
 
@@ -308,7 +308,7 @@ std::shared_ptr<IPCClient> WayfireIPC::create_client()
 {
     auto client = new IPCClient(next_client_id, shared_from_this());
     clients[next_client_id++] = client;
-    
+
     // Zero is reserved for NO CLIENT id, so just in case :)
     if (next_client_id == 0)
     {
@@ -320,7 +320,7 @@ std::shared_ptr<IPCClient> WayfireIPC::create_client()
 
 void WayfireIPC::client_destroyed(int id)
 {
-        clients.erase(id);
+    clients.erase(id);
 }
 
 std::shared_ptr<WayfireIPC> WayfireIPC::get_instance()
@@ -333,7 +333,7 @@ std::shared_ptr<WayfireIPC> WayfireIPC::get_instance()
         instance = std::shared_ptr<WayfireIPC>(new WayfireIPC());
         ipc = instance;
     }
-    
+
     return instance;
 }
 
