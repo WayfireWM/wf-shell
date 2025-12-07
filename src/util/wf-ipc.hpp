@@ -1,18 +1,15 @@
 #ifndef WF_IPC_HPP
 #define WF_IPC_HPP
 
-#include "gio/gio.h"
 #include "giomm/cancellable.h"
 #include "giomm/outputstream.h"
 #include "giomm/socketconnection.h"
 #include "glibmm/iochannel.h"
 #include "glibmm/refptr.h"
-#include <iostream>
 #include <wayfire/nonstd/json.hpp>
 #include "sigc++/connection.h"
 #include <functional>
 #include <memory>
-#include <optional>
 #include <queue>
 #include <set>
 #include <string>

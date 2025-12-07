@@ -10,7 +10,6 @@
 #include <gtkmm/cssprovider.h>
 
 #include "wayfire-shell-unstable-v2-client-protocol.h"
-#include "wf-ipc.hpp"
 
 using GMonitor = Glib::RefPtr<Gdk::Monitor>;
 
