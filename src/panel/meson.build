@@ -31,6 +31,7 @@ deps = [
   wfconfig,
   dbusmenu_gtk,
   xkbregistry,
+  json,
 ]
 
 if libpulse.found()

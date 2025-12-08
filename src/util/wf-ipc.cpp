@@ -3,8 +3,8 @@
 #include <cstring>
 #include <fcntl.h>
 #include <functional>
-#include <giomm-2.4/giomm/enums.h>
-#include <glibmm-2.4/glibmm/iochannel.h>
+#include <giomm/enums.h>
+#include <glibmm/iochannel.h>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -36,7 +36,7 @@ WayfireIPC::WayfireIPC()
     sig_connection = Glib::signal_io().connect(
         sigc::mem_fun(*this, &WayfireIPC::receive),
         connection->get_socket()->get_fd(),
-        Glib::IO_IN);
+        Glib::IOCondition::IO_IN);
 }
 
 WayfireIPC::~WayfireIPC()
@@ -104,7 +104,7 @@ void WayfireIPC::write_next()
     sig_connection = Glib::signal_io().connect(
         sigc::mem_fun(*this, &WayfireIPC::send_queue),
         connection->get_socket()->get_fd(),
-        Glib::IO_OUT);
+        Glib::IOCondition::IO_OUT);
 }
 
 void WayfireIPC::write_stream(const std::string& message)
@@ -135,7 +135,7 @@ void WayfireIPC::write_stream(const std::string& message)
                 }
             } catch (const Glib::Error& e)
             {
-                if (e.code() == Gio::IO_ERROR_CANCELLED)
+                if (e.code() == G_IO_ERROR_CANCELLED)
                 {
                     // Intended behavior
                     return;
