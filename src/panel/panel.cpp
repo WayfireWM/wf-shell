@@ -7,14 +7,17 @@
 #include <gtk4-layer-shell.h>
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 #include <map>
 #include <css-config.hpp>
 #include "panel.hpp"
 
+#include "wf-ipc.hpp"
 #include "widgets/battery.hpp"
 #include "widgets/command-output.hpp"
+#include "widgets/language.hpp"
 #include "widgets/menu.hpp"
 #include "widgets/clock.hpp"
 #include "widgets/launchers.hpp"
@@ -184,6 +187,11 @@ class WayfirePanel::impl
             return Widget(new WfCommandOutputButtons());
         }
 
+        if (name == "language")
+        {
+            return Widget(new WayfireLanguage());
+        }
+
         if (auto pixel = widget_with_value(name, "spacing"))
         {
             return Widget(new WayfireSpacing(*pixel));
@@ -318,6 +326,7 @@ class WayfirePanel::impl
 
 WayfirePanel::WayfirePanel(WayfireOutput *output) : pimpl(new impl(output))
 {}
+
 wl_surface*WayfirePanel::get_wl_surface()
 {
     return pimpl->get_wl_surface();

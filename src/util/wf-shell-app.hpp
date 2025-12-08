@@ -1,6 +1,7 @@
 #ifndef WF_SHELL_APP_HPP
 #define WF_SHELL_APP_HPP
 
+#include <memory>
 #include <string>
 #include <wayfire/config/config-manager.hpp>
 
@@ -11,6 +12,7 @@
 #include "wayfire-shell-unstable-v2-client-protocol.h"
 
 using GMonitor = Glib::RefPtr<Gdk::Monitor>;
+
 /**
  * Represents a single output
  */
