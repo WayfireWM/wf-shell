@@ -274,9 +274,9 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
             return;
         }
 
-        const std::string_view media_class{wp_pipewire_object_get_property(
+        const gchar *media_class = wp_pipewire_object_get_property(
             WP_PIPEWIRE_OBJECT(proxy),
-            PW_KEY_MEDIA_CLASS)};
+            PW_KEY_MEDIA_CLASS);
         for (guint i = 0; i < G_N_ELEMENTS(DEFAULT_NODE_MEDIA_CLASSES); i++)
         {
             if (media_class == DEFAULT_NODE_MEDIA_CLASSES[i])
