@@ -61,7 +61,7 @@ class WfDock::impl
 
         out_box.set_halign(Gtk::Align::CENTER);
 
-        if ((std::string)css_path != "")
+        if (css_path.value() != "")
         {
             auto css = load_css_from_path(css_path);
             if (css)
@@ -72,7 +72,6 @@ class WfDock::impl
         }
 
         window->present();
-        new CssFromConfigInt("dock/icon_height", ".toplevel-icon {-gtk-icon-size:", "px;}");
         _wl_surface = gdk_wayland_surface_get_wl_surface(
             window->get_surface()->gobj());
     }
@@ -82,7 +81,7 @@ class WfDock::impl
         box.get_style_context()->add_class("box");
         box.set_homogeneous(true);
 
-        if ((std::string)position == "left" or (std::string)position == "right")
+        if (position.value() == "left" or position.value() == "right")
         {
             box.set_orientation(Gtk::Orientation::VERTICAL);
         } else
@@ -103,7 +102,7 @@ class WfDock::impl
 
         // this sequence of checking gives a fallback to a horizontal layout if the value is invalid.
         // goes with the WfAutohideWindow fallback to go at the top.
-        if ((std::string)position == "left" or (std::string)position == "right")
+        if (position.value() == "left" or position.value() == "right")
         {
             orientation = Gtk::Orientation::VERTICAL;
             out_box.set_orientation(Gtk::Orientation::HORIZONTAL);
@@ -113,7 +112,7 @@ class WfDock::impl
             out_box.set_orientation(Gtk::Orientation::VERTICAL);
         }
 
-        if ((std::string)position == "bottom" or (std::string)position == "right")
+        if (position.value() == "bottom" or position.value() == "right")
         {
             ap_or_pre_pend = &Gtk::Box::prepend;
             first_or_last_child = &Gtk::Widget::get_first_child;
@@ -127,12 +126,12 @@ class WfDock::impl
 
         // again, goes with fallback being top and horizontal
         std::string widget_rotation = "horizontal";
-        if (((std::string)rotation == ROTATION_LEFT) || ((std::string)rotation == "match") &&
-            ((std::string)position == "right"))
+        if ((rotation.value() == ROTATION_LEFT) || (rotation.value() == "match") &&
+            (position.value() == "right"))
         {
             widget_rotation = ROTATION_LEFT;
-        } else if (((std::string)rotation == ROTATION_RIGHT) || ((std::string)rotation == "match") &&
-                   ((std::string)position == "left"))
+        } else if ((rotation.value() == ROTATION_RIGHT) || (rotation.value() == "match") &&
+                   (position.value() == "left"))
         {
             widget_rotation = ROTATION_RIGHT;
         }

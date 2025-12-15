@@ -592,22 +592,22 @@ void WayfireMenu::update_popover_layout()
             Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
             WfOption<std::string> panel_layer{"panel/layer"};
 
-            if ((std::string)panel_layer == "overlay")
+            if (panel_layer.value() == "overlay")
             {
                 gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
             }
 
-            if ((std::string)panel_layer == "top")
+            if (panel_layer.value() == "top")
             {
                 gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
             }
 
-            if ((std::string)panel_layer == "bottom")
+            if (panel_layer.value() == "bottom")
             {
                 gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
             }
 
-            if ((std::string)panel_layer == "background")
+            if (panel_layer.value() == "background")
             {
                 gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
             }

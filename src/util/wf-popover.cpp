@@ -10,16 +10,16 @@ WayfireMenuButton::WayfireMenuButton(const std::string& section) :
 
     auto cb = [=] ()
     {
-        if ((std::string)panel_position == "top")
+        if (panel_position.value() == "top")
         {
             set_direction(Gtk::ArrowType::DOWN);
-        } else if ((std::string)panel_position == "bottom")
+        } else if (panel_position.value() == "bottom")
         {
             set_direction(Gtk::ArrowType::UP);
-        } else if ((std::string)panel_position == "left")
+        } else if (panel_position.value() == "left")
         {
             set_direction(Gtk::ArrowType::RIGHT);
-        } else if ((std::string)panel_position == "right")
+        } else if (panel_position.value() == "right")
         {
             set_direction(Gtk::ArrowType::LEFT);
         }

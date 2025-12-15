@@ -390,9 +390,9 @@ bool WayfireNetworkInfo::setup_dbus()
 
 void WayfireNetworkInfo::on_click()
 {
-    if ((std::string)click_command_opt != "default")
+    if (click_command_opt.value() != "default")
     {
-        Glib::spawn_command_line_async((std::string)click_command_opt);
+        Glib::spawn_command_line_async(click_command_opt.value());
     } else
     {
         info->spawn_control_center(nm_proxy);
