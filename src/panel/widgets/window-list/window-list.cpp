@@ -1,130 +1,10 @@
 #include <iostream>
 #include <glibmm.h>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
 
 #include "toplevel.hpp"
 #include "window-list.hpp"
 #include "panel.hpp"
-
-WayfireWindowListBox::WayfireWindowListBox() : Gtk::HBox()
-{}
-
-void WayfireWindowListBox::set_top_widget(Gtk::Widget *top)
-{
-    this->top_widget = top;
-
-    if (top_widget)
-    {
-        /* Set original top_x to where the widget currently is, so that we don't
-         * mess with it before the real position is set */
-        this->top_x = get_absolute_position(0, *top);
-    }
-
-    set_top_x(top_x);
-}
-
-void WayfireWindowListBox::set_top_x(int x)
-{
-    /* Make sure that the widget doesn't go outside of the box */
-    if (this->top_widget)
-    {
-        x = std::min(x, get_allocated_width() - top_widget->get_allocated_width());
-    }
-
-    if (this->top_widget)
-    {
-        x = std::max(x, 0);
-    }
-
-    this->top_x = x;
-
-    queue_allocate();
-    queue_draw();
-
-    auto alloc = this->get_allocation();
-    on_size_allocate(alloc);
-}
-
-static void for_each_child_callback(GtkWidget *widget, gpointer data)
-{
-    auto v = (std::vector<GtkWidget*>*)data;
-    v->push_back(widget);
-}
-
-std::vector<Gtk::Widget*> WayfireWindowListBox::get_unsorted_widgets()
-{
-    std::vector<GtkWidget*> children;
-    HBox::forall_vfunc(true, &for_each_child_callback, &children);
-
-    std::vector<Gtk::Widget*> result;
-    for (auto& child : children)
-    {
-        result.push_back(Glib::wrap(child));
-    }
-
-    return result;
-}
-
-void WayfireWindowListBox::forall_vfunc(gboolean value, GtkCallback callback, gpointer callback_data)
-{
-    std::vector<GtkWidget*> children;
-    HBox::forall_vfunc(true, &for_each_child_callback, &children);
-
-    if (top_widget)
-    {
-        auto it = std::find(children.begin(), children.end(), top_widget->gobj());
-        children.erase(it);
-        children.push_back(top_widget->gobj());
-    }
-
-    for (auto& child : children)
-    {
-        callback(child, callback_data);
-    }
-}
-
-void WayfireWindowListBox::on_size_allocate(Gtk::Allocation& alloc)
-{
-    HBox::on_size_allocate(alloc);
-
-    if (top_widget)
-    {
-        auto alloc = top_widget->get_allocation();
-        alloc.set_x(this->top_x);
-        top_widget->size_allocate(alloc);
-    }
-}
-
-int WayfireWindowListBox::get_absolute_position(int x, Gtk::Widget& ref)
-{
-    auto w = &ref;
-    while (w && w != this)
-    {
-        auto allocation = w->get_allocation();
-        x += allocation.get_x();
-        w  = w->get_parent();
-    }
-
-    return x;
-}
-
-Gtk::Widget*WayfireWindowListBox::get_widget_at(int x)
-{
-    Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
-
-    /* Widgets are stored bottom to top, so we will return the bottom-most
-     * widget at the given position */
-    auto children = this->get_children();
-    for (auto& child : children)
-    {
-        if (child->get_allocation().intersects(given_point))
-        {
-            return child;
-        }
-    }
-
-    return nullptr;
-}
 
 #define DEFAULT_SIZE_PC 0.1
 
@@ -167,7 +47,7 @@ static struct wl_registry_listener registry_listener =
     &registry_remove_object
 };
 
-void WayfireWindowList::init(Gtk::HBox *container)
+void WayfireWindowList::init(Gtk::Box *container)
 {
     auto gdk_display = gdk_display_get_default();
     auto display     = gdk_wayland_display_get_wl_display(gdk_display);
@@ -191,64 +71,111 @@ void WayfireWindowList::init(Gtk::HBox *container)
     zwlr_foreign_toplevel_manager_v1_add_listener(manager,
         &toplevel_manager_v1_impl, this);
 
-    scrolled_window.signal_draw().connect_notify(
-        sigc::mem_fun(this, &WayfireWindowList::on_draw));
-
-    box.set_homogeneous(true);
-    scrolled_window.add(box);
+    scrolled_window.set_hexpand(true);
+    scrolled_window.set_child(*this);
     scrolled_window.set_propagate_natural_width(true);
-    scrolled_window.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_NEVER);
-    container->pack_start(scrolled_window, true, true);
-    scrolled_window.show_all();
+    scrolled_window.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::NEVER);
+    container->append(scrolled_window);
 }
 
-void WayfireWindowList::set_button_width(int width)
+void WayfireWindowList::set_top_widget(Gtk::Widget *top)
 {
-    std::cout << "set width " << width << std::endl;
-    for (auto& toplevel : toplevels)
+    this->layout->top_widget = top;
+
+    if (layout->top_widget)
     {
-        if (toplevel.second)
+        /* Set original top_x to where the widget currently is, so that we don't
+         * mess with it before the real position is set */
+        this->layout->top_x = get_absolute_position(0, *top);
+    }
+
+    set_top_x(layout->top_x);
+}
+
+void WayfireWindowList::set_top_x(int x)
+{
+    /* Make sure that the widget doesn't go outside of the box */
+    if (this->layout->top_widget)
+    {
+        x = std::min(x, get_allocated_width() - layout->top_widget->get_allocated_width());
+    }
+
+    if (this->layout->top_widget)
+    {
+        x = std::max(x, 0);
+    }
+
+    this->layout->top_x = x;
+
+    if (this->layout->top_widget)
+    {
+        // TODO Sensibly cause a reflow to force layout manager to move children
+    }
+
+    queue_allocate();
+    queue_draw();
+}
+
+int WayfireWindowList::get_absolute_position(int x, Gtk::Widget& ref)
+{
+    auto w = &ref;
+    while (w && w != this)
+    {
+        auto allocation = w->get_allocation();
+        x += allocation.get_x();
+        w  = w->get_parent();
+    }
+
+    return x;
+}
+
+Gtk::Widget*WayfireWindowList::get_widget_before(int x)
+{
+    Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
+
+    /* Widgets are stored bottom to top, so we will return the bottom-most
+     * widget at the given position */
+    Gtk::Widget *previous = nullptr;
+    auto children = this->get_children();
+    for (auto& child : children)
+    {
+        if (layout->top_widget && (child == layout->top_widget))
         {
-            toplevel.second->set_width(width);
+            continue;
+        }
+
+        if (child->get_allocation().intersects(given_point))
+        {
+            return previous;
+        }
+
+        previous = child;
+    }
+
+    return nullptr;
+}
+
+Gtk::Widget*WayfireWindowList::get_widget_at(int x)
+{
+    Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
+
+    /* Widgets are stored bottom to top, so we will return the bottom-most
+     * widget at the given position */
+    auto children = this->get_children();
+    for (auto& child : children)
+    {
+        if (child == layout->top_widget)
+        {
+            continue;
+        }
+
+        if (child->get_allocation().intersects(given_point))
+        {
+            return child;
         }
     }
-}
 
-int WayfireWindowList::get_default_button_width()
-{
-    return DEFAULT_SIZE_PC *
-           WayfirePanelApp::get().panel_for_wl_output(output->wo)->get_window()
-               .get_allocated_width();
-}
-
-int WayfireWindowList::get_target_button_width()
-{
-    int num_children = box.get_children().size();
-    int target_width = get_default_button_width();
-
-    if (num_children > 0)
-    {
-        target_width = std::min(target_width,
-            scrolled_window.get_allocated_width() / num_children);
-        std::cout << "target button " << scrolled_window.get_allocated_width() << std::endl;
-    }
-
-    return target_width;
-}
-
-void WayfireWindowList::on_draw(const Cairo::RefPtr<Cairo::Context>& ctx)
-{
-    int allocated_width = scrolled_window.get_allocated_width();
-
-    int minimal_width, preferred_width;
-    scrolled_window.get_preferred_width(minimal_width, preferred_width);
-
-    /* We have changed the size/number of toplevels. On top of that, our list
-     * is longer that the max size, so we need to re-layout the buttons */
-    if ((preferred_width > allocated_width) && (toplevels.size() > 0))
-    {
-        set_button_width(get_target_button_width());
-    }
+    return nullptr;
 }
 
 void WayfireWindowList::add_output(WayfireOutput *output)
@@ -264,8 +191,6 @@ void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1
 void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
 {
     toplevels[handle] = std::unique_ptr<WayfireToplevel>(new WayfireToplevel(this, handle));
-    /* The size will be updated in the next on_draw() if needed */
-    toplevels[handle]->set_width(get_default_button_width());
 }
 
 void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
@@ -277,14 +202,18 @@ void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *
     {
         return;
     }
-
-    /* Recalculate button size */
-    set_button_width(get_target_button_width());
 }
 
 WayfireWindowList::WayfireWindowList(WayfireOutput *output)
 {
     this->output = output;
+
+    layout = std::make_shared<WayfireWindowListLayout>(this);
+    set_layout_manager(layout);
+    user_size.set_callback([=]
+    {
+        this->queue_allocate();
+    });
 }
 
 WayfireWindowList::~WayfireWindowList()

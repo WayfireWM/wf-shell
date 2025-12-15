@@ -86,6 +86,14 @@ class WfToplevel::impl
             icon.second->set_state(state);
         }
     }
+
+    void close()
+    {
+        for (auto& icon : icons)
+        {
+            icon.second->close();
+        }
+    }
 };
 
 
@@ -97,6 +105,11 @@ WfToplevel::~WfToplevel() = default;
 void WfToplevel::handle_output_leave(wl_output *output)
 {
     pimpl->handle_output_leave(output);
+}
+
+void WfToplevel::close()
+{
+    pimpl->close();
 }
 
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;

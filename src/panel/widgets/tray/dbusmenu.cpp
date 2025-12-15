@@ -101,8 +101,8 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
             bool has_children = dbusmenu_menuitem_get_children(child) != NULL;
 
             /*  #Icons are set, but from what I read they won't be shown in gtk4.
-             *  for some reason TOGGLE_TYPE is always returning as if not set. So checkboxes and radios work
-             * but are never sent
+             *  for some reason TOGGLE_TYPE is always returning as if not set.
+             *  So checkboxes and radios work but are never sent
              */
             if (has_children)
             {
@@ -194,8 +194,8 @@ Glib::RefPtr<Gio::Menu> DbusMenuModel::get_menu()
 }
 
 /*
- *  Strip non-alphabetical characters and add a unique numeric ID. Keeping alphacharacters can help with
- * debugging but isn't strictly necessary.
+ *  Strip non-alphabetical characters and add a unique numeric ID.
+ *  Keeping alphacharacters can help with debugging but isn't strictly necessary.
  *
  *  Watch out for this in localisations. I'm betting it's a source of many bugs to come
  *

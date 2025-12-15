@@ -39,6 +39,9 @@ if libpulse.found()
   deps += [libpulse, libgvc]
 endif
 
-executable('wf-panel', ['panel.cpp'] + widget_sources,
-        dependencies: deps,
-        install: true)
+executable(
+  'wf-panel',
+  ['panel.cpp'] + widget_sources,
+  dependencies: deps,
+  install: true,
+)

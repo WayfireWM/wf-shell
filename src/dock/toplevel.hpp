@@ -19,6 +19,7 @@ class WfToplevel
     WfToplevel(zwlr_foreign_toplevel_handle_v1 *handle);
     ~WfToplevel();
 
+    void close();
     void handle_output_leave(wl_output *output);
 
     class impl;

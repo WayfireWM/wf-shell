@@ -21,7 +21,7 @@ class WayfireNotificationCenter : public WayfireWidget
     Gtk::Image icon;
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::ScrolledWindow scrolled_window;
-    Gtk::VBox vbox;
+    Gtk::Box vbox;
 
     std::map<Notification::id_type, std::unique_ptr<WfSingleNotification>> notification_widgets = {};
 
@@ -33,11 +33,10 @@ class WayfireNotificationCenter : public WayfireWidget
     sigc::connection popover_timeout;
     WfOption<double> timeout{"panel/notifications_autohide_timeout"};
     WfOption<bool> show_critical_in_dnd{"panel/notifications_critical_in_dnd"};
-    WfOption<int> icon_size{"panel/notifications_icon_size"};
     bool dnd_enabled = false;
 
   public:
-    void init(Gtk::HBox *container) override;
+    void init(Gtk::Box *container) override;
     ~WayfireNotificationCenter() override
     {
         notification_new_conn.disconnect();

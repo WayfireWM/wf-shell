@@ -68,8 +68,8 @@ class WayfireVolume : public WayfireWidget
     };
 
     /**
-     * Set the current volume level to volume_level. This updates both the popover scale and the real
-     * pulseaudio volume, depending on the passed flags.
+     * Set the current volume level to volume_level. This updates both the popover scale
+     * and the real pulseaudio volume, depending on the passed flags.
      *
      * Precondition: volume_level should be between 0 and max_norm
      */

@@ -14,12 +14,9 @@
 
 #include "panel.hpp"
 
-<<<<<<< HEAD
 #include "wf-ipc.hpp"
-=======
 #include "gtkmm/sizegroup.h"
 #include "widget.hpp"
->>>>>>> 148f633 (Added many configuration options to the dock and the panel, still a draft)
 #include "widgets/battery.hpp"
 #include "widgets/command-output.hpp"
 #include "widgets/language.hpp"

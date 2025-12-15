@@ -1,6 +1,8 @@
 #include "notification-info.hpp"
 
 #include <gdkmm.h>
+#include <gtkmm.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 namespace
 {
@@ -46,7 +48,7 @@ Glib::RefPtr<Gdk::Pixbuf> pixbufFromVariant(const Glib::VariantBase & variant)
 
     auto *data_ptr = new auto(std::move(data));
     return Gdk::Pixbuf::create_from_data(data_ptr->data(),
-        Gdk::COLORSPACE_RGB, has_alpha, bits_per_sample, width, height,
+        Gdk::Colorspace::RGB, has_alpha, bits_per_sample, width, height,
         rowstride, [data_ptr] (auto*) { delete data_ptr; });
 }
 } // namespace
