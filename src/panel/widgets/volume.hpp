@@ -2,9 +2,7 @@
 #define WIDGETS_VOLUME_HPP
 
 #include "../widget.hpp"
-#include "wf-popover.hpp"
 #include <gtkmm/image.h>
-#include <gtkmm/scale.h>
 #include <pulse/pulseaudio.h>
 #include "gvc-mixer-control.h"
 #include <wayfire/util/duration.hpp>
