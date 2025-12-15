@@ -286,8 +286,8 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
 
     loaded_apps.insert({name, exec});
 
-    /* Check if this has a 'OnlyShownIn' for a different desktop env If so, we throw it in a pile at the
-     * bottom just to be safe */
+    /* Check if this has a 'OnlyShownIn' for a different desktop env
+     * If so, we throw it in a pile at the bottom just to be safe */
     if (!app_info->should_show())
     {
         add_category_app("Hidden", app_info);
@@ -802,9 +802,9 @@ static void app_info_changed(GAppInfoMonitor *gappinfomonitor, gpointer user_dat
 
 void WayfireMenu::init(Gtk::Box *container)
 {
-    /* https://specifications.freedesktop.org/menu-spec/latest/apa.html#main-category-registry Using the
-     * 'Main' categories, with names and icons assigned Any Categories in .desktop files that are not in this
-     * list are ignored */
+    /* https://specifications.freedesktop.org/menu-spec/latest/apa.html#main-category-registry
+     * Using the 'Main' categories, with names and icons assigned
+     * Any Categories in .desktop files that are not in this list are ignored */
     category_list["All"]     = std::make_unique<WfMenuCategory>("All", "applications-other");
     category_list["Network"] = std::make_unique<WfMenuCategory>("Internet",
         "applications-internet");

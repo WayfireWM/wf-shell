@@ -26,10 +26,12 @@ class WayfireAutohidingWindow : public Gtk::Window
   public:
     /**
      * WayfireAutohidingWindow's behavior can be modified with several config file options:
-     *
-     * 1. section/position 2. section/autohide_duration 3. section/edge_offset 4. section/autohide 5.
-     * section/autohide_show_delay 6. section/autohide_hide_delay
-     *
+     * 1. section/position
+     * 2. section/autohide_duration
+     * 3. section/edge_offset
+     * 4. section/autohide
+     * 5. section/autohide_show_delay
+     * 6. section/autohide_hide_delay
      */
     WayfireAutohidingWindow(WayfireOutput *output, const std::string& section);
     WayfireAutohidingWindow(WayfireAutohidingWindow&&) = delete;
@@ -57,19 +59,20 @@ class WayfireAutohidingWindow : public Gtk::Window
     void set_auto_exclusive_zone(bool has_zone = false);
 
     /**
-     * Set the currently active popover button. The lastly activated popover, if any, will be closed, in order
-     * to show this new one.
+     * Set the currently active popover button.
+     * The lastly activated popover, if any, will be closed,
+     * in order to show this new one.
      *
-     * In addition, if the window has an active popover, it will grab the keyboard input and deactivate the
-     * popover when the focus is lost.
+     * In addition, if the window has an active popover, it will grab the
+     * keyboard input and deactivate the popover when the focus is lost.
      */
     void set_active_popover(WayfireMenuButton& button);
 
     /**
      * No-op if the given popover is not the currently active popover.
      *
-     * Unsets the currently active popover and reverses the effects of setting making it active with
-     * set_active_popover()
+     * Unsets the currently active popover and reverses the effects of setting
+     * making it active with set_active_popover()
      */
     void unset_active_popover(WayfireMenuButton& popover);
 

@@ -5,6 +5,8 @@
 
 #include <giomm/dbusconnection.h>
 
+#include <set>
+
 #define dbus_method(name)                                                                                              \
     void name ## dbus_method(const Glib::ustring & sender, const Glib::VariantContainerBase & parameters,                  \
     const Glib::RefPtr<Gio::DBus::MethodInvocation> & invocation)
@@ -39,19 +41,21 @@ class Daemon
     /*!
      * Initializes and launches the daemon.
      *
-     * Returns a shared pointer to the instance. Once there are no alive shared pointers to the instance, the
-     * daemon is automatically destroyed.
+     * Returns a shared pointer to the instance.
+     * Once there are no alive shared pointers to the instance,
+     * the daemon is automatically destroyed.
      */
     static std::shared_ptr<Daemon> Launch();
 
     /*!
-     * Returns a pointer to the Daemon's instance if it exists or an empty `shared_ptr` otherwise.
+     * Returns a pointer to the Daemon's instance if it exists
+     * or an empty `shared_ptr` otherwise.
      */
     static std::shared_ptr<Daemon> Instance();
 
     ~Daemon();
 
-    const std::map<Notification::id_type, const Notification>& getNotifications() const;
+    const std::map<Notification::id_type, const Notification> & getNotifications() const;
     void closeNotification(Notification::id_type id, CloseReason reason);
     void invokeAction(Notification::id_type id, const Glib::ustring & action_key);
 
@@ -68,8 +72,7 @@ class Daemon
     notification_signal signal_notification_replaced;
     notification_signal signal_notification_closed;
 
-    const Gio::DBus::InterfaceVTable interface_vtable{sigc::mem_fun(*this,
-        &Daemon::on_interface_method_call)};
+    const Gio::DBus::InterfaceVTable interface_vtable{sigc::mem_fun(this, &Daemon::on_interface_method_call)};
 
     Daemon();
 

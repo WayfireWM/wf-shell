@@ -221,11 +221,11 @@ static zwf_hotspot_v2_listener hotspot_listener = {
 };
 
 /**
- * An autohide window needs 2 hotspots. One of them is used to trigger autohide and is generally a tiny strip
- * on the edge of the output.
+ * An autohide window needs 2 hotspots. One of them is used to trigger autohide
+ * and is generally a tiny strip on the edge of the output.
  *
- * The other hotspot covers the whole window. It is used primarily to know when the input leaves the window,
- * in which case we need to hide the window again.
+ * The other hotspot covers the whole window. It is used primarily to know when
+ * the input leaves the window, in which case we need to hide the window again.
  */
 
 void WayfireAutohidingWindow::setup_hotspot()
@@ -482,12 +482,12 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
     /*
      *  if (should_grab_focus)
      *  {
-     *   // First, set exclusive mode to grab input gtk_layer_set_keyboard_mode(this->gobj(),
-     * GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+     *   // First, set exclusive mode to grab input
+     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
      *   wl_surface_commit(get_wl_surface());
      *
      *   // Next, allow releasing of focus when clicking outside of the panel
-     * gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
      *  }
      */
     // TODO come back for intentional focus steal

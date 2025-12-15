@@ -39,11 +39,12 @@ bool WayfireClock::update_label()
     auto time = Glib::DateTime::create_now_local();
     auto text = time.format((std::string)format);
 
-    /* Sometimes GLib::DateTime will add leading spaces. This results in unevenly balanced padding around the
-     * text, which looks quite bad.
+    /* Sometimes GLib::DateTime will add leading spaces. This results in
+     * unevenly balanced padding around the text, which looks quite bad.
      *
-     * This could be circumvented with the modifiers the user passes to the format string, * but to remove the
-     * requirement that the user does something fancy, we just remove any leading spaces. */
+     * This could be circumvented with the modifiers the user passes to the
+     * format string, * but to remove the requirement that the user does
+     * something fancy, we just remove any leading spaces. */
     int i = 0;
     while (i < (int)text.length() && text[i] == ' ')
     {

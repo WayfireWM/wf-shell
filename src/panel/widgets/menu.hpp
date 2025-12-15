@@ -153,8 +153,8 @@ class WayfireMenu : public WayfireWidget
     void on_search_changed();
     void on_popover_shown();
 
-    /* loaded_apps is a list of the already-opened applications + their execs, so that we don't show duplicate
-     * entries */
+    /* loaded_apps is a list of the already-opened applications + their execs,
+     * so that we don't show duplicate entries */
     std::set<std::pair<std::string, std::string>> loaded_apps;
     std::unordered_map<std::string, std::unique_ptr<WfMenuCategory>> category_list;
     std::string category = "All";

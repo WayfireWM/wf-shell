@@ -132,8 +132,8 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
             }
         }
 
-        /* an entry is a deskop-file entry if the it has the desktop prefix but not the file_icon, file_cmd or
-         * file_label prefix */
+        /* an entry is a deskop-file entry if the it has the desktop prefix
+         * but not the file_icon, file_cmd or file_label prefix */
         if (begins_with(opt->get_name(), desktop_prefix) &&
             !begins_with(opt->get_name(), file_icon_prefix) &&
             !begins_with(opt->get_name(), file_cmd_prefix) &&

@@ -4,7 +4,6 @@
 #include <gtkmm/image.h>
 #include <map>
 #include <string>
-#include <ctime>
 
 #include <gdkmm/pixbuf.h>
 #include <glibmm/refptr.h>
