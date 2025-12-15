@@ -7,8 +7,7 @@
 #include <wayfire/util/duration.hpp>
 
 /**
- * A custom scale which animates transitions when its value is
- * changed programatically.
+ * A custom scale which animates transitions when its value is changed programatically.
  */
 class WayfireAnimatedScale : public Gtk::Scale
 {
