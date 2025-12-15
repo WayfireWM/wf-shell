@@ -11,24 +11,24 @@
 
 namespace WpCommon
 {
-    WpCore *core = nullptr;
-    WpObjectManager *object_manager;
-    WpPlugin *mixer_api;
-    WpPlugin *default_nodes_api;
+WpCore *core = nullptr;
+WpObjectManager *object_manager;
+WpPlugin *mixer_api;
+WpPlugin *default_nodes_api;
 
-    std::vector<WayfireWireplumber*> widgets;
+std::vector<WayfireWireplumber*> widgets;
 
-    void init_wp();
-    void catch_up_to_current_state(WayfireWireplumber *widget);
-    void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
-    void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
-    void on_all_plugins_loaded();
-    void on_om_installed(WpObjectManager *manager, gpointer data);
-    void add_object_to_widget(WpPipewireObject* object, WayfireWireplumber* widget);
-    void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
-    void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
-    void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
-    void on_object_removed(WpObjectManager *manager, gpointer node, gpointer data);
+void init_wp();
+void catch_up_to_current_state(WayfireWireplumber *widget);
+void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
+void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
+void on_all_plugins_loaded();
+void on_om_installed(WpObjectManager *manager, gpointer data);
+void add_object_to_widget(WpPipewireObject *object, WayfireWireplumber *widget);
+void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
+void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
+void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
+void on_object_removed(WpObjectManager *manager, gpointer node, gpointer data);
 }
 
 enum class FaceChoice
@@ -506,9 +506,9 @@ void WayfireWireplumber::reload_config()
 void WayfireWireplumber::handle_config_reload()
 {
     reload_config();
-    for (auto &entry : objects_to_controls)
+    for (auto & entry : objects_to_controls)
     {
-        auto &control = entry.second;
+        auto & control = entry.second;
         control->handle_config_reload();
     }
 }
@@ -754,10 +754,11 @@ void WpCommon::on_all_plugins_loaded()
     wp_core_install_object_manager(core, object_manager);
 }
 
-void WpCommon::add_object_to_widget(WpPipewireObject* object, WayfireWireplumber* widget){
+void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber *widget)
+{
     // adds a new widget to the appropriate section
 
-    const std::string_view type {wp_pipewire_object_get_property(object, PW_KEY_MEDIA_CLASS)};
+    const std::string_view type{wp_pipewire_object_get_property(object, PW_KEY_MEDIA_CLASS)};
 
     WfWpControl *control;
     Gtk::Box *which_box;
@@ -765,7 +766,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject* object, WayfireWireplumber
     {
         which_box = &(widget->sinks_box);
 
-        control   = new WfWpControlDevice(object, widget);
+        control = new WfWpControlDevice(object, widget);
     } else if (type == "Audio/Source")
     {
         which_box = &(widget->sources_box);
@@ -923,7 +924,7 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
             // if the control is not for a sink or source (non WfWpControlDevice), don’t try to set status
             const std::string_view type{wp_pipewire_object_get_property(obj, PW_KEY_MEDIA_CLASS)};
 
-            if (type == "Audio/Sink" || type == "Audio/Source")
+            if ((type == "Audio/Sink") || (type == "Audio/Source"))
             {
                 ctrl->set_def_status_no_callbk(false);
             }
@@ -931,10 +932,10 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
             if ( // if the settings call for it, refresh the face
                 (
                     (widget->face_choice == FaceChoice::DEFAULT_SINK) &&
-                     (type == "Audio/Sink")
+                    (type == "Audio/Sink")
                     ||
                     (widget->face_choice == FaceChoice::DEFAULT_SOURCE) &&
-                     (type == "Audio/Source")
+                    (type == "Audio/Source")
                 )
                 &&
                 (widget->face->object == ctrl->object))
@@ -959,10 +960,12 @@ void WpCommon::on_object_removed(WpObjectManager *manager, gpointer object, gpoi
         WfWpControl *control = it->second.get();
         auto *box = (Gtk::Box*)control->get_parent();
         if (box)
+        {
             box->remove(*control);
+        }
 
         // if face points to the removed control we should handle it.
-        if (widget->face && widget->face->object == it->first)
+        if (widget->face && (widget->face->object == it->first))
         {
             // reset face to nullptr
             widget->face = nullptr;
