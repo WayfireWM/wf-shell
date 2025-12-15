@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 
+// header for volume and wireplumber widgets, which both use the following enum and map
+
 enum VolumeLevel
 {
     VOLUME_LEVEL_MUTE = 0,
