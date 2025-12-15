@@ -2,11 +2,9 @@
 #define WIDGETS_PIPEWIRE_HPP
 
 #include "../widget.hpp"
-#include "gtkmm/gestureclick.h"
-#include "gtkmm/togglebutton.h"
 #include "wf-popover.hpp"
-#include "wp/proxy-interfaces.h"
 #include "animated-scale.hpp"
+#include <wp/proxy-interfaces.h>
 #include <gtkmm/image.h>
 #include <gtkmm/scale.h>
 extern "C" {
