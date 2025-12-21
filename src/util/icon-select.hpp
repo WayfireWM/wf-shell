@@ -19,3 +19,11 @@ const std::map<double, std::vector<std::string>> volume_icons = {
     {1.0, {"audio-volume-high"}},
     {std::numeric_limits<double>::max(), {"audio-volume-high-danger", "dialog-warning"}}
 };
+
+const std::map<double, std::vector<std::string>> brightness_display_icons = {
+    {std::numeric_limits<double>::min(), {"display-brightness-invalid", "emblem-unreadable"}},
+    {0.33, {"display-brightness-low"}},
+    {0.66, {"display-brightness-medium"}},
+    {1.0, {"display-brightness-high"}},
+    {std::numeric_limits<double>::max(), {"display-brightness-invalid", "emblem-unreadable"}},
+};

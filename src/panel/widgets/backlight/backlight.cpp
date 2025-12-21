@@ -1,0 +1,269 @@
+#include <gdkmm/monitor.h>
+#include <memory>
+#include <pulse/proplist.h>
+#include <wayland-client-core.h>
+#include <wayland-client-protocol.h>
+
+#include "backlight.hpp"
+#include "wf-popover.hpp"
+#include "wf-shell-app.hpp"
+#include "icon-select.hpp"
+
+#define ICON(volume) icon_from_range(brightness_display_icons, volume)
+
+WfLightControl::WfLightControl(WayfireBacklight *_parent)
+{
+    parent = _parent;
+
+    scale.set_range(0.0, 1.0);
+    slider_length.set_callback([=] ()
+    {
+        scale.set_size_request(slider_length.value());
+    });
+    scale.set_size_request(slider_length.value());
+
+    scale.set_user_changed_callback([this] ()
+    {
+        this->set_brightness(scale.get_target_value());
+    });
+
+    set_orientation(Gtk::Orientation::VERTICAL);
+    append(label);
+    append(scale);
+
+    // scroll
+    auto scroll_gesture = Gtk::EventControllerScroll::create();
+    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
+    {
+        double change = 0;
+
+        if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
+        {
+            // +- number of clicks.
+            change = (dy * parent->scroll_sensitivity) / 10;
+        } else
+        {
+            // Number of pixels expected to have scrolled. usually in 100s
+            change = (dy * parent->scroll_sensitivity) / 100;
+        }
+
+        if (!(parent->invert_scroll))
+        {
+            change *= -1;
+        }
+
+        // correct for a "good feeling" change at sensitivity 1
+        change *= 0.2;
+
+        double newv = get_scale_target_value() + change;
+        newv = std::clamp(newv, 0.0, 1.0);
+        set_brightness(newv);
+        set_scale_target_value(newv);
+        return true;
+    }, true);
+    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    add_controller(scroll_gesture);
+}
+
+WayfireBacklight*WfLightControl::get_parent()
+{
+    return parent;
+}
+
+void WfLightControl::set_scale_target_value(double brightness)
+{
+    scale.set_target_value(brightness);
+    update_parent_icon();
+}
+
+double WfLightControl::get_scale_target_value()
+{
+    return scale.get_target_value();
+}
+
+void WfLightControl::update_parent_icon()
+{
+    if (parent->ctrl_this_display.get() == this)
+    {
+        parent->update_icon();
+        if (parent->popup_on_change && !parent->button->get_active())
+        {
+            parent->button->activate();
+            parent->check_set_popover_timeout();
+        }
+    }
+}
+
+void LightManager::add_widget(WayfireBacklight *widget)
+{
+    widgets.push_back(widget);
+    catch_up_widget(widget);
+}
+
+void LightManager::rem_widget(WayfireBacklight *widget)
+{
+    strip_widget(widget);
+    widgets.erase(find(widgets.begin(), widgets.end(), widget));
+}
+
+WayfireBacklight::WayfireBacklight(WayfireOutput *_output)
+{
+    output = _output;
+}
+
+WayfireBacklight::~WayfireBacklight()
+{
+    SysfsSurveillor::get().rem_widget(this);
+#ifdef HAVE_DDCUTIL
+    DdcaSurveillor::get().rem_widget(this);
+#endif
+}
+
+void WayfireBacklight::init(Gtk::Box *container)
+{
+    button = std::make_unique<WayfireMenuButton>("panel");
+    button->add_css_class("widget-icon");
+    button->add_css_class("backlight");
+    button->add_css_class("flat");
+    button->get_children()[0]->add_css_class("flat");
+    button->set_child(icon);
+    button->show();
+    popover = button->get_popover();
+    popover->set_autohide(false);
+
+    // layout
+    box.append(display_box);
+    box.set_orientation(Gtk::Orientation::VERTICAL);
+
+    disp_othr_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
+    box.append(disp_othr_sep);
+    box.append(other_box);
+
+    display_label.set_text("This monitor");
+    display_box.append(display_label);
+    display_box.set_orientation(Gtk::Orientation::VERTICAL);
+    display_label.add_css_class("this-monitor");
+
+    other_label.set_text("Other monitors");
+    other_box.append(other_label);
+    other_box.set_orientation(Gtk::Orientation::VERTICAL);
+    display_label.add_css_class("other-monitors");
+
+    // scroll to brighten and dim the monitor the panel is on
+    auto scroll_gesture = Gtk::EventControllerScroll::create();
+    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
+    {
+        if (!ctrl_this_display)
+        {
+            return false;
+        }
+
+        double change = 0;
+
+        if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
+        {
+            // +- number of clicks.
+            change = (dy * scroll_sensitivity) / 10;
+        } else
+        {
+            // Number of pixels expected to have scrolled. usually in 100s
+            change = (dy * scroll_sensitivity) / 100;
+        }
+
+        if (!invert_scroll)
+        {
+            change *= -1;
+        }
+
+        // correct for a "good feeling" change at sensitivity 1
+        change *= 0.2;
+
+        double newv = ctrl_this_display->get_scale_target_value() + change;
+        newv = std::clamp(newv, 0.0, 1.0);
+        ctrl_this_display->set_brightness(newv);
+        ctrl_this_display->set_scale_target_value(newv);
+        return true;
+    }, true);
+    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    button->add_controller(scroll_gesture);
+
+    popover->set_child(box);
+    popover->get_style_context()->add_class("backlight-popover");
+
+    container->append(*button);
+
+    SysfsSurveillor::get().add_widget(this);
+#ifdef HAVE_DDCUTIL
+    DdcaSurveillor::get().add_widget(this);
+#endif
+
+    update_icon();
+}
+
+void WayfireBacklight::add_control(std::shared_ptr<WfLightControl> control)
+{
+    auto connector = output->monitor->get_connector();
+    if (control->get_connector() == connector)
+    {
+        if (!ctrl_this_display)
+        {
+            ctrl_this_display = std::shared_ptr(control);
+            display_box.append(*control);
+            update_icon();
+        }
+    } else
+    {
+        other_box.append(*control);
+    }
+
+    controls.push_back(control);
+}
+
+void WayfireBacklight::rem_control(WfLightControl *control)
+{
+    if (control == ctrl_this_display.get())
+    {
+        display_box.remove(*control);
+        ctrl_this_display = nullptr;
+        update_icon();
+    } else
+    {
+        other_box.remove(*control);
+    }
+
+    controls.erase(std::remove_if(controls.begin(), controls.end(),
+        [control] (const std::shared_ptr<WfLightControl>& c) { return c.get() == control; }),
+        controls.end());
+}
+
+void WayfireBacklight::update_icon()
+{
+    // if none, show unavailable
+    if (!ctrl_this_display)
+    {
+        icon.set_from_icon_name(ICON(-1));
+        return;
+    }
+
+    icon.set_from_icon_name(ICON(ctrl_this_display->get_scale_target_value()));
+}
+
+bool WayfireBacklight::on_popover_timeout(int timer)
+{
+    popover_timeout.disconnect();
+    popover->popdown();
+    return false;
+}
+
+void WayfireBacklight::check_set_popover_timeout()
+{
+    popover_timeout.disconnect();
+
+    popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
+        &WayfireBacklight::on_popover_timeout), 0), popup_timeout * 1000);
+}
+
+void WayfireBacklight::cancel_popover_timeout()
+{
+    popover_timeout.disconnect();
+}
