@@ -1,6 +1,24 @@
 #include "light.hpp"
 #include "wf-popover.hpp"
 
+static BrightnessLevel light_icon_for(double value)
+{
+    double max = 1.0;
+    auto third = max / 3;
+    if (value <= third)
+    {
+        return BRIGHTNESS_LEVEL_LOW;
+    } else if ((value > third) && (value <= (third * 2)))
+    {
+        return BRIGHTNESS_LEVEL_MEDIUM;
+    } else if ((value > (third * 2)) && (value <= max))
+    {
+        return BRIGHTNESS_LEVEL_HIGH;
+    }
+
+    return BRIGHTNESS_LEVEL_OOR;
+}
+
 WfLightControl::WfLightControl(){
     // preparation
     scale.set_range(0.0, 1.0);

@@ -8,6 +8,22 @@
 #include "widget.hpp"
 #include "animated-scale.hpp"
 
+enum BrightnessLevel
+{
+  BRIGHTNESS_LEVEL_LOW,
+  BRIGHTNESS_LEVEL_MEDIUM,
+  BRIGHTNESS_LEVEL_HIGH,
+  BRIGHTNESS_LEVEL_OOR, /* Out of range */
+};
+
+const std::map<BrightnessLevel, std::string> icon_name_from_state = {
+  {BRIGHTNESS_LEVEL_LOW, "display-brightness-low"},
+  {BRIGHTNESS_LEVEL_MEDIUM, "display-brightness-medium"},
+  {BRIGHTNESS_LEVEL_HIGH, "display-brightness-high"},
+  // this icon seems rare, so probably best to have a generic failure
+  {BRIGHTNESS_LEVEL_OOR, "display-brightness-invalid"},
+};
+
 class WfLightControl : public Gtk::Box
 {
   protected:
@@ -35,7 +51,7 @@ class WayfireLight : public WayfireWidget {
 
     std::vector<std::unique_ptr<WfLightControl>> controls;
 
-    WfOption<double> scroll_sensitivity{"panel/wp_scroll_sensitivity"};
+    WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
 
   public:
     void update_icon();
