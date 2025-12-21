@@ -38,6 +38,7 @@ class WayfireShellApp
   private:
     std::vector<std::unique_ptr<WayfireOutput>> monitors;
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
+    sigc::signal<void()> monitor_list_changed;
 
   protected:
     /** This should be initialized by the subclass in each program which uses
@@ -92,6 +93,10 @@ class WayfireShellApp
     std::vector<std::unique_ptr<WayfireOutput>> *get_wayfire_outputs();
     wl_output *live_preview_output;
     std::string live_preview_output_name;
+    sigc::signal<void()> signal_monitor_list_changed()
+    {
+        return monitor_list_changed;
+    }
 
     /**
      * WayfireShellApp is a singleton class.

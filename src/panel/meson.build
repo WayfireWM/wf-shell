@@ -21,6 +21,8 @@ widget_sources = [
   'widgets/tray/host.cpp',
   'widgets/tray/dbusmenu.cpp',
   'widgets/workspace-switcher.cpp',
+  'widgets/brightness/brightness.cpp',
+  'widgets/brightness/sysfs.cpp',
 ]
 
 deps = [
@@ -34,6 +36,13 @@ deps = [
   xkbregistry,
   json,
 ]
+
+if ddcutil.found()
+  widget_sources += 'widgets/brightness/ddcutil.cpp'
+  deps += ddcutil
+else
+  message('Libddcutil not found, brightness widget will not support external monitors.')
+endif
 
 if libpulse.found()
   widget_sources += [
