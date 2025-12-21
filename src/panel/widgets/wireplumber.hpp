@@ -1,17 +1,16 @@
 #ifndef WIDGETS_PIPEWIRE_HPP
 #define WIDGETS_PIPEWIRE_HPP
 
-#include "../widget.hpp"
-#include "wf-popover.hpp"
-#include "animated-scale.hpp"
+#include <gtkmm.h>
 #include <wp/proxy-interfaces.h>
-#include <gtkmm/image.h>
-#include <gtkmm/scale.h>
 extern "C" {
 #include <wp/wp.h>
 }
-#include <wayfire/util/duration.hpp>
 #include <map>
+
+#include "widget.hpp"
+#include "wf-popover.hpp"
+#include "animated-scale.hpp"
 
 enum class FaceChoice;
 
@@ -117,9 +116,6 @@ class WayfireWireplumber : public WayfireWidget
 
     /** Update the icon based on volume and muted state of the face widget */
     void update_icon();
-
-    /** Called when the volume changed from outside of the widget */
-    void on_volume_changed_external();
 
     /**
      * Check whether the popover should be auto-hidden, and if yes, start a timer to hide it

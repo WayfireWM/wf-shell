@@ -522,9 +522,11 @@ void WayfireWireplumber::init(Gtk::Box *container)
     button->get_style_context()->add_class("flat");
     button->set_child(main_image);
     button->show();
-    button->get_popover()->set_child(master_box);
+    
     popover = button->get_popover();
+    popover->set_child(master_box);
     popover->set_autohide(false);
+    popover->get_style_context()->add_class("volume-popover");
 
     // scroll to change volume
     auto scroll_gesture = Gtk::EventControllerScroll::create();
@@ -596,11 +598,6 @@ void WayfireWireplumber::init(Gtk::Box *container)
     streams_box.append(streams);
     streams_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     streams_box.append(streams_sep);
-
-    /* Setup popover */
-    popover->set_child(master_box);
-    popover->get_style_context()->add_class("volume-popover");
-    popover->add_controller(scroll_gesture);
 
     /* Setup layout */
     container->append(*button);
