@@ -25,6 +25,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     adjacent_edge_hotspot_size{section + "/adjacent_edge_hotspot_size"}
 {
     this->output = output;
+    assert(output->monitor->is_valid());
     this->set_decorated(false);
 
     gtk_layer_init_for_window(this->gobj());
@@ -79,15 +80,12 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         return;
     }
 
-    auto display  = Gdk::Display::get_default();
-    auto monitors = display->get_monitors();
-    signals.push_back(monitors->signal_items_changed().connect([=] (auto, auto, auto)
+    auto display = Gdk::Display::get_default();
+    signals.push_back(WayfireShellApp::get().signal_monitor_list_changed().connect([=] ()
     {
-        reinit_ext_hotspots();
+        Glib::signal_idle().connect_once([=] () { this->reinit_ext_hotspots(); });
     }));
 
-    // wait for idle, so once everything is initialised. Else, things depend on loading order.
-    Glib::signal_idle().connect_once([=] () { this->reinit_ext_hotspots(); });
 
 
     static const zwf_output_v2_listener listener = {
@@ -119,6 +117,8 @@ WayfireAutohidingWindow::~WayfireAutohidingWindow()
     {
         zwf_hotspot_v2_destroy(adjacent_edge_hotspot);
     }
+
+    adjacent_edges_hotspots.clear();
 
     for (auto handler : signals)
     {
@@ -277,6 +277,15 @@ void WayfireAutohidingWindow::reinit_ext_hotspots()
     }
 
     adjacent_edges_hotspots.clear();
+    if ((this->output->monitor == nullptr) || !(this->output->monitor->is_valid()))
+    {
+        // Catch a too-soon reinit
+        std::cout << "Monitor is not valid" << std::endl;
+        Glib::signal_timeout().connect_once([this] () {reinit_ext_hotspots();}, 100);
+        return;
+    }
+
+    std::cout << "Monitor reinit hotspots " << this->output->monitor->get_connector() << std::endl;
 
     uint32_t adjacent_edge;
     auto position = check_position(this->position);

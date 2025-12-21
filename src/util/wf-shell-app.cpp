@@ -303,6 +303,7 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
 
 void WayfireShellApp::add_output(GMonitor monitor)
 {
+    std::cout << monitor->get_connector() << " plug" << std::endl;
     auto it = std::find_if(monitors.begin(), monitors.end(),
         [monitor] (auto& output) { return output->monitor == monitor; });
 
@@ -316,15 +317,18 @@ void WayfireShellApp::add_output(GMonitor monitor)
     monitor->signal_invalidate().connect([=]
     {
         rem_output(monitor);
+        monitor_list_changed.emit();
     });
     // Add to list
     monitors.push_back(
         std::make_unique<WayfireOutput>(monitor, this->wf_shell_manager));
     handle_new_output(monitors.back().get());
+    monitor_list_changed.emit();
 }
 
 void WayfireShellApp::rem_output(GMonitor monitor)
 {
+    std::cout << monitor->get_connector() << " unplug" << std::endl;
     auto it = std::find_if(monitors.begin(), monitors.end(),
         [monitor] (auto& output) { return output->monitor == monitor; });
 
@@ -332,6 +336,9 @@ void WayfireShellApp::rem_output(GMonitor monitor)
     {
         handle_output_removed(it->get());
         monitors.erase(it);
+    } else
+    {
+        std::cerr << "rem_output didn't find monitor" << std::endl;
     }
 }
 

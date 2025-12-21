@@ -34,6 +34,7 @@
 #ifdef HAVE_WIREPLUMBER
     #include "widgets/mixer/mixer.hpp"
 #endif
+#include "widgets/brightness/brightness.hpp"
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
 #include "widgets/tray/tray.hpp"
@@ -247,6 +248,15 @@ class WayfirePanel::impl
 #else
             std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
+#endif
+        }
+
+        if (name == "brightness")
+        {
+            return Widget(new WayfireBrightness(output));
+#ifndef HAVE_DDCUTIL
+            std::cout << "Built without DDC/CI support, brightness widget "
+                         " doesn’t support external monitors." << std::endl;
 #endif
         }
 
@@ -599,7 +609,8 @@ void WayfirePanelApp::on_activate()
         {"panel/mixer_icon_size", ".mixer"},
         {"panel/mixer_popup_icon_size", ".mute-toggle, .default-button"},
         {"panel/notifications_icon_size", ".notification-center "},
-        {"panel/tray_icon_size", ".tray-button"}
+        {"panel/tray_icon_size", ".tray-button"},
+        {"panel/brightness_icon_size", ".brightness"}
     };
     for (auto pair : icon_sizes_args)
     {
