@@ -303,14 +303,14 @@ void WayfireVolume::init(Gtk::Box *container)
     {
         dnd_enabled = !dnd_enabled;
         updateIcon();
-        long_press.set_state(Gtk::EventSequenceState::CLAIMED);
-        middle_click_gesture.set_state(Gtk::EventSequenceState::DENIED);
+        long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+        middle_click_gesture->set_state(Gtk::EventSequenceState::DENIED);
     }
     );
     middle_click_gesture->set_button(2);
     middle_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
     {
-        middle_click_gesture.set_state(Gtk::EventSequenceState::CLAIMED);
+        middle_click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
     });
     middle_click_gesture->signal_release().connect([=] (int count, double x, double y)
     {

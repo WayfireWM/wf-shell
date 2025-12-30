@@ -101,8 +101,8 @@ void StatusNotifierItem::init_widget()
         [=] (double x, double y)
     {
         popover.popup();
-        long_press.set_state(Gtk::EventSequenceState::CLAIMED);
-        click_gesture.set_state(Gtk::EventSequenceState::DENIED);
+        long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+        click_gesture->set_state(Gtk::EventSequenceState::DENIED);
     });
     click_gesture->set_button(0);
     click_gesture->signal_pressed().connect([=] (int count, double x, double y)

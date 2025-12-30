@@ -135,8 +135,8 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
         [=] (double x, double y)
     {
         m_extra_actions_button.activate();
-        long_press.set_state(Gtk::EventSequenceState::CLAIMED);
-        click_gesture.set_state(Gtk::EventSequenceState::DENIED);
+        long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+        click_gesture->set_state(Gtk::EventSequenceState::DENIED);
     });
     click_gesture->set_button(3);
     click_gesture->signal_pressed().connect([=] (int count, double x, double y)
