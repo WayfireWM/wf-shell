@@ -154,6 +154,7 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
                 {
                     Daemon::Instance()->invokeAction(id, action_key);
                 });
+                default_action_ev_box.add_controller(long_press);
                 default_action_ev_box.add_controller(click_gesture);
             }
         }
