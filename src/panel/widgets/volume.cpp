@@ -301,8 +301,9 @@ void WayfireVolume::init(Gtk::Box *container)
     long_press->signal_pressed().connect(
         [=] (double x, double y)
     {
-        dnd_enabled = !dnd_enabled;
-        updateIcon();
+        bool muted = !(gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream));
+        gvc_mixer_stream_change_is_muted(gvc_stream, muted);
+        gvc_mixer_stream_push_volume(gvc_stream);
         long_press->set_state(Gtk::EventSequenceState::CLAIMED);
         middle_click_gesture->set_state(Gtk::EventSequenceState::DENIED);
     }
@@ -312,7 +313,7 @@ void WayfireVolume::init(Gtk::Box *container)
     {
         middle_click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
     });
-    middle_click_gesture->signal_release().connect([=] (int count, double x, double y)
+    middle_click_gesture->signal_released().connect([=] (int count, double x, double y)
     {
         bool muted = !(gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream));
         gvc_mixer_stream_change_is_muted(gvc_stream, muted);
