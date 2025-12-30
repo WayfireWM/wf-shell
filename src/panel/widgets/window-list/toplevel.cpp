@@ -115,7 +115,7 @@ class WayfireToplevel::impl
         button.add_controller(drag_gesture);
 
         auto click_gesture = Gtk::GestureClick::create();
-        auto long_press = Gtk::GestureLongPress::create();
+        auto long_press    = Gtk::GestureLongPress::create();
         long_press->set_touch_only(true);
         long_press->signal_pressed().connect(
             [=] (double x, double y)
@@ -147,7 +147,7 @@ class WayfireToplevel::impl
             } else if (butt == 2)
             {
                 zwlr_foreign_toplevel_handle_v1_close(handle);
-            } else if (butt ==3 )
+            } else if (butt == 3)
             {
                 popover.popup();
             }

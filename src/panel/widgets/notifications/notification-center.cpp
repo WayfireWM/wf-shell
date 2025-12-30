@@ -29,7 +29,7 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
     button->set_tooltip_text("Middle click to toggle DND mode.");
 
     auto click_gesture = Gtk::GestureClick::create();
-    auto long_press = Gtk::GestureLongPress::create();
+    auto long_press    = Gtk::GestureLongPress::create();
     long_press->set_touch_only(true);
     long_press->signal_pressed().connect(
         [=] (double x, double y)

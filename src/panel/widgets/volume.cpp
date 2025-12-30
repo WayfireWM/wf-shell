@@ -306,8 +306,7 @@ void WayfireVolume::init(Gtk::Box *container)
         gvc_mixer_stream_push_volume(gvc_stream);
         long_press->set_state(Gtk::EventSequenceState::CLAIMED);
         middle_click_gesture->set_state(Gtk::EventSequenceState::DENIED);
-    }
-    );
+    });
     middle_click_gesture->set_button(2);
     middle_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
     {
