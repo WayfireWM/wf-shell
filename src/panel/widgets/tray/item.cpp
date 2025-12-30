@@ -95,6 +95,15 @@ void StatusNotifierItem::init_widget()
     }, true);
 
     auto click_gesture = Gtk::GestureClick::create();
+    auto long_press = Gtk::GestureLongPress::create();
+    long_press->set_touch_only(true);
+    long_press->signal_pressed().connect(
+        [=] (double x, double y)
+    {
+        popover.popup();
+        long_press.set_state(Gtk::EventSequenceState::CLAIMED);
+        click_gesture.set_state(Gtk::EventSequenceState::DENIED);
+    });
     click_gesture->set_button(0);
     click_gesture->signal_pressed().connect([=] (int count, double x, double y)
     {

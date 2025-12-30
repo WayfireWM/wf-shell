@@ -129,11 +129,23 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     m_extra_actions_button.insert_action_group("app", m_actions);
 
     auto click_gesture = Gtk::GestureClick::create();
+    auto long_press = Gtk::GestureLongPress::create();
+    long_press->set_touch_only(true);
+    long_press->signal_pressed().connect(
+        [=] (double x, double y)
+    {
+        m_extra_actions_button.activate();
+        long_press.set_state(Gtk::EventSequenceState::CLAIMED);
+        click_gesture.set_state(Gtk::EventSequenceState::DENIED);
+    });
     click_gesture->set_button(3);
     click_gesture->signal_pressed().connect([=] (int count, double x, double y)
     {
-        m_extra_actions_button.activate();
         click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+    });
+    click_gesture->signal_released().connect([=] (int count, double x, double y)
+    {
+        m_extra_actions_button.activate();
     });
     m_button.add_controller(click_gesture);
 }

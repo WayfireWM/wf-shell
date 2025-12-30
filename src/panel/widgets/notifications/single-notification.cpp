@@ -147,8 +147,12 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
                 click_gesture->signal_pressed().connect(
                     [id = notification.id, action_key, click_gesture] (int count, double x, double y)
                 {
-                    Daemon::Instance()->invokeAction(id, action_key);
                     click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+                });
+                click_gesture->signal_released().connect(
+                    [id = notification.id, action_key, click_gesture] (int count, double x, double y)
+                {
+                    Daemon::Instance()->invokeAction(id, action_key);
                 });
                 default_action_ev_box.add_controller(click_gesture);
             }
