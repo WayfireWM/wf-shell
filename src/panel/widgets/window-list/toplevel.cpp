@@ -152,7 +152,7 @@ class WayfireToplevel::impl
                 popover.popup();
             }
         });
-        button.add_controller(long_click);
+        button.add_controller(long_press);
         button.add_controller(click_gesture);
 
         this->window_list = window_list;

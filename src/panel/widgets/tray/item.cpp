@@ -150,7 +150,7 @@ void StatusNotifierItem::init_widget()
         click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
         return;
     });
-
+    add_controller(long_press);
     add_controller(scroll_gesture);
     add_controller(click_gesture);
 }

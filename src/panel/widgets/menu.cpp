@@ -147,6 +147,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     {
         m_extra_actions_button.activate();
     });
+    m_button.add_controller(long_press);
     m_button.add_controller(click_gesture);
 }
 

@@ -318,6 +318,7 @@ void WayfireVolume::init(Gtk::Box *container)
         gvc_mixer_stream_change_is_muted(gvc_stream, muted);
         gvc_mixer_stream_push_volume(gvc_stream);
     });
+    button.add_controller(long_press);
     button.add_controller(middle_click_gesture);
 
     /* Setup layout */

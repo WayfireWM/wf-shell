@@ -49,6 +49,7 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
         dnd_enabled = !dnd_enabled;
         updateIcon();
     });
+    button->add_controller(long_press);
     button->add_controller(click_gesture);
 
     for (const auto & [id, _] : daemon->getNotifications())
