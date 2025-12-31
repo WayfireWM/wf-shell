@@ -34,8 +34,8 @@ WfLightControl::WfLightControl(){
     label.set_text(get_name());
 
     // layout
-    set_orientation(Gtk::Orientation::VERTICAL);
-    append(label);
+    ((Gtk::Box*)this)->set_orientation(Gtk::Orientation::VERTICAL);
+    ((Gtk::Box*)this)->append(label);
     append(scale);
 }
 
@@ -47,7 +47,7 @@ void WayfireLight::init(Gtk::Box *container){
     popover = button->get_popover();
     popover->set_autohide(false);
 
-    // scroll to change brighten and dim all monitors
+    // scroll to brighten and dim all monitors
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
@@ -72,4 +72,8 @@ void WayfireLight::init(Gtk::Box *container){
     popover->get_style_context()->add_class("light-popover");
 
     container->append(*button);
+
+
 }
+
+// void WayfireLight::update_icon(){}

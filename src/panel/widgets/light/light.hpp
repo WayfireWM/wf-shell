@@ -4,7 +4,9 @@
 */
 
 #include <gtkmm.h>
-
+extern "C" {
+  #include "public/ddcutil_c_api.h"
+}
 #include "widget.hpp"
 #include "animated-scale.hpp"
 
@@ -29,6 +31,7 @@ class WfLightControl : public Gtk::Box
   protected:
     WayfireAnimatedScale scale;
     Gtk::Label label;
+    std::map<BrightnessLevel, std::string> icons;
 
     virtual std::string get_name();
 
@@ -36,15 +39,28 @@ class WfLightControl : public Gtk::Box
     WfLightControl();
 
     // a double from 0 to 1 for min to max
-    virtual void set_brightness(double brightness);
-    virtual double get_brightness();
+    virtual void set_brightness(double brightness) = 0;
+    virtual double get_brightness() = 0;
+};
+
+class WfLightDdcControl : public WfLightControl
+{
+  protected:
+    DDCA_Display_Handle dh;
+};
+
+class WfLightFsControl: public WfLightControl
+{
+  protected:
+    std::string path;
+
 };
 
 class WayfireLight : public WayfireWidget {
   private:
     void init(Gtk::Box *container) override;
-    Gtk::Image icon;
 
+    Gtk::Image icon;
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::Popover *popover;
     Gtk::Box box;
@@ -52,6 +68,8 @@ class WayfireLight : public WayfireWidget {
     std::vector<std::unique_ptr<WfLightControl>> controls;
 
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
+
+
 
   public:
     void update_icon();
