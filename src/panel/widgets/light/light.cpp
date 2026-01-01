@@ -29,10 +29,6 @@ WfLightControl::WfLightControl(){
         this->set_brightness(scale.get_target_value());
     });
 
-    const std::string name;
-
-    label.set_text(get_name());
-
     // layout
     ((Gtk::Box*)this)->set_orientation(Gtk::Orientation::VERTICAL);
     ((Gtk::Box*)this)->append(label);
@@ -61,9 +57,10 @@ void WayfireLight::init(Gtk::Box *container){
             // Number of pixels expected to have scrolled. usually in 100s
             change = (dy * scroll_sensitivity) / 100;
         }
-        // for (auto control: controls){
-            // control->set_brightness(control->get_brightness() + change);
-        // }
+        for (int i = 0 ; i < controls.size() ; i++){
+            controls[i]->set_brightness(controls[i]->get_brightness() + change);
+        }
+        return true;
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     button->add_controller(scroll_gesture);
@@ -73,7 +70,7 @@ void WayfireLight::init(Gtk::Box *container){
 
     container->append(*button);
 
-
+    setup_fs();
 }
 
 // void WayfireLight::update_icon(){}
