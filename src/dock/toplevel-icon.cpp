@@ -147,18 +147,17 @@ class WfToplevelIcon::impl
             return;
         }
 
-        bool was_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
         this->state = state;
         bool is_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
         bool is_min = state & WF_TOPLEVEL_STATE_MINIMIZED;
         bool is_max = state & WF_TOPLEVEL_STATE_MAXIMIZED;
         auto style  = this->button.get_style_context();
-        if (!was_activated && is_activated)
+        if (is_activated)
         {
-            style->remove_class("flat");
-        } else if (was_activated && !is_activated)
+            style->add_class("activated");
+        } else
         {
-            style->add_class("flat");
+            style->remove_class("activated");
         }
 
         if (is_min)
