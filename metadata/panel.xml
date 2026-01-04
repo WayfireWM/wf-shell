@@ -335,6 +335,11 @@
 			<_name>Mute quick action target</_name>
 		</desc>
 	</option>
+	<option name="wp_icon_size" type="int">
+		<_short>Volume Icon Size</_short>
+		<default>32</default>
+		<min>1</min>
+	</option>
 	</group>
 	<group>
 	<_short>Notifications</_short>

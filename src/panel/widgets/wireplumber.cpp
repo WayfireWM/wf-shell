@@ -511,7 +511,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     // sets up the "widget part"
 
     button = std::make_unique<WayfireMenuButton>("panel");
-    button->get_style_context()->add_class("volume");
+    button->get_style_context()->add_class("wireplumber");
     button->get_style_context()->add_class("flat");
     button->set_child(main_image);
     button->show();
@@ -519,7 +519,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     popover = button->get_popover();
     popover->set_child(master_box);
     popover->set_autohide(false);
-    popover->get_style_context()->add_class("volume-popover");
+    popover->get_style_context()->add_class("wireplumber-popover");
 
     // scroll to change volume of the object targetted by the face widget
     auto scroll_gesture = Gtk::EventControllerScroll::create();
