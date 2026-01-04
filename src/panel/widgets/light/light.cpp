@@ -40,6 +40,7 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
 
 void WayfireLight::init(Gtk::Box *container){
     button = std::make_unique<WayfireMenuButton>("panel");
+    button->get_style_context()->add_class("light");
     button->get_style_context()->add_class("flat");
     button->set_child(icon);
     button->show();

@@ -401,6 +401,7 @@ void WayfirePanelApp::on_activate()
     new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
     new CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "");
     new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
+    new CssFromConfigInt("panel/light_icon_size", ".light{-gtk-icon-size:", "px;}");
 
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");
