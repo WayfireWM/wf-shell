@@ -68,22 +68,25 @@ void WayfireLight::setup_fs(){
 
         auto max_perms = std::filesystem::status(max_b_path).permissions();
         // can the file be read?
-        if (!((max_perms & std::filesystem::perms::others_read) == std::filesystem::perms::none)
-            || !((is_in_file_group(max_b_path) && !((max_perms & std::filesystem::perms::group_read) == std::filesystem::perms::none)))){
+        if (!((max_perms & std::filesystem::perms::others_read) != std::filesystem::perms::none
+            || (is_in_file_group(max_b_path) && (max_perms & std::filesystem::perms::group_read) != std::filesystem::perms::none)
+        )){
             std::cout << "Cannot read max_brightness file.\n";
-            break;
+            continue;
         }
 
         auto perms = std::filesystem::status(b_path).permissions();
         // can the file be read?
-        if (!((perms & std::filesystem::perms::others_read) == std::filesystem::perms::none)
-            || !((is_in_file_group(b_path) && !((perms & std::filesystem::perms::group_read) == std::filesystem::perms::none)))){
+        if (!((perms & std::filesystem::perms::others_read) != std::filesystem::perms::none
+            || (is_in_file_group(b_path) && (perms & std::filesystem::perms::group_read) != std::filesystem::perms::none)
+        )){
             std::cout << "Cannot read brightness file.\n";
-            break;
+            continue;
         }
         // and written?
-        if (!((perms & std::filesystem::perms::others_write) == std::filesystem::perms::none)
-            || !((is_in_file_group(b_path) && !((perms & std::filesystem::perms::group_write) == std::filesystem::perms::none))))
+        if (!((perms & std::filesystem::perms::others_write) != std::filesystem::perms::none
+            || (is_in_file_group(b_path) && (perms & std::filesystem::perms::group_write) != std::filesystem::perms::none)
+        ))
             std::cout << "Can read backlight, but cannot write. Control will only display brightness.\n";
 
         add_control(std::make_unique<WfLightFsControl>(entry.path()));
