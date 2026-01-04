@@ -65,7 +65,7 @@ void WayfireLight::init(Gtk::Box *container){
         // if (!invert_scroll)
             change *= -1;
 
-        for (int i = 0 ; i < controls.size() ; i++){
+        for (int i = 0 ; i < (int)controls.size() ; i++){
             controls[i]->set_brightness(controls[i]->get_brightness() + change);
         }
         return true;
@@ -94,29 +94,29 @@ void WayfireLight::update_icon(){
         icon.set_from_icon_name(brightness_display_icons.at(BRIGHTNESS_LEVEL_OOR));
         return;
     }
-    if (icon_target/* .value() */ == ICON_TARGET_BRIGHTEST){
+    if (icon_target.value() == ICON_TARGET_BRIGHTEST){
         // since brightness is between 0 and 1, we can just start at 0
         double max = 0;
-        for (int i = 0 ; i < controls.size() ; i++){
+        for (int i = 0 ; i < (int)controls.size() ; i++){
             if (controls[i]->get_brightness() > max){
                 max = controls[i]->get_brightness();
             }
         }
         icon.set_from_icon_name(brightness_display_icons.at(light_icon_for(max)));
     }
-    if (icon_target/* .value() */ == ICON_TARGET_DIMMEST){
+    if (icon_target.value() == ICON_TARGET_DIMMEST){
         // same as before, but just start from 1
         double min = 1;
-        for (int i = 0 ; i < controls.size() ; i++){
+        for (int i = 0 ; i < (int)controls.size() ; i++){
             if (controls[i]->get_brightness() > min){
                 min = controls[i]->get_brightness();
             }
         }
         icon.set_from_icon_name(brightness_display_icons.at(light_icon_for(min)));
     }
-    if (icon_target/* .value() */ == ICON_TARGET_AVERAGE){
+    if (icon_target.value() == ICON_TARGET_AVERAGE){
         double sum = 0;
-        for (int i = 0 ; i < controls.size() ; i++){
+        for (int i = 0 ; i < (int)controls.size() ; i++){
             sum += controls[i]->get_brightness();
         }
         icon.set_from_icon_name(brightness_display_icons.at(light_icon_for(sum / controls.size())));
