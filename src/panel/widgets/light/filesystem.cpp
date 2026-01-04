@@ -89,13 +89,13 @@ void WayfireLight::setup_fs(){
         ))
             std::cout << "Can read backlight, but cannot write. Control will only display brightness.\n";
 
-        add_control(std::make_unique<WfLightFsControl>(entry.path()));
+        add_control(std::make_unique<WfLightFsControl>(this, entry.path()));
     }
 }
 
 // the permissions have already been checked and *most likely* won’t have changed, so we just read/write
 
-WfLightFsControl::WfLightFsControl(std::string _path) : WfLightControl(){
+WfLightFsControl::WfLightFsControl(WayfireLight *parent, std::string _path) : WfLightControl(parent){
     path = _path;
 
     scale.set_target_value(get_brightness());
