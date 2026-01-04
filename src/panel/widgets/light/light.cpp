@@ -1,5 +1,6 @@
 #include "light.hpp"
 #include "wf-popover.hpp"
+#include <memory>
 
 static BrightnessLevel light_icon_for(double value)
 {
@@ -22,7 +23,6 @@ static BrightnessLevel light_icon_for(double value)
 WfLightControl::WfLightControl(){
     // preparation
     scale.set_range(0.0, 1.0);
-    scale.set_target_value(0.5);
     scale.set_size_request(300);
 
     scale.set_user_changed_callback([this](){
@@ -30,8 +30,8 @@ WfLightControl::WfLightControl(){
     });
 
     // layout
-    ((Gtk::Box*)this)->set_orientation(Gtk::Orientation::VERTICAL);
-    ((Gtk::Box*)this)->append(label);
+    set_orientation(Gtk::Orientation::VERTICAL);
+    append(label);
     append(scale);
 }
 
@@ -51,11 +51,11 @@ void WayfireLight::init(Gtk::Box *container){
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
         {
             // +- number of clicks.
-            change = (dy * scroll_sensitivity) / 10;
+            change = (dy * 1/* scroll_sensitivity */) / 10;
         } else
         {
             // Number of pixels expected to have scrolled. usually in 100s
-            change = (dy * scroll_sensitivity) / 100;
+            change = (dy * 1/* scroll_sensitivity */) / 100;
         }
         for (int i = 0 ; i < controls.size() ; i++){
             controls[i]->set_brightness(controls[i]->get_brightness() + change);
@@ -71,6 +71,11 @@ void WayfireLight::init(Gtk::Box *container){
     container->append(*button);
 
     setup_fs();
+}
+
+void WayfireLight::add_control(std::unique_ptr<WfLightControl> control){
+    box.append(*control);
+    controls.push_back(std::move(control));
 }
 
 // void WayfireLight::update_icon(){}
