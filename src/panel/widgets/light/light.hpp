@@ -75,6 +75,7 @@ class WayfireLight : public WayfireWidget {
     std::vector<std::unique_ptr<WfLightControl>> controls;
 
     // WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
+    // WfOption<double> invert_scroll{"panel/light_invert_scroll"};
 
     void add_control(std::unique_ptr<WfLightControl> control);
 
