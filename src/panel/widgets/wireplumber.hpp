@@ -12,7 +12,7 @@ extern "C" {
 #include "wf-popover.hpp"
 #include "animated-scale.hpp"
 
-enum class FaceChoice;
+enum class FaceChoice; // config
 
 class WayfireWireplumber;
 
@@ -45,9 +45,9 @@ class WfWpControl : public Gtk::Grid
     std::unique_ptr<WfWpControl> copy();
 };
 
-// todo: add a WfWpControlStream class that presents a dropdown to select which sink a stream goes to
+// idea: would be neat to have a WfWpControlStream class that presents a dropdown to select which sink a stream goes to
 
-// sinks and sources
+// sinks and sources: a control with a button to set itself as default for it’s category
 class WfWpControlDevice : public WfWpControl
 {
   private:
@@ -61,7 +61,6 @@ class WfWpControlDevice : public WfWpControl
     std::unique_ptr<WfWpControlDevice> copy();
 };
 
-class wayfire_config;
 class WayfireWireplumber : public WayfireWidget
 {
   private:
@@ -74,18 +73,17 @@ class WayfireWireplumber : public WayfireWidget
     void on_volume_value_changed();
     bool on_popover_timeout(int timer);
 
-    // signals for the configurable actions on click
+    // signals and gestures for the configurable actions on click
     gulong notify_volume_signal   = 0;
     gulong notify_is_muted_signal = 0;
     gulong notify_default_sink_changed = 0;
     sigc::connection popover_timeout;
     sigc::connection volume_changed_signal;
-
     bool gestures_initialised = false;
     std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
     sigc::connection left_conn, middle_conn, right_conn;
 
-    // mixer display widgets
+    // widgets for the mixer itself
     Gtk::Label output, input, streams;
     Gtk::Separator out_in_wall, in_streams_wall, out_sep, in_sep, streams_sep;
 
@@ -103,14 +101,14 @@ class WayfireWireplumber : public WayfireWidget
     Gtk::Popover *popover;
 
     /*
-     *   the "face" is the representation of the audio channel that shows it’s volume level on the widget
-     * icon and is concerned by the quick actions.
-     *  configured by panel/wp_face_choice. idea: add pinning?
+     * the "face" is the representation of the audio channel that shows it’s volume
+     * level on the widget icon and is concerned by the quick actions.
+     * configured by panel/wp_face_choice. idea: add pinning?
      */
     std::unique_ptr<WfWpControl> face;
 
     Gtk::Box master_box, sinks_box, sources_box, streams_box;
-    // possible: add a category for stuff that listens to an audio source
+    // idea: add a category for stuff that listens to an audio source
 
     std::map<WpPipewireObject*, std::unique_ptr<WfWpControl>> objects_to_controls;
 
@@ -126,5 +124,19 @@ class WayfireWireplumber : public WayfireWidget
 
     virtual ~WayfireWireplumber();
 };
+
+namespace WpCommon{
+  void init_wp();
+  void catch_up_to_current_state(WayfireWireplumber *widget);
+  void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
+  void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
+  void on_all_plugins_loaded();
+  void on_om_installed(WpObjectManager *manager, gpointer data);
+  void add_object_to_widget(WpPipewireObject *object, WayfireWireplumber *widget);
+  void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
+  void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
+  void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
+  void on_object_removed(WpObjectManager *manager, gpointer node, gpointer data);
+}
 
 #endif // WIDGETS_PIPEWIRE_HPP

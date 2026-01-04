@@ -11,27 +11,15 @@
 
 namespace WpCommon
 {
-WpCore *core = nullptr;
-WpObjectManager *object_manager;
-WpPlugin *mixer_api;
-WpPlugin *default_nodes_api;
+    WpCore *core = nullptr;
+    WpObjectManager *object_manager;
+    WpPlugin *mixer_api;
+    WpPlugin *default_nodes_api;
 
-std::vector<WayfireWireplumber*> widgets;
-
-void init_wp();
-void catch_up_to_current_state(WayfireWireplumber *widget);
-void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
-void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
-void on_all_plugins_loaded();
-void on_om_installed(WpObjectManager *manager, gpointer data);
-void add_object_to_widget(WpPipewireObject *object, WayfireWireplumber *widget);
-void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
-void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
-void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
-void on_object_removed(WpObjectManager *manager, gpointer node, gpointer data);
+    std::vector<WayfireWireplumber*> widgets;
 }
 
-enum class FaceChoice
+enum class FaceChoice // config
 {
     LAST_CHANGE,
     DEFAULT_SINK,
@@ -71,24 +59,23 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
 
     guint32 id = wp_proxy_get_bound_id(WP_PROXY(object));
 
+    // build layout
+
     scale.set_range(0.0, 1.0);
     scale.set_target_value(0.5);
     scale.set_size_request(300, 0);
 
     const gchar *name;
-
     // try to find a name to display
     name = wp_pipewire_object_get_property(object, PW_KEY_NODE_NICK);
     if (!name)
     {
         name = wp_pipewire_object_get_property(object, PW_KEY_NODE_NAME);
     }
-
     if (!name)
     {
         name = wp_pipewire_object_get_property(object, PW_KEY_NODE_DESCRIPTION);
     }
-
     if (!name)
     {
         name = "Unnamed";
@@ -101,6 +88,8 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     attach(label, 0, 0, 2, 1);
     attach(button, 1, 1, 1, 1);
     attach(scale, 0, 1, 1, 1);
+
+    // setup user interactions
 
     mute_conn = button.signal_toggled().connect(
         [this, id] ()
@@ -162,7 +151,6 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     {
         return;
     }
-
     gboolean mute  = FALSE;
     gdouble volume = 0.0;
     g_variant_lookup(v, "volume", "d", &volume);
@@ -215,6 +203,7 @@ void WfWpControl::update_gestures()
         button.set_active(!button.get_active());
     };
 
+    // only create once
     if (!gestures_initialised)
     {
         middle_click_mute = Gtk::GestureClick::create();
@@ -245,7 +234,7 @@ void WfWpControl::handle_config_reload()
     update_gestures();
 }
 
-std::unique_ptr<WfWpControl> WfWpControl::copy()
+std::unique_ptr<WfWpControl> WfWpControl::copy() // for the face handling
 {
     return std::make_unique<WfWpControl>(object, parent);
 }
@@ -253,8 +242,6 @@ std::unique_ptr<WfWpControl> WfWpControl::copy()
 WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
     WayfireWireplumber *parent_widget) : WfWpControl(obj, parent_widget)
 {
-    // for devices (sinks and sources), we determine if they are the default
-
     attach(default_btn, 1, 0, 1, 1);
 
     WpProxy *proxy = WP_PROXY(object);
@@ -267,7 +254,7 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
     def_conn = default_btn.signal_clicked().connect(
         [this, proxy] ()
     {
-        // keep the button down when it is selected to prevent inconsistency of visuals with actual status
+        // keep the button down when it is selected to prevent inconsistency of visuals with actual state
         if (default_btn.get_active() == false)
         {
             set_def_status_no_callbk(true);
@@ -279,6 +266,7 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
             PW_KEY_MEDIA_CLASS);
         for (guint i = 0; i < G_N_ELEMENTS(DEFAULT_NODE_MEDIA_CLASSES); i++)
         {
+            // only for the media class our object is in
             if (media_class == DEFAULT_NODE_MEDIA_CLASSES[i])
             {
                 continue;
@@ -334,6 +322,7 @@ void WayfireWireplumber::check_set_popover_timeout()
 
 void WayfireWireplumber::reload_config()
 {
+    // big matching operation
     WfOption<std::string> str_face_choice{"panel/wp_face_choice"};
     WfOption<std::string> str_wp_left_click_action{"panel/wp_left_click_action"};
     WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
@@ -376,6 +365,8 @@ void WayfireWireplumber::reload_config()
         middle_conn.disconnect();
         right_conn.disconnect();
     }
+
+    // "actions" that can be bound to different clicks
 
     auto show_mixer_action = [&] (int c, double x, double y)
     {
@@ -472,6 +463,8 @@ void WayfireWireplumber::reload_config()
         });
     }
 
+    // more simple matching
+
     if (str_wp_middle_click_action.value() == "show_mixer")
     {
         middle_conn = middle_click_gesture->signal_pressed().connect(show_mixer_action);
@@ -522,13 +515,13 @@ void WayfireWireplumber::init(Gtk::Box *container)
     button->get_style_context()->add_class("flat");
     button->set_child(main_image);
     button->show();
-    
+
     popover = button->get_popover();
     popover->set_child(master_box);
     popover->set_autohide(false);
     popover->get_style_context()->add_class("volume-popover");
 
-    // scroll to change volume
+    // scroll to change volume of the object targetted by the face widget
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
@@ -619,7 +612,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     WpCommon::init_wp();
 }
 
-void WayfireWireplumber::update_icon()
+void WayfireWireplumber::update_icon() // depends on face widget
 {
     VolumeLevel current = volume_icon_for(face->get_scale_target_value());
 
@@ -641,7 +634,7 @@ void WpCommon::init_wp()
     core = wp_core_new(NULL, NULL, NULL);
     object_manager = wp_object_manager_new();
 
-    // register interests in  sinks, sources and streams
+    // register interests in sinks, sources and streams
     WpObjectInterest *sink_interest = wp_object_interest_new_type(WP_TYPE_NODE);
     wp_object_interest_add_constraint(
         sink_interest,
@@ -669,8 +662,10 @@ void WpCommon::init_wp()
         "media.class",
         WP_CONSTRAINT_VERB_EQUALS,
         g_variant_new_string("Stream/Output/Audio"));
+
     wp_object_manager_add_interest_full(object_manager, stream_interest);
 
+    // load plugins
     wp_core_load_component(
         core,
         "libwireplumber-module-mixer-api",
@@ -682,18 +677,6 @@ void WpCommon::init_wp()
         NULL);
 
     wp_core_connect(core);
-}
-
-void WpCommon::catch_up_to_current_state(WayfireWireplumber *widget)
-{
-    // catch up to objects already registered by the manager
-    WpIterator *reg_objs = wp_object_manager_new_iterator(object_manager);
-    GValue item = G_VALUE_INIT;
-    while (wp_iterator_next(reg_objs, &item))
-    {
-        add_object_to_widget((WpPipewireObject*)g_value_get_object(&item), widget);
-        g_value_unset(&item);
-    }
 }
 
 void WpCommon::on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, void *data)
@@ -724,16 +707,17 @@ void WpCommon::on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, v
 
 void WpCommon::on_all_plugins_loaded()
 {
+    // connect signals
     g_signal_connect(
         mixer_api,
         "changed",
-        G_CALLBACK(WpCommon::on_mixer_changed),
+        G_CALLBACK(on_mixer_changed),
         NULL);
 
     g_signal_connect(
         default_nodes_api,
         "changed",
-        G_CALLBACK(WpCommon::on_default_nodes_changed),
+        G_CALLBACK(on_default_nodes_changed),
         NULL);
 
     g_signal_connect(
@@ -751,9 +735,21 @@ void WpCommon::on_all_plugins_loaded()
     wp_core_install_object_manager(core, object_manager);
 }
 
+void WpCommon::catch_up_to_current_state(WayfireWireplumber *widget)
+{
+    // catch up to objects already registered by the manager
+    WpIterator *reg_objs = wp_object_manager_new_iterator(object_manager);
+    GValue item = G_VALUE_INIT;
+    while (wp_iterator_next(reg_objs, &item))
+    {
+        add_object_to_widget((WpPipewireObject*)g_value_get_object(&item), widget);
+        g_value_unset(&item);
+    }
+}
+
 void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber *widget)
 {
-    // adds a new widget to the appropriate section
+    // adds a new control to the appropriate section of a widget
 
     const std::string_view type{wp_pipewire_object_get_property(object, PW_KEY_MEDIA_CLASS)};
 
@@ -789,6 +785,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber
 
 void WpCommon::on_object_added(WpObjectManager *manager, gpointer object, gpointer data)
 {
+    // add to all the registered widgets
     auto *obj = (WpPipewireObject*)object;
 
     for (auto widget : widgets)
@@ -799,7 +796,7 @@ void WpCommon::on_object_added(WpObjectManager *manager, gpointer object, gpoint
 
 void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 {
-    // update the visual of the appropriate WfWpControl according to external changes
+    // update the visual of the appropriate WfWpControl according to external changes on all widgets
 
     GVariant *v = NULL;
     // query the new data
@@ -834,7 +831,9 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         control->update_icon();
 
         // correct the face
-        // ensure the control in the popover is the one that was updated
+        // if the face choice is last_change, ensure the control in the popover is the one that was updated,
+        // else, if the face does not control the changed object, just don’t change it
+
         if (
             control->object
             !=
@@ -869,7 +868,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             widget->popover->set_child(*widget->face);
         }
 
-        // if it was hidden, show it
+        // if it was hidden and configuration calls for it, show it
         if (widget->popup_on_change && !widget->popover->is_visible())
         {
             widget->button->set_active(true);
@@ -882,9 +881,12 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
 void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer data)
 {
+    // silimarly to mixer, update the visuals of the controls on the widgets
+
     std::vector<guint32> defaults;
     guint32 id = SPA_ID_INVALID;
 
+    // for the appropriate classes
     for (guint32 i = 0; i < G_N_ELEMENTS(DEFAULT_NODE_MEDIA_CLASSES); i++)
     {
         // query the new data
@@ -933,9 +935,7 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
                     ||
                     (widget->face_choice == FaceChoice::DEFAULT_SOURCE) &&
                     (type == "Audio/Source")
-                )
-                &&
-                (widget->face->object == ctrl->object))
+                ))
             {
                 widget->face = ctrl->copy();
             }
