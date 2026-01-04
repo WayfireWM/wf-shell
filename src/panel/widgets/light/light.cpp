@@ -48,6 +48,7 @@ void WayfireLight::init(Gtk::Box *container){
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
         double change = 0;
+
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
         {
             // +- number of clicks.
@@ -57,6 +58,9 @@ void WayfireLight::init(Gtk::Box *container){
             // Number of pixels expected to have scrolled. usually in 100s
             change = (dy * 1/* scroll_sensitivity */) / 100;
         }
+        // if (!invert_scroll)
+            change *= -1;
+
         for (int i = 0 ; i < controls.size() ; i++){
             controls[i]->set_brightness(controls[i]->get_brightness() + change);
         }
