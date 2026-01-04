@@ -11,12 +11,12 @@
 
 namespace WpCommon
 {
-    WpCore *core = nullptr;
-    WpObjectManager *object_manager;
-    WpPlugin *mixer_api;
-    WpPlugin *default_nodes_api;
+WpCore *core = nullptr;
+WpObjectManager *object_manager;
+WpPlugin *mixer_api;
+WpPlugin *default_nodes_api;
 
-    std::vector<WayfireWireplumber*> widgets;
+std::vector<WayfireWireplumber*> widgets;
 }
 
 enum class FaceChoice // config
@@ -72,10 +72,12 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     {
         name = wp_pipewire_object_get_property(object, PW_KEY_NODE_NAME);
     }
+
     if (!name)
     {
         name = wp_pipewire_object_get_property(object, PW_KEY_NODE_DESCRIPTION);
     }
+
     if (!name)
     {
         name = "Unnamed";
@@ -151,6 +153,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     {
         return;
     }
+
     gboolean mute  = FALSE;
     gdouble volume = 0.0;
     g_variant_lookup(v, "volume", "d", &volume);

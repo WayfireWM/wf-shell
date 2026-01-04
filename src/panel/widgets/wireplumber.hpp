@@ -45,7 +45,8 @@ class WfWpControl : public Gtk::Grid
     std::unique_ptr<WfWpControl> copy();
 };
 
-// idea: would be neat to have a WfWpControlStream class that presents a dropdown to select which sink a stream goes to
+// idea: would be neat to have a WfWpControlStream class that presents a dropdown to select which sink a
+// stream goes to
 
 // sinks and sources: a control with a button to set itself as default for it’s category
 class WfWpControlDevice : public WfWpControl
@@ -125,18 +126,19 @@ class WayfireWireplumber : public WayfireWidget
     virtual ~WayfireWireplumber();
 };
 
-namespace WpCommon{
-  void init_wp();
-  void catch_up_to_current_state(WayfireWireplumber *widget);
-  void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
-  void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
-  void on_all_plugins_loaded();
-  void on_om_installed(WpObjectManager *manager, gpointer data);
-  void add_object_to_widget(WpPipewireObject *object, WayfireWireplumber *widget);
-  void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
-  void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
-  void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
-  void on_object_removed(WpObjectManager *manager, gpointer node, gpointer data);
+namespace WpCommon
+{
+void init_wp();
+void catch_up_to_current_state(WayfireWireplumber *widget);
+void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
+void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
+void on_all_plugins_loaded();
+void on_om_installed(WpObjectManager *manager, gpointer data);
+void add_object_to_widget(WpPipewireObject *object, WayfireWireplumber *widget);
+void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
+void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
+void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
+void on_object_removed(WpObjectManager *manager, gpointer node, gpointer data);
 }
 
 #endif // WIDGETS_PIPEWIRE_HPP
