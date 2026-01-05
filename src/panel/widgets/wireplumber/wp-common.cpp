@@ -406,6 +406,11 @@ gboolean WpCommon::set_default(const gchar* media_class, const gchar* name){
     return res;
 }
 
+void WpCommon::re_evaluate_def_nodes(){
+    if (default_nodes_api)
+        on_default_nodes_changed(default_nodes_api, NULL);
+}
+
 WpCommon& WpCommon::get(){
     if (!instance)
     {

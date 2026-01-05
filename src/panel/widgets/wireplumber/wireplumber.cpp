@@ -44,10 +44,10 @@ void WayfireWireplumber::check_set_popover_timeout()
 void WayfireWireplumber::reload_config()
 {
     // big matching operation
-    WfOption<std::string> str_face_choice{"panel/wp_face_choice"};
-    WfOption<std::string> str_wp_left_click_action{"panel/wp_left_click_action"};
-    WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
-    WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
+    static WfOption<std::string> str_face_choice{"panel/wp_face_choice"};
+    static WfOption<std::string> str_wp_left_click_action{"panel/wp_left_click_action"};
+    static WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
+    static WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
 
     if (str_face_choice.value() == "last_change")
     {
@@ -56,12 +56,12 @@ void WayfireWireplumber::reload_config()
     {
         face_choice = FaceChoice::DEFAULT_SINK;
         face = nullptr;
-        // WpCommon::on_default_nodes_changed(WpCommon::default_nodes_api, NULL);
+        WpCommon::get().re_evaluate_def_nodes();
     } else if (str_face_choice.value() == "default_source")
     {
         face_choice = FaceChoice::DEFAULT_SOURCE;
         face = nullptr;
-        // WpCommon::on_default_nodes_changed(WpCommon::default_nodes_api, NULL);
+        WpCommon::get().re_evaluate_def_nodes();
     } else // default if no match
     {
         face_choice = FaceChoice::LAST_CHANGE;
@@ -146,7 +146,6 @@ void WayfireWireplumber::reload_config()
 
     // the left click case is a bit special, since it’s supposed to show the popover.
     // (this is also why the mute action is not available for the left click)
-    // this is not the prettiest, but the alternative is way worse
     if (str_wp_left_click_action.value() == "show_mixer")
     {
         left_conn = left_click_gesture->signal_pressed().connect(
@@ -176,9 +175,7 @@ void WayfireWireplumber::reload_config()
             if (popover->get_child() != face.get())
             {
                 popover->set_child(*face);
-                // popdown so that when the click is processed, the popover is down, and thus pops up
-                // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
-                // how to make it better
+                // same as above
                 button->set_active(false);
             }
         });
