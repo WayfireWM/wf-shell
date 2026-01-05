@@ -40,7 +40,9 @@ if libpulse.found()
 endif
 
 if wireplumber.found()
-  widget_sources += 'widgets/wireplumber.cpp'
+  widget_sources += 'widgets/wireplumber/wireplumber.cpp'
+  widget_sources += 'widgets/wireplumber/wf-wp-control.cpp'
+  widget_sources += 'widgets/wireplumber/wp-common.cpp'
   deps += wireplumber
 endif
 

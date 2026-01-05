@@ -27,7 +27,7 @@
     #include "widgets/volume.hpp"
 #endif
 #ifdef HAVE_WIREPLUMBER
-    #include "widgets/wireplumber.hpp"
+    #include "widgets/wireplumber/wireplumber.hpp"
 #endif
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
