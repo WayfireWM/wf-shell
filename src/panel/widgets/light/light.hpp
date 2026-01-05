@@ -56,7 +56,7 @@ class WfLightDdcControl : public WfLightControl
 };
 #endif
 
-class WfLightFsControl: public WfLightControl
+class WfLightSysfsControl: public WfLightControl
 {
   protected:
     std::string path;
@@ -65,7 +65,7 @@ class WfLightFsControl: public WfLightControl
     std::string get_name();
 
   public:
-    WfLightFsControl(WayfireLight *parent, std::string path);
+    WfLightSysfsControl(WayfireLight *parent, std::string path);
     void set_brightness(double brightness);
     double get_brightness();
 };
@@ -87,7 +87,7 @@ class WayfireLight : public WayfireWidget {
 
     void add_control(std::unique_ptr<WfLightControl> control);
 
-    void setup_fs();
+    void setup_sysfs();
     void setup_ddc();
 
   public:

@@ -45,7 +45,7 @@ bool is_in_file_group(const std::filesystem::path& file_path) {
     }
 }
 
-void WayfireLight::setup_fs(){
+void WayfireLight::setup_sysfs(){
     // look for integrated backlights
     const auto path = "/sys/class/backlight";
     if (!std::filesystem::exists(path)){
@@ -89,13 +89,13 @@ void WayfireLight::setup_fs(){
         ))
             std::cout << "Can read backlight, but cannot write. Control will only display brightness.\n";
 
-        add_control(std::make_unique<WfLightFsControl>(this, entry.path()));
+        add_control(std::make_unique<WfLightSysfsControl>(this, entry.path()));
     }
 }
 
 // the permissions have already been checked and *most likely* won’t have changed, so we just read/write
 
-WfLightFsControl::WfLightFsControl(WayfireLight *parent, std::string _path) : WfLightControl(parent){
+WfLightSysfsControl::WfLightSysfsControl(WayfireLight *parent, std::string _path) : WfLightControl(parent){
     path = _path;
 
     scale.set_target_value(get_brightness());
@@ -105,13 +105,13 @@ WfLightFsControl::WfLightFsControl(WayfireLight *parent, std::string _path) : Wf
     icons = brightness_display_icons;
 }
 
-std::string WfLightFsControl::get_name(){
+std::string WfLightSysfsControl::get_name(){
     std::string name;
     name = "Integrated display";
     return name;
 }
 
-int WfLightFsControl::get_max(){
+int WfLightSysfsControl::get_max(){
     std::ifstream max_file(path + "/max_brightness");
     if (!max_file.is_open()){
         std::cerr << "Failed to get max brightness for device at " << path << '\n';
@@ -123,7 +123,7 @@ int WfLightFsControl::get_max(){
     return max;
 }
 
-void WfLightFsControl::set_brightness(double brightness){
+void WfLightSysfsControl::set_brightness(double brightness){
     std::ofstream b_file(path + "/brightness");
     if (!b_file.is_open()){
         std::cerr << "Failed to open brightness for device at " << path << '\n';
@@ -137,7 +137,7 @@ void WfLightFsControl::set_brightness(double brightness){
 
 }
 
-double WfLightFsControl::get_brightness(){
+double WfLightSysfsControl::get_brightness(){
     std::ifstream b_file(path + "/brightness");
     if (!b_file.is_open()){
         std::cerr << "Failed to get brightness for device at " << path << '\n';
