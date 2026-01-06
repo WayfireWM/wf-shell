@@ -1,6 +1,6 @@
 #ifndef WF_PANEL_POPOVER_HPP
 #define WF_PANEL_POPOVER_HPP
-
+#include <sigc++/signal.h>   // Only signal.h to avoid incomplete type issues
 #include <gtkmm/menubutton.h>
 #include <gtkmm/popover.h>
 #include <wf-option-wrap.hpp>
@@ -26,10 +26,10 @@ class WayfireMenuButton : public Gtk::MenuButton
     Gtk::Popover m_popover;
 
     WayfireMenuButton(const std::string& config_section);
-    virtual ~WayfireMenuButton()
-    {}
+    virtual ~WayfireMenuButton() = default;
 
-    /**
+    
+     /**
      * Set whether the popup should grab input focus when opened
      * By default, the menu button interacts with the keyboard.
      */
@@ -40,7 +40,7 @@ class WayfireMenuButton : public Gtk::MenuButton
 
     /** @return Whether the popover currently has keyboard focus */
     bool is_popover_focused() const;
-
+    
     /**
      * Grab the keyboard focus.
      * Also sets the popover to keyboard interactive.
@@ -48,6 +48,19 @@ class WayfireMenuButton : public Gtk::MenuButton
      * NOTE: this works only if the popover was already opened.
      */
     void grab_focus();
+
+    sigc::signal<void()>& signal_clicked() { return m_signal_clicked; }
+
+  private:
+    sigc::signal<void()> m_signal_clicked;
+
+    void on_realize() override
+    {
+        Gtk::MenuButton::on_realize();
+
+        // Emit clicked when the popover is shown
+        m_popover.signal_show().connect([this]() { m_signal_clicked.emit(); });
+    }
 };
 
-#endif /* end of include guard: WF_PANEL_POPOVER_HPP */
+#endif /* WF_PANEL_POPOVER_HPP */
