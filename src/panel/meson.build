@@ -22,7 +22,7 @@ widget_sources = [
   'widgets/tray/dbusmenu.cpp',
   'widgets/light/light.cpp',
   'widgets/light/ddcutil.cpp',
-  'widgets/light/filesystem.cpp',
+  'widgets/light/sysfs.cpp',
 ]
 
 deps = [

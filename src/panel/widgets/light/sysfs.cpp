@@ -4,6 +4,10 @@
 #include <grp.h>
 #include <memory>
 #include <pwd.h>
+extern "C"{
+    #include <sys/inotify.h>
+}
+#include <errno.h>
 
 #include "light.hpp"
 
@@ -45,52 +49,156 @@ bool is_in_file_group(const std::filesystem::path& file_path) {
     }
 }
 
+// singleton that monitors sysfs and calls the necessary functions
+// monitors appearance and deletion of backlight devices
+// and the brightness of each of them
+class SysfsSurveillor {
+    private:
+        SysfsSurveillor(){
+            fd = inotify_init();
+            if (fd == -1){
+                std::cerr << "Light widget: initialisation of inotify on sysfs failed.\n";
+                return;
+            }
+
+            // look for present integrated backlights
+            const auto path = "/sys/class/backlight";
+            if (!std::filesystem::exists(path)){
+                std::cout << "No backlight directory found for integrated screens, skipping.\n";
+                return;
+            }
+
+            for (const auto& entry : std::filesystem::directory_iterator(path)){
+                add_dev(entry);
+            }
+        }
+
+        static inline std::unique_ptr<SysfsSurveillor> instance;
+
+        int fd; // inotify file descriptor
+
+        void handle_inotify_events(){
+            // according to the inotify man page, aligning as such ensures
+            // proper function and avoid performance loss for "some systems"
+            char buf[2048] __attribute__((aligned(__alignof__(struct inotify_event))));
+            const struct inotify_event *event;
+            ssize_t size;
+
+            for (;;){
+                size = read(fd, buf, sizeof(buf));
+                if (size == -1 && errno != EAGAIN){
+                    std::cerr << "Light widget: error reading inotify event.\n";
+                }
+                if (size <= 0)
+                    break;
+
+                for (char *ptr = buf ; ptr < buf + size ; ptr += sizeof(struct inotify_event) + event->len){
+                    event = (const struct inotify_event*) ptr;
+
+                    if (event->mask & IN_CLOSE_WRITE){
+                        // look for the watch descriptor
+                        for (auto const& pair : wd_to_controls){
+                            if (pair.first == event->wd){
+                                // it changed, so refresh the value of the controls
+                                for (auto const control : pair.second){
+                                    control->set_scale_target_value(control->get_brightness());
+                                }
+                            }
+                        }
+                    }
+
+                    if (event->mask & IN_CREATE){
+
+                    }
+                    if (event->mask & IN_DELETE){
+
+                    }
+                }
+
+            }
+        }
+
+        void add_dev(std::filesystem::path path){
+            const std::filesystem::path b_path = path.string() + "/brightness";
+            const std::filesystem::path max_b_path = path.string() + "/max_brightness";
+
+            if (!std::filesystem::exists(b_path)){
+                std::cout << "No brightness found for " << path.string() << ", ignoring.\n";
+                return;
+            }
+            if (!std::filesystem::exists(b_path)){
+                std::cout << "No max_brightness found for " << path.string() << ", ignoring.\n";
+                return;
+            }
+
+            auto max_perms = std::filesystem::status(max_b_path).permissions();
+            // can the file be read?
+            if (!((max_perms & std::filesystem::perms::others_read) != std::filesystem::perms::none
+                || (is_in_file_group(max_b_path) && (max_perms & std::filesystem::perms::group_read) != std::filesystem::perms::none)
+            )){
+                std::cout << "Cannot read max_brightness file.\n";
+                return;
+            }
+
+            auto perms = std::filesystem::status(b_path).permissions();
+            // can the file be read?
+            if (!((perms & std::filesystem::perms::others_read) != std::filesystem::perms::none
+                || (is_in_file_group(b_path) && (perms & std::filesystem::perms::group_read) != std::filesystem::perms::none)
+            )){
+                std::cout << "Cannot read brightness file.\n";
+                return;
+            }
+            // and written?
+            if (!((perms & std::filesystem::perms::others_write) != std::filesystem::perms::none
+                || (is_in_file_group(b_path) && (perms & std::filesystem::perms::group_write) != std::filesystem::perms::none)
+            ))
+                std::cout << "Can read backlight, but cannot write. Control will only display brightness.\n";
+
+            for (auto widget : widgets){
+                widget->add_control(std::make_unique<WfLightSysfsControl>(widget, path));
+            }
+            devices.push_back(path);
+            int wd = inotify_add_watch(fd, path.string().c_str(), IN_CLOSE_WRITE);
+            if (wd == -1){
+                std::cerr << "Light widget: failed to register inotify watch descriptor.\n";
+                return;
+            }
+            wd_to_controls.insert({wd, {}});
+        }
+
+        void catch_up_widget(WayfireLight* widget){
+            for (auto device : devices){
+                for (auto widget: widgets){
+                    widget->add_control(std::make_unique<WfLightSysfsControl>(widget, device));
+                }
+            }
+        }
+
+        std::vector<std::filesystem::path> devices;
+        std::vector<WayfireLight*> widgets;
+        std::map<int, std::vector<WfLightSysfsControl*>> wd_to_controls;
+
+    public:
+
+        void add_widget(WayfireLight *widget){
+            widgets.push_back(widget);
+            catch_up_widget(widget);
+        }
+        void rem_widget(WayfireLight *widget){
+
+        }
+
+        static SysfsSurveillor& get(){
+            if (!instance)
+            {
+                instance = std::unique_ptr<SysfsSurveillor>(new SysfsSurveillor());
+            }
+            return *instance;
+        }
+};
+
 void WayfireLight::setup_sysfs(){
-    // look for integrated backlights
-    const auto path = "/sys/class/backlight";
-    if (!std::filesystem::exists(path)){
-        std::cout << "No backlight directory found for integrated screens, skipping.\n";
-        return;
-    }
-
-    for (const auto& entry : std::filesystem::directory_iterator(path)){
-        const std::filesystem::path b_path = entry.path().string() + "/brightness";
-        const std::filesystem::path max_b_path = entry.path().string() + "/max_brightness";
-
-        if (!std::filesystem::exists(b_path)){
-            std::cout << "No brightness found for " << entry.path().string() << ", ignoring.\n";
-            break;
-        }
-        if (!std::filesystem::exists(b_path)){
-            std::cout << "No max_brightness found for " << entry.path().string() << ", ignoring.\n";
-            break;
-        }
-
-        auto max_perms = std::filesystem::status(max_b_path).permissions();
-        // can the file be read?
-        if (!((max_perms & std::filesystem::perms::others_read) != std::filesystem::perms::none
-            || (is_in_file_group(max_b_path) && (max_perms & std::filesystem::perms::group_read) != std::filesystem::perms::none)
-        )){
-            std::cout << "Cannot read max_brightness file.\n";
-            continue;
-        }
-
-        auto perms = std::filesystem::status(b_path).permissions();
-        // can the file be read?
-        if (!((perms & std::filesystem::perms::others_read) != std::filesystem::perms::none
-            || (is_in_file_group(b_path) && (perms & std::filesystem::perms::group_read) != std::filesystem::perms::none)
-        )){
-            std::cout << "Cannot read brightness file.\n";
-            continue;
-        }
-        // and written?
-        if (!((perms & std::filesystem::perms::others_write) != std::filesystem::perms::none
-            || (is_in_file_group(b_path) && (perms & std::filesystem::perms::group_write) != std::filesystem::perms::none)
-        ))
-            std::cout << "Can read backlight, but cannot write. Control will only display brightness.\n";
-
-        add_control(std::make_unique<WfLightSysfsControl>(this, entry.path()));
-    }
+    SysfsSurveillor::get().add_widget(this);
 }
 
 // the permissions have already been checked and *most likely* won’t have changed, so we just read/write

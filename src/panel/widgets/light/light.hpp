@@ -42,6 +42,7 @@ class WfLightControl : public Gtk::Box
   public:
     WfLightControl(WayfireLight *parent);
 
+    void set_scale_target_value(double value);
     // a double from 0 to 1 for min to max
     virtual void set_brightness(double brightness) = 0;
     virtual double get_brightness() = 0;
@@ -85,11 +86,11 @@ class WayfireLight : public WayfireWidget {
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
     WfOption<double> invert_scroll{"panel/light_invert_scroll"};
 
-    void add_control(std::unique_ptr<WfLightControl> control);
-
     void setup_sysfs();
     void setup_ddc();
 
   public:
+    void add_control(std::unique_ptr<WfLightControl> control);
+
     void update_icon();
 };
