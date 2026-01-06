@@ -23,7 +23,7 @@ widget_sources = [
   'widgets/workspace-switcher.cpp',
   'widgets/light/light.cpp',
   'widgets/light/ddcutil.cpp',
-  'widgets/light/filesystem.cpp',
+  'widgets/light/sysfs.cpp',
 ]
 
 deps = [

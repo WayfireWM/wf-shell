@@ -38,6 +38,11 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
     append(scale);
 }
 
+void WfLightControl::set_scale_target_value(double brightness)
+{
+    scale.set_target_value(brightness);
+}
+
 void WayfireLight::init(Gtk::Box *container){
     button = std::make_unique<WayfireMenuButton>("panel");
     button->get_style_context()->add_class("light");
@@ -56,13 +61,13 @@ void WayfireLight::init(Gtk::Box *container){
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
         {
             // +- number of clicks.
-            change = (dy * 1/* scroll_sensitivity */) / 10;
+            change = (dy * scroll_sensitivity) / 10;
         } else
         {
             // Number of pixels expected to have scrolled. usually in 100s
-            change = (dy * 1/* scroll_sensitivity */) / 100;
+            change = (dy * scroll_sensitivity) / 100;
         }
-        // if (!invert_scroll)
+        if (!invert_scroll)
             change *= -1;
 
         for (int i = 0 ; i < (int)controls.size() ; i++){
@@ -78,7 +83,7 @@ void WayfireLight::init(Gtk::Box *container){
 
     container->append(*button);
 
-    setup_fs();
+    setup_sysfs();
 
     update_icon();
 }
