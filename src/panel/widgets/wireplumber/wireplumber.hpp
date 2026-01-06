@@ -86,6 +86,9 @@ class WayfireWireplumber : public WayfireWidget
      */
     void check_set_popover_timeout();
 
+    // cancel popover self-hiding. mostly used after user interactions to an externally opened popover
+    void cancel_popover_timeout();
+
     void handle_config_reload() override;
 
     virtual ~WayfireWireplumber();

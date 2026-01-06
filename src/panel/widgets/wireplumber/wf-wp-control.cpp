@@ -50,6 +50,9 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     mute_conn = button.signal_toggled().connect(
         [this, id] ()
     {
+        // if the menu was popped up because of an external change
+        // and is now changed manually, don’t hide
+        parent->cancel_popover_timeout();
         ignore = true;
         WpCommon::get().set_mute(id, button.get_active());
     });
@@ -57,6 +60,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     scale.set_user_changed_callback(
         [this, id] ()
     {
+        parent->cancel_popover_timeout(); // see above
         ignore = true;
         WpCommon::get().set_volume(id, scale.get_target_value());
     });

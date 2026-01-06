@@ -20,6 +20,11 @@ void WayfireWireplumber::check_set_popover_timeout()
         &WayfireWireplumber::on_popover_timeout), 0), timeout * 1000);
 }
 
+void WayfireWireplumber::cancel_popover_timeout()
+{
+    popover_timeout.disconnect();
+}
+
 void WayfireWireplumber::reload_config()
 {
     // big matching operation
@@ -70,6 +75,9 @@ void WayfireWireplumber::reload_config()
 
     auto show_mixer_action = [&] (int c, double x, double y)
     {
+        // unschedule hiding
+        cancel_popover_timeout();
+
         if ((popover->get_child() == (Gtk::Widget*)&master_box) && popover->is_visible())
         {
             popover->popdown();
@@ -90,6 +98,8 @@ void WayfireWireplumber::reload_config()
 
     auto show_face_action = [&] (int c, double x, double y)
     {
+        // unschedule hiding
+        cancel_popover_timeout();
         if (!face)
         {
             return; // no face means we have nothing to show
@@ -130,6 +140,8 @@ void WayfireWireplumber::reload_config()
         left_conn = left_click_gesture->signal_pressed().connect(
             [&] (int c, double x, double y)
         {
+            // unschedule hiding
+            cancel_popover_timeout();
             if (popover->get_child() != (Gtk::Widget*)&master_box)
             {
                 popover->set_child(master_box);
@@ -146,6 +158,8 @@ void WayfireWireplumber::reload_config()
         left_conn = left_click_gesture->signal_pressed().connect(
             [&] (int c, double x, double y)
         {
+            // unschedule hiding
+            cancel_popover_timeout();
             if (!face)
             {
                 return;
