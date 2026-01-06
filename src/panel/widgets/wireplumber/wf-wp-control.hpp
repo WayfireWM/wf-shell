@@ -30,6 +30,7 @@ class WfWpControl : public Gtk::Grid
     void set_scale_target_value(double volume);
     double get_scale_target_value();
     void update_icon();
+    bool ignore; // set when volume changes because of it to ignore refresh of ui
 
     void handle_config_reload();
 

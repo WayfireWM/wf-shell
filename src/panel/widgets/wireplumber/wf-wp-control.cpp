@@ -48,12 +48,14 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     mute_conn = button.signal_toggled().connect(
         [this, id] ()
     {
+        ignore = true;
         WpCommon::get().set_mute(id, button.get_active());
     });
 
     scale.set_user_changed_callback(
         [this, id] ()
     {
+        ignore = true;
         WpCommon::get().set_volume(id, scale.get_target_value());
     });
 
@@ -74,6 +76,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
             change = (dy * parent->scroll_sensitivity * SCROLL_MULT) / 100;
         }
 
+        ignore = true; // this scroll is accessed in the mixer, so we ignore too
         WpCommon::get().set_volume(id, scale.get_target_value() + change);
         return true;
     }, true);

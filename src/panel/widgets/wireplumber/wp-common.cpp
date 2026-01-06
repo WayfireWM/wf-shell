@@ -214,6 +214,16 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             }
         }
 
+        // if this control is the source of this change, don’t do anything
+        if (control->ignore)
+        {
+            control->ignore = false;
+            widget->update_icon(); // still update the icons
+            control->update_icon();
+            widget->face->update_icon();
+            continue;
+        }
+
         // correct the values of the control
         control->set_btn_status_no_callbk(mute);
         control->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
@@ -225,7 +235,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         // if the face controls the same object as the changed, correct it as well
         if (
             widget->face /* not faceless guard */ && (control->object
-            != widget->face->object) // current control and face are for the same wp obj
+            == widget->face->object) // current control and face are for the same wp obj
         ){
             widget->face->set_btn_status_no_callbk(mute);
             widget->face->set_scale_target_value(std::cbrt(volume));
@@ -239,17 +249,20 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         }
 
         widget->update_icon();
+        widget->face->update_icon();
 
-        if (!widget->popover->is_visible())
+        if (!widget->popover->is_visible() ||
+            widget->popover->get_child() != (WfWpControl*)&widget->face)
         {
+            // put the face in the popover and show
+            widget->popover->set_child(*widget->face);
             if (widget->popup_on_change && change)
             {
                 widget->popover->popup();
             }
-        } else {
-            // in all cases, (re-)schedule hiding
-            widget->check_set_popover_timeout();
         }
+        // in all cases that reach here, (re-)schedule hiding
+        widget->check_set_popover_timeout();
     }
 }
 
