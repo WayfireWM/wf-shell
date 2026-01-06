@@ -193,10 +193,12 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
     g_variant_lookup(v, "mute", "b", &mute);
     g_clear_pointer(&v, g_variant_unref);
 
+    // for each widget
     for (auto widget : instance->widgets)
     {
         WfWpControl *control;
 
+        // first, find the appropiate control
         for (auto & it : widget->objects_to_controls)
         {
             WpPipewireObject *obj = it.first;
@@ -205,58 +207,49 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             {
                 break;
             }
+            // if we are at the end and still no match
+            if (it.first == widget->objects_to_controls.end()->first){
+                std::cerr << "Wireplumber mixer could not find control for wp object";
+                return;
+            }
         }
 
+        // correct the values of the control
         control->set_btn_status_no_callbk(mute);
         control->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
         control->update_icon();
 
-        // correct the face
-        // if the face choice is last_change, ensure the control in the popover is the one that was updated,
-        // else, if the face does not control the changed object, just don’t change it
 
+        bool change = false; // if something changes below
+
+        // if the face controls the same object as the changed, correct it as well
         if (
-            control->object
-            !=
-            ((WfWpControl*)(widget->popover->get_child()))->object)
-        {
-            // in the other two cases, the face choice, if existant, is already in the face
-            if (widget->face_choice == FaceChoice::LAST_CHANGE)
-            {
-                widget->face = control->copy();
-            }
-        } else
-        {
-            // update the face’s values; note the WfWpControl constructor already syncs the values
+            widget->face /* not faceless guard */ && (control->object
+            != widget->face->object) // current control and face are for the same wp obj
+        ){
             widget->face->set_btn_status_no_callbk(mute);
-            widget->face->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
+            widget->face->set_scale_target_value(std::cbrt(volume));
+            change = true;
+        }
+        // change face if needed
+        else if (widget->face_choice == FaceChoice::LAST_CHANGE)
+        {
+            widget->face = control->copy();
+            change = true;
         }
 
         widget->update_icon();
 
-        // if we have the full mixer in the popover
-        if ((Gtk::Widget*)&(widget->master_box)
-            ==
-            (Gtk::Widget*)widget->popover->get_child())
+        if (!widget->popover->is_visible())
         {
-            // if shown, stop there
-            if (widget->popover->is_visible())
+            if (widget->popup_on_change && change)
             {
-                return;
+                widget->popover->popup();
             }
-
-            // if hidden, replace by the face
-            widget->popover->set_child(*widget->face);
+        } else {
+            // in all cases, (re-)schedule hiding
+            widget->check_set_popover_timeout();
         }
-
-        // if it was hidden and configuration calls for it, show it
-        if (widget->popup_on_change && !widget->popover->is_visible())
-        {
-            widget->button->set_active(true);
-        }
-
-        // in all cases, (re-)schedule hiding
-        widget->check_set_popover_timeout();
     }
 }
 
