@@ -302,6 +302,7 @@ void WayfireWireplumber::update_icon() // depends on face widget
         main_image.set_from_icon_name(volume_icon_for(-1)); // OOR
         return;
     }
+
     if (face->button.get_active())
     {
         main_image.set_from_icon_name(volume_icon_for(0)); // mute

@@ -353,22 +353,26 @@ void WpCommon::on_object_removed(WpObjectManager *manager, gpointer object, gpoi
     }
 }
 
-void WpCommon::add_widget(WayfireWireplumber *widget){
+void WpCommon::add_widget(WayfireWireplumber *widget)
+{
     widgets.push_back(widget);
     catch_up_to_current_state(widget);
 }
 
-void WpCommon::rem_widget(WayfireWireplumber *widget){
+void WpCommon::rem_widget(WayfireWireplumber *widget)
+{
     widgets.erase(std::find(widgets.begin(), widgets.end(), widget));
 }
 
-std::pair<double, bool> WpCommon::get_volume_and_mute(guint32 id){
+std::pair<double, bool> WpCommon::get_volume_and_mute(guint32 id)
+{
     GVariant *v = NULL;
     g_signal_emit_by_name(mixer_api, "get-volume", id, &v);
     if (!v)
     {
         // return;
     }
+
     gboolean mute  = FALSE;
     gdouble volume = 0.0;
     g_variant_lookup(v, "volume", "d", &volume);
@@ -377,8 +381,8 @@ std::pair<double, bool> WpCommon::get_volume_and_mute(guint32 id){
     return std::make_pair(std::cbrt(volume), mute);
 }
 
-
-void WpCommon::set_volume(guint32 id, double volume){
+void WpCommon::set_volume(guint32 id, double volume)
+{
     GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
     g_variant_builder_add(&gvb, "{sv}", "volume",
         g_variant_new_double(std::pow(volume, 3))); // see on_mixer_plugin_loaded
@@ -387,16 +391,17 @@ void WpCommon::set_volume(guint32 id, double volume){
     g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
 }
 
-void WpCommon::set_mute(guint32 id, bool state){
+void WpCommon::set_mute(guint32 id, bool state)
+{
     GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
     g_variant_builder_add(&gvb, "{sv}", "mute", g_variant_new_boolean(state));
     GVariant *v = g_variant_builder_end(&gvb);
     gboolean res FALSE;
     g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
-
 }
 
-gboolean WpCommon::set_default(const gchar* media_class, const gchar* name){
+gboolean WpCommon::set_default(const gchar *media_class, const gchar *name)
+{
     gboolean res = false;
     g_signal_emit_by_name(WpCommon::default_nodes_api, "set-default-configured-node-name",
         media_class, name, &res);
@@ -406,15 +411,20 @@ gboolean WpCommon::set_default(const gchar* media_class, const gchar* name){
     return res;
 }
 
-void WpCommon::re_evaluate_def_nodes(){
+void WpCommon::re_evaluate_def_nodes()
+{
     if (default_nodes_api)
+    {
         on_default_nodes_changed(default_nodes_api, NULL);
+    }
 }
 
-WpCommon& WpCommon::get(){
+WpCommon& WpCommon::get()
+{
     if (!instance)
     {
         instance = std::unique_ptr<WpCommon>(new WpCommon());
     }
+
     return *instance;
 }
