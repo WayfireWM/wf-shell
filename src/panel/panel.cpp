@@ -163,7 +163,6 @@ class WayfirePanel::impl
 #ifdef HAVE_PULSE
             return Widget(new WayfireVolume());
 #else
-    #warning "Pulse not found, volume widget will not be available."
             std::cerr << "Built without pulse support, volume widget "
                          " is not available." << std::endl;
 #endif
@@ -174,7 +173,6 @@ class WayfirePanel::impl
 #ifdef HAVE_WIREPLUMBER
             return Widget(new WayfireWireplumber());
 #else
-    #warning "Wireplumber not found, mixer widget will not be available."
             std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
 #endif
