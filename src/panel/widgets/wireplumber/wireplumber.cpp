@@ -210,6 +210,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     button = std::make_unique<WayfireMenuButton>("panel");
     button->get_style_context()->add_class("wireplumber");
     button->get_style_context()->add_class("flat");
+    button->get_children()[0]->get_style_context()->add_class("flat");
     button->set_child(main_image);
     button->show();
 

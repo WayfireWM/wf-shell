@@ -38,6 +38,8 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     label.set_text(Glib::ustring(name));
 
     button.set_child(volume_icon);
+    button.get_style_context()->add_class("wireplumber");
+    button.get_style_context()->add_class("flat");
 
     attach(label, 0, 0, 2, 1);
     attach(button, 1, 1, 1, 1);
@@ -172,6 +174,8 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
     WayfireWireplumber *parent_widget) : WfWpControl(obj, parent_widget)
 {
     attach(default_btn, 1, 0, 1, 1);
+    default_btn.get_style_context()->add_class("wireplumber");
+    default_btn.get_style_context()->add_class("flat");
 
     WpProxy *proxy = WP_PROXY(object);
 
