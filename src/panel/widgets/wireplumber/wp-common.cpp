@@ -383,21 +383,22 @@ std::pair<double, bool> WpCommon::get_volume_and_mute(guint32 id)
 
 void WpCommon::set_volume(guint32 id, double volume)
 {
-    GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
-    g_variant_builder_add(&gvb, "{sv}", "volume",
-        g_variant_new_double(std::pow(volume, 3))); // see on_mixer_plugin_loaded
-    GVariant *v = g_variant_builder_end(&gvb);
-    gboolean res FALSE;
-    g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
+    using Vol = std::map<Glib::ustring, Glib::Variant<double>>;
+    Vol vol;
+    vol["volume"] = Glib::Variant<double>::create(std::pow(volume, 3));
+    auto vol_v = Glib::Variant<Vol>::create(vol);
+    gboolean res = FALSE; // ignored for now
+    g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, vol_v.gobj(), &res);
 }
 
 void WpCommon::set_mute(guint32 id, bool state)
 {
-    GVariantBuilder gvb = G_VARIANT_BUILDER_INIT(G_VARIANT_TYPE_VARDICT);
-    g_variant_builder_add(&gvb, "{sv}", "mute", g_variant_new_boolean(state));
-    GVariant *v = g_variant_builder_end(&gvb);
-    gboolean res FALSE;
-    g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, v, &res);
+    using Mute = std::map<Glib::ustring, Glib::Variant<bool>>;
+    Mute mute;
+    mute["mute"] = Glib::Variant<bool>::create(state);
+    auto mute_v = Glib::Variant<Mute>::create(mute);
+    gboolean res = FALSE; // ignored for now
+    g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, mute_v.gobj(), &res);
 }
 
 gboolean WpCommon::set_default(const gchar *media_class, const gchar *name)
