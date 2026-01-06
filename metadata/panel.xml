@@ -264,6 +264,7 @@
 	<option name="wp_scroll_sensitivity" type="double">
 		<_short>Scroll sensitivity</_short>
 		<default>1</default>
+		<min>0</min>
 	</option>
 	<option name="wp_invert_scroll" type="bool">
 		<_short>Invert scroll</_short>
