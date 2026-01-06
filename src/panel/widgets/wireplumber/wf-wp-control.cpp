@@ -104,15 +104,13 @@ void WfWpControl::set_scale_target_value(double volume)
 
 void WfWpControl::update_icon()
 {
-    VolumeLevel current = volume_icon_for(get_scale_target_value());
-
     if (button.get_active())
     {
-        volume_icon.set_from_icon_name("audio-volume-muted");
+        volume_icon.set_from_icon_name(volume_icon_for(0)); // mute
         return;
     }
 
-    volume_icon.set_from_icon_name(icon_name_from_state.at(current));
+    volume_icon.set_from_icon_name(volume_icon_for(get_scale_target_value()));
 }
 
 double WfWpControl::get_scale_target_value()

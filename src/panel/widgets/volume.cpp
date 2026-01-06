@@ -4,38 +4,15 @@
 
 #include "volume-level.hpp"
 
-static VolumeLevel get_volume_level(pa_volume_t volume, pa_volume_t max)
-{
-    auto third = max / 3;
-    if (volume == 0)
-    {
-        return VOLUME_LEVEL_MUTE;
-    } else if ((volume > 0) && (volume <= third))
-    {
-        return VOLUME_LEVEL_LOW;
-    } else if ((volume > third) && (volume <= (third * 2)))
-    {
-        return VOLUME_LEVEL_MED;
-    } else if ((volume > (third * 2)) && (volume <= max))
-    {
-        return VOLUME_LEVEL_HIGH;
-    }
-
-    return VOLUME_LEVEL_OOR;
-}
-
 void WayfireVolume::update_icon()
 {
-    VolumeLevel current =
-        get_volume_level(volume_scale.get_target_value(), max_norm);
-
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
-        main_image.set_from_icon_name("audio-volume-muted");
+        main_image.set_from_icon_name(volume_icon_for(0)); // mute
         return;
     }
 
-    main_image.set_from_icon_name(icon_name_from_state.at(current));
+    main_image.set_from_icon_name(volume_icon_for(volume_scale.get_target_value() / (double)max_norm));
 }
 
 bool WayfireVolume::on_popover_timeout(int timer)

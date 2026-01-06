@@ -13,8 +13,6 @@ extern "C" {
 #include "wp-common.hpp"
 #include "../volume-level.hpp"
 
-VolumeLevel volume_icon_for(double volume);
-
 enum class FaceChoice // config
 {
     LAST_CHANGE,

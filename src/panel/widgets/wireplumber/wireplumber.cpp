@@ -5,27 +5,6 @@
 #include "wireplumber.hpp"
 #include "wf-wp-control.hpp"
 
-VolumeLevel volume_icon_for(double volume)
-{
-    double max = 1.0;
-    auto third = max / 3;
-    if (volume == 0)
-    {
-        return VOLUME_LEVEL_MUTE;
-    } else if ((volume > 0) && (volume <= third))
-    {
-        return VOLUME_LEVEL_LOW;
-    } else if ((volume > third) && (volume <= (third * 2)))
-    {
-        return VOLUME_LEVEL_MED;
-    } else if ((volume > (third * 2)) && (volume <= max))
-    {
-        return VOLUME_LEVEL_HIGH;
-    }
-
-    return VOLUME_LEVEL_OOR;
-}
-
 bool WayfireWireplumber::on_popover_timeout(int timer)
 {
     popover_timeout.disconnect();
@@ -318,15 +297,18 @@ void WayfireWireplumber::init(Gtk::Box *container)
 
 void WayfireWireplumber::update_icon() // depends on face widget
 {
-    VolumeLevel current = volume_icon_for(face->get_scale_target_value());
-
-    if (!face || face->button.get_active())
+    if (!face)
     {
-        main_image.set_from_icon_name("audio-volume-muted");
+        main_image.set_from_icon_name(volume_icon_for(-1)); // OOR
+        return;
+    }
+    if (face->button.get_active())
+    {
+        main_image.set_from_icon_name(volume_icon_for(0)); // mute
         return;
     }
 
-    main_image.set_from_icon_name(icon_name_from_state.at(current));
+    main_image.set_from_icon_name(volume_icon_for(face->get_scale_target_value()));
 }
 
 WayfireWireplumber::~WayfireWireplumber()
