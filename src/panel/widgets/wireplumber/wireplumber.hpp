@@ -44,7 +44,7 @@ class WayfireWireplumber : public WayfireWidget
     sigc::connection left_conn, middle_conn, right_conn;
 
     // widgets for the mixer itself
-    Gtk::Label output, input, streams;
+    Gtk::Label output_label, input_label, streams_label;
     Gtk::Separator out_in_wall, in_streams_wall, out_sep, in_sep, streams_sep;
 
     void reload_config();
