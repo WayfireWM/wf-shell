@@ -293,7 +293,6 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 widget->popover->popup();
             }
         }
-
         // in all cases that reach here, (re-)schedule hiding
         widget->check_set_popover_timeout();
     }
@@ -317,7 +316,7 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
         }
     }
 
-    for (auto widget : instance->widgets)
+    for (const auto widget : instance->widgets)
     {
         for (const auto & entry : widget->objects_to_controls)
         {
@@ -334,28 +333,29 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
             {
                 return def_id == bound_id;
             });
-            if (is_default)
+
+            // is it a source or a sink?
+            const std::string_view type{wp_pipewire_object_get_property(obj, PW_KEY_MEDIA_CLASS)};
+
+            if (!is_default)
             {
-                ctrl->set_def_status_no_callbk(true);
+                const std::string_view type{wp_pipewire_object_get_property(obj, PW_KEY_MEDIA_CLASS)};
+                if ((type == "Audio/Sink") || (type == "Audio/Source"))
+                {
+                    ctrl->set_def_status_no_callbk(false);
+                }
                 continue;
             }
 
-            // if the control is not for a sink or source (non WfWpControlDevice), don’t try to set status
-            const std::string_view type{wp_pipewire_object_get_property(obj, PW_KEY_MEDIA_CLASS)};
+            // if we’re here, we’re a default of some kind
+            ctrl->set_def_status_no_callbk(true);
 
-            if ((type == "Audio/Sink") || (type == "Audio/Source"))
-            {
-                ctrl->set_def_status_no_callbk(false);
-            }
-
-            if ( // if the settings call for it, refresh the face
-                (
-                    (widget->face_choice == FaceChoice::DEFAULT_SINK) &&
-                    (type == "Audio/Sink")
-                    ||
-                    (widget->face_choice == FaceChoice::DEFAULT_SOURCE) &&
-                    (type == "Audio/Source")
-                ))
+            if ((widget->face_choice == FaceChoice::DEFAULT_SINK) &&
+                (type == "Audio/Sink")
+                ||
+                (widget->face_choice == FaceChoice::DEFAULT_SOURCE) &&
+                (type == "Audio/Source")
+            ) // if the settings call for it, refresh the face
             {
                 widget->face = ctrl->copy();
                 widget->update_icon();
@@ -471,7 +471,6 @@ gboolean WpCommon::set_default(WpPipewireObject *object)
 
         return res;
     }
-
     return false;
 }
 
