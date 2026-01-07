@@ -11,18 +11,12 @@ extern "C" {
 #include "wf-popover.hpp"
 #include "wf-wp-control.hpp"
 #include "wp-common.hpp"
-#include "../volume-level.hpp"
 
 enum class FaceChoice // config
 {
     LAST_CHANGE,
     DEFAULT_SINK,
     DEFAULT_SOURCE,
-};
-
-static const gchar *DEFAULT_NODE_MEDIA_CLASSES[] = {
-    "Audio/Sink",
-    "Audio/Source",
 };
 
 class WfWpControl;

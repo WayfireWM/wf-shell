@@ -4,6 +4,7 @@
 
 #include "wireplumber.hpp"
 #include "wf-wp-control.hpp"
+#include "../volume-level.hpp"
 
 bool WayfireWireplumber::on_popover_timeout(int timer)
 {

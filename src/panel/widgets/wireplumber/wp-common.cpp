@@ -5,6 +5,12 @@
 #include "wp-common.hpp"
 #include "wireplumber.hpp"
 #include "wf-wp-control.hpp"
+#include "wp/proxy-interfaces.h"
+
+const gchar *DEFAULT_NODE_MEDIA_CLASSES[] = {
+    "Audio/Sink",
+    "Audio/Source",
+};
 
 WpCommon::WpCommon()
 {
@@ -166,7 +172,6 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber
     {
         on_default_nodes_changed(default_nodes_api, NULL);
     }
-
     // let’s considier this a change and set this as face
     if (widget->face_choice == FaceChoice::LAST_CHANGE)
     {
@@ -219,7 +224,6 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             {
                 break;
             }
-
             // if we are at the end and still no match
             if (it.first == widget->objects_to_controls.end()->first)
             {
@@ -239,9 +243,10 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         // if the face controls the same object as the changed, correct it as well
         if (
-            widget->face /* not faceless guard */ && (control->object ==
-                                                      widget->face->object) // current control and face are
-                                                                            // for the same wp obj
+            widget->face /* not faceless guard */
+            // current control and face are for the same wp obj
+            && (control->object
+            == widget->face->object)
         )
         {
             widget->face->set_btn_status_no_callbk(mute);
@@ -287,7 +292,6 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 widget->popover->popup();
             }
         }
-
         // in all cases that reach here, (re-)schedule hiding
         widget->check_set_popover_timeout();
     }
@@ -404,10 +408,10 @@ std::pair<double, bool> WpCommon::get_volume_and_mute(guint32 id)
     g_signal_emit_by_name(mixer_api, "get-volume", id, &v);
     if (!v)
     {
-        // return;
+        return {0.0, true};
     }
 
-    gboolean mute  = FALSE;
+    gboolean mute  = TRUE;
     gdouble volume = 0.0;
     g_variant_lookup(v, "volume", "d", &volume);
     g_variant_lookup(v, "mute", "b", &mute);
@@ -420,8 +424,8 @@ void WpCommon::set_volume(guint32 id, double volume)
     using Vol = std::map<Glib::ustring, Glib::Variant<double>>;
     Vol vol;
     vol["volume"] = Glib::Variant<double>::create(std::pow(volume, 3));
-    auto vol_v   = Glib::Variant<Vol>::create(vol);
-    gboolean res = FALSE; // ignored for now
+    auto vol_v    = Glib::Variant<Vol>::create(vol);
+    gboolean res  = FALSE; // ignored for now
     g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, vol_v.gobj(), &res);
 }
 
@@ -435,15 +439,37 @@ void WpCommon::set_mute(guint32 id, bool state)
     g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, mute_v.gobj(), &res);
 }
 
-gboolean WpCommon::set_default(const gchar *media_class, const gchar *name)
+gboolean WpCommon::set_default(WpPipewireObject *object)
 {
-    gboolean res = false;
-    g_signal_emit_by_name(WpCommon::default_nodes_api, "set-default-configured-node-name",
-        media_class, name, &res);
+    auto proxy = WP_PROXY(object);
+    const gchar *media_class = wp_pipewire_object_get_property(
+        WP_PIPEWIRE_OBJECT(proxy),
+        PW_KEY_MEDIA_CLASS);
+    for (guint i = 0; i < G_N_ELEMENTS(DEFAULT_NODE_MEDIA_CLASSES); i++)
+    {
+        // only for the media class our object is in
+        if (media_class == DEFAULT_NODE_MEDIA_CLASSES[i])
+        {
+            continue;
+        }
 
-    wp_core_sync(core, NULL, NULL, NULL);
+        const gchar *name = wp_pipewire_object_get_property(
+            WP_PIPEWIRE_OBJECT(proxy),
+            PW_KEY_NODE_NAME);
+        if (!name)
+        {
+            continue;
+        }
 
-    return res;
+        gboolean res = false;
+        g_signal_emit_by_name(WpCommon::default_nodes_api, "set-default-configured-node-name",
+            media_class, name, &res);
+
+        wp_core_sync(core, NULL, NULL, NULL);
+
+        return res;
+    }
+    return false;
 }
 
 void WpCommon::re_evaluate_def_nodes()

@@ -181,15 +181,13 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
     default_btn.get_style_context()->add_class("wireplumber");
     default_btn.get_style_context()->add_class("flat");
 
-    WpProxy *proxy = WP_PROXY(object);
-
     is_def_icon.set_from_icon_name("emblem-default");
     default_btn.set_child(is_def_icon);
 
     // we are not using ToggleButton groups because on_default_nodes_changed
     // will be called anyway to set the status of all devices
     def_conn = default_btn.signal_clicked().connect(
-        [this, proxy] ()
+        [this] ()
     {
         // keep the button down when it is selected to prevent inconsistency of visuals with actual state
         if (default_btn.get_active() == false)
@@ -197,28 +195,7 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
             set_def_status_no_callbk(true);
             return;
         }
-
-        const gchar *media_class = wp_pipewire_object_get_property(
-            WP_PIPEWIRE_OBJECT(proxy),
-            PW_KEY_MEDIA_CLASS);
-        for (guint i = 0; i < G_N_ELEMENTS(DEFAULT_NODE_MEDIA_CLASSES); i++)
-        {
-            // only for the media class our object is in
-            if (media_class == DEFAULT_NODE_MEDIA_CLASSES[i])
-            {
-                continue;
-            }
-
-            const gchar *name = wp_pipewire_object_get_property(
-                WP_PIPEWIRE_OBJECT(proxy),
-                PW_KEY_NODE_NAME);
-            if (!name)
-            {
-                continue;
-            }
-
-            WpCommon::get().set_default(DEFAULT_NODE_MEDIA_CLASSES[i], name);
-        }
+        WpCommon::get().set_default(object);
     });
 }
 

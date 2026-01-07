@@ -45,7 +45,7 @@ class WpCommon
     std::pair<double, bool> get_volume_and_mute(guint32 id);
     void set_volume(guint32 id, double volume);
     void set_mute(guint32 id, bool state);
-    gboolean set_default(const gchar *media_class, const gchar *name);
+    gboolean set_default(WpPipewireObject *object);
 
     static WpCommon& get();
 };
