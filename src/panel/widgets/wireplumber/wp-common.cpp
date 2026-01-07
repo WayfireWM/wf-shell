@@ -140,7 +140,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber
     if (type == "Audio/Sink")
     {
         which_box = &(widget->sinks_box);
-        control = new WfWpControlDevice(object, widget);
+        control   = new WfWpControlDevice(object, widget);
         recheck_default = true;
     } else if (type == "Audio/Source")
     {
@@ -166,6 +166,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber
     {
         on_default_nodes_changed(default_nodes_api, NULL);
     }
+
     // let’s considier this a change and set this as face
     if (widget->face_choice == FaceChoice::LAST_CHANGE)
     {
@@ -218,14 +219,17 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             {
                 break;
             }
+
             // if we are at the end and still no match
-            if (it.first == widget->objects_to_controls.end()->first){
+            if (it.first == widget->objects_to_controls.end()->first)
+            {
                 std::cerr << "Wireplumber mixer could not find control for wp object";
                 return;
             }
         }
 
-        static const auto update_icons = [=](){
+        static const auto update_icons = [=] ()
+        {
             control->update_icon();
             widget->face->update_icon();
             widget->update_icon();
@@ -235,9 +239,11 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         // if the face controls the same object as the changed, correct it as well
         if (
-            widget->face /* not faceless guard */ && (control->object
-            == widget->face->object) // current control and face are for the same wp obj
-        ){
+            widget->face /* not faceless guard */ && (control->object ==
+                                                      widget->face->object) // current control and face are
+                                                                            // for the same wp obj
+        )
+        {
             widget->face->set_btn_status_no_callbk(mute);
             widget->face->set_scale_target_value(std::cbrt(volume));
             change = true;
@@ -272,7 +278,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         update_icons();
 
         if (!widget->popover->is_visible() ||
-            widget->popover->get_child() != (WfWpControl*)&widget->face)
+            (widget->popover->get_child() != (WfWpControl*)&widget->face))
         {
             // put the face in the popover and show
             widget->popover->set_child(*widget->face);
@@ -281,6 +287,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 widget->popover->popup();
             }
         }
+
         // in all cases that reach here, (re-)schedule hiding
         widget->check_set_popover_timeout();
     }
@@ -413,7 +420,7 @@ void WpCommon::set_volume(guint32 id, double volume)
     using Vol = std::map<Glib::ustring, Glib::Variant<double>>;
     Vol vol;
     vol["volume"] = Glib::Variant<double>::create(std::pow(volume, 3));
-    auto vol_v = Glib::Variant<Vol>::create(vol);
+    auto vol_v   = Glib::Variant<Vol>::create(vol);
     gboolean res = FALSE; // ignored for now
     g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, vol_v.gobj(), &res);
 }
@@ -423,7 +430,7 @@ void WpCommon::set_mute(guint32 id, bool state)
     using Mute = std::map<Glib::ustring, Glib::Variant<bool>>;
     Mute mute;
     mute["mute"] = Glib::Variant<bool>::create(state);
-    auto mute_v = Glib::Variant<Mute>::create(mute);
+    auto mute_v  = Glib::Variant<Mute>::create(mute);
     gboolean res = FALSE; // ignored for now
     g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, mute_v.gobj(), &res);
 }
