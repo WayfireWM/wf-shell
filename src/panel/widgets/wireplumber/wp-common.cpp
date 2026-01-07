@@ -232,7 +232,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             }
         }
 
-        static const auto update_icons = [=] ()
+        const auto update_icons = [&] ()
         {
             control->update_icon();
             widget->face->update_icon();
