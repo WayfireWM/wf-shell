@@ -31,13 +31,11 @@ class WfWpControl : public Gtk::Grid
     double get_scale_target_value();
     void update_icon();
     // used to mark the control as the source of changes and determine what should be done
-    enum ignore_type
-    {
-        DONT_IGNORE, // not the source, normal treatment
-        IGNORE_ALL, // the source, no need to touch it
-        ONLY_UPDATE, // the source, but the visuals need to be updated. used for scrolling.
+    enum ignore_type {
+      DONT_IGNORE, // not the source, normal treatment
+      IGNORE_ALL, // the source, no need to touch it
+      ONLY_UPDATE, // the source, but the visuals need to be updated. used for scrolling.
     };
-
     ignore_type ignore; // set when volume changes because of it to ignore refresh of ui
 
     void handle_config_reload();
@@ -59,5 +57,4 @@ class WfWpControlDevice : public WfWpControl
     WfWpControlDevice(WpPipewireObject *obj, WayfireWireplumber *parent_widget);
     Gtk::ToggleButton default_btn;
     void set_def_status_no_callbk(bool state);
-    std::unique_ptr<WfWpControlDevice> copy();
 };
