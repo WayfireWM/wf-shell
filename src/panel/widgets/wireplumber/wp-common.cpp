@@ -172,6 +172,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber
     {
         on_default_nodes_changed(default_nodes_api, NULL);
     }
+
     // let’s considier this a change and set this as face
     if (widget->face_choice == FaceChoice::LAST_CHANGE)
     {
@@ -224,6 +225,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             {
                 break;
             }
+
             // if we are at the end and still no match
             if (it.first == widget->objects_to_controls.end()->first)
             {
@@ -245,9 +247,8 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         if (
             widget->face /* not faceless guard */
             // current control and face are for the same wp obj
-            && (control->object
-            == widget->face->object)
-        )
+            && (control->object ==
+                widget->face->object))
         {
             widget->face->set_btn_status_no_callbk(mute);
             widget->face->set_scale_target_value(std::cbrt(volume));
@@ -292,6 +293,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 widget->popover->popup();
             }
         }
+
         // in all cases that reach here, (re-)schedule hiding
         widget->check_set_popover_timeout();
     }
@@ -424,8 +426,8 @@ void WpCommon::set_volume(guint32 id, double volume)
     using Vol = std::map<Glib::ustring, Glib::Variant<double>>;
     Vol vol;
     vol["volume"] = Glib::Variant<double>::create(std::pow(volume, 3));
-    auto vol_v    = Glib::Variant<Vol>::create(vol);
-    gboolean res  = FALSE; // ignored for now
+    auto vol_v   = Glib::Variant<Vol>::create(vol);
+    gboolean res = FALSE; // ignored for now
     g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, vol_v.gobj(), &res);
 }
 
@@ -469,6 +471,7 @@ gboolean WpCommon::set_default(WpPipewireObject *object)
 
         return res;
     }
+
     return false;
 }
 

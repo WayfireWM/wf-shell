@@ -195,6 +195,7 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
             set_def_status_no_callbk(true);
             return;
         }
+
         WpCommon::get().set_default(object);
     });
 }
