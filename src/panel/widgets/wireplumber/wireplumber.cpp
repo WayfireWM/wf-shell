@@ -287,13 +287,13 @@ void WayfireWireplumber::init(Gtk::Box *container)
     sinks_box.append(out_sep);
 
     // sources
-    output_label.set_text("Input devices");
+    input_label.set_text("Input devices");
     sources_box.append(input_label);
     in_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     sources_box.append(in_sep);
 
     // streams
-    output_label.set_text("Audio streams");
+    streams_label.set_text("Audio streams");
     streams_box.append(streams_label);
     streams_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     streams_box.append(streams_sep);
