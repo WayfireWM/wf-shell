@@ -134,17 +134,19 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber
 
     const std::string_view type{wp_pipewire_object_get_property(object, PW_KEY_MEDIA_CLASS)};
 
+    bool recheck_default = false;
     WfWpControl *control;
     Gtk::Box *which_box;
     if (type == "Audio/Sink")
     {
         which_box = &(widget->sinks_box);
-
         control = new WfWpControlDevice(object, widget);
+        recheck_default = true;
     } else if (type == "Audio/Source")
     {
         which_box = &(widget->sources_box);
         control   = new WfWpControlDevice(object, widget);
+        recheck_default = true;
     } else if (type == "Stream/Output/Audio")
     {
         which_box = &(widget->streams_box);
@@ -157,10 +159,19 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber
 
     widget->objects_to_controls.insert({object, std::unique_ptr<WfWpControl>(control)});
     which_box->append((Gtk::Widget&)*control);
-    // try to not be faceless
-    if (!widget->face)
+
+    // we added new controls, so maybe one of them is a default
+    // also initialises the face for when face choice is a device
+    if (recheck_default)
+    {
+        on_default_nodes_changed(default_nodes_api, NULL);
+    }
+    // let’s considier this a change and set this as face
+    if (widget->face_choice == FaceChoice::LAST_CHANGE)
     {
         widget->face = control->copy();
+        widget->popover->set_child(*widget->face);
+        widget->update_icon();
     }
 }
 
@@ -214,21 +225,11 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             }
         }
 
-        // if this control is the source of this change, don’t do anything
-        if (control->ignore)
-        {
-            control->ignore = false;
-            widget->update_icon(); // still update the icons
+        static const auto update_icons = [=](){
             control->update_icon();
             widget->face->update_icon();
-            continue;
-        }
-
-        // correct the values of the control
-        control->set_btn_status_no_callbk(mute);
-        control->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
-        control->update_icon();
-
+            widget->update_icon();
+        };
 
         bool change = false; // if something changes below
 
@@ -248,8 +249,27 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             change = true;
         }
 
-        widget->update_icon();
-        widget->face->update_icon();
+        // if this control is the source of this change, don’t do anything
+        if (control->ignore == WfWpControl::IGNORE_ALL)
+        {
+            control->ignore = WfWpControl::DONT_IGNORE;
+            update_icons();
+            continue;
+        }
+
+        // correct the values of the control
+        control->set_btn_status_no_callbk(mute);
+        control->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
+
+        // is scroll, quit after updating controls
+        if (control->ignore == WfWpControl::ONLY_UPDATE)
+        {
+            control->ignore = WfWpControl::DONT_IGNORE;
+            update_icons();
+            continue;
+        }
+
+        update_icons();
 
         if (!widget->popover->is_visible() ||
             widget->popover->get_child() != (WfWpControl*)&widget->face)
@@ -325,6 +345,7 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
                 ))
             {
                 widget->face = ctrl->copy();
+                widget->update_icon();
             }
         }
     }

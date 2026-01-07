@@ -53,7 +53,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
         // if the menu was popped up because of an external change
         // and is now changed manually, don’t hide
         parent->cancel_popover_timeout();
-        ignore = true;
+        ignore = IGNORE_ALL;
         WpCommon::get().set_mute(id, button.get_active());
     });
 
@@ -61,7 +61,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
         [this, id] ()
     {
         parent->cancel_popover_timeout(); // see above
-        ignore = true;
+        ignore = IGNORE_ALL;
         WpCommon::get().set_volume(id, scale.get_target_value());
     });
 
@@ -82,7 +82,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
             change = (dy * parent->scroll_sensitivity * SCROLL_MULT) / 100;
         }
 
-        ignore = true; // this scroll is accessed in the mixer, so we ignore too
+        ignore = ONLY_UPDATE; // this scroll is accessed in the full mixer, just update visuals
         WpCommon::get().set_volume(id, scale.get_target_value() + change);
         return true;
     }, true);

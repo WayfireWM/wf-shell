@@ -39,13 +39,9 @@ void WayfireWireplumber::reload_config()
     } else if (str_face_choice.value() == "default_sink")
     {
         face_choice = FaceChoice::DEFAULT_SINK;
-        face = nullptr;
-        WpCommon::get().re_evaluate_def_nodes();
     } else if (str_face_choice.value() == "default_source")
     {
         face_choice = FaceChoice::DEFAULT_SOURCE;
-        face = nullptr;
-        WpCommon::get().re_evaluate_def_nodes();
     } else // default if no match
     {
         face_choice = FaceChoice::LAST_CHANGE;
