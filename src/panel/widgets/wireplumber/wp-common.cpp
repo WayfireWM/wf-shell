@@ -246,7 +246,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 widget->face->object))
         {
             widget->face->set_btn_status_no_callbk(mute);
-            widget->face->set_scale_target_value(std::cbrt(volume));
+            widget->face->set_scale_target_value(volume);
             change = true;
         }
         // change face if needed
@@ -266,7 +266,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         // correct the values of the control
         control->set_btn_status_no_callbk(mute);
-        control->set_scale_target_value(std::cbrt(volume)); // see on_mixer_plugin_loaded
+        control->set_scale_target_value(volume);
 
         // is scroll, quit after updating controls
         if (control->ignore == WfWpControl::ONLY_UPDATE)
