@@ -54,7 +54,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
         // and is now changed manually, don’t hide
         parent->cancel_popover_timeout();
         ignore = IGNORE_ALL;
-        if (!WpCommon::get().set_volume(id, scale.get_target_value()))
+        if (!WpCommon::get().set_mute(id, button.get_active()))
         {
             ignore = DONT_IGNORE;
         }
