@@ -20,8 +20,8 @@ class WpCommon
 
     WpCore *core = nullptr;
     WpObjectManager *object_manager;
-    WpPlugin *mixer_api;
-    WpPlugin *default_nodes_api;
+    WpPlugin *mixer_api = nullptr;
+    WpPlugin *default_nodes_api = nullptr;
 
     std::vector<WayfireWireplumber*> widgets;
 

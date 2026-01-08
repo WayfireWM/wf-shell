@@ -197,6 +197,11 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 {
     // update the visual of the appropriate WfWpControl according to external changes on all widgets
 
+    if (!mixer_api)
+    {
+        return;
+    }
+
     GVariant *v = NULL;
     // query the new data
     g_signal_emit_by_name(instance->mixer_api, "get-volume", id, &v);
@@ -293,7 +298,6 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 widget->popover->popup();
             }
         }
-
         // in all cases that reach here, (re-)schedule hiding
         widget->check_set_popover_timeout();
     }
@@ -302,6 +306,11 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer data)
 {
     // silimarly to mixer, update the visuals of the controls on the widgets
+
+    if (!default_nodes_api)
+    {
+        return;
+    }
 
     std::vector<guint32> defaults;
     guint32 id = SPA_ID_INVALID;
@@ -345,7 +354,6 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
                 {
                     ctrl->set_def_status_no_callbk(false);
                 }
-
                 continue;
             }
 
@@ -472,7 +480,6 @@ gboolean WpCommon::set_default(WpPipewireObject *object)
 
         return res;
     }
-
     return false;
 }
 
