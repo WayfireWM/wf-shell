@@ -54,7 +54,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
         // and is now changed manually, don’t hide
         parent->cancel_popover_timeout();
         ignore = IGNORE_ALL;
-        if (WpCommon::get().set_volume(id, scale.get_target_value()))
+        if (!WpCommon::get().set_volume(id, scale.get_target_value()))
         {
             ignore = DONT_IGNORE;
         }
@@ -65,7 +65,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
     {
         parent->cancel_popover_timeout(); // see above
         ignore = IGNORE_ALL;
-        if (WpCommon::get().set_volume(id, scale.get_target_value()))
+        if (!WpCommon::get().set_volume(id, scale.get_target_value()))
         {
             ignore = DONT_IGNORE;
         }
@@ -89,7 +89,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
         }
 
         ignore = ONLY_UPDATE; // this scroll is accessed in the full mixer, just update visuals
-        if (WpCommon::get().set_volume(id, scale.get_target_value() + change))
+        if (!WpCommon::get().set_volume(id, scale.get_target_value() + change))
         {
             ignore = DONT_IGNORE;
         }
