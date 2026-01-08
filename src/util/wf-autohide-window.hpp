@@ -53,7 +53,8 @@ class WayfireAutohidingWindow : public Gtk::Window
     void schedule_hide(int delay);
     void schedule_show(int delay);
 
-    /** When auto exclusive zone is set, the window will adjust its exclusive zone based on the window size.
+    /** When auto exclusive zone is set, the window will adjust its exclusive
+     * zone based on the window size.
      *
      * Note that autohide margin isn't taken into account. */
     void set_auto_exclusive_zone(bool has_zone = false);

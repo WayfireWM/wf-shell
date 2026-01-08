@@ -118,7 +118,8 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
             auto icon_option = section->get_option_or(file_icon_prefix + launcher_name);
             if (icon_option)
             {
-                /* bingo, found command + icon now look for the corresponding label  */
+                /* bingo, found command + icon
+                 * now look for the corresponding label  */
                 auto label_option = section->get_option_or(file_label_prefix + launcher_name);
                 if (label_option)
                 {

@@ -231,8 +231,8 @@ class WfDock::impl
         return this->_wl_surface;
     }
 
-    /* Sets the central section as clickable and transparent edges as click-through Gets called regularly to
-     * ensure css size changes all register */
+    /* Sets the central section as clickable and transparent edges as click-through
+     * Gets called regularly to ensure css size changes all register */
     void set_clickable_region()
     {
         auto surface = window->get_surface();

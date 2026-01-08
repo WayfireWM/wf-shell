@@ -155,9 +155,10 @@ uint32_t WfMenuMenuItem::get_search_value()
 }
 
 /* Fuzzy search for pattern in text. We use a greedy algorithm as follows:
- * As long as the pattern isn't matched, try to match the leftmost unmatched character in pattern with the
- * first occurence of this character after the partial match. In the end, we just check if we successfully
- * matched all characters */
+ * As long as the pattern isn't matched, try to match the leftmost unmatched
+ * character in pattern with the first occurence of this character after the
+ * partial match. In the end, we just check if we successfully matched all
+ * characters */
 static bool fuzzy_match(Glib::ustring text, Glib::ustring pattern)
 {
     size_t i = 0, // next character in pattern to match
@@ -272,7 +273,8 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
 
     auto name = app_info->get_name();
     auto exec = app_info->get_executable();
-    /* If we don't have the following, then the entry won't be useful anyway, so we should skip it */
+    /* If we don't have the following, then the entry won't be useful anyway,
+     * so we should skip it */
     if (name.empty() || !app_info->get_icon() || exec.empty())
     {
         return;

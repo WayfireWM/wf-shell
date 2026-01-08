@@ -5,6 +5,7 @@
 #include <gdk/wayland/gdkwayland.h>
 #include <css-config.hpp>
 
+
 namespace
 {
 extern zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl;
@@ -89,7 +90,8 @@ void WfDockApp::handle_new_output(WayfireOutput *output)
 
 void WfDockApp::handle_output_removed(WayfireOutput *output)
 {
-    /* Send an artificial output leave. This is useful because in this way the toplevel can safely destroy its
+    /* Send an artificial output leave.
+     * This is useful because in this way the toplevel can safely destroy its
      * icons created on that particular output */
     for (auto& toplvl : priv->toplevels)
     {

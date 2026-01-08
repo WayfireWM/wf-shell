@@ -221,8 +221,9 @@ static zwf_hotspot_v2_listener hotspot_listener = {
 };
 
 /**
- * An autohide window needs 2 hotspots. One of them is used to trigger autohide
- * and is generally a tiny strip on the edge of the output.
+ * An autohide window needs 2 hotspots.
+ * One of them is used to trigger autohide and is generally a tiny strip on the
+ * edge of the output.
  *
  * The other hotspot covers the whole window. It is used primarily to know when
  * the input leaves the window, in which case we need to hide the window again.

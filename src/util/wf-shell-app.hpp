@@ -59,7 +59,6 @@ class WayfireShellApp
         const Glib::ustring & value, bool has_value);
     virtual void handle_new_output(WayfireOutput *output)
     {}
-
     virtual void handle_output_removed(WayfireOutput *output)
     {}
 
@@ -78,7 +77,6 @@ class WayfireShellApp
 
     virtual void on_config_reload()
     {}
-
     void on_css_reload();
     void clear_css_rules();
     void add_css_file(std::string file, int priority);

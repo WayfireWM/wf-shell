@@ -42,7 +42,8 @@ class WayfireMenuButton : public Gtk::MenuButton
     bool is_popover_focused() const;
 
     /**
-     * Grab the keyboard focus. Also sets the popover to keyboard interactive.
+     * Grab the keyboard focus.
+     * Also sets the popover to keyboard interactive.
      *
      * NOTE: this works only if the popover was already opened.
      */
