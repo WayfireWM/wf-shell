@@ -427,7 +427,7 @@ std::pair<double, bool> WpCommon::get_volume_and_mute(guint32 id)
     return std::make_pair(std::cbrt(volume), mute);
 }
 
-void WpCommon::set_volume(guint32 id, double volume)
+gboolean WpCommon::set_volume(guint32 id, double volume)
 {
     using Vol = std::map<Glib::ustring, Glib::Variant<double>>;
     Vol vol;
@@ -435,9 +435,10 @@ void WpCommon::set_volume(guint32 id, double volume)
     auto vol_v   = Glib::Variant<Vol>::create(vol);
     gboolean res = FALSE; // ignored for now
     g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, vol_v.gobj(), &res);
+    return res;
 }
 
-void WpCommon::set_mute(guint32 id, bool state)
+gboolean WpCommon::set_mute(guint32 id, bool state)
 {
     using Mute = std::map<Glib::ustring, Glib::Variant<bool>>;
     Mute mute;
@@ -445,6 +446,7 @@ void WpCommon::set_mute(guint32 id, bool state)
     auto mute_v  = Glib::Variant<Mute>::create(mute);
     gboolean res = FALSE; // ignored for now
     g_signal_emit_by_name(WpCommon::mixer_api, "set-volume", id, mute_v.gobj(), &res);
+    return res;
 }
 
 gboolean WpCommon::set_default(WpPipewireObject *object)

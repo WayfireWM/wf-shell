@@ -43,8 +43,8 @@ class WpCommon
     void re_evaluate_def_nodes();
 
     std::pair<double, bool> get_volume_and_mute(guint32 id);
-    void set_volume(guint32 id, double volume);
-    void set_mute(guint32 id, bool state);
+    gboolean set_volume(guint32 id, double volume);
+    gboolean set_mute(guint32 id, bool state);
     gboolean set_default(WpPipewireObject *object);
 
     static WpCommon& get();
