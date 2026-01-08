@@ -260,6 +260,12 @@
 	<option name="wp_display_timeout" type="double">
 		<_short>Display timeout</_short>
 		<default>2.5</default>
+		<min>0</min>
+	</option>
+	<option name="wp_slider_length" type="int">
+		<_short>Slider length</_short>
+		<default>300</default>
+		<min>1</min>
 	</option>
 	<option name="wp_scroll_sensitivity" type="double">
 		<_short>Scroll sensitivity</_short>

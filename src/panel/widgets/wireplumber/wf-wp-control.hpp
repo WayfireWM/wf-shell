@@ -21,6 +21,7 @@ class WfWpControl : public Gtk::Grid
     sigc::connection middle_conn, right_conn;
     bool gestures_initialised = false;
     void update_gestures();
+    WfOption<int> slider_length{"panel/wp_slider_length"};
 
   public:
     WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widget);

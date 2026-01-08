@@ -15,7 +15,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
 
     scale.set_range(0.0, 1.0);
     scale.set_target_value(0.5);
-    scale.set_size_request(300, 0);
+    scale.set_size_request(slider_length, 0);
 
     const gchar *name;
     // try to find a name to display
@@ -167,6 +167,7 @@ void WfWpControl::update_gestures()
 void WfWpControl::handle_config_reload()
 {
     update_gestures();
+    scale.set_size_request(slider_length);
 }
 
 std::unique_ptr<WfWpControl> WfWpControl::copy() // for the face handling
