@@ -242,7 +242,10 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         const auto update_icons = [&] ()
         {
             control->update_icon();
-            if (widget->face) widget->face->update_icon();
+            if (widget->face)
+            {
+                widget->face->update_icon();
+            }
             widget->update_icon();
         };
 
