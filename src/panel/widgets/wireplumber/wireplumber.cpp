@@ -304,6 +304,9 @@ void WayfireWireplumber::init(Gtk::Box *container)
     container->append(*button);
     button->set_child(main_image);
 
+    // in case it is not set afterwards, call it here to have one
+    update_icon();
+
     /*
      * If the core is already set, we are another widget, wether on another monitor or on the same wf-panel.
      * We re-use the core, manager and all other objects

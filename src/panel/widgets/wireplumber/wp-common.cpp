@@ -242,7 +242,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         const auto update_icons = [&] ()
         {
             control->update_icon();
-            widget->face->update_icon();
+            if (widget->face) widget->face->update_icon();
             widget->update_icon();
         };
 
@@ -288,8 +288,8 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         update_icons();
 
-        if (!widget->popover->is_visible() ||
-            (widget->popover->get_child() != (WfWpControl*)&widget->face))
+        if (widget->face && (!widget->popover->is_visible() ||
+            (widget->popover->get_child() != (WfWpControl*)&widget->face)))
         {
             // put the face in the popover and show
             widget->popover->set_child(*widget->face);
@@ -298,6 +298,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
                 widget->popover->popup();
             }
         }
+
         // in all cases that reach here, (re-)schedule hiding
         widget->check_set_popover_timeout();
     }
@@ -354,6 +355,7 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
                 {
                     ctrl->set_def_status_no_callbk(false);
                 }
+
                 continue;
             }
 
@@ -480,6 +482,7 @@ gboolean WpCommon::set_default(WpPipewireObject *object)
 
         return res;
     }
+
     return false;
 }
 
