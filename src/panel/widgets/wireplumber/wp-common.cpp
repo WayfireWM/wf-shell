@@ -197,24 +197,10 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 {
     // update the visual of the appropriate WfWpControl according to external changes on all widgets
 
-    if (!mixer_api)
-    {
-        return;
-    }
+    auto info = instance->get_volume_and_mute(id);
 
-    GVariant *v = NULL;
-    // query the new data
-    g_signal_emit_by_name(instance->mixer_api, "get-volume", id, &v);
-    if (!v)
-    {
-        return;
-    }
-
-    gboolean mute  = FALSE;
-    gdouble volume = 0.0;
-    g_variant_lookup(v, "volume", "d", &volume);
-    g_variant_lookup(v, "mute", "b", &mute);
-    g_clear_pointer(&v, g_variant_unref);
+    auto volume = info.first;
+    auto mute   = info.second;
 
     // for each widget
     for (auto widget : instance->widgets)
@@ -421,6 +407,11 @@ void WpCommon::rem_widget(WayfireWireplumber *widget)
 
 std::pair<double, bool> WpCommon::get_volume_and_mute(guint32 id)
 {
+    if (!mixer_api)
+    {
+        return {0.0, true};
+    }
+
     GVariant *v = NULL;
     g_signal_emit_by_name(mixer_api, "get-volume", id, &v);
     if (!v)
