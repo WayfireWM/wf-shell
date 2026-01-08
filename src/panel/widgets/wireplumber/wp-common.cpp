@@ -246,6 +246,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             {
                 widget->face->update_icon();
             }
+
             widget->update_icon();
         };
 
@@ -291,8 +292,8 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         update_icons();
 
-        if (widget->face && (!widget->popover->is_visible() ||
-            (widget->popover->get_child() != (WfWpControl*)&widget->face)))
+        if (widget->face &&
+            (!widget->popover->is_visible() || (widget->popover->get_child() != (WfWpControl*)&widget->face)))
         {
             // put the face in the popover and show
             widget->popover->set_child(*widget->face);
