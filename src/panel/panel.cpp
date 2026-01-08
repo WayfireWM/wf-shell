@@ -79,7 +79,6 @@ class WayfirePanel::impl
     WfOption<bool> force_center{"panel/force_center"};
 
     WfOption<std::string> panel_position{"panel/position"};
-    WfOption<std::string> panel_orientation{"panel/orientation"};
 
     void set_boxes_orientation(Gtk::Orientation orientation)
     {

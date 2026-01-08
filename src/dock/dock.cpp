@@ -32,8 +32,6 @@ class WfDock::impl
     WfOption<std::string> position{"dock/position"};
     WfOption<int> entries_per_line{"dock/max_per_line"};
 
-    WfOption<std::string> rotation{"dock/orientation"};
-
     void (Gtk::Box::*ap_or_pre_pend)(Gtk::Widget&); // pointer to Gtk::Box::prepend or Gtk::Box::append,
                                                     // updated by update_layout
     Gtk::Widget*(Gtk::Widget::*first_or_last_child)(); // similar, for get_first_child and get_last_child
@@ -124,26 +122,9 @@ class WfDock::impl
             reverse_iteration   = false;
         }
 
-        // again, goes with fallback being top and horizontal
-        std::string widget_rotation = "horizontal";
-        if ((rotation.value() == ROTATION_LEFT) || (rotation.value() == "match") &&
-            (position.value() == "right"))
-        {
-            widget_rotation = ROTATION_LEFT;
-        } else if ((rotation.value() == ROTATION_RIGHT) || (rotation.value() == "match") &&
-                   (position.value() == "left"))
-        {
-            widget_rotation = ROTATION_RIGHT;
-        }
-
         for (auto layer : out_box.get_children())
         {
             ((Gtk::Box*)layer)->set_orientation(orientation);
-
-            for (auto child : layer->get_children())
-            {
-                apply_rotation(*child, widget_rotation);
-            }
         }
     }
 

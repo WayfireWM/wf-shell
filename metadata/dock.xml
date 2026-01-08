@@ -52,26 +52,6 @@
 			<_name>Right</_name>
 		</desc>
 	</option>
-	<option name="orientation" type="string">
-		<_short>Icons orientation</_short>
-		<default>match</default>
-		<desc>
-			<value>match</value>
-			<_name>Match dock position</_name>
-		</desc>
-		<desc>
-			<value>horizontal</value>
-			<_name>Normal</_name>
-		</desc>
-		<desc>
-			<value>left</value>
-			<_name>Orient components to the left</_name>
-		</desc>
-		<desc>
-			<value>right</value>
-			<_name>Orient components to the right</_name>
-		</desc>
-	</option>
 	<option name="max_per_line" type="int">
 		<_short>Max icons per line</_short>
 		<_long>If greater than 0, the dock will have a maximum number of entries per line, after which a new line is created.</_long>
