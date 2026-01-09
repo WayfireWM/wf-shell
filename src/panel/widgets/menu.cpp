@@ -10,7 +10,6 @@
 
 #include "menu.hpp"
 #include "gtk-utils.hpp"
-#include "launchers.hpp"
 #include "wf-autohide-window.hpp"
 
 const std::string default_icon = "wayfire";
@@ -174,8 +173,7 @@ static bool fuzzy_match(Glib::ustring text, Glib::ustring pattern)
             ++j;
         } else
         {
-            /* Try to match current unmatched character in pattern with the next
-             * character in text */
+            /* Try to match current unmatched character in pattern with the next character in text */
             ++j;
         }
     }
@@ -291,7 +289,7 @@ void WayfireMenu::load_menu_item(AppInfo app_info)
     loaded_apps.insert({name, exec});
 
     /* Check if this has a 'OnlyShownIn' for a different desktop env
-    *  If so, we throw it in a pile at the bottom just to be safe */
+     * If so, we throw it in a pile at the bottom just to be safe */
     if (!app_info->should_show())
     {
         add_category_app("Hidden", app_info);
@@ -596,30 +594,29 @@ void WayfireMenu::update_popover_layout()
             Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
             WfOption<std::string> panel_layer{"panel/layer"};
 
-            if ((std::string)panel_layer == "overlay")
+            if (panel_layer.value() == "overlay")
             {
                 gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
             }
 
-            if ((std::string)panel_layer == "top")
+            if (panel_layer.value() == "top")
             {
                 gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
             }
 
-            if ((std::string)panel_layer == "bottom")
+            if (panel_layer.value() == "bottom")
             {
                 gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
             }
 
-            if ((std::string)panel_layer == "background")
+            if (panel_layer.value() == "background")
             {
                 gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
             }
         });
     } else
     {
-        /* Layout was already initialized, make sure to remove widgets before
-         * adding them again */
+        /* Layout was already initialized, make sure to remove widgets before adding them again */
         popover_layout_box.remove(search_entry);
         popover_layout_box.remove(scroll_pair);
         popover_layout_box.remove(separator);
