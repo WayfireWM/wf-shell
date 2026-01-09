@@ -12,7 +12,7 @@
 		<default>true</default>
 	</option>
 	<option name="autohide_duration" type="int">
-		<_short>Animation duration</_short>
+		<_short>Autohide animation duration</_short>
 		<_long>
 			Time (in milliseconds) the panel takes to expand and retract
 		</_long>
@@ -65,7 +65,6 @@
 		<_short>Dock width</_short>
 		<default>100</default>
 	</option>
-
 	<option name="icon_height" type="int">
 		<_short>Dock icons height</_short>
 		<default>72</default>

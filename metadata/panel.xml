@@ -49,9 +49,9 @@
 		<default>true</default>
 	</option>
 	<option name="force_center" type="bool">
-		<_short>Force centering by elements</_short>
+		<_short>Force even spacing</_short>
 		<_long>
-			If on, the panel elements are centered around the middle of it, and thus the edge it runs along. This will lead to unused space on the side that has the least space taken up by the widgets.
+			If on, the left and right of the panel always take the same amount of space and the panel is always centered on the middle of the screen. This will lead to unused space on the side that has the least space taken up by the widgets.
 		</_long>
 		<default>false</default>
 	</option>
@@ -60,7 +60,7 @@
 		<default>false</default>
 	</option>
 	<option name="autohide_duration" type="int">
-		<_short>Animation duration</_short>
+		<_short>Autohide animation duration</_short>
 		<_long>
 			Time (in milliseconds) the panel takes to expand and retract
 		</_long>

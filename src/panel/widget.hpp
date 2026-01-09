@@ -13,10 +13,6 @@
 #define PANEL_POSITION_LEFT "left"
 #define PANEL_POSITION_RIGHT "right"
 
-#define PANEL_ORIENTATION_HORIZONTAL "horizontal"
-#define PANEL_ORIENTATION_LEFT "left"
-#define PANEL_ORIENTATION_RIGHT "right"
-
 class wayfire_config;
 class WayfireWidget
 {
@@ -24,10 +20,8 @@ class WayfireWidget
     std::string widget_name; // for WayfirePanel use, widgets shouldn't change it
 
     virtual void init(Gtk::Box *container) = 0;
-
     virtual void handle_config_reload()
     {}
-
     virtual ~WayfireWidget()
     {}
 };
