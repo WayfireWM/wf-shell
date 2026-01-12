@@ -19,15 +19,15 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widge
 
     const gchar *name;
     // try to find a name to display
-    name = wp_pipewire_object_get_property(object, PW_KEY_NODE_NICK);
+    name = wp_pipewire_object_get_property(object, PW_KEY_NODE_DESCRIPTION);
     if (!name)
     {
-        name = wp_pipewire_object_get_property(object, PW_KEY_NODE_NAME);
+        name = wp_pipewire_object_get_property(object, PW_KEY_NODE_NICK);
     }
 
     if (!name)
     {
-        name = wp_pipewire_object_get_property(object, PW_KEY_NODE_DESCRIPTION);
+        name = wp_pipewire_object_get_property(object, PW_KEY_NODE_NAME);
     }
 
     if (!name)
