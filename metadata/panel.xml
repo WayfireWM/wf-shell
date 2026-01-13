@@ -252,9 +252,7 @@
 	<_short>Wireplumber mixer</_short>
 	<option name="wp_popup_on_change" type="bool">
 		<_short>Pop up on change</_short>
-		<_long>
-			Wether to show a popup with the new values upon a change to the quick action target
-		</_long>
+		<_long>Wether to show a popup with the new values upon a change to the quick action target</_long>
 		<default>true</default>
 	</option>
 	<option name="wp_display_timeout" type="double">
@@ -274,16 +272,12 @@
 	</option>
 	<option name="wp_invert_scroll" type="bool">
 		<_short>Invert scroll</_short>
-		<_long>
-			Inverts which scroll direction raises and lowers volume
-		</_long>
+		<_long>Inverts which scroll direction raises and lowers volume</_long>
 		<default>false</default>
 	</option>
 	<option name="wp_face_choice" type="string">
 		<_short>Quick action target</_short>
-		<_long>
-			Which audio control will be the target of the "Quick action" (choice for the click action)
-		</_long>
+		<_long>Which audio control will be the target of the "Quick action" (choice for the click action)</_long>
 		<default>last_change</default>
 		<desc>
 			<value>last_change</value>
