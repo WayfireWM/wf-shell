@@ -12,7 +12,7 @@ extern "C" {
 #include "wf-wp-control.hpp"
 #include "wp-common.hpp"
 
-enum class FaceChoice // config
+enum class QuickTargetChoice // config
 {
     LAST_CHANGE,
     DEFAULT_SINK,
@@ -55,24 +55,24 @@ class WayfireWireplumber : public WayfireWidget
     WfOption<bool> invert_scroll{"panel/wp_invert_scroll"};
     WfOption<bool> popup_on_change{"panel/wp_popup_on_change"};
 
-    FaceChoice face_choice;
+    QuickTargetChoice quick_target_choice;
 
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::Popover *popover;
 
     /*
-     * the "face" is the representation of the audio channel that shows it’s volume
+     * the "quick_target" is the representation of the audio channel that shows it’s volume
      * level on the widget icon and is concerned by the quick actions.
-     * configured by panel/wp_face_choice. idea: add pinning?
+     * configured by panel/wp_quick_target_choice. idea: add pinning?
      */
-    std::unique_ptr<WfWpControl> face;
+    std::unique_ptr<WfWpControl> quick_target;
 
     Gtk::Box master_box, sinks_box, sources_box, streams_box;
     // idea: add a category for stuff that listens to an audio source
 
     std::map<WpPipewireObject*, std::unique_ptr<WfWpControl>> objects_to_controls;
 
-    /** Update the icon based on volume and muted state of the face widget */
+    /** Update the icon based on volume and muted state of the quick_target widget */
     void update_icon();
 
     /**

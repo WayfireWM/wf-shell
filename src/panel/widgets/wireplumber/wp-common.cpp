@@ -167,17 +167,17 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber
     which_box->append((Gtk::Widget&)*control);
 
     // we added new controls, so maybe one of them is a default
-    // also initialises the face for when face choice is a device
+    // also initialises the quick_target for when quick_target choice is a device
     if (recheck_default)
     {
         on_default_nodes_changed(default_nodes_api, NULL);
     }
 
-    // let’s considier this a change and set this as face
-    if (widget->face_choice == FaceChoice::LAST_CHANGE)
+    // let’s considier this a change and set this as quick_target
+    if (widget->quick_target_choice == QuickTargetChoice::LAST_CHANGE)
     {
-        widget->face = control->copy();
-        widget->popover->set_child(*widget->face);
+        widget->quick_target = control->copy();
+        widget->popover->set_child(*widget->quick_target);
         widget->update_icon();
     }
 }
@@ -228,9 +228,9 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         const auto update_icons = [&] ()
         {
             control->update_icon();
-            if (widget->face)
+            if (widget->quick_target)
             {
-                widget->face->update_icon();
+                widget->quick_target->update_icon();
             }
 
             widget->update_icon();
@@ -238,21 +238,21 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         bool change = false; // if something changes below
 
-        // if the face controls the same object as the changed, correct it as well
+        // if the quick_target controls the same object as the changed, correct it as well
         if (
-            widget->face /* not faceless guard */
-            // current control and face are for the same wp obj
+            widget->quick_target /* not quick_targetless guard */
+            // current control and quick_target are for the same wp obj
             && (control->object ==
-                widget->face->object))
+                widget->quick_target->object))
         {
-            widget->face->set_btn_status_no_callbk(mute);
-            widget->face->set_scale_target_value(volume);
+            widget->quick_target->set_btn_status_no_callbk(mute);
+            widget->quick_target->set_scale_target_value(volume);
             change = true;
         }
-        // change face if needed
-        else if (widget->face_choice == FaceChoice::LAST_CHANGE)
+        // change quick_target if needed
+        else if (widget->quick_target_choice == QuickTargetChoice::LAST_CHANGE)
         {
-            widget->face = control->copy();
+            widget->quick_target = control->copy();
             change = true;
         }
 
@@ -278,11 +278,11 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         update_icons();
 
-        if (widget->face &&
-            (!widget->popover->is_visible() || (widget->popover->get_child() != (WfWpControl*)&widget->face)))
+        if (widget->quick_target &&
+            (!widget->popover->is_visible() || (widget->popover->get_child() != (WfWpControl*)&widget->quick_target)))
         {
-            // put the face in the popover and show
-            widget->popover->set_child(*widget->face);
+            // put the quick_target in the popover and show
+            widget->popover->set_child(*widget->quick_target);
             if (widget->popup_on_change && change)
             {
                 widget->popover->popup();
@@ -352,13 +352,13 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
             // if we’re here, we’re a default of some kind
             ctrl->set_def_status_no_callbk(true);
 
-            if ((widget->face_choice == FaceChoice::DEFAULT_SINK) &&
+            if ((widget->quick_target_choice == QuickTargetChoice::DEFAULT_SINK) &&
                 (type == "Audio/Sink")
                 ||
-                (widget->face_choice == FaceChoice::DEFAULT_SOURCE) &&
-                (type == "Audio/Source")) // if the settings call for it, refresh the face
+                (widget->quick_target_choice == QuickTargetChoice::DEFAULT_SOURCE) &&
+                (type == "Audio/Source")) // if the settings call for it, refresh the quick_target
             {
-                widget->face = ctrl->copy();
+                widget->quick_target = ctrl->copy();
                 widget->update_icon();
             }
         }
@@ -383,11 +383,11 @@ void WpCommon::on_object_removed(WpObjectManager *manager, gpointer object, gpoi
             box->remove(*control);
         }
 
-        // if face points to the removed control we should handle it.
-        if (widget->face && (widget->face->object == it->first))
+        // if quick_target points to the removed control we should handle it.
+        if (widget->quick_target && (widget->quick_target->object == it->first))
         {
-            // reset face to nullptr
-            widget->face = nullptr;
+            // reset quick_target to nullptr
+            widget->quick_target = nullptr;
         }
 
         widget->objects_to_controls.erase(it);

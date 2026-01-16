@@ -275,9 +275,9 @@
 		<_long>Inverts which scroll direction raises and lowers volume</_long>
 		<default>false</default>
 	</option>
-	<option name="wp_face_choice" type="string">
+	<option name="wp_quick_target_choice" type="string">
 		<_short>Quick action target</_short>
-		<_long>Which audio control will be the target of the "Quick action" (choice for the click action)</_long>
+		<_long>Which audio control will be the target of the quick target</_long>
 		<default>last_change</default>
 		<desc>
 			<value>last_change</value>
@@ -300,39 +300,39 @@
 			<_name>Show full mixer</_name>
 		</desc>
 		<desc>
-			<value>show_face</value>
+			<value>show_quick_target</value>
 			<_name>Show quick action target</_name>
 		</desc>
 	</option>
 	<option name="wp_middle_click_action" type="string">
 		<_short>Middle click action</_short>
-		<default>mute_face</default>
+		<default>mute_quick_target</default>
 		<desc>
 			<value>show_mixer</value>
 			<_name>Show full mixer</_name>
 		</desc>
 		<desc>
-			<value>show_face</value>
+			<value>show_quick_target</value>
 			<_name>Show quick action target</_name>
 		</desc>
 		<desc>
-			<value>mute_face</value>
+			<value>mute_quick_target</value>
 			<_name>Mute quick action target</_name>
 		</desc>
 	</option>
 	<option name="wp_right_click_action" type="string">
 		<_short>Right click action</_short>
-		<default>show_face</default>
+		<default>show_quick_target</default>
 		<desc>
 			<value>show_mixer</value>
 			<_name>Show full mixer</_name>
 		</desc>
 		<desc>
-			<value>show_face</value>
+			<value>show_quick_target</value>
 			<_name>Show quick action target</_name>
 		</desc>
 		<desc>
-			<value>mute_face</value>
+			<value>mute_quick_target</value>
 			<_name>Mute quick action target</_name>
 		</desc>
 	</option>

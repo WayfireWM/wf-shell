@@ -29,25 +29,25 @@ void WayfireWireplumber::cancel_popover_timeout()
 void WayfireWireplumber::reload_config()
 {
     // big matching operation
-    static WfOption<std::string> str_face_choice{"panel/wp_face_choice"};
+    static WfOption<std::string> str_quick_target_choice{"panel/wp_quick_target_choice"};
     static WfOption<std::string> str_wp_left_click_action{"panel/wp_left_click_action"};
     static WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
     static WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
 
-    if (str_face_choice.value() == "last_change")
+    if (str_quick_target_choice.value() == "last_change")
     {
-        face_choice = FaceChoice::LAST_CHANGE;
-    } else if (str_face_choice.value() == "default_sink")
+        quick_target_choice = QuickTargetChoice::LAST_CHANGE;
+    } else if (str_quick_target_choice.value() == "default_sink")
     {
-        face_choice = FaceChoice::DEFAULT_SINK;
+        quick_target_choice = QuickTargetChoice::DEFAULT_SINK;
         WpCommon::get().re_evaluate_def_nodes();
-    } else if (str_face_choice.value() == "default_source")
+    } else if (str_quick_target_choice.value() == "default_source")
     {
-        face_choice = FaceChoice::DEFAULT_SOURCE;
+        quick_target_choice = QuickTargetChoice::DEFAULT_SOURCE;
         WpCommon::get().re_evaluate_def_nodes();
     } else // default if no match
     {
-        face_choice = FaceChoice::LAST_CHANGE;
+        quick_target_choice = QuickTargetChoice::LAST_CHANGE;
     }
 
     // run only the first time around
@@ -95,16 +95,16 @@ void WayfireWireplumber::reload_config()
         }
     };
 
-    auto show_face_action = [&] (int c, double x, double y)
+    auto show_quick_target_action = [&] (int c, double x, double y)
     {
         // unschedule hiding
         cancel_popover_timeout();
-        if (!face)
+        if (!quick_target)
         {
-            return; // no face means we have nothing to show
+            return; // no quick_target means we have nothing to show
         }
 
-        if ((popover->get_child() == face.get()) && popover->is_visible())
+        if ((popover->get_child() == quick_target.get()) && popover->is_visible())
         {
             popover->popdown();
             return;
@@ -115,21 +115,21 @@ void WayfireWireplumber::reload_config()
             button->set_active(true);
         }
 
-        if (popover->get_child() != face.get())
+        if (popover->get_child() != quick_target.get())
         {
-            popover->set_child(*face);
+            popover->set_child(*quick_target);
             popover_timeout.disconnect();
         }
     };
 
     auto mute_action = [&] (int c, double x, double y)
     {
-        if (!face)
+        if (!quick_target)
         {
-            return; // no face means we have nothing to change by clicking
+            return; // no quick_target means we have nothing to change by clicking
         }
 
-        face->button.set_active(!face->button.get_active());
+        quick_target->button.set_active(!quick_target->button.get_active());
     };
 
     // the left click case is a bit special, since it’s supposed to show the popover.
@@ -152,21 +152,21 @@ void WayfireWireplumber::reload_config()
         });
     }
 
-    if (str_wp_left_click_action.value() == "show_face")
+    if (str_wp_left_click_action.value() == "show_quick_target")
     {
         left_conn = left_click_gesture->signal_pressed().connect(
             [&] (int c, double x, double y)
         {
             // unschedule hiding
             cancel_popover_timeout();
-            if (!face)
+            if (!quick_target)
             {
                 return;
             }
 
-            if (popover->get_child() != face.get())
+            if (popover->get_child() != quick_target.get())
             {
-                popover->set_child(*face);
+                popover->set_child(*quick_target);
                 // same as above
                 button->set_active(false);
             }
@@ -180,12 +180,12 @@ void WayfireWireplumber::reload_config()
         middle_conn = middle_click_gesture->signal_pressed().connect(show_mixer_action);
     }
 
-    if (str_wp_middle_click_action.value() == "show_face")
+    if (str_wp_middle_click_action.value() == "show_quick_target")
     {
-        middle_conn = middle_click_gesture->signal_pressed().connect(show_face_action);
+        middle_conn = middle_click_gesture->signal_pressed().connect(show_quick_target_action);
     }
 
-    if (str_wp_middle_click_action.value() == "mute_face")
+    if (str_wp_middle_click_action.value() == "mute_quick_target")
     {
         middle_conn = middle_click_gesture->signal_pressed().connect(mute_action);
     }
@@ -195,12 +195,12 @@ void WayfireWireplumber::reload_config()
         right_conn = right_click_gesture->signal_pressed().connect(show_mixer_action);
     }
 
-    if (str_wp_right_click_action.value() == "show_face")
+    if (str_wp_right_click_action.value() == "show_quick_target")
     {
-        right_conn = right_click_gesture->signal_pressed().connect(show_face_action);
+        right_conn = right_click_gesture->signal_pressed().connect(show_quick_target_action);
     }
 
-    if (str_wp_right_click_action.value() == "mute_face")
+    if (str_wp_right_click_action.value() == "mute_quick_target")
     {
         right_conn = right_click_gesture->signal_pressed().connect(mute_action);
     }
@@ -232,13 +232,13 @@ void WayfireWireplumber::init(Gtk::Box *container)
     popover->set_autohide(false);
     popover->get_style_context()->add_class("wireplumber-popover");
 
-    // scroll to change volume of the object targetted by the face widget
+    // scroll to change volume of the object targetted by the quick_target widget
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
-        if (!face)
+        if (!quick_target)
         {
-            return false; // no face means we have nothing to change by scrolling
+            return false; // no quick_target means we have nothing to change by scrolling
         }
 
         dy = invert_scroll ? dy : dy * -1; // for the same scrolling as volume widget, which we will agree it
@@ -255,8 +255,8 @@ void WayfireWireplumber::init(Gtk::Box *container)
             change = (dy * scroll_sensitivity * SCROLL_MULT) / 100;
         }
 
-        guint32 id = wp_proxy_get_bound_id(WP_PROXY(face->object));
-        WpCommon::get().set_volume(id, face->get_scale_target_value() + change);
+        guint32 id = wp_proxy_get_bound_id(WP_PROXY(quick_target->object));
+        WpCommon::get().set_volume(id, quick_target->get_scale_target_value() + change);
         return true;
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
@@ -315,21 +315,21 @@ void WayfireWireplumber::init(Gtk::Box *container)
     WpCommon::get().add_widget(this);
 }
 
-void WayfireWireplumber::update_icon() // depends on face widget
+void WayfireWireplumber::update_icon() // depends on quick_target widget
 {
-    if (!face)
+    if (!quick_target)
     {
         main_image.set_from_icon_name(volume_icon_for(-1)); // OOR
         return;
     }
 
-    if (face->button.get_active())
+    if (quick_target->button.get_active())
     {
         main_image.set_from_icon_name(volume_icon_for(0)); // mute
         return;
     }
 
-    main_image.set_from_icon_name(volume_icon_for(face->get_scale_target_value()));
+    main_image.set_from_icon_name(volume_icon_for(quick_target->get_scale_target_value()));
 }
 
 WayfireWireplumber::~WayfireWireplumber()

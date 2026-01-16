@@ -163,12 +163,13 @@ void WfWpControl::update_gestures()
         right_conn.disconnect();
     }
 
-    if (str_wp_middle_click_action.value() == "mute_face")
+    // the setting says that it is for quick target, but let’s have all the muting consistent
+    if (str_wp_middle_click_action.value() == "mute_quick_target")
     {
         middle_conn = middle_click_mute->signal_pressed().connect(mute_action);
     }
 
-    if (str_wp_right_click_action.value() == "mute_face")
+    if (str_wp_right_click_action.value() == "mute_quick_target")
     {
         right_conn = right_click_mute->signal_pressed().connect(mute_action);
     }
@@ -180,7 +181,8 @@ void WfWpControl::handle_config_reload()
     scale.set_size_request(slider_length);
 }
 
-std::unique_ptr<WfWpControl> WfWpControl::copy() // for the face handling
+// used to make a copy to the face of the widget
+std::unique_ptr<WfWpControl> WfWpControl::copy()
 {
     return std::make_unique<WfWpControl>(object, parent);
 }
