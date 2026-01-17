@@ -14,7 +14,7 @@ randomize = 0
 [panel]
 # widgets_* is a space-separated list of widgets to be displayed
 # at the corresponding part of the panel
-# Supported widgets are: launchers clock network battery window-list volume menu notifications tray command-output
+# Supported widgets are: launchers clock network battery window-list volume wireplumber menu notifications tray command-output
 # Special widgets are "spacing" and "separator" widgets, they can be used to add padding everywhere on the panel
 # To use them, just append the amount of pixels you want as a padding
 # to the word "spacing" or "separator" and use it as a plugin
@@ -130,6 +130,37 @@ menu_logout_command = wayland-logout
 # after scrolling on the volume icon
 volume_display_timeout = 2.5
 
+# Configuration for the wireplumber mixer widget
+
+# Pop up a slider when the volume of the quick target changes
+# wp_popup_on_change = true
+
+# Number of seconds the popover will display atfer popping up,
+# wether due to scrolling or an external volume change
+# wp_display_timeout = 2.5
+
+# Length of the volume sliders
+# wp_slider_length = 300
+
+# Multiplier to the volume change in scrolling
+# wp_scroll_sensitivity = 1
+
+# wp_invert_scroll = false
+
+# Which audio control will be the target of scrolling, muting... on the icon
+# wp_quick_target_choice = last_change
+
+# Actions to be tied to left, right and middle click on the widget
+# Can be:
+#   - show_mixer: show the whole mixer
+#   - mute_quick_target: mute the target of quick actions
+#   - show_quick_target: show the target of quick actions
+# wp_left_click_action = show_mixer # uniquely, cannot be mute
+# wp_middle_click_action = mute_quick_target
+# wp_right_click_action = show_quick_target
+
+# Size of the icons
+# wp_icon_size = 32
 
 # Configuration for the tray widget
 # Amount of smooth scrolling needed to trigger one scroll wheel step
@@ -169,7 +200,7 @@ commands_output_max_chars = 10
 # command_output_period_1 = 1
 
 # Optionally, an icon can be displayed next to the text. Leave empty (first option) for no icon.
-# command_output_icon_1 = 
+# command_output_icon_1 =
 # command_output_icon_1 = text-x-script
 
 # Position and size for the icon, if it is not empty
