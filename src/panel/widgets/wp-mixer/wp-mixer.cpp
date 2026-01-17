@@ -271,9 +271,6 @@ void WayfireWpMixer::init(Gtk::Box *container)
     // column orientations
     out_in_wall.set_orientation(Gtk::Orientation::VERTICAL);
     in_streams_wall.set_orientation(Gtk::Orientation::VERTICAL);
-    sinks_box.set_orientation(Gtk::Orientation::VERTICAL);
-    sources_box.set_orientation(Gtk::Orientation::VERTICAL);
-    streams_box.set_orientation(Gtk::Orientation::VERTICAL);
 
     // assemble master box (todo: only show boxes that have contents)
     master_box.append(sinks_box);
@@ -282,26 +279,34 @@ void WayfireWpMixer::init(Gtk::Box *container)
     master_box.append(in_streams_wall);
     master_box.append(streams_box);
 
+    auto set_categories_common = [&] (Gtk::Box& box)
+    {
+        box.set_orientation(Gtk::Orientation::VERTICAL);
+        box.set_spacing(icon_size / 3);
+        box.set_margin_top(icon_size / 3);
+        box.set_margin_bottom(icon_size / 3);
+    };
+
     // sinks
     output_label.set_text("Output devices");
     sinks_box.append(output_label);
     out_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     sinks_box.append(out_sep);
-    sinks_box.set_spacing(icon_size / 2);
+    set_categories_common(sinks_box);
 
     // sources
     input_label.set_text("Input devices");
     sources_box.append(input_label);
     in_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     sources_box.append(in_sep);
-    sources_box.set_spacing(icon_size / 2);
+    set_categories_common(sources_box);
 
     // streams
     streams_label.set_text("Audio streams");
     streams_box.append(streams_label);
     streams_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     streams_box.append(streams_sep);
-    streams_box.set_spacing(icon_size / 2);
+    set_categories_common(streams_box);
 
     // add to the actual container
     container->append(*button);
