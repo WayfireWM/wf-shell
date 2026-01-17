@@ -303,23 +303,22 @@ void WayfireWpMixer::init(Gtk::Box *container)
     streams_box.append(streams_sep);
     streams_box.set_spacing(icon_size / 2);
 
-    /* Setup layout */
+    // add to the actual container
     container->append(*button);
     button->set_child(main_image);
 
-    // in case it is not set afterwards, call it here to have one
+    // if there is no audio device nor application, the quick target will not be set
+    // and the widget will apear empty. Calling this here to always have the OOR icon.
     update_icon();
 
-    /*
-     * If the core is already set, we are another widget, wether on another monitor or on the same wf-panel.
-     * We re-use the core, manager and all other objects
-     */
-
+    // get() returns WpCommon and creates it if it wasn’t yet.
+    // add_widget also catches up this widget to every audio channel registered before.
     WpCommon::get().add_widget(this);
 }
 
-void WayfireWpMixer::update_icon() // depends on quick_target widget
+void WayfireWpMixer::update_icon()
 {
+    // depends on quick_target widget
     if (!quick_target)
     {
         main_image.set_from_icon_name(volume_icon_for(-1)); // OOR
@@ -335,7 +334,7 @@ void WayfireWpMixer::update_icon() // depends on quick_target widget
     main_image.set_from_icon_name(volume_icon_for(quick_target->get_scale_target_value()));
 }
 
-void WayfireWpMixer::set_quick_target_from(WfWpControl* from)
+void WayfireWpMixer::set_quick_target_from(WfWpControl *from)
 {
     quick_target = from->copy();
     button->set_tooltip_text(quick_target->label.get_text());

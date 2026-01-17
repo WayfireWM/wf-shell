@@ -66,7 +66,7 @@ class WayfireWpMixer : public WayfireWidget
      */
     QuickTargetChoice quick_target_choice;
     std::unique_ptr<WfWpControl> quick_target;
-    void set_quick_target_from(WfWpControl* from);
+    void set_quick_target_from(WfWpControl *from);
 
     Gtk::Box master_box, sinks_box, sources_box, streams_box;
     // idea: add a category for stuff that listens to an audio source
