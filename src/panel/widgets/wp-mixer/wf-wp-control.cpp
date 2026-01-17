@@ -47,8 +47,7 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
     set_tooltip_text(name);
 
     attach(label, 0, 0, 2, 1);
-    attach(button, 1, 1);
-    attach(scale, 0, 1);
+    update_icons_pos();
 
     // setup user interactions
 
@@ -180,9 +179,29 @@ void WfWpControl::update_gestures()
     }
 }
 
+// attaches elements to the grid
+void WfWpControl::update_icons_pos()
+{
+    WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
+
+    remove(scale);
+    remove(button);
+
+    if (icons_on_left)
+    {
+        attach(scale, 1, 1);
+        attach(button, 0, 1);
+    } else
+    {
+        attach(scale, 0, 1);
+        attach(button, 1, 1);
+    }
+}
+
 void WfWpControl::handle_config_reload()
 {
     update_gestures();
+    update_icons_pos();
     scale.set_size_request(slider_length);
 }
 
@@ -196,14 +215,13 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
     WayfireWpMixer *parent_widget) : WfWpControl(obj, parent_widget)
 {
     // the label is already attached, but takes 2 spaces. reattach it to make room for default_btn
-    remove(label);
-    attach(label, 0, 0);
-    attach(default_btn, 1, 0);
     default_btn.get_style_context()->add_class("wireplumber");
     default_btn.get_style_context()->add_class("flat");
 
     is_def_icon.set_from_icon_name("emblem-default");
     default_btn.set_child(is_def_icon);
+
+    update_icons_pos();
 
     // we are not using ToggleButton groups because on_default_nodes_changed
     // will be called anyway to set the status of all devices
@@ -226,4 +244,23 @@ void WfWpControlDevice::set_def_status_no_callbk(bool state)
     def_conn.block(true);
     default_btn.set_active(state);
     def_conn.block(false);
+}
+
+void WfWpControlDevice::update_icons_pos()
+{
+    WfWpControl::update_icons_pos();
+    WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
+
+    remove(label);
+    remove(default_btn);
+
+    if (icons_on_left)
+    {
+        attach(label, 1, 0);
+        attach(default_btn, 0, 0);
+    } else
+    {
+        attach(label, 0, 0);
+        attach(default_btn, 1, 0);
+    }
 }

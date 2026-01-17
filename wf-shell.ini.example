@@ -166,6 +166,9 @@ wp_scroll_sensitivity = 1
 
 wp_invert_scroll = false
 
+# Set to true to show icons (mute, set default) on the left
+wp_icons_on_left = false
+
 # Actions to be tied to left, right and middle click on the widget
 # Can be:
 #   - show_mixer: show the whole mixer

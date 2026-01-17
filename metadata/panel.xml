@@ -292,6 +292,11 @@
 		<_long>Inverts which scroll direction raises and lowers volume</_long>
 		<default>false</default>
 	</option>
+	<option name="wp_icons_on_left" type="bool">
+		<_short>Icons on left</_short>
+		<_long>Displays the mute and set default icon on the left</_long>
+		<default>false</default>
+	</option>
 	<option name="wp_left_click_action" type="string">
 		<_short>Left click action</_short>
 		<default>show_mixer</default>

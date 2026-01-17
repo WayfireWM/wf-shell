@@ -20,6 +20,7 @@ class WfWpControl : public Gtk::Grid
     sigc::connection middle_conn, right_conn;
     bool gestures_initialised = false;
     void update_gestures();
+    virtual void update_icons_pos();
     WfOption<int> slider_length{"panel/wp_slider_length"};
 
   public:
@@ -55,6 +56,7 @@ class WfWpControlDevice : public WfWpControl
   private:
     sigc::connection def_conn;
     Gtk::Image is_def_icon;
+    void update_icons_pos();
 
   public:
     WfWpControlDevice(WpPipewireObject *obj, WayfireWpMixer *parent_widget);
