@@ -16,7 +16,7 @@ const std::map<VolumeLevel, std::string> volume_icons = {
     {VOLUME_LEVEL_LOW, "audio-volume-low"},
     {VOLUME_LEVEL_MED, "audio-volume-medium"},
     {VOLUME_LEVEL_HIGH, "audio-volume-high"},
-    {VOLUME_LEVEL_OOR, "audio-volume-muted"},
+    {VOLUME_LEVEL_OOR, "emblem-unreadable"},
 };
 
 // volume is expected to be from 0 to 1
