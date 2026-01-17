@@ -14,7 +14,7 @@ randomize = 0
 [panel]
 # widgets_* is a space-separated list of widgets to be displayed
 # at the corresponding part of the panel
-# Supported widgets are: launchers clock network battery window-list volume wireplumber menu notifications tray command-output
+# Supported widgets are: launchers clock network battery window-list volume wp-mixer menu notifications tray command-output
 # Special widgets are "spacing" and "separator" widgets, they can be used to add padding everywhere on the panel
 # To use them, just append the amount of pixels you want as a padding
 # to the word "spacing" or "separator" and use it as a plugin
@@ -125,42 +125,58 @@ menu_min_content_height = 500
 menu_logout_command = wayland-logout
 
 
+# Note on PulseAudio (volume widet) and Wireplumber/Pipewire (mixer widget)
+# PulseAudio and Pipewire are audio servers for the desktop.
+# PulseAudio is older and was generally the default of most distributions for years.
+# Pipewire, interacted with by Wireplumber, has rapidly become the default of most
+# major distros since 2020, and has compatibility with PulseAudio with Pipewire-Pulse, usually setup by default.
+# What this ammounts to is that, if you don’t know which one you’re running,
+# the full mixer widget might not work out of the box on older systems,
+# while the volume widget is pretty much guaranteed to.
+
 # Configuration for the volume widget
-# Number of seconds volume popover will display
+# It shows a simple slider to control the volume of the default output using PulseAudio
+# Number of seconds volume popover will display (when volume is changed)
 # after scrolling on the volume icon
 volume_display_timeout = 2.5
 
 # Configuration for the wireplumber mixer widget
+# This shows an almost full-featured mixer for the audio using Pipewire/Wireplumber
+# It allows for individual control of the volume of all apps, microphones and speakers,
+# as well as muting and choosing a default device for the latter two.
+# Supports scrolling and middle/right clicks with configurable actions (see below)
+# This default configuration shows off every feature
+
+# Which audio control will be the target of scrolling, muting... on the icon
+# Can be locked to the default input or output device
+wp_quick_target_choice = last_change # default_sink for output device, default_source for input
 
 # Pop up a slider when the volume of the quick target changes
-# wp_popup_on_change = true
+wp_popup_on_change = true
 
 # Number of seconds the popover will display atfer popping up,
 # wether due to scrolling or an external volume change
-# wp_display_timeout = 2.5
+wp_display_timeout = 2.5
 
 # Length of the volume sliders
-# wp_slider_length = 300
+wp_slider_length = 300
 
 # Multiplier to the volume change in scrolling
-# wp_scroll_sensitivity = 1
+wp_scroll_sensitivity = 1
 
-# wp_invert_scroll = false
-
-# Which audio control will be the target of scrolling, muting... on the icon
-# wp_quick_target_choice = last_change
+wp_invert_scroll = false
 
 # Actions to be tied to left, right and middle click on the widget
 # Can be:
 #   - show_mixer: show the whole mixer
 #   - mute_quick_target: mute the target of quick actions
 #   - show_quick_target: show the target of quick actions
-# wp_left_click_action = show_mixer # uniquely, cannot be mute
-# wp_middle_click_action = mute_quick_target
-# wp_right_click_action = show_quick_target
+wp_left_click_action = show_mixer # uniquely, cannot be mute
+wp_middle_click_action = mute_quick_target
+wp_right_click_action = show_quick_target
 
 # Size of the icons
-# wp_icon_size = 32
+wp_icon_size = 32
 
 # Configuration for the tray widget
 # Amount of smooth scrolling needed to trigger one scroll wheel step

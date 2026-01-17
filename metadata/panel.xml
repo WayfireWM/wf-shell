@@ -249,7 +249,24 @@
 	</option>
 	</group>
 	<group>
-	<_short>Wireplumber mixer</_short>
+	<_short>Audio mixer (wireplumber)</_short>
+	<option name="wp_quick_target_choice" type="string">
+		<_short>Quick action target</_short>
+		<_long>Which audio control will be the target of the quick actions (scrolling and muting on the widget)</_long>
+		<default>last_change</default>
+		<desc>
+			<value>last_change</value>
+			<_name>Last changed volume</_name>
+		</desc>
+		<desc>
+			<value>default_sink</value>
+			<_name>Default sink</_name>
+		</desc>
+		<desc>
+			<value>default_source</value>
+			<_name>Default source</_name>
+		</desc>
+	</option>
 	<option name="wp_popup_on_change" type="bool">
 		<_short>Pop up on change</_short>
 		<_long>Whether to show a popup with the new values upon a change to the quick action target</_long>
@@ -274,23 +291,6 @@
 		<_short>Invert scroll</_short>
 		<_long>Inverts which scroll direction raises and lowers volume</_long>
 		<default>false</default>
-	</option>
-	<option name="wp_quick_target_choice" type="string">
-		<_short>Quick action target</_short>
-		<_long>Which audio control will be the target of the quick target</_long>
-		<default>last_change</default>
-		<desc>
-			<value>last_change</value>
-			<_name>Last changed volume</_name>
-		</desc>
-		<desc>
-			<value>default_sink</value>
-			<_name>Default sink</_name>
-		</desc>
-		<desc>
-			<value>default_source</value>
-			<_name>Default source</_name>
-		</desc>
 	</option>
 	<option name="wp_left_click_action" type="string">
 		<_short>Left click action</_short>
