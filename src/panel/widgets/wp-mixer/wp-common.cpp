@@ -174,7 +174,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *wi
     // let’s considier this a change and set this as quick_target
     if (widget->quick_target_choice == QuickTargetChoice::LAST_CHANGE)
     {
-        widget->quick_target = control->copy();
+        widget->set_quick_target_from(control);
         widget->popover->set_child(*widget->quick_target);
         widget->update_icon();
     }
@@ -250,7 +250,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         // change quick_target if needed
         else if (widget->quick_target_choice == QuickTargetChoice::LAST_CHANGE)
         {
-            widget->quick_target = control->copy();
+            widget->set_quick_target_from(control);
             change = true;
         }
 
@@ -357,7 +357,7 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
                 (widget->quick_target_choice == QuickTargetChoice::DEFAULT_SOURCE) &&
                 (type == "Audio/Source")) // if the settings call for it, refresh the quick_target
             {
-                widget->quick_target = ctrl->copy();
+                widget->set_quick_target_from(ctrl);
                 widget->update_icon();
             }
         }

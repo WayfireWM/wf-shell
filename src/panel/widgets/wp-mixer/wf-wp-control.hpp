@@ -13,7 +13,6 @@ class WfWpControl : public Gtk::Grid
 
   protected:
     WayfireAnimatedScale scale;
-    Gtk::Label label;
     Gtk::Image volume_icon;
     sigc::connection mute_conn;
     WayfireWpMixer *parent;
@@ -26,6 +25,7 @@ class WfWpControl : public Gtk::Grid
   public:
     WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget);
     WpPipewireObject *object;
+    Gtk::Label label;
     Gtk::ToggleButton button;
     void set_btn_status_no_callbk(bool state);
     void set_scale_target_value(double volume);

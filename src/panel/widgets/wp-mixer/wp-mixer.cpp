@@ -335,6 +335,12 @@ void WayfireWpMixer::update_icon() // depends on quick_target widget
     main_image.set_from_icon_name(volume_icon_for(quick_target->get_scale_target_value()));
 }
 
+void WayfireWpMixer::set_quick_target_from(WfWpControl* from)
+{
+    quick_target = from->copy();
+    button->set_tooltip_text(quick_target->label.get_text());
+}
+
 WayfireWpMixer::~WayfireWpMixer()
 {
     WpCommon::get().rem_widget(this);

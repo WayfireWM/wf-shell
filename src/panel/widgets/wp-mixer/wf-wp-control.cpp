@@ -18,7 +18,6 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
     button.get_style_context()->add_class("flat");
 
     scale.set_range(0.0, 1.0);
-    scale.set_target_value(0.5);
     scale.set_size_request(slider_length, 0);
 
     const gchar *name;

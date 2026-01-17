@@ -56,8 +56,6 @@ class WayfireWpMixer : public WayfireWidget
     WfOption<bool> invert_scroll{"panel/wp_invert_scroll"};
     WfOption<bool> popup_on_change{"panel/wp_popup_on_change"};
 
-    QuickTargetChoice quick_target_choice;
-
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::Popover *popover;
 
@@ -66,7 +64,9 @@ class WayfireWpMixer : public WayfireWidget
      * level on the widget icon and is concerned by the quick actions.
      * configured by panel/wp_quick_target_choice. idea: add pinning?
      */
+    QuickTargetChoice quick_target_choice;
     std::unique_ptr<WfWpControl> quick_target;
+    void set_quick_target_from(WfWpControl* from);
 
     Gtk::Box master_box, sinks_box, sources_box, streams_box;
     // idea: add a category for stuff that listens to an audio source
