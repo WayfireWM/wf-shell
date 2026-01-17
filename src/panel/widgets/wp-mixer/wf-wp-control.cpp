@@ -143,8 +143,8 @@ double WfWpControl::get_scale_target_value()
 
 void WfWpControl::update_gestures()
 {
-    WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
-    WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
+    static WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
+    static WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
 
     auto mute_action =
         [&] (int count, double x, double y)
@@ -182,7 +182,7 @@ void WfWpControl::update_gestures()
 // attaches elements to the grid
 void WfWpControl::update_icons_pos()
 {
-    WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
+    static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
 
     remove(scale);
     remove(button);
@@ -249,7 +249,7 @@ void WfWpControlDevice::set_def_status_no_callbk(bool state)
 void WfWpControlDevice::update_icons_pos()
 {
     WfWpControl::update_icons_pos();
-    WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
+    static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
 
     remove(label);
     remove(default_btn);
