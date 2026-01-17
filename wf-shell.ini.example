@@ -161,7 +161,7 @@ wp_display_timeout = 2.5
 # Length of the volume sliders
 wp_slider_length = 300
 
-# Multiplier to the volume change in scrolling
+# Multiplier to the volume change when scrolling
 wp_scroll_sensitivity = 1
 
 wp_invert_scroll = false

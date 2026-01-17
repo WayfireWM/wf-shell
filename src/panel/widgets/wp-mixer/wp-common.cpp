@@ -279,7 +279,8 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         update_icons();
 
         if (widget->quick_target &&
-            (!widget->popover->is_visible() || (widget->popover->get_child() != (WfWpControl*)&widget->quick_target)))
+            (!widget->popover->is_visible() ||
+            (widget->popover->get_child() != (WfWpControl*)&widget->quick_target)))
         {
             // put the quick_target in the popover and show
             widget->popover->set_child(*widget->quick_target);
