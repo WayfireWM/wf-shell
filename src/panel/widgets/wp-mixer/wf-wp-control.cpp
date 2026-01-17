@@ -2,7 +2,6 @@
 #include <gtkmm.h>
 
 #include "wf-wp-control.hpp"
-#include "wp-mixer.hpp"
 #include "../volume-level.hpp"
 
 WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)

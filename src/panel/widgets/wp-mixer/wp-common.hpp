@@ -8,7 +8,7 @@ extern "C" {
 #include <wp/wp.h>
 }
 
-#include "wireplumber.hpp"
+#include "wp-mixer.hpp"
 class WayfireWpMixer;
 
 class WpCommon

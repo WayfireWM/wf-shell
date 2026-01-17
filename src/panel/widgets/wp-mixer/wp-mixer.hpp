@@ -85,5 +85,5 @@ class WayfireWpMixer : public WayfireWidget
 
     void handle_config_reload() override;
 
-    virtual ~WayfireWpMixerr();
+    virtual ~WayfireWpMixer();
 };

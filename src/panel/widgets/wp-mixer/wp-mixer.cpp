@@ -2,7 +2,7 @@
 #include <wp/proxy-interfaces.h>
 #include <wp/proxy.h>
 
-#include "wireplumber.hpp"
+#include "wp-mixer.hpp"
 #include "wf-wp-control.hpp"
 #include "../volume-level.hpp"
 

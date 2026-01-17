@@ -2,7 +2,7 @@
 
 #include <gtkmm.h>
 
-#include "wireplumber.hpp"
+#include "wp-mixer.hpp"
 #include "animated-scale.hpp"
 
 class WayfireWpMixer;

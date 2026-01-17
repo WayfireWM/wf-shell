@@ -46,9 +46,9 @@ endif
 
 if wireplumber.found()
   widget_sources += [
-    'widgets/wireplumber/wireplumber.cpp',
-    'widgets/wireplumber/wf-wp-control.cpp',
-    'widgets/wireplumber/wp-common.cpp',
+    'widgets/wp-mixer/wp-mixer.cpp',
+    'widgets/wp-mixer/wf-wp-control.cpp',
+    'widgets/wp-mixer/wp-common.cpp',
     'widgets/volume-level.cpp',
   ]
   deps += wireplumber

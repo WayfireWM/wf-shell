@@ -3,8 +3,6 @@
 #include <utility>
 
 #include "wp-common.hpp"
-#include "wireplumber.hpp"
-#include "wf-wp-control.hpp"
 #include "wp/proxy-interfaces.h"
 
 const gchar *DEFAULT_NODE_MEDIA_CLASSES[] = {
@@ -280,7 +278,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         if (widget->quick_target &&
             (!widget->popover->is_visible() ||
-            (widget->popover->get_child() != (WfWpControl*)&widget->quick_target)))
+             (widget->popover->get_child() != (WfWpControl*)&widget->quick_target)))
         {
             // put the quick_target in the popover and show
             widget->popover->set_child(*widget->quick_target);
