@@ -5,7 +5,7 @@
 #include "wireplumber.hpp"
 #include "animated-scale.hpp"
 
-class WayfireWireplumber;
+class WayfireWpMixer;
 
 class WfWpControl : public Gtk::Grid
 {
@@ -16,7 +16,7 @@ class WfWpControl : public Gtk::Grid
     Gtk::Label label;
     Gtk::Image volume_icon;
     sigc::connection mute_conn;
-    WayfireWireplumber *parent;
+    WayfireWpMixer *parent;
     std::shared_ptr<Gtk::GestureClick> middle_click_mute, right_click_mute;
     sigc::connection middle_conn, right_conn;
     bool gestures_initialised = false;
@@ -24,7 +24,7 @@ class WfWpControl : public Gtk::Grid
     WfOption<int> slider_length{"panel/wp_slider_length"};
 
   public:
-    WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widget);
+    WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget);
     WpPipewireObject *object;
     Gtk::ToggleButton button;
     void set_btn_status_no_callbk(bool state);
@@ -57,7 +57,7 @@ class WfWpControlDevice : public WfWpControl
     Gtk::Image is_def_icon;
 
   public:
-    WfWpControlDevice(WpPipewireObject *obj, WayfireWireplumber *parent_widget);
+    WfWpControlDevice(WpPipewireObject *obj, WayfireWpMixer *parent_widget);
     Gtk::ToggleButton default_btn;
     void set_def_status_no_callbk(bool state);
 };

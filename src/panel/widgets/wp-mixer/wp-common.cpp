@@ -122,7 +122,7 @@ void WpCommon::on_all_plugins_loaded()
     wp_core_install_object_manager(instance->core, instance->object_manager);
 }
 
-void WpCommon::catch_up_to_current_state(WayfireWireplumber *widget)
+void WpCommon::catch_up_to_current_state(WayfireWpMixer *widget)
 {
     // catch up to objects already registered by the manager
     WpIterator *reg_objs = wp_object_manager_new_iterator(object_manager);
@@ -134,7 +134,7 @@ void WpCommon::catch_up_to_current_state(WayfireWireplumber *widget)
     }
 }
 
-void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber *widget)
+void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *widget)
 {
     // adds a new control to the appropriate section of a widget
 
@@ -156,7 +156,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWireplumber
     } else if (type == "Stream/Output/Audio")
     {
         which_box = &(widget->streams_box);
-        control   = new WfWpControl(object, (WayfireWireplumber*)widget);
+        control   = new WfWpControl(object, (WayfireWpMixer*)widget);
     } else
     {
         std::cout << "Could not match pipewire object media class, ignoring\n";
@@ -394,13 +394,13 @@ void WpCommon::on_object_removed(WpObjectManager *manager, gpointer object, gpoi
     }
 }
 
-void WpCommon::add_widget(WayfireWireplumber *widget)
+void WpCommon::add_widget(WayfireWpMixer *widget)
 {
     widgets.push_back(widget);
     catch_up_to_current_state(widget);
 }
 
-void WpCommon::rem_widget(WayfireWireplumber *widget)
+void WpCommon::rem_widget(WayfireWpMixer *widget)
 {
     widgets.erase(std::find(widgets.begin(), widgets.end(), widget));
 }

@@ -6,27 +6,27 @@
 #include "wf-wp-control.hpp"
 #include "../volume-level.hpp"
 
-bool WayfireWireplumber::on_popover_timeout(int timer)
+bool WayfireWpMixer::on_popover_timeout(int timer)
 {
     popover_timeout.disconnect();
     popover->popdown();
     return false;
 }
 
-void WayfireWireplumber::check_set_popover_timeout()
+void WayfireWpMixer::check_set_popover_timeout()
 {
     popover_timeout.disconnect();
 
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireWireplumber::on_popover_timeout), 0), timeout * 1000);
+        &WayfireWpMixer::on_popover_timeout), 0), timeout * 1000);
 }
 
-void WayfireWireplumber::cancel_popover_timeout()
+void WayfireWpMixer::cancel_popover_timeout()
 {
     popover_timeout.disconnect();
 }
 
-void WayfireWireplumber::reload_config()
+void WayfireWpMixer::reload_config()
 {
     // big matching operation
     static WfOption<std::string> str_quick_target_choice{"panel/wp_quick_target_choice"};
@@ -206,7 +206,7 @@ void WayfireWireplumber::reload_config()
     }
 }
 
-void WayfireWireplumber::handle_config_reload()
+void WayfireWpMixer::handle_config_reload()
 {
     reload_config();
     for (auto & entry : objects_to_controls)
@@ -216,7 +216,7 @@ void WayfireWireplumber::handle_config_reload()
     }
 }
 
-void WayfireWireplumber::init(Gtk::Box *container)
+void WayfireWpMixer::init(Gtk::Box *container)
 {
     // sets up the "widget part"
 
@@ -315,7 +315,7 @@ void WayfireWireplumber::init(Gtk::Box *container)
     WpCommon::get().add_widget(this);
 }
 
-void WayfireWireplumber::update_icon() // depends on quick_target widget
+void WayfireWpMixer::update_icon() // depends on quick_target widget
 {
     if (!quick_target)
     {
@@ -332,7 +332,7 @@ void WayfireWireplumber::update_icon() // depends on quick_target widget
     main_image.set_from_icon_name(volume_icon_for(quick_target->get_scale_target_value()));
 }
 
-WayfireWireplumber::~WayfireWireplumber()
+WayfireWpMixer::~WayfireWpMixer()
 {
     WpCommon::get().rem_widget(this);
     gtk_widget_unparent(GTK_WIDGET(popover->gobj()));

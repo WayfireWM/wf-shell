@@ -1,10 +1,11 @@
 #include <pipewire/keys.h>
+#include <gtkmm.h>
 
 #include "wf-wp-control.hpp"
-#include "widgets/wireplumber/wireplumber.hpp"
+#include "wp-mixer.hpp"
 #include "../volume-level.hpp"
 
-WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWireplumber *parent_widget)
+WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
 {
     object = obj;
     parent = parent_widget;
@@ -188,7 +189,7 @@ std::unique_ptr<WfWpControl> WfWpControl::copy()
 }
 
 WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
-    WayfireWireplumber *parent_widget) : WfWpControl(obj, parent_widget)
+    WayfireWpMixer *parent_widget) : WfWpControl(obj, parent_widget)
 {
     attach(default_btn, 1, 0, 1, 1);
     default_btn.get_style_context()->add_class("wireplumber");

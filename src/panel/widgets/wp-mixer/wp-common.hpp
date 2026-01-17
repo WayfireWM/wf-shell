@@ -9,7 +9,7 @@ extern "C" {
 }
 
 #include "wireplumber.hpp"
-class WayfireWireplumber;
+class WayfireWpMixer;
 
 class WpCommon
 {
@@ -23,13 +23,13 @@ class WpCommon
     WpPlugin *mixer_api = nullptr;
     WpPlugin *default_nodes_api = nullptr;
 
-    std::vector<WayfireWireplumber*> widgets;
+    std::vector<WayfireWpMixer*> widgets;
 
-    void catch_up_to_current_state(WayfireWireplumber *widget);
+    void catch_up_to_current_state(WayfireWpMixer *widget);
     static void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
     static void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
     static void on_all_plugins_loaded();
-    void add_object_to_widget(WpPipewireObject *object, WayfireWireplumber *widget);
+    void add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *widget);
     static void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
     static void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
     static void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
@@ -37,8 +37,8 @@ class WpCommon
 
   public:
 
-    void add_widget(WayfireWireplumber *widget);
-    void rem_widget(WayfireWireplumber *widget);
+    void add_widget(WayfireWpMixer *widget);
+    void rem_widget(WayfireWpMixer *widget);
 
     void re_evaluate_def_nodes();
 

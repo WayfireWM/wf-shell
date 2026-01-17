@@ -21,7 +21,7 @@ enum class QuickTargetChoice // config
 
 class WfWpControl;
 
-class WayfireWireplumber : public WayfireWidget
+class WayfireWpMixer : public WayfireWidget
 {
   private:
     void init(Gtk::Box *container) override;
@@ -85,5 +85,5 @@ class WayfireWireplumber : public WayfireWidget
 
     void handle_config_reload() override;
 
-    virtual ~WayfireWireplumber();
+    virtual ~WayfireWpMixerr();
 };

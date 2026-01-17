@@ -27,7 +27,7 @@
     #include "widgets/volume.hpp"
 #endif
 #ifdef HAVE_WIREPLUMBER
-    #include "widgets/wireplumber/wireplumber.hpp"
+    #include "widgets/wp-mixer/wp-mixer.hpp"
 #endif
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
@@ -168,10 +168,10 @@ class WayfirePanel::impl
 #endif
         }
 
-        if (name == "wireplumber")
+        if (name == "wp-mixer")
         {
 #ifdef HAVE_WIREPLUMBER
-            return Widget(new WayfireWireplumber());
+            return Widget(new WayfireWpMixer());
 #else
             std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
