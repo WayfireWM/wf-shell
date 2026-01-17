@@ -287,18 +287,21 @@ void WayfireWpMixer::init(Gtk::Box *container)
     sinks_box.append(output_label);
     out_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     sinks_box.append(out_sep);
+    sinks_box.set_spacing(icon_size / 2);
 
     // sources
     input_label.set_text("Input devices");
     sources_box.append(input_label);
     in_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     sources_box.append(in_sep);
+    sources_box.set_spacing(icon_size / 2);
 
     // streams
     streams_label.set_text("Audio streams");
     streams_box.append(streams_label);
     streams_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     streams_box.append(streams_sep);
+    streams_box.set_spacing(icon_size / 2);
 
     /* Setup layout */
     container->append(*button);

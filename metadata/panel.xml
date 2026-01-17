@@ -337,7 +337,7 @@
 		</desc>
 	</option>
 	<option name="wp_icon_size" type="int">
-		<_short>Volume Icon Size</_short>
+		<_short>Icon size</_short>
 		<default>32</default>
 		<min>1</min>
 	</option>

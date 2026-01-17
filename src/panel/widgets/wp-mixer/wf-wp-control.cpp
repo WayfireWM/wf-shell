@@ -13,6 +13,10 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
 
     // build layout
 
+    button.set_child(volume_icon);
+    button.get_style_context()->add_class("wireplumber");
+    button.get_style_context()->add_class("flat");
+
     scale.set_range(0.0, 1.0);
     scale.set_target_value(0.5);
     scale.set_size_request(slider_length, 0);
@@ -36,14 +40,16 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
     }
 
     label.set_text(Glib::ustring(name));
+    // this causes the label’s *minimum* size to be 0, causing it to not request any space,
+    // thus having the column’s width be dictated solely by the scale’s size request
+    label.set_max_width_chars(0);
+    label.set_ellipsize(Pango::EllipsizeMode::END);
 
-    button.set_child(volume_icon);
-    button.get_style_context()->add_class("wireplumber");
-    button.get_style_context()->add_class("flat");
+    set_tooltip_text(name);
 
     attach(label, 0, 0, 2, 1);
-    attach(button, 1, 1, 1, 1);
-    attach(scale, 0, 1, 1, 1);
+    attach(button, 1, 1);
+    attach(scale, 0, 1);
 
     // setup user interactions
 
@@ -190,7 +196,10 @@ std::unique_ptr<WfWpControl> WfWpControl::copy()
 WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
     WayfireWpMixer *parent_widget) : WfWpControl(obj, parent_widget)
 {
-    attach(default_btn, 1, 0, 1, 1);
+    // the label is already attached, but takes 2 spaces. reattach it to make room for default_btn
+    remove(label);
+    attach(label, 0, 0);
+    attach(default_btn, 1, 0);
     default_btn.get_style_context()->add_class("wireplumber");
     default_btn.get_style_context()->add_class("flat");
 
