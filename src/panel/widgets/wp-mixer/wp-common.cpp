@@ -175,7 +175,13 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *wi
     if (widget->quick_target_choice == QuickTargetChoice::LAST_CHANGE)
     {
         widget->set_quick_target_from(control);
-        widget->popover->set_child(*widget->quick_target);
+        // if the full mixer is not shown, change the popover child
+        if (widget->popover->get_child() !=
+          &(widget->master_box) && widget->popover->is_visible())
+        {
+            widget->popover->set_child(*widget->quick_target);
+        }
+
         widget->update_icon();
     }
 }
