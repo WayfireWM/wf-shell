@@ -6,6 +6,7 @@
 #include <gtkmm/box.h>
 #include <memory>
 #include <string>
+#include <iostream>
 #include "../../util/wf-option-wrap.hpp"
 #include "glib.h"
 #include "locker.hpp"
@@ -42,9 +43,14 @@ void WayfireLockerFingerprintPlugin::on_bus_acquired(const Glib::RefPtr<Gio::DBu
         [this, connection] (const Glib::RefPtr<Gio::AsyncResult> & result)
     {
         auto manager_proxy = Gio::DBus::Proxy::create_finish(result);
-        auto variant = manager_proxy->call_sync("GetDefaultDevice");
+        auto variant = manager_proxy->call_sync("GetDevices");
+        if(variant.get_n_children()==0){
+            update_labels("No Fingerprint device found");
+            return;
+        }
+        auto default_device = manager_proxy->call_sync("GetDefaultDevice");
         Glib::Variant<Glib::ustring> item_path;
-        variant.get_child(item_path, 0);
+        default_device.get_child(item_path, 0);
         Gio::DBus::Proxy::create(connection,
             "net.reactivated.Fprint",
             item_path.get(),
