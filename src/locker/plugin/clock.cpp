@@ -5,14 +5,16 @@
 
 bool WayfireLockerClockPlugin::should_enable()
 {
-    return (bool) enable;
+    return (bool)enable;
 }
 
-void WayfireLockerClockPlugin::update_labels(std::string text){
-    for (auto& it: labels)
+void WayfireLockerClockPlugin::update_labels(std::string text)
+{
+    for (auto& it : labels)
     {
         it.second->set_label(text);
     }
+
     label_contents = text;
 }
 
@@ -23,8 +25,8 @@ void WayfireLockerClockPlugin::add_output(int id, Gtk::Grid *grid)
     label->add_css_class("clock");
     label->set_label(label_contents);
 
-    Gtk::Box* box = get_plugin_position(WfOption<std::string>{"locker/clock_position"}, grid);
-box->append(*label);
+    Gtk::Box *box = get_plugin_position(WfOption<std::string>{"locker/clock_position"}, grid);
+    box->append(*label);
 }
 
 void WayfireLockerClockPlugin::remove_output(int id)
@@ -48,19 +50,19 @@ void WayfireLockerClockPlugin::update_time()
     {
         i++;
     }
+
     this->update_labels(text.substr(i));
 }
 
 WayfireLockerClockPlugin::WayfireLockerClockPlugin()
-{
-
-}
+{}
 
 void WayfireLockerClockPlugin::init()
 {
     timeout = Glib::signal_timeout().connect_seconds(
-        [this](){
-            this->update_time();
-            return G_SOURCE_CONTINUE;
-        }, 1);
+        [this] ()
+    {
+        this->update_time();
+        return G_SOURCE_CONTINUE;
+    }, 1);
 }

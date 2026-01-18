@@ -11,8 +11,9 @@
 
 /* Rather than keep an unordered list for each widget, put them together */
 class WayfireLockerPinPlugin;
-class PinPad : public Gtk::Grid{
-    public:
+class PinPad : public Gtk::Grid
+{
+  public:
     PinPad();
     ~PinPad();
     Gtk::Button bsub, bcan;
@@ -20,11 +21,11 @@ class PinPad : public Gtk::Grid{
     void init();
     void check();
     Gtk::Button numbers[10];
-
 };
 
-class WayfireLockerPinPlugin: public WayfireLockerPlugin{
-    public:
+class WayfireLockerPinPlugin : public WayfireLockerPlugin
+{
+  public:
     WayfireLockerPinPlugin();
     void add_output(int id, Gtk::Grid *grid) override;
     void remove_output(int id) override;
@@ -37,12 +38,12 @@ class WayfireLockerPinPlugin: public WayfireLockerPlugin{
     void add_digit(std::string digit);
     std::string sha512(const std::string input);
 
-    bool enable= false;
+    bool enable = false;
 
     std::unordered_map<int, Glib::RefPtr<PinPad>> pinpads;
 
-    std::string pin="";
-    std::string pinhash="nope";
+    std::string pin     = "";
+    std::string pinhash = "nope";
 };
 
 #endif

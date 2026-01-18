@@ -10,8 +10,9 @@
 #include "giomm/dbusproxy.h"
 #include "glibmm/refptr.h"
 
-class WayfireLockerFingerprintPlugin: public WayfireLockerPlugin{
-    public:
+class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
+{
+  public:
     guint dbus_name_id;
     Glib::RefPtr<Gio::DBus::Proxy> device_proxy;
 
@@ -32,9 +33,9 @@ class WayfireLockerFingerprintPlugin: public WayfireLockerPlugin{
 
     std::unordered_map<int, std::shared_ptr<Gtk::Label>> labels;
     std::unordered_map<int, std::shared_ptr<Gtk::Image>> images;
-    std::string icon_contents="";
-    std::string label_contents="";
-    std::string finger_name="";
+    std::string icon_contents  = "";
+    std::string label_contents = "";
+    std::string finger_name    = "";
 };
 
 #endif
