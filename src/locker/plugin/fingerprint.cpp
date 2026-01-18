@@ -17,9 +17,8 @@ WayfireLockerFingerprintPlugin::WayfireLockerFingerprintPlugin() :
     dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SYSTEM,
         "net.reactivated.Fprint",
         sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_bus_acquired))),
-    enable(WfOption<bool> {"locker/fingerprint_enable"})
-{
-}
+    enable(WfOption<bool>{"locker/fingerprint_enable"})
+{}
 
 WayfireLockerFingerprintPlugin::~WayfireLockerFingerprintPlugin()
 {
@@ -49,12 +48,13 @@ void WayfireLockerFingerprintPlugin::on_bus_acquired(const Glib::RefPtr<Gio::DBu
         /* Decant the array from the tuple, count devices */
         Glib::Variant<std::vector<Glib::VariantBase>> array;
         variant.get_child(array, 0);
-        if(array.get_n_children()==0)
+        if (array.get_n_children() == 0)
         {
             enable = false;
             hide();
             return;
         }
+
         auto default_device = manager_proxy->call_sync("GetDefaultDevice");
         Glib::Variant<Glib::ustring> item_path;
         default_device.get_child(item_path, 0);
@@ -148,10 +148,11 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
 
 void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 {
-    if(!enable)
+    if (!enable)
     {
         return;
     }
+
     if (device_proxy && !is_scanning)
     {
         show();
@@ -167,8 +168,7 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 }
 
 void WayfireLockerFingerprintPlugin::init()
-{
-}
+{}
 
 void WayfireLockerFingerprintPlugin::add_output(int id, Gtk::Grid *grid)
 {
@@ -178,7 +178,7 @@ void WayfireLockerFingerprintPlugin::add_output(int id, Gtk::Grid *grid)
     auto image = images[id];
     auto label = labels[id];
 
-    if(!show_state)
+    if (!show_state)
     {
         image->hide();
         label->hide();
@@ -227,7 +227,6 @@ void WayfireLockerFingerprintPlugin::update_labels(std::string text)
     label_contents = text;
 }
 
-
 void WayfireLockerFingerprintPlugin::hide()
 {
     show_state = false;
@@ -235,11 +234,13 @@ void WayfireLockerFingerprintPlugin::hide()
     {
         it.second->hide();
     }
+
     for (auto& it : images)
     {
         it.second->hide();
     }
 }
+
 void WayfireLockerFingerprintPlugin::show()
 {
     show_state = true;
@@ -247,6 +248,7 @@ void WayfireLockerFingerprintPlugin::show()
     {
         it.second->show();
     }
+
     for (auto& it : images)
     {
         it.second->show();

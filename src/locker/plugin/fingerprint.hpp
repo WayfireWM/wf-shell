@@ -30,7 +30,7 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
 
     bool enable;
     bool is_scanning;
-    bool show_state=false;
+    bool show_state = false;
     void update_labels(std::string text);
     void update_image(std::string image);
 
