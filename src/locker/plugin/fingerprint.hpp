@@ -25,9 +25,12 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     void remove_output(int id) override;
     bool should_enable() override;
     void init() override;
+    void hide();
+    void show();
 
     bool enable;
     bool is_scanning;
+    bool show_state=false;
     void update_labels(std::string text);
     void update_image(std::string image);
 

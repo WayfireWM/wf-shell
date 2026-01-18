@@ -49,9 +49,10 @@ void WayfireLockerFingerprintPlugin::on_bus_acquired(const Glib::RefPtr<Gio::DBu
         /* Decant the array from the tuple, count devices */
         Glib::Variant<std::vector<Glib::VariantBase>> array;
         variant.get_child(array, 0);
-        if(array.get_n_children()==0){
-            update_labels("No Fingerprint device found : removing");
+        if(array.get_n_children()==0)
+        {
             enable = false;
+            hide();
             return;
         }
         auto default_device = manager_proxy->call_sync("GetDefaultDevice");
@@ -78,11 +79,13 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
     if (array.get_n_children() > 0)
     {
         // User has at least one fingerprint on file!
+        show();
         update_labels("Fingerprint Ready");
         update_image("fingerprint");
     } else
     {
         // Zero fingers for this user.
+        show();
         update_labels("No fingerprints enrolled");
         update_image("nofingerprint");
         // Don't hide entirely, allow the user to see this specific fail
@@ -117,6 +120,7 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
                     this->start_fingerprint_scanning();
                     return G_SOURCE_REMOVE;
                 }, 5);
+                show();
                 update_image("nofingerprint");
                 update_labels("Invalid fingerprint");
             }
@@ -150,7 +154,8 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
     }
     if (device_proxy && !is_scanning)
     {
-        update_labels("Press to unlock : '"+finger_name+"'");
+        show();
+        update_labels("Use fingerprint to unlock");
         is_scanning = true;
         device_proxy->call_sync("VerifyStart",
             nullptr,
@@ -172,6 +177,12 @@ void WayfireLockerFingerprintPlugin::add_output(int id, Gtk::Grid *grid)
 
     auto image = images[id];
     auto label = labels[id];
+
+    if(!show_state)
+    {
+        image->hide();
+        label->hide();
+    }
 
     image->set_from_icon_name("fingerprint");
     label->set_label("No Fingerprint device found");
@@ -214,4 +225,30 @@ void WayfireLockerFingerprintPlugin::update_labels(std::string text)
     }
 
     label_contents = text;
+}
+
+
+void WayfireLockerFingerprintPlugin::hide()
+{
+    show_state = false;
+    for (auto& it : labels)
+    {
+        it.second->hide();
+    }
+    for (auto& it : images)
+    {
+        it.second->hide();
+    }
+}
+void WayfireLockerFingerprintPlugin::show()
+{
+    show_state = true;
+    for (auto& it : labels)
+    {
+        it.second->show();
+    }
+    for (auto& it : images)
+    {
+        it.second->show();
+    }
 }
