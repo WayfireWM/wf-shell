@@ -17,7 +17,10 @@ WayfireLockerFingerprintPlugin::WayfireLockerFingerprintPlugin() :
     dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SYSTEM,
         "net.reactivated.Fprint",
         sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_bus_acquired)))
-{}
+{
+    WfOption<bool> enabled{"locker/fingerprint_enable"};
+    enable = enabled;
+}
 
 WayfireLockerFingerprintPlugin::~WayfireLockerFingerprintPlugin()
 {
@@ -152,7 +155,6 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 
 void WayfireLockerFingerprintPlugin::init()
 {
-    WfOption<bool> enabled{"locker/fingerprint_enable"};
     enable = enabled;
 
     // If no device : set enable = false
