@@ -62,9 +62,9 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
         [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
     {
         item_proxy = Gio::DBus::Proxy::create_for_bus_finish(result);
-        item_proxy->signal_signal().connect(
+        signals.push_back(item_proxy->signal_signal().connect(
             [this] (const Glib::ustring & sender, const Glib::ustring & signal,
-                    const Glib::VariantContainerBase & params) { handle_signal(signal, params); });
+                    const Glib::VariantContainerBase & params) { handle_signal(signal, params); }));
         init_widget();
     });
 }
@@ -72,6 +72,10 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
 StatusNotifierItem::~StatusNotifierItem()
 {
     gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
 }
 
 void StatusNotifierItem::init_widget()
@@ -86,17 +90,17 @@ void StatusNotifierItem::init_widget()
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::BOTH_AXES);
-    scroll_gesture->signal_scroll().connect([=] (double dx, double dy) -> bool
+    signals.push_back(scroll_gesture->signal_scroll().connect([=] (double dx, double dy) -> bool
     {
         using ScrollParams = Glib::Variant<std::tuple<int, Glib::ustring>>;
         item_proxy->call("Scroll", ScrollParams::create({dx, "horizontal"}));
         item_proxy->call("Scroll", ScrollParams::create({dy, "vertical"}));
         return true;
-    }, true);
+    }, true));
 
     auto click_gesture = Gtk::GestureClick::create();
     click_gesture->set_button(0);
-    click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    signals.push_back(click_gesture->signal_pressed().connect([=] (int count, double x, double y)
     {
         int butt = click_gesture->get_current_button();
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({0, 0});
@@ -140,7 +144,7 @@ void StatusNotifierItem::init_widget()
 
         click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
         return;
-    });
+    }));
 
     add_controller(scroll_gesture);
     add_controller(click_gesture);
@@ -149,7 +153,8 @@ void StatusNotifierItem::init_widget()
 void StatusNotifierItem::setup_tooltip()
 {
     set_has_tooltip();
-    signal_query_tooltip().connect([this] (int, int, bool, const std::shared_ptr<Gtk::Tooltip> & tooltip)
+    signals.push_back(signal_query_tooltip().connect([this] (int, int, bool,
+                                                             const std::shared_ptr<Gtk::Tooltip> & tooltip)
     {
         auto [tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
             get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
@@ -173,7 +178,7 @@ void StatusNotifierItem::setup_tooltip()
 
         tooltip->set_markup(tooltip_label_text);
         return icon_shown || !tooltip_label_text.empty();
-    }, true);
+    }, true));
 }
 
 void StatusNotifierItem::update_icon()
@@ -222,12 +227,12 @@ void StatusNotifierItem::init_menu()
     auto action_prefix = dbus_name_as_prefix();
 
     menu->connect(dbus_name, menu_path, action_prefix);
-    menu->signal_action_group().connect([=] ()
+    signals.push_back(menu->signal_action_group().connect([=] ()
     {
         auto action_group = menu->get_action_group();
         insert_action_group(action_prefix, action_group);
         popover.set_menu_model(menu->get_menu());
-    });
+    }));
     has_menu = true;
 }
 

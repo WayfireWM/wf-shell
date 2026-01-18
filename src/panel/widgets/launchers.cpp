@@ -49,7 +49,7 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
     style->add_class("flat");
     style->add_class("launcher");
 
-    button.signal_clicked().connect([=] () { launch(); });
+    btn_sig = button.signal_clicked().connect([=] () { launch(); });
 
     update_icon();
 
@@ -74,7 +74,9 @@ void WfLauncherButton::launch()
 WfLauncherButton::WfLauncherButton()
 {}
 WfLauncherButton::~WfLauncherButton()
-{}
+{
+    btn_sig.disconnect();
+}
 
 static bool begins_with(const std::string& string, const std::string& prefix)
 {

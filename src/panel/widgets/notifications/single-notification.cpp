@@ -72,22 +72,22 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
     time_label.set_sensitive(false);
     time_label.set_label(format_recv_time(notification.additional_info.recv_time));
     time_label.get_style_context()->add_class("time");
-    time_label_update = Glib::signal_timeout().connect(
+    signals.push_back(Glib::signal_timeout().connect(
         [=]
     {
         time_label.set_label(format_recv_time(notification.additional_info.recv_time));
         return true;
     },
         // updating once a day doesn't work with system suspending/hybernating
-        10000, Glib::PRIORITY_LOW);
+        10000, Glib::PRIORITY_LOW));
     top_bar.append(time_label);
 
     close_image.set_from_icon_name("window-close");
     close_button.set_child(close_image);
     close_button.get_style_context()->add_class("flat");
     close_button.get_style_context()->add_class("close");
-    close_button.signal_clicked().connect(
-        [=] { Daemon::Instance()->closeNotification(notification.id, Daemon::CloseReason::Dismissed); });
+    signals.push_back(close_button.signal_clicked().connect(
+        [=] { Daemon::Instance()->closeNotification(notification.id, Daemon::CloseReason::Dismissed); }));
     top_bar.set_spacing(5);
 
     child.append(top_bar);
@@ -138,18 +138,21 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
             if (const auto action_key = notification.actions[i];action_key != "default")
             {
                 auto action_button = Glib::RefPtr<Gtk::Button>(new Gtk::Button(notification.actions[i + 1]));
-                action_button->signal_clicked().connect(
-                    [id = notification.id, action_key] { Daemon::Instance()->invokeAction(id, action_key); });
+                signals.push_back(action_button->signal_clicked().connect(
+                    [id = notification.id, action_key]
+                {
+                    Daemon::Instance()->invokeAction(id, action_key);
+                }));
                 actions.append(*action_button.get());
             } else
             {
                 auto click_gesture = Gtk::GestureClick::create();
-                click_gesture->signal_pressed().connect(
+                signals.push_back(click_gesture->signal_pressed().connect(
                     [id = notification.id, action_key, click_gesture] (int count, double x, double y)
                 {
                     Daemon::Instance()->invokeAction(id, action_key);
                     click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-                });
+                }));
                 default_action_ev_box.add_controller(click_gesture);
             }
         }
@@ -170,5 +173,8 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
 
 WfSingleNotification::~WfSingleNotification()
 {
-    time_label_update.disconnect();
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
 }

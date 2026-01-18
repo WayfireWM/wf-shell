@@ -10,6 +10,7 @@
 #include <giomm/dbusconnection.h>
 
 #include "../widget.hpp"
+#include "sigc++/connection.h"
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
 using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
@@ -22,6 +23,8 @@ class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
     WfOption<std::string> status_opt{"panel/battery_status"};
+
+    sigc::connection btn_sig, disp_dev_sig;
 
     Gtk::Button button;
     Gtk::Label label;
@@ -44,7 +47,7 @@ class WayfireBatteryInfo : public WayfireWidget
 
   public:
     virtual void init(Gtk::Box *container);
-    virtual ~WayfireBatteryInfo() = default;
+    virtual ~WayfireBatteryInfo();
 };
 
 

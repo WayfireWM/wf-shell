@@ -1,6 +1,7 @@
 #ifndef TRAY_HOST_HPP
 #define TRAY_HOST_HPP
 
+#include "sigc++/connection.h"
 #include "watcher.hpp"
 
 #include <giomm.h>
@@ -19,6 +20,8 @@ class StatusNotifierHost
     Glib::RefPtr<Gio::DBus::Proxy> watcher_proxy;
 
     WayfireStatusNotifier *tray;
+
+    sigc::connection watch_sig;
 
     void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
     void register_host(const Glib::RefPtr<Gio::AsyncResult> & result);

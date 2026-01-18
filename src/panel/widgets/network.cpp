@@ -54,6 +54,7 @@ struct WifiConnectionInfo : public WfNetworkConnectionInfo
 {
     WayfireNetworkInfo *widget;
     DBusProxy ap;
+    sigc::connection ap_sig;
 
     WifiConnectionInfo(const DBusConnection& connection, std::string path,
         WayfireNetworkInfo *widget)
@@ -65,7 +66,7 @@ struct WifiConnectionInfo : public WfNetworkConnectionInfo
 
         if (ap)
         {
-            ap->signal_properties_changed().connect(
+            ap_sig = ap->signal_properties_changed().connect(
                 sigc::mem_fun(*this, &WifiConnectionInfo::on_properties_changed));
         }
     }
@@ -382,8 +383,8 @@ bool WayfireNetworkInfo::setup_dbus()
         return false;
     }
 
-    nm_proxy->signal_properties_changed().connect(
-        sigc::mem_fun(*this, &WayfireNetworkInfo::on_nm_properties_changed));
+    signals.push_back(nm_proxy->signal_properties_changed().connect(
+        sigc::mem_fun(*this, &WayfireNetworkInfo::on_nm_properties_changed)));
 
     return true;
 }
@@ -415,8 +416,8 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     button.set_child(button_content);
     button.get_style_context()->add_class("flat");
 
-    button.signal_clicked().connect(
-        sigc::mem_fun(*this, &WayfireNetworkInfo::on_click));
+    signals.push_back(button.signal_clicked().connect(
+        sigc::mem_fun(*this, &WayfireNetworkInfo::on_click)));
 
     button_content.set_valign(Gtk::Align::CENTER);
     button_content.append(icon);
@@ -424,8 +425,8 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     button_content.set_spacing(6);
 
     icon.set_valign(Gtk::Align::CENTER);
-    icon.property_scale_factor().signal_changed().connect(
-        sigc::mem_fun(*this, &WayfireNetworkInfo::update_icon));
+    signals.push_back(icon.property_scale_factor().signal_changed().connect(
+        sigc::mem_fun(*this, &WayfireNetworkInfo::update_icon)));
     icon.get_style_context()->add_class("network-icon");
 
     update_active_connection();
@@ -455,4 +456,9 @@ void WayfireNetworkInfo::handle_config_reload()
 }
 
 WayfireNetworkInfo::~WayfireNetworkInfo()
-{}
+{
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
+}

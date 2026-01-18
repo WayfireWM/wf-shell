@@ -8,6 +8,7 @@
 #include <gtkmm/label.h>
 
 #include "../widget.hpp"
+#include "sigc++/connection.h"
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
 using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
@@ -55,6 +56,8 @@ class WayfireNetworkInfo : public WayfireWidget
     DBusProxy nm_proxy, active_connection_proxy;
 
     std::unique_ptr<WfNetworkConnectionInfo> info;
+
+    std::vector<sigc::connection> signals;
 
     Gtk::Button button;
     Gtk::Box button_content;

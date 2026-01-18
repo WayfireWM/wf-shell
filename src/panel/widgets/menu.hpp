@@ -2,6 +2,7 @@
 #define WIDGETS_MENU_HPP
 
 #include "../widget.hpp"
+#include "sigc++/connection.h"
 #include "wf-popover.hpp"
 #include <giomm/desktopappinfo.h>
 #include <gtkmm.h>
@@ -27,12 +28,14 @@ class WfMenuCategoryButton : public Gtk::Button
 {
   public:
     WfMenuCategoryButton(WayfireMenu *menu, std::string category, std::string label, std::string icon_name);
+    ~WfMenuCategoryButton();
 
   private:
     WayfireMenu *menu;
     Gtk::Box m_box;
     Gtk::Label m_label;
     Gtk::Image m_image;
+    sigc::connection sig_click;
 
     std::string category;
     std::string label;
@@ -44,6 +47,7 @@ class WfMenuMenuItem : public Gtk::FlowBoxChild
 {
   public:
     WfMenuMenuItem(WayfireMenu *menu, AppInfo app);
+    ~WfMenuMenuItem();
 
     uint32_t matches(Glib::ustring text);
     uint32_t fuzzy_match(Glib::ustring text);
@@ -64,6 +68,7 @@ class WfMenuMenuItem : public Gtk::FlowBoxChild
     Glib::RefPtr<Gio::Menu> m_menu;
     Glib::RefPtr<Gio::SimpleActionGroup> m_actions;
     Gtk::MenuButton m_extra_actions_button;
+    std::vector<sigc::connection> signals;
 
     bool m_has_actions = false;
     uint32_t m_search_value = 0;
@@ -84,6 +89,7 @@ class WayfireLogoutUI
 {
   public:
     WayfireLogoutUI();
+    ~WayfireLogoutUI();
     WfOption<std::string> logout_command{"panel/logout_command"};
     WfOption<std::string> reboot_command{"panel/reboot_command"};
     WfOption<std::string> shutdown_command{"panel/shutdown_command"};
@@ -100,6 +106,7 @@ class WayfireLogoutUI
     WayfireLogoutUIButton cancel;
     Gtk::CenterBox hbox;
     Gtk::Grid main_layout;
+    std::vector<sigc::connection> signals;
     void create_logout_ui_button(WayfireLogoutUIButton *button,
         const char *icon, const char *label);
     void on_logout_click();
@@ -163,6 +170,8 @@ class WayfireMenu : public WayfireWidget
         "Settings", "System", "Utility", "Hidden"
     };
 
+    std::vector<sigc::connection> signals;
+
     WfOption<std::string> menu_logout_command{"panel/menu_logout_command"};
     WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
     WfOption<std::string> panel_position{"panel/position"};
@@ -196,10 +205,7 @@ class WayfireMenu : public WayfireWidget
         this->output = output;
     }
 
-    ~WayfireMenu() override
-    {
-        g_signal_handler_disconnect(app_info_monitor, app_info_monitor_changed_handler_id);
-    }
+    ~WayfireMenu() override;
 };
 
 #endif /* end of include guard: WIDGETS_MENU_HPP */

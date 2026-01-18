@@ -21,8 +21,11 @@ DbusMenuModel::~DbusMenuModel()
 {
     if (client)
     {
+        g_signal_handler_disconnect(G_OBJECT(client), update_sig_handler_id);
         g_object_unref(client);
     }
+
+    act_sig.disconnect();
 }
 
 type_signal_action_group DbusMenuModel::signal_action_group()
@@ -36,7 +39,7 @@ void DbusMenuModel::connect(const Glib::ustring & dbus_name, const Glib::ustring
     prefix = pref;
     client = dbusmenu_client_new(dbus_name.c_str(), menu_path.c_str());
     auto gclient = G_OBJECT(client);
-    g_signal_connect(
+    update_sig_handler_id = g_signal_connect(
         gclient,
         DBUSMENU_CLIENT_SIGNAL_LAYOUT_UPDATED,
         G_CALLBACK(menu_updated),
@@ -127,7 +130,7 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
                         // Radio action
                         auto boolean_action = Gio::SimpleAction::create_radio_string(action_name,
                             toggle_state ? action_name : "");
-                        boolean_action->signal_activate().connect([=] (Glib::VariantBase vb)
+                        act_sig = boolean_action->signal_activate().connect([=] (Glib::VariantBase vb)
                         {
                             GVariant *data = g_variant_new_int32(0);
                             dbusmenu_menuitem_handle_event(child, "clicked", data, 0);
@@ -140,7 +143,7 @@ int DbusMenuModel::iterate_children(Gio::Menu *parent_menu, DbusmenuMenuitem *pa
 
                         // Checkbox action
                         auto boolean_action = Gio::SimpleAction::create_bool(action_name, toggle_state);
-                        boolean_action->signal_activate().connect([=] (Glib::VariantBase vb)
+                        act_sig = boolean_action->signal_activate().connect([=] (Glib::VariantBase vb)
                         {
                             GVariant *data = g_variant_new_int32(0);
                             dbusmenu_menuitem_handle_event(child, "clicked", data, 0);

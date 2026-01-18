@@ -28,7 +28,7 @@ class WfSingleNotification : public Gtk::Revealer
     Gtk::Image app_icon;
     Gtk::Label app_name;
     Gtk::Label time_label;
-    sigc::connection time_label_update;
+    std::vector<sigc::connection> signals;
     Gtk::Button close_button;
     Gtk::Image close_image;
 

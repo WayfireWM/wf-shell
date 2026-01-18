@@ -21,6 +21,9 @@ class DbusMenuModel
 
     std::string label_to_action_name(std::string, int counter);
 
+    gulong update_sig_handler_id;
+    sigc::connection act_sig;
+
   public:
     explicit DbusMenuModel();
     ~DbusMenuModel();
