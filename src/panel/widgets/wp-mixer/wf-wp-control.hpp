@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gtkmm.h>
+#include <mutex>
 
 #include "wp-mixer.hpp"
 #include "animated-scale.hpp"
@@ -33,15 +34,8 @@ class WfWpControl : public Gtk::Grid
     void set_scale_target_value(double volume);
     double get_scale_target_value();
     void update_icon();
-    // used to mark the control as the source of changes and determine what should be done
-    enum ignore_type
-    {
-        DONT_IGNORE, // not the source, normal treatment
-        IGNORE_ALL, // the source, no need to touch it
-        ONLY_UPDATE, // the source, but the visuals need to be updated. used for scrolling.
-    };
-
-    ignore_type ignore; // set when volume changes because of it to ignore refresh of ui
+    // used to mark the control as the source of changes and stop useless/counterproductive updates
+    bool ignore = false; // set when volume changes because of it to ignore refresh of ui
 
     virtual void handle_config_reload();
 

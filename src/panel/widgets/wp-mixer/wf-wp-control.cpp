@@ -59,22 +59,18 @@ void WfWpControl::init()
         // if the menu was popped up because of an external change
         // and is now changed manually, don’t hide
         parent->cancel_popover_timeout();
-        ignore = IGNORE_ALL;
-        if (!WpCommon::get().set_mute(id, button.get_active()))
-        {
-            ignore = DONT_IGNORE;
-        }
+        ignore = true;
+        // disregarding the return value prevents cases where ignore is read at an ncorrect time,
+        // with the only problem of having one update ignored if something goes very wrong
+        WpCommon::get().set_mute(id, button.get_active());
     });
 
     scale.set_user_changed_callback(
         [this, id] ()
     {
         parent->cancel_popover_timeout(); // see above
-        ignore = IGNORE_ALL;
-        if (!WpCommon::get().set_volume(id, scale.get_target_value()))
-        {
-            ignore = DONT_IGNORE;
-        }
+        ignore = true;
+        WpCommon::get().set_volume(id, scale.get_target_value());
     });
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();
@@ -94,12 +90,7 @@ void WfWpControl::init()
             change = (dy * parent->scroll_sensitivity * SCROLL_MULT) / 100;
         }
 
-        ignore = ONLY_UPDATE; // this scroll is accessed in the full mixer, just update visuals
-        if (!WpCommon::get().set_volume(id, scale.get_target_value() + change))
-        {
-            ignore = DONT_IGNORE;
-        }
-
+        WpCommon::get().set_volume(id, scale.get_target_value() + change);
         return true;
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);

@@ -1,6 +1,5 @@
 #include <iostream>
 #include <pipewire/keys.h>
-#include <utility>
 
 #include "wp-common.hpp"
 #include "wp/proxy-interfaces.h"
@@ -256,9 +255,9 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         }
 
         // if this control is the source of this change, don’t do anything
-        if (control->ignore == WfWpControl::IGNORE_ALL)
+        if (control->ignore)
         {
-            control->ignore = WfWpControl::DONT_IGNORE;
+            control->ignore = false;
             update_icons();
             continue;
         }
@@ -267,15 +266,14 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         control->set_btn_status_no_callbk(mute);
         control->set_scale_target_value(volume);
 
-        // is scroll, quit after updating controls
-        if (control->ignore == WfWpControl::ONLY_UPDATE)
+        update_icons();
+
+        // if the mixer is currently being displayed, stop there
+        if (widget->popover->get_child() ==
+          &(widget->master_box) && widget->popover->is_visible())
         {
-            control->ignore = WfWpControl::DONT_IGNORE;
-            update_icons();
             continue;
         }
-
-        update_icons();
 
         if (widget->quick_target &&
             (!widget->popover->is_visible() ||
