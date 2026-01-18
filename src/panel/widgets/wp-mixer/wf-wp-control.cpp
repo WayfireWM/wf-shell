@@ -209,7 +209,6 @@ std::unique_ptr<WfWpControl> WfWpControl::copy()
     return std::make_unique<WfWpControl>(object, parent);
 }
 
-
 void WfWpControlDevice::init()
 {
     default_btn.get_style_context()->add_class("wireplumber");

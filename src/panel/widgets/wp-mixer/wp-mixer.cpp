@@ -50,26 +50,6 @@ void WayfireWpMixer::reload_config()
         quick_target_choice = QuickTargetChoice::LAST_CHANGE;
     }
 
-    // run only the first time around
-    if (!gestures_initialised)
-    {
-        gestures_initialised = true;
-        left_click_gesture   = Gtk::GestureClick::create();
-        right_click_gesture  = Gtk::GestureClick::create();
-        middle_click_gesture = Gtk::GestureClick::create();
-        left_click_gesture->set_button(1);
-        middle_click_gesture->set_button(2);
-        right_click_gesture->set_button(3);
-        button->add_controller(left_click_gesture);
-        button->add_controller(right_click_gesture);
-        button->add_controller(middle_click_gesture);
-    } else
-    {
-        left_conn.disconnect();
-        middle_conn.disconnect();
-        right_conn.disconnect();
-    }
-
     // "actions" that can be bound to different clicks
 
     auto show_mixer_action = [&] (int c, double x, double y)
@@ -208,6 +188,9 @@ void WayfireWpMixer::reload_config()
 
 void WayfireWpMixer::handle_config_reload()
 {
+    left_conn.disconnect();
+    middle_conn.disconnect();
+    right_conn.disconnect();
     reload_config();
     for (auto & entry : objects_to_controls)
     {
@@ -261,6 +244,17 @@ void WayfireWpMixer::init(Gtk::Box *container)
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     button->add_controller(scroll_gesture);
+
+    // set up gestures
+    left_click_gesture   = Gtk::GestureClick::create();
+    right_click_gesture  = Gtk::GestureClick::create();
+    middle_click_gesture = Gtk::GestureClick::create();
+    left_click_gesture->set_button(1);
+    middle_click_gesture->set_button(2);
+    right_click_gesture->set_button(3);
+    button->add_controller(left_click_gesture);
+    button->add_controller(right_click_gesture);
+    button->add_controller(middle_click_gesture);
 
     // config options
     reload_config();

@@ -40,7 +40,6 @@ class WayfireWpMixer : public WayfireWidget
     gulong notify_default_sink_changed = 0;
     sigc::connection popover_timeout;
     sigc::connection volume_changed_signal;
-    bool gestures_initialised = false;
     std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
     sigc::connection left_conn, middle_conn, right_conn;
 
