@@ -176,6 +176,7 @@ int main(int argc, char **argv)
     if (!gtk_session_lock_is_supported())
     {
         std::cerr << "This session does not support locking" << std::endl;
+        exit(0);
     }
 
     WayfireLockerApp::create(argc, argv);
