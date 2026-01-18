@@ -1,4 +1,5 @@
 #include "battery.hpp"
+#include "wf-ipc.hpp"
 #include <gtk-utils.hpp>
 #include <iostream>
 #include <algorithm>
@@ -197,7 +198,7 @@ bool WayfireBatteryInfo::setup_dbus()
     display_device->get_cached_property(present, SHOULD_DISPLAY);
     if (present.get())
     {
-        display_device->signal_properties_changed().connect(
+        disp_dev_sig = display_device->signal_properties_changed().connect(
             sigc::mem_fun(*this, &WayfireBatteryInfo::on_properties_changed));
 
         return true;
@@ -231,4 +232,10 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
     button.set_child(button_box);
     button.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(*this, &WayfireBatteryInfo::update_icon));
+}
+
+WayfireBatteryInfo::~WayfireBatteryInfo()
+{
+    btn_sig.disconnect();
+    disp_dev_sig.disconnect();
 }

@@ -1,4 +1,5 @@
 #include "command-output.hpp"
+#include "sigc++/connection.h"
 
 #include <glibmm/main.h>
 #include <glibmm/shell.h>
@@ -11,7 +12,7 @@
 
 #include <gtk-utils.hpp>
 
-static void label_set_from_command(std::string command_line,
+static sigc::connection label_set_from_command(std::string command_line,
     Gtk::Label& label)
 {
     command_line = "/bin/sh -c \"" + command_line + "\"";
@@ -21,7 +22,7 @@ static void label_set_from_command(std::string command_line,
     Glib::spawn_async_with_pipes("", Glib::shell_parse_argv(command_line),
         Glib::SpawnFlags::DO_NOT_REAP_CHILD | Glib::SpawnFlags::SEARCH_PATH_FROM_ENVP,
         Glib::SlotSpawnChildSetup{}, &pid, nullptr, &output_fd, nullptr);
-    Glib::signal_child_watch().connect([=, &label] (Glib::Pid pid, int exit_status)
+    return Glib::signal_child_watch().connect([=, &label] (Glib::Pid pid, int exit_status)
     {
         FILE *file = fdopen(output_fd, "r");
         Glib::ustring output;
@@ -95,10 +96,11 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
 
     const auto update_output = [=] ()
     {
-        label_set_from_command(command, main_label);
+        command_sig.disconnect();
+        command_sig = label_set_from_command(command, main_label);
     };
 
-    signal_clicked().connect(update_output);
+    signals.push_back(signal_clicked().connect(update_output));
 
     if (period > 0)
     {
@@ -118,8 +120,17 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     {
         set_has_tooltip();
         tooltip_label.show();
-        signal_query_tooltip().connect(sigc::mem_fun(*this,
-            &WfCommandOutputButtons::CommandOutput::query_tooltip), false);
+        signals.push_back(signal_query_tooltip().connect(sigc::mem_fun(*this,
+            &WfCommandOutputButtons::CommandOutput::query_tooltip), false));
+    }
+}
+
+WfCommandOutputButtons::CommandOutput::~CommandOutput()
+{
+    timeout_connection.disconnect();
+    for (auto signal : signals)
+    {
+        signal.disconnect();
     }
 }
 

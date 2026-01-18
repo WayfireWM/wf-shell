@@ -7,6 +7,7 @@
 #include <wf-option-wrap.hpp>
 #include <libdbusmenu-glib/dbusmenu-glib.h>
 #include "dbusmenu.hpp"
+#include "sigc++/connection.h"
 #include <sstream>
 #include <string>
 
@@ -33,6 +34,7 @@ class StatusNotifierItem : public Gtk::Button
     gdouble distance_scrolled_x = 0;
     gdouble distance_scrolled_y = 0;
 
+    std::vector<sigc::connection> signals;
 
     Glib::RefPtr<Gtk::IconTheme> icon_theme;
 

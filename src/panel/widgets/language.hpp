@@ -3,6 +3,7 @@
 
 #include "../widget.hpp"
 #include "gtkmm/button.h"
+#include "sigc++/connection.h"
 #include "wf-ipc.hpp"
 #include <cstdint>
 #include <gtkmm/calendar.h>
@@ -21,6 +22,7 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
 {
     // Gtk::Label label;
     Gtk::Button button;
+    sigc::connection btn_sig;
 
     std::shared_ptr<IPCClient> ipc_client;
     uint32_t current_layout;

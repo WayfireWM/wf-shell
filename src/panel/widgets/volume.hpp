@@ -21,6 +21,7 @@ class WayfireVolumeScale : public Gtk::Scale
 
   public:
     WayfireVolumeScale();
+    ~WayfireVolumeScale();
 
     /* Gets the current target value */
     double get_target_value() const;
@@ -55,7 +56,7 @@ class WayfireVolume : public WayfireWidget
     gulong notify_is_muted_signal = 0;
     gulong notify_default_sink_changed = 0;
     sigc::connection popover_timeout;
-    sigc::connection volume_changed_signal;
+    std::vector<sigc::connection> signals;
     void disconnect_gvc_stream_signals();
 
     enum set_volume_flags_t
