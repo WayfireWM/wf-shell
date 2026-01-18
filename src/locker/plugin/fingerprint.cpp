@@ -155,9 +155,6 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 
 void WayfireLockerFingerprintPlugin::init()
 {
-    enable = enabled;
-
-    // If no device : set enable = false
 }
 
 void WayfireLockerFingerprintPlugin::add_output(int id, Gtk::Grid *grid)
