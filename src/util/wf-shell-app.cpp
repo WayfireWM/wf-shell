@@ -226,7 +226,6 @@ void WayfireShellApp::on_activate()
 
     if (!alternative_monitors)
     {
-
         // Hook up monitor tracking
         auto display  = Gdk::Display::get_default();
         auto monitors = display->get_monitors();
