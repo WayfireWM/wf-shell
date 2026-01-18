@@ -44,7 +44,10 @@ void WayfireLockerFingerprintPlugin::on_bus_acquired(const Glib::RefPtr<Gio::DBu
     {
         auto manager_proxy = Gio::DBus::Proxy::create_finish(result);
         auto variant = manager_proxy->call_sync("GetDevices");
-        if(variant.get_n_children()==0){
+        /* Decant the array from the tuple, count devices */
+        Glib::Variant<std::vector<Glib::VariantBase>> array;
+        variant.get_child(array, 0);
+        if(array.get_n_children()==0){
             update_labels("No Fingerprint device found");
             enable = false;
             return;
