@@ -161,6 +161,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *wi
         return;
     }
 
+    control->init();
     widget->objects_to_controls.insert({object, std::unique_ptr<WfWpControl>(control)});
     which_box->append((Gtk::Widget&)*control);
 

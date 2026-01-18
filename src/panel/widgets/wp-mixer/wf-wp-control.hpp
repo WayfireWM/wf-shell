@@ -25,6 +25,8 @@ class WfWpControl : public Gtk::Grid
 
   public:
     WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget);
+    virtual void init();
+
     WpPipewireObject *object;
     Gtk::Label label;
     Gtk::ToggleButton button;
@@ -42,7 +44,7 @@ class WfWpControl : public Gtk::Grid
 
     ignore_type ignore; // set when volume changes because of it to ignore refresh of ui
 
-    void handle_config_reload();
+    virtual void handle_config_reload();
 
     std::unique_ptr<WfWpControl> copy();
 };
@@ -59,7 +61,11 @@ class WfWpControlDevice : public WfWpControl
     void update_icons_pos();
 
   public:
-    WfWpControlDevice(WpPipewireObject *obj, WayfireWpMixer *parent_widget);
+    WfWpControlDevice(WpPipewireObject *obj, WayfireWpMixer *parent_widget) : WfWpControl(obj, parent_widget){};
+    void init();
+
     Gtk::ToggleButton default_btn;
     void set_def_status_no_callbk(bool state);
+
+    void handle_config_reload();
 };

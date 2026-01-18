@@ -342,6 +342,7 @@ void WayfireWpMixer::update_icon()
 void WayfireWpMixer::set_quick_target_from(WfWpControl *from)
 {
     quick_target = from->copy();
+    quick_target->init();
     button->set_tooltip_text(quick_target->label.get_text());
 }
 

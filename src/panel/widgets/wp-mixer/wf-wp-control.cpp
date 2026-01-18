@@ -8,7 +8,10 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
 {
     object = obj;
     parent = parent_widget;
+}
 
+void WfWpControl::init()
+{
     guint32 id = wp_proxy_get_bound_id(WP_PROXY(object));
 
     // build layout
@@ -46,7 +49,12 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
 
     set_tooltip_text(name);
 
-    attach(label, 0, 0, 2, 1);
+    // already attached for the devices
+    if (!label.get_parent())
+    {
+        attach(label, 0, 0, 2, 1);
+    }
+
     update_icons_pos();
 
     // setup user interactions
@@ -141,6 +149,22 @@ double WfWpControl::get_scale_target_value()
     return scale.get_target_value();
 }
 
+// attaches elements to the grid
+void WfWpControl::update_icons_pos()
+{
+    static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
+
+    if (icons_on_left)
+    {
+        attach(scale, 1, 1);
+        attach(button, 0, 1);
+    } else
+    {
+        attach(scale, 0, 1);
+        attach(button, 1, 1);
+    }
+}
+
 void WfWpControl::update_gestures()
 {
     static WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
@@ -179,29 +203,12 @@ void WfWpControl::update_gestures()
     }
 }
 
-// attaches elements to the grid
-void WfWpControl::update_icons_pos()
-{
-    static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
-
-    remove(scale);
-    remove(button);
-
-    if (icons_on_left)
-    {
-        attach(scale, 1, 1);
-        attach(button, 0, 1);
-    } else
-    {
-        attach(scale, 0, 1);
-        attach(button, 1, 1);
-    }
-}
-
 void WfWpControl::handle_config_reload()
 {
-    update_gestures();
+    remove(scale);
+    remove(button);
     update_icons_pos();
+    update_gestures();
     scale.set_size_request(slider_length);
 }
 
@@ -211,17 +218,14 @@ std::unique_ptr<WfWpControl> WfWpControl::copy()
     return std::make_unique<WfWpControl>(object, parent);
 }
 
-WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
-    WayfireWpMixer *parent_widget) : WfWpControl(obj, parent_widget)
+
+void WfWpControlDevice::init()
 {
-    // the label is already attached, but takes 2 spaces. reattach it to make room for default_btn
     default_btn.get_style_context()->add_class("wireplumber");
     default_btn.get_style_context()->add_class("flat");
 
     is_def_icon.set_from_icon_name("emblem-default");
     default_btn.set_child(is_def_icon);
-
-    update_icons_pos();
 
     // we are not using ToggleButton groups because on_default_nodes_changed
     // will be called anyway to set the status of all devices
@@ -237,6 +241,8 @@ WfWpControlDevice::WfWpControlDevice(WpPipewireObject *obj,
 
         WpCommon::get().set_default(object);
     });
+
+    WfWpControl::init();
 }
 
 void WfWpControlDevice::set_def_status_no_callbk(bool state)
@@ -251,9 +257,6 @@ void WfWpControlDevice::update_icons_pos()
     WfWpControl::update_icons_pos();
     static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
 
-    remove(label);
-    remove(default_btn);
-
     if (icons_on_left)
     {
         attach(label, 1, 0);
@@ -263,4 +266,12 @@ void WfWpControlDevice::update_icons_pos()
         attach(label, 0, 0);
         attach(default_btn, 1, 0);
     }
+}
+
+void WfWpControlDevice::handle_config_reload()
+{
+    // the label is already attached, but takes 2 spaces. reattach it to make room for default_btn
+    remove(label);
+    remove(default_btn);
+    WfWpControl::handle_config_reload();
 }
