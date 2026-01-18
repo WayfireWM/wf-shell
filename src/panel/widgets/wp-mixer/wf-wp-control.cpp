@@ -49,12 +49,6 @@ void WfWpControl::init()
 
     set_tooltip_text(name);
 
-    // already attached for the devices
-    if (!label.get_parent())
-    {
-        attach(label, 0, 0, 2, 1);
-    }
-
     update_icons_pos();
 
     // setup user interactions
@@ -111,6 +105,13 @@ void WfWpControl::init()
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     add_controller(scroll_gesture);
 
+    middle_click_mute = Gtk::GestureClick::create();
+    right_click_mute  = Gtk::GestureClick::create();
+    middle_click_mute->set_button(2);
+    right_click_mute->set_button(3);
+    add_controller(middle_click_mute);
+    add_controller(right_click_mute);
+
     update_gestures();
 
     // initialise the values
@@ -149,17 +150,19 @@ double WfWpControl::get_scale_target_value()
     return scale.get_target_value();
 }
 
-// attaches elements to the grid
+// attaches elements to the grid at the appropriate place
 void WfWpControl::update_icons_pos()
 {
     static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
 
     if (icons_on_left)
     {
+        attach(label, 1, 0);
         attach(scale, 1, 1);
         attach(button, 0, 1);
     } else
     {
+        attach(label, 0, 0);
         attach(scale, 0, 1);
         attach(button, 1, 1);
     }
@@ -167,6 +170,7 @@ void WfWpControl::update_icons_pos()
 
 void WfWpControl::update_gestures()
 {
+    // the setting says that it is for quick target, but let’s have all the muting consistent
     static WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
     static WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
 
@@ -176,22 +180,6 @@ void WfWpControl::update_gestures()
         button.set_active(!button.get_active());
     };
 
-    // only create once
-    if (!gestures_initialised)
-    {
-        middle_click_mute = Gtk::GestureClick::create();
-        right_click_mute  = Gtk::GestureClick::create();
-        middle_click_mute->set_button(2);
-        right_click_mute->set_button(3);
-        add_controller(middle_click_mute);
-        add_controller(right_click_mute);
-    } else
-    {
-        middle_conn.disconnect();
-        right_conn.disconnect();
-    }
-
-    // the setting says that it is for quick target, but let’s have all the muting consistent
     if (str_wp_middle_click_action.value() == "mute_quick_target")
     {
         middle_conn = middle_click_mute->signal_pressed().connect(mute_action);
@@ -205,8 +193,11 @@ void WfWpControl::update_gestures()
 
 void WfWpControl::handle_config_reload()
 {
+    remove(label);
     remove(scale);
     remove(button);
+    middle_conn.disconnect();
+    right_conn.disconnect();
     update_icons_pos();
     update_gestures();
     scale.set_size_request(slider_length);
@@ -259,19 +250,15 @@ void WfWpControlDevice::update_icons_pos()
 
     if (icons_on_left)
     {
-        attach(label, 1, 0);
         attach(default_btn, 0, 0);
     } else
     {
-        attach(label, 0, 0);
         attach(default_btn, 1, 0);
     }
 }
 
 void WfWpControlDevice::handle_config_reload()
 {
-    // the label is already attached, but takes 2 spaces. reattach it to make room for default_btn
-    remove(label);
     remove(default_btn);
     WfWpControl::handle_config_reload();
 }
