@@ -61,15 +61,14 @@ static std::string uint_to_time(int64_t time)
     return format_digit(hrs) + ":" + format_digit(min);
 }
 
-
 bool WayfireLockerBatteryPlugin::should_enable()
 {
-    return (bool) enable;
+    return (bool)enable;
 }
 
 void WayfireLockerBatteryPlugin::update_percentages(std::string text)
 {
-    for (auto& it: labels)
+    for (auto& it : labels)
     {
         it.second->set_label(text);
     }
@@ -77,7 +76,7 @@ void WayfireLockerBatteryPlugin::update_percentages(std::string text)
 
 void WayfireLockerBatteryPlugin::update_descriptions(std::string text)
 {
-    for (auto& it: subtexts)
+    for (auto& it : subtexts)
     {
         it.second->set_label(text);
     }
@@ -87,7 +86,7 @@ void WayfireLockerBatteryPlugin::update_images()
 {
     Glib::Variant<Glib::ustring> icon_name;
     display_device->get_cached_property(icon_name, ICON);
-    for (auto& it: images)
+    for (auto& it : images)
     {
         it.second->set_from_icon_name(icon_name.get());
     }
@@ -99,9 +98,9 @@ void WayfireLockerBatteryPlugin::add_output(int id, Gtk::Grid *grid)
     labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
     subtexts.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
     images.emplace(id, std::shared_ptr<Gtk::Image>(new Gtk::Image()));
-    auto label = labels[id];
+    auto label   = labels[id];
     auto subtext = subtexts[id];
-    auto image = images[id];
+    auto image   = images[id];
 
     label->add_css_class("battery-percent");
     subtext->add_css_class("battery-description");
@@ -109,10 +108,10 @@ void WayfireLockerBatteryPlugin::add_output(int id, Gtk::Grid *grid)
 
     batt_grid->attach(*image, 0, 0);
     batt_grid->attach(*label, 1, 0);
-    batt_grid->attach(*subtext, 0, 1,2,1);
+    batt_grid->attach(*subtext, 0, 1, 2, 1);
 
-    Gtk::Box* box = get_plugin_position(battery_position, grid);
-    
+    Gtk::Box *box = get_plugin_position(battery_position, grid);
+
     box->append(*batt_grid);
 
     update_details();
@@ -130,7 +129,6 @@ void WayfireLockerBatteryPlugin::init()
         return;
     }
 }
-
 
 bool WayfireLockerBatteryPlugin::setup_dbus()
 {
@@ -192,8 +190,7 @@ void WayfireLockerBatteryPlugin::on_properties_changed(
         }
 
         if (prop.first == SHOULD_DISPLAY)
-        {
-        }
+        {}
     }
 
     if (invalid_icon)

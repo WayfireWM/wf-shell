@@ -6,7 +6,7 @@
 
 bool WayfireLockerInstantPlugin::should_enable()
 {
-    return (bool) enable;
+    return (bool)enable;
 }
 
 void WayfireLockerInstantPlugin::add_output(int id, Gtk::Grid *grid)
@@ -16,10 +16,11 @@ void WayfireLockerInstantPlugin::add_output(int id, Gtk::Grid *grid)
     button->set_label("Press to unlock");
     button->add_css_class("instant-unlock");
 
-    Gtk::Box* box = get_plugin_position(WfOption<std::string>{"locker/instant_unlock_position"}, grid);
+    Gtk::Box *box = get_plugin_position(WfOption<std::string>{"locker/instant_unlock_position"}, grid);
     box->append(*button);
 
-    button->signal_clicked().connect([](){
+    button->signal_clicked().connect([] ()
+    {
         WayfireLockerApp::get().unlock();
     }, false);
 }
@@ -30,6 +31,4 @@ void WayfireLockerInstantPlugin::remove_output(int id)
 }
 
 void WayfireLockerInstantPlugin::init()
-{
-    
-}
+{}

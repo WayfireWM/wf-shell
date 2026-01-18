@@ -7,10 +7,12 @@
 #include "../plugin.hpp"
 #include "../../util/wf-option-wrap.hpp"
 
-int pam_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr);
+int pam_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp,
+    void *appdata_ptr);
 
-class WayfireLockerPasswordPlugin: public WayfireLockerPlugin{
-    public:
+class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
+{
+  public:
     WayfireLockerPasswordPlugin();
     void add_output(int id, Gtk::Grid *grid) override;
     void remove_output(int id) override;
@@ -26,7 +28,7 @@ class WayfireLockerPasswordPlugin: public WayfireLockerPlugin{
 
     std::unordered_map<int, std::shared_ptr<Gtk::Label>> labels;
     std::unordered_map<int, std::shared_ptr<Gtk::Entry>> entries;
-    std::string label_contents="";
+    std::string label_contents     = "";
     std::string submitted_password = "";
 };
 

@@ -16,29 +16,30 @@
 
 
 /*
- To set the PIN Hash required to enable this plugin, try running
-  `echo -n "1234" | sha512sum | head -c 128 > ~/.config/wf-locker.hash`
-
-  Replace the numbers inside the echo quote. There must be one or more digits,
-  and any non-digit will render it impossible to unlock.
+ *  To set the PIN Hash required to enable this plugin, try running
+ *  `echo -n "1234" | sha512sum | head -c 128 > ~/.config/wf-locker.hash`
+ *
+ *  Replace the numbers inside the echo quote. There must be one or more digits,
+ *  and any non-digit will render it impossible to unlock.
  */
 
 PinPad::PinPad()
 {
-    for (int count = 0; count < 10; count ++)
+    for (int count = 0; count < 10; count++)
     {
         std::string number = std::to_string(count);
         numbers[count].add_css_class("pinpad-number");
         numbers[count].add_css_class("pinpad-button");
         numbers[count].set_label(number);
         numbers[count].signal_clicked().connect(
-            [number] () {
-                auto plugin = WayfireLockerApp::get().get_plugin("pin");
-                auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
-                plugin_cast->add_digit(number);
-            }
-        );
+            [number] ()
+        {
+            auto plugin = WayfireLockerApp::get().get_plugin("pin");
+            auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
+            plugin_cast->add_digit(number);
+        });
     }
+
     bsub.set_label("✔️");
     bcan.set_label("❌");
     bsub.add_css_class("pinpad-submit");
@@ -46,40 +47,39 @@ PinPad::PinPad()
     bcan.add_css_class("pinpad-cancel");
     bcan.add_css_class("pinpad-button");
     bcan.signal_clicked().connect(
-        []() {
-            auto plugin = WayfireLockerApp::get().get_plugin("pin");
-            auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
-            plugin_cast->reset_pin();
-        }
-    );
+        [] ()
+    {
+        auto plugin = WayfireLockerApp::get().get_plugin("pin");
+        auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
+        plugin_cast->reset_pin();
+    });
     bsub.signal_clicked().connect(
-        [] () {
-            auto plugin = WayfireLockerApp::get().get_plugin("pin");
-            auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
-            plugin_cast->submit_pin();
-        }
-    );
+        [] ()
+    {
+        auto plugin = WayfireLockerApp::get().get_plugin("pin");
+        auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
+        plugin_cast->submit_pin();
+    });
     label.add_css_class("pinpad-current");
 }
 
 PinPad::~PinPad()
-{
-}
+{}
 
 void PinPad::init()
 {
     attach(label, 0, 0, 3);
-    attach(numbers[1],0,1);
-    attach(numbers[2], 1,1);
+    attach(numbers[1], 0, 1);
+    attach(numbers[2], 1, 1);
     attach(numbers[3], 2, 1);
-    attach(numbers[4],0,2);
-    attach(numbers[5], 1,2);
+    attach(numbers[4], 0, 2);
+    attach(numbers[5], 1, 2);
     attach(numbers[6], 2, 2);
-    attach(numbers[7],0,3);
-    attach(numbers[8], 1,3);
+    attach(numbers[7], 0, 3);
+    attach(numbers[8], 1, 3);
     attach(numbers[9], 2, 3);
     attach(bsub, 2, 4);
-    attach(numbers[0],1, 4);
+    attach(numbers[0], 1, 4);
     attach(bcan, 0, 4);
     set_vexpand(true);
     set_column_homogeneous(true);
@@ -90,16 +90,16 @@ WayfireLockerPinPlugin::WayfireLockerPinPlugin()
 {
     WfOption<bool> enabled{"locker/pin_enable"};
     enable = enabled;
-    if(!enable)
+    if (!enable)
     {
         return;
     }
-  
+
     /* TODO ... */
-    //if (cmdline_config.has_value())
-    //{
-    //    return cmdline_config.value();
-    //}
+    // if (cmdline_config.has_value())
+    // {
+    // return cmdline_config.value();
+    // }
     std::string config_dir;
 
     char *config_home = getenv("XDG_CONFIG_HOME");
@@ -112,29 +112,33 @@ WayfireLockerPinPlugin::WayfireLockerPinPlugin()
     }
 
     std::ifstream f(config_dir + "/wf-locker.hash");
-    if(!f.is_open()){
+    if (!f.is_open())
+    {
         std::cerr << "No PIN hash set" << std::endl;
         enable = false;
         return;
     }
 
     std::string s;
-    if(!getline(f,s)){
+    if (!getline(f, s))
+    {
         std::cerr << "No PIN hash set" << std::endl;
         enable = false;
         return;
     }
-    if(s.length() != 128){
+
+    if (s.length() != 128)
+    {
         std::cerr << "Invalid PIN hash" << std::endl;
-        enable= false;
+        enable = false;
         return;
     }
+
     pinhash = s;
 }
 
 void WayfireLockerPinPlugin::init()
-{
-}
+{}
 
 bool WayfireLockerPinPlugin::should_enable()
 {
@@ -147,7 +151,7 @@ void WayfireLockerPinPlugin::add_output(int id, Gtk::Grid *grid)
     auto pinpad = pinpads[id];
     pinpad->add_css_class("pinpad");
     pinpad->init();
-    Gtk::Box* box = get_plugin_position(WfOption<std::string>{"locker/pin_position"}, grid);
+    Gtk::Box *box = get_plugin_position(WfOption<std::string>{"locker/pin_position"}, grid);
     box->append(*pinpad);
     update_labels(); /* Update all to set this one? maybe overkill */
 }
@@ -172,7 +176,7 @@ void WayfireLockerPinPlugin::reset_pin()
 void WayfireLockerPinPlugin::update_labels()
 {
     std::string asterisks(pin.length(), '*');
-    for(auto& it: pinpads)
+    for (auto& it : pinpads)
     {
         it.second->label.set_label(asterisks);
     }
@@ -185,6 +189,7 @@ void WayfireLockerPinPlugin::submit_pin()
     {
         WayfireLockerApp::get().unlock();
     }
+
     pin = "";
     update_labels();
 }
@@ -198,11 +203,13 @@ std::string WayfireLockerPinPlugin::sha512(const std::string input)
     EVP_DigestUpdate(mdctx, input.c_str(), input.size());
     EVP_DigestFinal(mdctx, hash, &hash_length);
     EVP_MD_CTX_free(mdctx);
-  
+
     std::stringstream ss;
 
-    for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){
-      ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>( hash[i] );
+    for (int i = 0; i < SHA512_DIGEST_LENGTH; i++)
+    {
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
     }
+
     return ss.str();
 }

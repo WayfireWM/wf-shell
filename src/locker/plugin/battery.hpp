@@ -26,8 +26,9 @@ using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
 #define TIMETOEMPTY    "TimeToEmpty"
 #define SHOULD_DISPLAY "IsPresent"
 
-class WayfireLockerBatteryPlugin: public WayfireLockerPlugin{
-    private:
+class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
+{
+  private:
     DBusConnection connection;
     DBusProxy upower_proxy, display_device;
     void on_properties_changed(
@@ -35,8 +36,9 @@ class WayfireLockerBatteryPlugin: public WayfireLockerPlugin{
         const std::vector<Glib::ustring>& invalidated);
     bool setup_dbus();
 
-    public:
-    WayfireLockerBatteryPlugin(){};
+  public:
+    WayfireLockerBatteryPlugin()
+    {}
     void add_output(int id, Gtk::Grid *grid) override;
     void remove_output(int id) override;
     bool should_enable() override;

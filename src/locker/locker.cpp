@@ -25,17 +25,18 @@
 #include "wf-shell-app.hpp"
 #include <wayfire/config/file.hpp>
 
-WayfireLockerApp::~WayfireLockerApp(){
-
-}
+WayfireLockerApp::~WayfireLockerApp()
+{}
 
 void WayfireLockerApp::on_activate()
 {
     WayfireShellApp::on_activate();
     auto debug = Glib::getenv("WF_LOCKER_DEBUG");
-    if(debug == "1"){
+    if (debug == "1")
+    {
         m_is_debug = true;
     }
+
     std::cout << "Locker activate" << std::endl;
     lock = gtk_session_lock_instance_new();
     /* Session lock callbacks */
@@ -53,37 +54,40 @@ void WayfireLockerApp::on_activate()
     new CssFromConfigFont("locker/battery_description_font", ".wf-locker .battery-description {", "}");
     new CssFromConfigFont("locker/instant_unlock_font", ".wf-locker .instant-unlock {", "}");
     new CssFromConfigInt("locker/battery_icon_size", ".wf-locker .battery-image {-gtk-icon-size:", "px;}");
-    new CssFromConfigInt("locker/fingerprint_icon_size", ".wf-locker .fingerprint-icon {-gtk-icon-size:", "px;}");
+    new CssFromConfigInt("locker/fingerprint_icon_size", ".wf-locker .fingerprint-icon {-gtk-icon-size:",
+        "px;}");
 
     /* Init plugins */
     plugins.emplace("clock", Plugin(new WayfireLockerClockPlugin()));
     plugins.emplace("battery", Plugin(new WayfireLockerBatteryPlugin()));
-    plugins.emplace("password",Plugin(new WayfireLockerPasswordPlugin()));
-    plugins.emplace("instant",(Plugin(new WayfireLockerInstantPlugin())));
-    plugins.emplace("pin",Plugin(new WayfireLockerPinPlugin()));
+    plugins.emplace("password", Plugin(new WayfireLockerPasswordPlugin()));
+    plugins.emplace("instant", (Plugin(new WayfireLockerInstantPlugin())));
+    plugins.emplace("pin", Plugin(new WayfireLockerPinPlugin()));
     plugins.emplace("fingerprint", Plugin(new WayfireLockerFingerprintPlugin()));
 
-    for(auto& it: plugins){
-        if(it.second->should_enable())
+    for (auto& it : plugins)
+    {
+        if (it.second->should_enable())
         {
             it.second->init();
         }
     }
 
-    if(is_debug())
+    if (is_debug())
     {
         on_monitor_present(nullptr);
-    } else {
+    } else
+    {
         /* Demand the session be locked */
         gtk_session_lock_instance_lock(lock);
     }
 }
 
 /* A new monitor has been added to the lockscreen */
-void WayfireLockerApp::on_monitor_present(GdkMonitor* monitor)
+void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
 {
     int id = window_id_count;
-    window_id_count ++;
+    window_id_count++;
     /* Create lockscreen with a grid for contents */
     auto window = new Gtk::Window();
     window->add_css_class("wf-locker");
@@ -92,45 +96,54 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor* monitor)
     grid->set_expand(true);
     grid->set_column_homogeneous(true);
     grid->set_row_homogeneous(true);
-    for(int x = 0; x < 3; x ++)
+    for (int x = 0; x < 3; x++)
     {
-        for(int y = 0; y < 3; y ++)
+        for (int y = 0; y < 3; y++)
         {
             auto box = new Gtk::Box();
-            if(x == 0)
+            if (x == 0)
             {
                 box->set_halign(Gtk::Align::START);
             } else if (x == 2)
             {
                 box->set_halign(Gtk::Align::END);
             }
-            if(y == 0)
+
+            if (y == 0)
             {
                 box->set_valign(Gtk::Align::START);
             } else if (y == 2)
             {
                 box->set_valign(Gtk::Align::END);
             }
+
             box->set_orientation(Gtk::Orientation::VERTICAL);
             grid->attach(*box, x, y);
         }
     }
-    for(auto& it: plugins){
-        if(it.second->should_enable())
+
+    for (auto& it : plugins)
+    {
+        if (it.second->should_enable())
         {
             it.second->add_output(id, grid);
         }
     }
-    window->signal_close_request().connect([this, id](){
-        for(auto& it: plugins){
+
+    window->signal_close_request().connect([this, id] ()
+    {
+        for (auto& it : plugins)
+        {
             it.second->remove_output(id);
         }
+
         return false;
-    },false);
-    if(is_debug())
+    }, false);
+    if (is_debug())
     {
         window->present();
-    } else {
+    } else
+    {
         gtk_session_lock_instance_assign_window_to_monitor(lock, window->gobj(), monitor);
     }
 }
@@ -142,6 +155,7 @@ void WayfireLockerApp::unlock()
     {
         exit(0);
     }
+
     gtk_session_lock_instance_unlock(lock);
 }
 
@@ -159,10 +173,11 @@ void WayfireLockerApp::create(int argc, char **argv)
 /* Starting point */
 int main(int argc, char **argv)
 {
-    if(!gtk_session_lock_is_supported())
+    if (!gtk_session_lock_is_supported())
     {
-        std::cerr << "This session does not support locking" <<std::endl;
-    }    
+        std::cerr << "This session does not support locking" << std::endl;
+    }
+
     WayfireLockerApp::create(argc, argv);
     std::cout << "Exit" << std::endl;
     return 0;
@@ -184,16 +199,18 @@ void on_session_unlocked_c(GtkSessionLockInstance *lock, void *data)
 {
     std::cout << "Session unlocked" << std::endl;
     // Exiting here causes wf to lock up
-    Glib::signal_timeout().connect_seconds([]()->bool{
+    Glib::signal_timeout().connect_seconds([] () -> bool
+    {
         exit(0);
         return 0;
-    },1);
+    }, 1);
 }
 
 void on_monitor_present_c(GtkSessionLockInstance *lock, GdkMonitor *monitor, void *data)
 {
     WayfireLockerApp::get().on_monitor_present(monitor);
 }
+
 /* Find user config */
 std::string WayfireLockerApp::get_config_file()
 {
@@ -212,15 +229,16 @@ std::string WayfireLockerApp::get_config_file()
     {
         config_dir = std::string(config_home);
     }
-    
+
     return config_dir + "/wf-shell.ini";
 }
 
 Plugin WayfireLockerApp::get_plugin(std::string name)
 {
-    if(plugins.find(name )==plugins.end())
+    if (plugins.find(name) == plugins.end())
     {
         return nullptr;
     }
+
     return plugins.at(name);
 }
