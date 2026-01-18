@@ -16,10 +16,9 @@
 WayfireLockerFingerprintPlugin::WayfireLockerFingerprintPlugin() :
     dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SYSTEM,
         "net.reactivated.Fprint",
-        sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_bus_acquired)))
+        sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_bus_acquired))),
+    enable(WfOption<bool> {"locker/fingerprint_enable"})
 {
-    WfOption<bool> enabled{"locker/fingerprint_enable"};
-    enable = enabled;
 }
 
 WayfireLockerFingerprintPlugin::~WayfireLockerFingerprintPlugin()
@@ -51,7 +50,7 @@ void WayfireLockerFingerprintPlugin::on_bus_acquired(const Glib::RefPtr<Gio::DBu
         Glib::Variant<std::vector<Glib::VariantBase>> array;
         variant.get_child(array, 0);
         if(array.get_n_children()==0){
-            update_labels("No Fingerprint device found");
+            update_labels("No Fingerprint device found : removing");
             enable = false;
             return;
         }
@@ -73,7 +72,10 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
     update_labels("Listing fingers...");
     auto reply = device_proxy->call_sync("ListEnrolledFingers", nullptr,
         Glib::Variant<std::tuple<Glib::ustring>>::create(username));
-    if (reply.get_n_children() > 0)
+    Glib::Variant<std::vector<Glib::ustring>> array;
+    reply.get_child(array, 0);
+
+    if (array.get_n_children() > 0)
     {
         // User has at least one fingerprint on file!
         update_labels("Fingerprint Ready");
@@ -83,11 +85,13 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
         // Zero fingers for this user.
         update_labels("No fingerprints enrolled");
         update_image("nofingerprint");
+        // Don't hide entirely, allow the user to see this specific fail
+        return;
     }
 
     Glib::Variant<Glib::ustring> finger;
     reply.get_child(finger, 0);
-    update_labels("Claiming device...");
+    update_labels("Finger print device found");
     device_proxy->signal_signal().connect([this] (const Glib::ustring & sender_name,
                                                   const Glib::ustring & signal_name,
                                                   const Glib::VariantContainerBase & params)
@@ -140,9 +144,13 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
 
 void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 {
+    if(!enable)
+    {
+        return;
+    }
     if (device_proxy && !is_scanning)
     {
-        update_labels("Use fingerprint to unlock");
+        update_labels("Press to unlock : '"+finger_name+"'");
         is_scanning = true;
         device_proxy->call_sync("VerifyStart",
             nullptr,
