@@ -102,6 +102,13 @@ void WayfireLockerBatteryPlugin::add_output(int id, Gtk::Grid *grid)
     auto subtext = subtexts[id];
     auto image   = images[id];
 
+    if(!show_state)
+    {
+        label->hide();
+        subtext->hide();
+        image->hide();
+    }
+
     label->add_css_class("battery-percent");
     subtext->add_css_class("battery-description");
     image->add_css_class("battery-image");
@@ -232,7 +239,47 @@ void WayfireLockerBatteryPlugin::update_details()
         description += ", " + uint_to_time(time_to_empty.get()) + " remaining";
     }
 
+    if(state == 0) /* Unknown */
+    {
+        hide();
+        return;
+    }
+    show();
     update_descriptions(get_device_type_description(type.get()) + description);
     update_percentages(percentage_string);
     update_images();
+}
+
+
+void WayfireLockerBatteryPlugin::hide()
+{
+    show_state = false;
+    for (auto& it : labels)
+    {
+        it.second->hide();
+    }
+    for (auto& it : images)
+    {
+        it.second->hide();
+    }
+    for (auto &it : subtexts)
+    {
+        it.second->hide();
+    }
+}
+void WayfireLockerBatteryPlugin::show()
+{
+    show_state = true;
+    for (auto& it : labels)
+    {
+        it.second->show();
+    }
+    for (auto& it : images)
+    {
+        it.second->show();
+    }
+    for (auto& it : subtexts)
+    {
+        it.second->show();
+    }
 }

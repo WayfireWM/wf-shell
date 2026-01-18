@@ -43,6 +43,9 @@ class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
     void remove_output(int id) override;
     bool should_enable() override;
     void init() override;
+    void hide();
+    void show();
+    bool show_state=true;
 
     WfOption<std::string> battery_position{"locker/battery_position"};
     WfOption<bool> enable{"locker/battery_enable"};
