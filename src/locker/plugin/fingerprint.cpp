@@ -46,6 +46,7 @@ void WayfireLockerFingerprintPlugin::on_bus_acquired(const Glib::RefPtr<Gio::DBu
         auto variant = manager_proxy->call_sync("GetDevices");
         if(variant.get_n_children()==0){
             update_labels("No Fingerprint device found");
+            enable = false;
             return;
         }
         auto default_device = manager_proxy->call_sync("GetDefaultDevice");
