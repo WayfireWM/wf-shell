@@ -176,8 +176,8 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *wi
     {
         widget->set_quick_target_from(control);
         // if the full mixer is not shown, change the popover child
-        if (widget->popover->get_child() !=
-          &(widget->master_box) && widget->popover->is_visible())
+        if ((widget->popover->get_child() !=
+             &(widget->master_box)) && widget->popover->is_visible())
         {
             widget->popover->set_child(*widget->quick_target);
         }
@@ -244,7 +244,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         // if the quick_target controls the same object as the changed, correct it as well
         if (
-            widget->quick_target /* not quick_targetless guard */
+            widget->quick_target /* not quick-target-less guard */
             // current control and quick_target are for the same wp obj
             && (control->object ==
                 widget->quick_target->object))
@@ -275,8 +275,8 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         update_icons();
 
         // if the mixer is currently being displayed, stop there
-        if (widget->popover->get_child() ==
-          &(widget->master_box) && widget->popover->is_visible())
+        if ((widget->popover->get_child() ==
+             &(widget->master_box)) && widget->popover->is_visible())
         {
             continue;
         }
