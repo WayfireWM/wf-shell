@@ -42,6 +42,7 @@ class WayfireShellApp
   protected:
     /** This should be initialized by the subclass in each program which uses
      * wf-shell-app */
+    bool alternative_monitors = false; /* Used to skip monitor management in lockscreen */
     static std::unique_ptr<WayfireShellApp> instance;
     std::optional<std::string> cmdline_config;
     std::optional<std::string> cmdline_css;

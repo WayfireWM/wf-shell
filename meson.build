@@ -14,6 +14,7 @@ project(
 )
 
 wayfire = dependency('wayfire')
+pam = dependency('pam')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols')
 gtkmm = dependency('gtkmm-4.0', version: '>=4.12')
@@ -26,6 +27,7 @@ dbusmenu_gtk = dependency('dbusmenu-glib-0.4')
 libgvc = subproject('gvc', default_options: ['static=true'], required: get_option('pulse'))
 xkbregistry = dependency('xkbregistry')
 json = subproject('wf-json').get_variable('wfjson')
+openssl = dependency('openssl')
 
 if get_option('wayland-logout') == true
 	wayland_logout = subproject('wayland-logout')

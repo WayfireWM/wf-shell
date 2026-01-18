@@ -2,6 +2,7 @@ subdir('util')
 subdir('panel')
 subdir('background')
 subdir('dock')
+subdir('locker')
 
 pkgconfig = import('pkgconfig')
 pkgconfig.generate(
