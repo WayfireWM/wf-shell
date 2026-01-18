@@ -1,7 +1,7 @@
 #include <string>
 #include <glibmm.h>
 #include <gtkmm.h>
-#include <wf-option-wrap.hpp>
+#include "wf-option-wrap.hpp"
 
 class CssFromConfig
 {

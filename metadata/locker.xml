@@ -1,0 +1,351 @@
+<?xml version="1.0"?>
+<wf-shell>
+	<plugin name="locker">
+	<_short>Locker</_short>
+	<category>Shell</category>
+	<group>
+	<_short>General</_short>
+	<option name="background_color" type="string">
+		<_short>Background Color</_short>
+		<default>gtk_headerbar</default>
+	</option>
+	</group>
+	<group>
+	<_short>Password</_short>
+	<option name="password_enable" type="bool">
+		<_short>Enable</_short>
+		<_long>Show a password entry field to unlock with a keyboard</_long>
+		<default>true</default>
+	</option>
+	<option name="password_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>center-center</default>
+	</option>
+	</group>
+	<group>
+	<_short>PIN</_short>
+	<option name="pin_enable" type="bool">
+		<_short>Enable</_short>
+		<_long>Show a PIN pad and authenticate against users chosen PIN</_long>
+		<default>true</default>
+	</option>
+	<option name="pin_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>center-center</default>
+	</option>
+	<option name="pin_pad_font" type="string">
+		<_short>Pin Pad Font</_short>
+		<default>default</default>
+	</option>
+	<option name="pin_reply_font" type="string">
+		<_short>Pin Reply Font</_short>
+		<default>default</default>
+	</option>
+	</group>
+	<group>
+	<_short>Fingerprint</_short>
+	<option name="fingerprint_enable" type="bool">
+		<_short>Enable</_short>
+		<_long>Allow authentication with fingerprint reader</_long>
+		<default>true</default>
+	</option>
+	<option name="fingerprint_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>center-center</default>
+	</option>
+	<option name="fingerprint_font" type="string">
+		<_short>Fingerprint Reply Font</_short>
+		<default>default</default>
+	</option>
+	<option name="fingerprint_icon_size" type="int">
+		<_short>Fingerprint Icon Size</_short>
+		<default>128</default>
+	</option>
+	</group>
+	<group>
+	<_short>Clock</_short>
+	<option name="clock_enable" type="bool">
+		<_short>Enable</_short>
+		<default>true</default>
+	</option>
+	<option name="clock_format" type="string">
+		<_short>Clock Format</_short>
+		<default>%H:%M:%S</default>
+	</option>
+	<option name="clock_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>top-center</default>
+	</option>
+	<option name="clock_font" type="string">
+		<_short>Clock Font</_short>
+		<default>default</default>
+	</option>
+	</group>
+	<group>
+	<_short>Battery</_short>
+	<option name="battery_enable" type="bool">
+		<_short>Enable</_short>
+		<default>true</default>
+	</option>
+	<option name="battery_status" type="string">
+		<_short>Battery Status</_short>
+		<default>percentage</default>
+		<desc>
+			<value>icon</value>
+			<_name>Icon</_name>
+		</desc>
+		<desc>
+			<value>percentage</value>
+			<_name>Icon with Percentage</_name>
+		</desc>
+		<desc>
+			<value>full</value>
+			<_name>Full Information</_name>
+		</desc>
+	</option>
+	<option name="battery_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>bottom-center</default>
+	</option>
+	<option name="battery_percent_font" type="string">
+		<_short>Percent Font</_short>
+		<default>default</default>
+	</option>
+	<option name="battery_description_font" type="string">
+		<_short>Description Font</_short>
+		<default>default</default>
+	</option>
+	<option name="battery_icon_size" type="int">
+		<_short>Icon Size</_short>
+		<default>96</default>
+		<min>16</min>
+	</option>
+	</group>
+	<group>
+	<_short>Instant Unlock</_short>
+	<option name="instant_unlock_enable" type="bool">
+		<_short>Enable</_short>
+		<_long>Show a button which unlocks instantly without a password</_long>
+		<default>false</default>
+	</option>
+	<option name="instant_unlock_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>bottom-center</default>
+	</option>
+	<option name="instant_unlock_font" type="string">
+		<_short>Font</_short>
+		<default>default</default>
+	</option>
+	</group>
+	</plugin>
+</wf-shell>

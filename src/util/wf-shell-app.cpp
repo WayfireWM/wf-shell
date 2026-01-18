@@ -222,17 +222,21 @@ void WayfireShellApp::on_activate()
         sigc::bind<0>(&handle_css_inotify_event, this),
         inotify_css_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
 
-    // Hook up monitor tracking
-    auto display  = Gdk::Display::get_default();
-    auto monitors = display->get_monitors();
-    monitors->signal_items_changed().connect(sigc::mem_fun(*this, &WayfireShellApp::output_list_updated));
-
-    // initial monitors
-    int num_monitors = monitors->get_n_items();
-    for (int i = 0; i < num_monitors; i++)
+    if (!alternative_monitors)
     {
-        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
-        add_output(obj);
+
+        // Hook up monitor tracking
+        auto display  = Gdk::Display::get_default();
+        auto monitors = display->get_monitors();
+        monitors->signal_items_changed().connect(sigc::mem_fun(*this, &WayfireShellApp::output_list_updated));
+
+        // initial monitors
+        int num_monitors = monitors->get_n_items();
+        for (int i = 0; i < num_monitors; i++)
+        {
+            auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+            add_output(obj);
+        }
     }
 }
 
