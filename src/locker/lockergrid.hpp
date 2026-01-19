@@ -10,7 +10,7 @@ class WayfireLockerGrid : public Gtk::CenterBox
 {
     Gtk::CenterBox row1, row2, row3;
     Gtk::Box box[9];
-    
+
   public:
     /* Config string to box from grid */
     void attach(Gtk::Widget & widget, std::string pos_string)
@@ -54,7 +54,7 @@ class WayfireLockerGrid : public Gtk::CenterBox
         {
             throw std::exception();
         }
-        
+
         box[col + (row * 3)].append(widget);
     }
 
@@ -73,7 +73,7 @@ class WayfireLockerGrid : public Gtk::CenterBox
         row3.set_start_widget(box[6]);
         row3.set_center_widget(box[7]);
         row3.set_end_widget(box[8]);
-        for(int i = 0; i < 9; i ++)
+        for (int i = 0; i < 9; i++)
         {
             box[i].set_orientation(Gtk::Orientation::VERTICAL);
         }
