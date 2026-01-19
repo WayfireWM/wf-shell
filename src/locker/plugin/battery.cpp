@@ -1,11 +1,9 @@
 #include <memory>
-
-#include "gtkmm/image.h"
-#include "gtkmm/label.h"
-#include "gtkmm/box.h"
-#include "lockergrid.hpp"
-#include "wf-option-wrap.hpp"
 #include <iostream>
+#include <gtkmm/image.h>
+#include <gtkmm/label.h>
+
+#include "lockergrid.hpp"
 #include "battery.hpp"
 
 

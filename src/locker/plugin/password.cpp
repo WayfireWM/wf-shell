@@ -1,17 +1,15 @@
+#include <iostream>
 #include <memory>
 #include <glibmm.h>
-#include "password.hpp"
-#include "gtkmm/box.h"
 #include "gtkmm/entry.h"
 #include "gtkmm/label.h"
-#include "locker.hpp"
-#include "lockergrid.hpp"
-
 #include <unistd.h>
 #include <security/_pam_types.h>
 #include <security/pam_appl.h>
-#include <iostream>
 
+#include "locker.hpp"
+#include "lockergrid.hpp"
+#include "password.hpp"
 
 bool WayfireLockerPasswordPlugin::should_enable()
 {

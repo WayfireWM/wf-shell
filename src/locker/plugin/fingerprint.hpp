@@ -1,15 +1,15 @@
 #ifndef LOCKER_FINGERPRINT_PLUGIN_HPP
 #define LOCKER_FINGERPRINT_PLUGIN_HPP
 
+#include <unordered_map>
 #include <gtkmm/label.h>
 #include <gtkmm/image.h>
-#include <unordered_map>
 #include <giomm.h>
+#include <giomm/dbusproxy.h>
+#include <glibmm/refptr.h>
 
-#include "../plugin.hpp"
-#include "giomm/dbusproxy.h"
-#include "glibmm/refptr.h"
 #include "lockergrid.hpp"
+#include "../plugin.hpp"
 
 class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
 {

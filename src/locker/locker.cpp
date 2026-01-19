@@ -1,21 +1,18 @@
+
+#include <iostream>
 #include <glibmm/main.h>
+#include <glibmm/miscutils.h>
 #include <gtkmm/window.h>
 #include <gtkmm/headerbar.h>
 #include <gtkmm/box.h>
 #include <gtkmm/centerbox.h>
 #include <gtkmm/application.h>
+#include <gdkmm/monitor.h>
 #include <gdk/wayland/gdkwayland.h>
+#include <gtk4-session-lock.h>
+#include <wayfire/config/file.hpp>
 
-#include <iostream>
-
-#include <css-config.hpp>
-#include "locker.hpp"
-
-#include "gdkmm/monitor.h"
-#include "glibmm/miscutils.h"
-#include "gtk4-session-lock.h"
-#include "gtkmm/enums.h"
-
+#include "css-config.hpp"
 #include "lockergrid.hpp"
 #include "plugin/battery.hpp"
 #include "plugin/clock.hpp"
@@ -25,7 +22,8 @@
 #include "plugin/fingerprint.hpp"
 #include "plugin/volume.hpp"
 #include "wf-shell-app.hpp"
-#include <wayfire/config/file.hpp>
+#include "locker.hpp"
+
 
 WayfireLockerApp::~WayfireLockerApp()
 {}

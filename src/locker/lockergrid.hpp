@@ -1,6 +1,5 @@
 #ifndef WF_LOCKER_GRID
 #define WF_LOCKER_GRID
-#include "gtkmm/enums.h"
 #include <exception>
 #include <gtkmm/centerbox.h>
 #include <gtkmm/box.h>
