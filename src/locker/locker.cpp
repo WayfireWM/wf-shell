@@ -106,6 +106,9 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
             if (x == 0)
             {
                 box->set_halign(Gtk::Align::START);
+            } else if (x == 1)
+            {
+                box->set_halign(Gtk::Align::CENTER);
             } else if (x == 2)
             {
                 box->set_halign(Gtk::Align::END);
@@ -114,6 +117,9 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
             if (y == 0)
             {
                 box->set_valign(Gtk::Align::START);
+            } else if (y == 1)
+            {
+                box->set_valign(Gtk::Align::CENTER); 
             } else if (y == 2)
             {
                 box->set_valign(Gtk::Align::END);
