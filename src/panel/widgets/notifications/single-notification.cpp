@@ -94,8 +94,6 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
 
     if (notification.hints.image_data)
     {
-        int width;
-        int height;
         auto image_pixbuf = notification.hints.image_data;
 
         image.set(image_pixbuf);

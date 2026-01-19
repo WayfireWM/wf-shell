@@ -1,5 +1,4 @@
-#ifndef LAUNCHERS_HPP
-#define LAUNCHERS_HPP
+#pragma once
 
 #include "../widget.hpp"
 #include <vector>
@@ -39,6 +38,3 @@ class WayfireLaunchers : public WayfireWidget
     virtual ~WayfireLaunchers()
     {}
 };
-
-
-#endif /* end of include guard: LAUNCHERS_HPP */

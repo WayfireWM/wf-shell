@@ -1,16 +1,16 @@
-#ifndef WIDGETS_LANGUAGE_HPP
-#define WIDGETS_LANGUAGE_HPP
+#pragma once
 
-#include "../widget.hpp"
-#include "gtkmm/button.h"
-#include "sigc++/connection.h"
-#include "wf-ipc.hpp"
 #include <cstdint>
+#include <gtkmm/button.h>
 #include <gtkmm/calendar.h>
 #include <gtkmm/label.h>
 #include <wayfire/nonstd/json.hpp>
 #include <string>
 #include <vector>
+#include <sigc++/connection.h>
+
+#include "../widget.hpp"
+#include "wf-ipc.hpp"
 
 struct Layout
 {
@@ -38,5 +38,3 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
     WayfireLanguage();
     ~WayfireLanguage();
 };
-
-#endif /* end of include guard: WIDGETS_LANGUAGE_HPP */

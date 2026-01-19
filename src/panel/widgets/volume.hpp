@@ -1,12 +1,10 @@
-#ifndef WIDGETS_VOLUME_HPP
-#define WIDGETS_VOLUME_HPP
+#pragma once
 
 #include "../widget.hpp"
-#include "wf-popover.hpp"
 #include <gtkmm/image.h>
 #include <gtkmm/scale.h>
 #include <pulse/pulseaudio.h>
-#include "gvc-mixer-control.h"
+#include <gvc-mixer-control.h>
 #include <wayfire/util/duration.hpp>
 
 /**
@@ -100,5 +98,3 @@ class WayfireVolume : public WayfireWidget
      */
     void check_set_popover_timeout();
 };
-
-#endif /* end of include guard: WIDGETS_VOLUME_HPP */

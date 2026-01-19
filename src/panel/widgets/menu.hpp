@@ -1,12 +1,12 @@
-#ifndef WIDGETS_MENU_HPP
-#define WIDGETS_MENU_HPP
+#pragma once
 
-#include "../widget.hpp"
-#include "sigc++/connection.h"
-#include "wf-popover.hpp"
 #include <giomm/desktopappinfo.h>
 #include <gtkmm.h>
+#include <sigc++/connection.h>
 #include <set>
+
+#include "../widget.hpp"
+#include "wf-popover.hpp"
 
 class WayfireMenu;
 using AppInfo = Glib::RefPtr<Gio::DesktopAppInfo>;
@@ -208,5 +208,3 @@ class WayfireMenu : public WayfireWidget
 
     ~WayfireMenu() override;
 };
-
-#endif /* end of include guard: WIDGETS_MENU_HPP */

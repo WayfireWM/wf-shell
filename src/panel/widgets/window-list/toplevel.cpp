@@ -1,16 +1,17 @@
 #include <gtkmm.h>
 #include <giomm/desktopappinfo.h>
-#include <iostream>
 
 #include <gdkmm/seat.h>
 #include <gdk/wayland/gdkwayland.h>
 #include <cmath>
 
 #include <glibmm.h>
+#include <cassert>
+
 #include "toplevel.hpp"
+#include "window-list.hpp"
 #include "gtk-utils.hpp"
 #include "panel.hpp"
-#include <cassert>
 
 namespace
 {

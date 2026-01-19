@@ -1,13 +1,14 @@
 #include "launchers.hpp"
+
 #include <giomm/file.h>
 #include <glibmm/spawn.h>
 #include <glibmm/keyfile.h>
 #include <gtkmm/icontheme.h>
 #include <gdk/gdkcairo.h>
 #include <cassert>
-#include <iostream>
 #include <gtk-utils.hpp>
-#include <wf-shell-app.hpp>
+
+#include "wf-shell-app.hpp"
 
 bool WfLauncherButton::initialize(std::string name, std::string icon, std::string label)
 {

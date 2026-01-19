@@ -1,5 +1,4 @@
 #include "command-output.hpp"
-#include "sigc++/connection.h"
 
 #include <glibmm/main.h>
 #include <glibmm/shell.h>

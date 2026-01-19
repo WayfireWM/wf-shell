@@ -10,7 +10,6 @@
 
 #include "menu.hpp"
 #include "gtk-utils.hpp"
-#include "launchers.hpp"
 #include "wf-autohide-window.hpp"
 
 const std::string default_icon = "wayfire";

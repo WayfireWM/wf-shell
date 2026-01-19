@@ -1,5 +1,4 @@
-#ifndef WIDGETS_SINGLE_NOTIFICATION_HPP
-#define WIDGETS_SINGLE_NOTIFICATION_HPP
+#pragma once
 
 #include <gdkmm/pixbuf.h>
 #include <gtkmm/box.h>
@@ -41,5 +40,3 @@ class WfSingleNotification : public Gtk::Revealer
     explicit WfSingleNotification(const Notification & notification);
     ~WfSingleNotification() override;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef TRAY_WATCHER_HPP
-#define TRAY_WATCHER_HPP
+#pragma once
 
 #include <memory>
 
@@ -82,5 +81,3 @@ class Watcher
         watcher_connection->emit_signal(SNW_PATH, SNW_IFACE, name);
     }
 }; // namespace Watcher
-
-#endif

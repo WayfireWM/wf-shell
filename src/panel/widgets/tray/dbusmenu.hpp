@@ -1,5 +1,4 @@
-#ifndef TRAY_DBUSMENU_HPP
-#define TRAY_DBUSMENU_HPP
+#pragma once
 
 #include <giomm.h>
 #include <gtkmm.h>
@@ -40,5 +39,3 @@ class DbusMenuModel
 
     type_signal_action_group signal_action_group();
 };
-
-#endif
