@@ -55,7 +55,7 @@ void WayfireLockerFingerprintPlugin::on_bus_acquired(const Glib::RefPtr<Gio::DBu
                 item_path.get(),
                 "net.reactivated.Fprint.Device",
                 sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
-        } catch (Glib::Error &e) /* TODO : Narrow down? */
+        } catch (Glib::Error & e) /* TODO : Narrow down? */
         {
             enable = false;
             hide();
@@ -148,7 +148,7 @@ void WayfireLockerFingerprintPlugin::claim_device()
             this->start_fingerprint_scanning();
             return G_SOURCE_REMOVE;
         }, 5);
-    } catch (Glib::Error &e) /* TODO : Narrow down? */
+    } catch (Glib::Error & e) /* TODO : Narrow down? */
     {
         std::cout << "Fingerprint device already claimed, try in 5s" << std::endl;
         update_labels("Fingerprint reader busy...");
