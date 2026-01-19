@@ -217,7 +217,7 @@ void WayfireWpMixer::init(Gtk::Box *container)
 
     // scroll to change volume of the object targetted by the quick_target widget
     auto scroll_gesture = Gtk::EventControllerScroll::create();
-    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
+    scroll_conn = scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
         if (!quick_target)
         {
@@ -345,4 +345,9 @@ WayfireWpMixer::~WayfireWpMixer()
     WpCommon::get().rem_widget(this);
     gtk_widget_unparent(GTK_WIDGET(popover->gobj()));
     popover_timeout.disconnect();
+    volume_changed_signal.disconnect();
+    left_conn.disconnect();
+    middle_conn.disconnect();
+    right_conn.disconnect();
+    scroll_conn.disconnect();
 }

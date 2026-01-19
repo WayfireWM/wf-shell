@@ -10,6 +10,17 @@ WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
     parent = parent_widget;
 }
 
+WfWpControl::~WfWpControl()
+{
+    mute_conn.disconnect();
+    middle_conn.disconnect();
+    right_conn.disconnect();
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
+}
+
 void WfWpControl::init()
 {
     guint32 id = wp_proxy_get_bound_id(WP_PROXY(object));
@@ -53,7 +64,7 @@ void WfWpControl::init()
 
     // setup user interactions
 
-    mute_conn = button.signal_toggled().connect(
+    signals.push_back(mute_conn = button.signal_toggled().connect(
         [this, id] ()
     {
         // if the menu was popped up because of an external change
@@ -63,7 +74,7 @@ void WfWpControl::init()
         // disregarding the return value prevents cases where ignore is read at an ncorrect time,
         // with the only problem of having one update ignored if something goes very wrong
         WpCommon::get().set_mute(id, button.get_active());
-    });
+    }));
 
     scale.set_user_changed_callback(
         [this, id] ()
@@ -74,7 +85,7 @@ void WfWpControl::init()
     });
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();
-    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
+    signals.push_back(scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
         dy = parent->invert_scroll ? dy : dy * -1; // for the same scrolling as volume widget, which we will
                                                    // agree it is more intuitive for more people
@@ -92,7 +103,7 @@ void WfWpControl::init()
 
         WpCommon::get().set_volume(id, scale.get_target_value() + change);
         return true;
-    }, true);
+    }, true));
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     add_controller(scroll_gesture);
 
@@ -198,6 +209,11 @@ void WfWpControl::handle_config_reload()
 std::unique_ptr<WfWpControl> WfWpControl::copy()
 {
     return std::make_unique<WfWpControl>(object, parent);
+}
+
+WfWpControlDevice::~WfWpControlDevice()
+{
+    def_conn.disconnect();
 }
 
 void WfWpControlDevice::init()

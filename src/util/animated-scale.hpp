@@ -17,6 +17,7 @@ class WayfireAnimatedScale : public Gtk::Scale
 
   public:
     WayfireAnimatedScale();
+    ~WayfireAnimatedScale();
 
     /* Gets the current target value */
     double get_target_value() const;

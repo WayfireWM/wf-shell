@@ -19,12 +19,14 @@ class WfWpControl : public Gtk::Grid
     WayfireWpMixer *parent;
     std::shared_ptr<Gtk::GestureClick> middle_click_mute, right_click_mute;
     sigc::connection middle_conn, right_conn;
+    std::vector<sigc::connection> signals;
     void update_gestures();
     virtual void update_icons_pos();
     WfOption<int> slider_length{"panel/wp_slider_length"};
 
   public:
     WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget);
+    ~WfWpControl();
     virtual void init();
 
     WpPipewireObject *object;
@@ -49,6 +51,7 @@ class WfWpControl : public Gtk::Grid
 class WfWpControlDevice : public WfWpControl
 {
   private:
+
     sigc::connection def_conn;
     Gtk::Image is_def_icon;
     void update_icons_pos();
@@ -56,6 +59,7 @@ class WfWpControlDevice : public WfWpControl
   public:
     WfWpControlDevice(WpPipewireObject *obj, WayfireWpMixer *parent_widget) : WfWpControl(obj, parent_widget)
     {}
+    ~WfWpControlDevice();
     void init();
 
     Gtk::ToggleButton default_btn;

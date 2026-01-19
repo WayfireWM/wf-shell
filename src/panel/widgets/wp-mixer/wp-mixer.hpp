@@ -38,10 +38,8 @@ class WayfireWpMixer : public WayfireWidget
     gulong notify_volume_signal   = 0;
     gulong notify_is_muted_signal = 0;
     gulong notify_default_sink_changed = 0;
-    sigc::connection popover_timeout;
-    sigc::connection volume_changed_signal;
+    sigc::connection popover_timeout, volume_changed_signal, left_conn, middle_conn, right_conn, scroll_conn;
     std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
-    sigc::connection left_conn, middle_conn, right_conn;
 
     // widgets for the mixer itself
     Gtk::Label output_label, input_label, streams_label;

@@ -13,6 +13,11 @@ WayfireAnimatedScale::WayfireAnimatedScale()
     });
 }
 
+WayfireAnimatedScale::~WayfireAnimatedScale()
+{
+    value_changed.disconnect();
+}
+
 void WayfireAnimatedScale::set_target_value(double value)
 {
     this->current_volume.animate(value);
