@@ -6,13 +6,14 @@
 #include <gtkmm/box.h>
 #include <gtkmm/widget.h>
 
-class WayfireLockerGrid : public Gtk::CenterBox{
-    Gtk::CenterBox row1,row2,row3;
+class WayfireLockerGrid : public Gtk::CenterBox
+{
+    Gtk::CenterBox row1, row2, row3;
     Gtk::Box box[9];
-    public:
-
+    
+  public:
     /* Config string to box from grid */
-    void attach(Gtk::Widget &widget, std::string pos_string)
+    void attach(Gtk::Widget & widget, std::string pos_string)
     {
         if (pos_string == "top-left")
         {
@@ -41,21 +42,21 @@ class WayfireLockerGrid : public Gtk::CenterBox{
         } else if (pos_string == "bottom-right")
         {
             attach(widget, 2, 2);
-        } else {
-            throw std::exception();
-        }
-    }
-
-    void attach(Gtk::Widget &widget, int col, int row)
-    {
-        if(col > 2 || row > 2 || col < 0 || row < 0)
+        } else
         {
             throw std::exception();
         }
-        box[col + (row*3)].append(widget);
     }
 
-    
+    void attach(Gtk::Widget & widget, int col, int row)
+    {
+        if ((col > 2) || (row > 2) || (col < 0) || (row < 0))
+        {
+            throw std::exception();
+        }
+        
+        box[col + (row * 3)].append(widget);
+    }
 
     WayfireLockerGrid()
     {
