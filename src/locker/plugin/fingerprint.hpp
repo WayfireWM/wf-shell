@@ -20,6 +20,7 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     ~WayfireLockerFingerprintPlugin();
     void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
     void on_device_acquired(const Glib::RefPtr<Gio::AsyncResult> & result);
+    void claim_device();
     void start_fingerprint_scanning();
     void add_output(int id, Gtk::Grid *grid) override;
     void remove_output(int id) override;
@@ -38,7 +39,6 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     std::unordered_map<int, std::shared_ptr<Gtk::Image>> images;
     std::string icon_contents  = "";
     std::string label_contents = "";
-    std::string finger_name    = "";
 };
 
 #endif

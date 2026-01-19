@@ -3,6 +3,7 @@
 
 #include "../widget.hpp"
 #include "wf-popover.hpp"
+#include <gtkmm/button.h>
 #include <gtkmm/image.h>
 #include <gtkmm/scale.h>
 #include <pulse/pulseaudio.h>

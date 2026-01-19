@@ -22,6 +22,7 @@
 #include "plugin/password.hpp"
 #include "plugin/pin.hpp"
 #include "plugin/fingerprint.hpp"
+#include "plugin/volume.hpp"
 #include "wf-shell-app.hpp"
 #include <wayfire/config/file.hpp>
 
@@ -64,6 +65,7 @@ void WayfireLockerApp::on_activate()
     plugins.emplace("instant", (Plugin(new WayfireLockerInstantPlugin())));
     plugins.emplace("pin", Plugin(new WayfireLockerPinPlugin()));
     plugins.emplace("fingerprint", Plugin(new WayfireLockerFingerprintPlugin()));
+    plugins.emplace("volume", Plugin(new WayfireLockerVolumePlugin()));
 
     for (auto& it : plugins)
     {

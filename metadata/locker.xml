@@ -297,6 +297,52 @@
 	</option>
 	</group>
 	<group>
+	<option name="volume_enable" type="bool">
+		<_short>Enable</_short>
+		<default>true</default>
+	</option>
+	<option name="volume_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>top-right</default>
+	</option>
+	
+	</group>
+	<group>
 	<_short>Instant Unlock</_short>
 	<option name="instant_unlock_enable" type="bool">
 		<_short>Enable</_short>
