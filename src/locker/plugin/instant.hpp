@@ -5,13 +5,14 @@
 
 #include "../plugin.hpp"
 #include "../../util/wf-option-wrap.hpp"
+#include "lockergrid.hpp"
 
 class WayfireLockerInstantPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerInstantPlugin()
     {}
-    void add_output(int id, Gtk::Grid *grid) override;
+    void add_output(int id, WayfireLockerGrid *grid) override;
     void remove_output(int id) override;
     bool should_enable() override;
     void init() override;

@@ -10,6 +10,7 @@
 #include "../../util/wf-option-wrap.hpp"
 #include "glib.h"
 #include "locker.hpp"
+#include "lockergrid.hpp"
 #include "fingerprint.hpp"
 
 
@@ -187,7 +188,7 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 void WayfireLockerFingerprintPlugin::init()
 {}
 
-void WayfireLockerFingerprintPlugin::add_output(int id, Gtk::Grid *grid)
+void WayfireLockerFingerprintPlugin::add_output(int id, WayfireLockerGrid *grid)
 {
     labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
     images.emplace(id, std::shared_ptr<Gtk::Image>(new Gtk::Image()));
@@ -207,10 +208,8 @@ void WayfireLockerFingerprintPlugin::add_output(int id, Gtk::Grid *grid)
     image->add_css_class("fingerprint-icon");
     label->add_css_class("fingerprint-text");
 
-    Gtk::Box *box = get_plugin_position(WfOption<std::string>{"locker/fingerprint_position"}, grid);
-    box->append(*image);
-
-    box->append(*label);
+    grid->attach(*image,WfOption<std::string>{"locker/fingerprint_position"});
+    grid->attach(*label,WfOption<std::string>{"locker/fingerprint_position"});
 }
 
 void WayfireLockerFingerprintPlugin::remove_output(int id)

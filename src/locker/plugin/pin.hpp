@@ -8,6 +8,7 @@
 
 #include "../plugin.hpp"
 #include "glibmm/refptr.h"
+#include "lockergrid.hpp"
 
 /* Rather than keep an unordered list for each widget, put them together */
 class WayfireLockerPinPlugin;
@@ -27,7 +28,7 @@ class WayfireLockerPinPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerPinPlugin();
-    void add_output(int id, Gtk::Grid *grid) override;
+    void add_output(int id, WayfireLockerGrid *grid) override;
     void remove_output(int id) override;
     bool should_enable() override;
     void init() override;

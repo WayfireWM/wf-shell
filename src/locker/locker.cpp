@@ -2,7 +2,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/headerbar.h>
 #include <gtkmm/box.h>
-#include <gtkmm/grid.h>
+#include <gtkmm/centerbox.h>
 #include <gtkmm/application.h>
 #include <gdk/wayland/gdkwayland.h>
 
@@ -16,6 +16,7 @@
 #include "gtk4-session-lock.h"
 #include "gtkmm/enums.h"
 
+#include "lockergrid.hpp"
 #include "plugin/battery.hpp"
 #include "plugin/clock.hpp"
 #include "plugin/instant.hpp"
@@ -93,42 +94,10 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     /* Create lockscreen with a grid for contents */
     auto window = new Gtk::Window();
     window->add_css_class("wf-locker");
-    auto grid = new Gtk::Grid();
+    auto grid = new WayfireLockerGrid();
+
     window->set_child(*grid);
     grid->set_expand(true);
-    grid->set_column_homogeneous(true);
-    grid->set_row_homogeneous(true);
-    for (int x = 0; x < 3; x++)
-    {
-        for (int y = 0; y < 3; y++)
-        {
-            auto box = new Gtk::Box();
-            if (x == 0)
-            {
-                box->set_halign(Gtk::Align::START);
-            } else if (x == 1)
-            {
-                box->set_halign(Gtk::Align::CENTER);
-            } else if (x == 2)
-            {
-                box->set_halign(Gtk::Align::END);
-            }
-
-            if (y == 0)
-            {
-                box->set_valign(Gtk::Align::START);
-            } else if (y == 1)
-            {
-                box->set_valign(Gtk::Align::CENTER);
-            } else if (y == 2)
-            {
-                box->set_valign(Gtk::Align::END);
-            }
-
-            box->set_orientation(Gtk::Orientation::VERTICAL);
-            grid->attach(*box, x, y);
-        }
-    }
 
     for (auto& it : plugins)
     {

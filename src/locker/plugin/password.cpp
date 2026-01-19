@@ -5,6 +5,7 @@
 #include "gtkmm/entry.h"
 #include "gtkmm/label.h"
 #include "locker.hpp"
+#include "lockergrid.hpp"
 
 #include <unistd.h>
 #include <security/_pam_types.h>
@@ -35,7 +36,7 @@ void WayfireLockerPasswordPlugin::blank_passwords()
     }
 }
 
-void WayfireLockerPasswordPlugin::add_output(int id, Gtk::Grid *grid)
+void WayfireLockerPasswordPlugin::add_output(int id, WayfireLockerGrid *grid)
 {
     labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
     entries.emplace(id, std::shared_ptr<Gtk::Entry>(new Gtk::Entry));
@@ -56,9 +57,8 @@ void WayfireLockerPasswordPlugin::add_output(int id, Gtk::Grid *grid)
         }
     }, true);
     /* Add to window */
-    Gtk::Box *box = get_plugin_position(WfOption<std::string>{"locker/password_position"}, grid);
-    box->append(*entry);
-    box->append(*label);
+    grid->attach(*entry, WfOption<std::string>{"locker/password_position"});
+    grid->attach(*label, WfOption<std::string>{"locker/password_position"});
 }
 
 void WayfireLockerPasswordPlugin::remove_output(int id)

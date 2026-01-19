@@ -10,6 +10,7 @@
 #include "gvc-mixer-control.h"
 
 #include "../plugin.hpp"
+#include "lockergrid.hpp"
 
 class WayfireLockerVolumePlugin : public WayfireLockerPlugin
 {
@@ -24,7 +25,7 @@ class WayfireLockerVolumePlugin : public WayfireLockerPlugin
 
   public:
     WayfireLockerVolumePlugin();
-    void add_output(int id, Gtk::Grid *grid) override;
+    void add_output(int id, WayfireLockerGrid *grid) override;
     void remove_output(int id) override;
     bool should_enable() override;
     void init() override;

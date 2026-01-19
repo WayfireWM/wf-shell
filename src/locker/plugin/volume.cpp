@@ -2,6 +2,7 @@
 #include <glibmm.h>
 #include <gtkmm/box.h>
 #include "clock.hpp"
+#include "lockergrid.hpp"
 
 #include "volume.hpp"
 
@@ -71,7 +72,7 @@ bool WayfireLockerVolumePlugin::should_enable()
     return (bool)enable;
 }
 
-void WayfireLockerVolumePlugin::add_output(int id, Gtk::Grid *grid)
+void WayfireLockerVolumePlugin::add_output(int id, WayfireLockerGrid *grid)
 {
     source_buttons.emplace(id, std::shared_ptr<Gtk::Button>(new Gtk::Button()));
     sink_buttons.emplace(id, std::shared_ptr<Gtk::Button>(new Gtk::Button()));
@@ -81,11 +82,10 @@ void WayfireLockerVolumePlugin::add_output(int id, Gtk::Grid *grid)
     sink_button->add_css_class("volume-button");
     source_button->add_css_class("mic-button");
 
-    Gtk::Box *box  = get_plugin_position(WfOption<std::string>{"locker/volume_position"}, grid);
     auto inner_box = Gtk::Box();
     inner_box.append(*source_button);
     inner_box.append(*sink_button);
-    box->append(inner_box);
+    grid->attach(inner_box, WfOption<std::string>{"locker/volume_position"});
 
     sink_button->signal_clicked().connect(
         [=] ()

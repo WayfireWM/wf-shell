@@ -12,6 +12,7 @@
 
 #include "../../util/wf-option-wrap.hpp"
 #include "locker.hpp"
+#include "lockergrid.hpp"
 #include "pin.hpp"
 
 
@@ -145,14 +146,13 @@ bool WayfireLockerPinPlugin::should_enable()
     return enable;
 }
 
-void WayfireLockerPinPlugin::add_output(int id, Gtk::Grid *grid)
+void WayfireLockerPinPlugin::add_output(int id, WayfireLockerGrid *grid)
 {
     pinpads.emplace(id, new PinPad());
     auto pinpad = pinpads[id];
     pinpad->add_css_class("pinpad");
     pinpad->init();
-    Gtk::Box *box = get_plugin_position(WfOption<std::string>{"locker/pin_position"}, grid);
-    box->append(*pinpad);
+    grid->attach(*pinpad, WfOption<std::string>{"locker/pin_position"});
     update_labels(); /* Update all to set this one? maybe overkill */
 }
 

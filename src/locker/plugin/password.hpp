@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "../plugin.hpp"
 #include "../../util/wf-option-wrap.hpp"
+#include "lockergrid.hpp"
 
 int pam_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp,
     void *appdata_ptr);
@@ -14,7 +15,7 @@ class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerPasswordPlugin();
-    void add_output(int id, Gtk::Grid *grid) override;
+    void add_output(int id, WayfireLockerGrid *grid) override;
     void remove_output(int id) override;
     bool should_enable() override;
     void init() override;
