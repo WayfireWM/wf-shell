@@ -19,11 +19,10 @@ deps = [
   openssl
 ]
 
-# We'll come back here with a 'mute mic' widget and a 'volume' widget
-#if libpulse.found()
-#  widget_sources += 'widgets/volume.cpp'
-#  deps += [libpulse, libgvc]
-#endif
+if libpulse.found()
+  widget_sources += 'plugin/volume.cpp'
+  deps += [libpulse, libgvc]
+endif
 
 executable(
   'wf-locker',
