@@ -3,6 +3,7 @@
 #include "gtkmm/image.h"
 #include "gtkmm/label.h"
 #include "gtkmm/box.h"
+#include "lockergrid.hpp"
 #include "wf-option-wrap.hpp"
 #include <iostream>
 #include "battery.hpp"
@@ -92,7 +93,7 @@ void WayfireLockerBatteryPlugin::update_images()
     }
 }
 
-void WayfireLockerBatteryPlugin::add_output(int id, Gtk::Grid *grid)
+void WayfireLockerBatteryPlugin::add_output(int id, WayfireLockerGrid *grid)
 {
     Gtk::Grid *batt_grid = new Gtk::Grid();
     labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
@@ -117,9 +118,7 @@ void WayfireLockerBatteryPlugin::add_output(int id, Gtk::Grid *grid)
     batt_grid->attach(*label, 1, 0);
     batt_grid->attach(*subtext, 0, 1, 2, 1);
 
-    Gtk::Box *box = get_plugin_position(battery_position, grid);
-
-    box->append(*batt_grid);
+    grid->attach(*batt_grid, (std::string)battery_position);
 
     update_details();
 }

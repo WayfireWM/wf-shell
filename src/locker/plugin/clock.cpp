@@ -2,6 +2,7 @@
 #include <glibmm.h>
 #include <gtkmm/box.h>
 #include "clock.hpp"
+#include "lockergrid.hpp"
 
 bool WayfireLockerClockPlugin::should_enable()
 {
@@ -18,15 +19,14 @@ void WayfireLockerClockPlugin::update_labels(std::string text)
     label_contents = text;
 }
 
-void WayfireLockerClockPlugin::add_output(int id, Gtk::Grid *grid)
+void WayfireLockerClockPlugin::add_output(int id, WayfireLockerGrid *grid)
 {
     labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
     auto label = labels[id];
     label->add_css_class("clock");
     label->set_label(label_contents);
 
-    Gtk::Box *box = get_plugin_position(WfOption<std::string>{"locker/clock_position"}, grid);
-    box->append(*label);
+    grid->attach(*label, WfOption<std::string>{"locker/clock_position"});
 }
 
 void WayfireLockerClockPlugin::remove_output(int id)
