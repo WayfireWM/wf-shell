@@ -1,5 +1,4 @@
-#ifndef WIDGET_SEPARATOR_HPP
-#define WIDGET_SEPARATOR_HPP
+#pragma once
 
 #include "../widget.hpp"
 #include <gtkmm/separator.h>
@@ -15,6 +14,3 @@ class WayfireSeparator : public WayfireWidget
     virtual ~WayfireSeparator()
     {}
 };
-
-
-#endif /* end of include guard: WIDGET_SEPARATOR_HPP */

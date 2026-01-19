@@ -1,5 +1,4 @@
-#ifndef WIDGETS_BATTERY_HPP
-#define WIDGETS_BATTERY_HPP
+#pragma once
 
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
@@ -9,8 +8,9 @@
 #include <giomm/dbusproxy.h>
 #include <giomm/dbusconnection.h>
 
+#include <sigc++/connection.h>
+
 #include "../widget.hpp"
-#include "sigc++/connection.h"
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
 using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
@@ -49,6 +49,3 @@ class WayfireBatteryInfo : public WayfireWidget
     virtual void init(Gtk::Box *container);
     virtual ~WayfireBatteryInfo();
 };
-
-
-#endif /* end of include guard: WIDGETS_BATTERY_HPP */

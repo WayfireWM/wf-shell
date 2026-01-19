@@ -14,7 +14,6 @@
 #include <css-config.hpp>
 #include "panel.hpp"
 
-#include "wf-ipc.hpp"
 #include "widgets/battery.hpp"
 #include "widgets/command-output.hpp"
 #include "widgets/language.hpp"

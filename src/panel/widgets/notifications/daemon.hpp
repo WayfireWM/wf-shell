@@ -1,5 +1,4 @@
-#ifndef NOTIFICATION_DAEMON_HPP
-#define NOTIFICATION_DAEMON_HPP
+#pragma once
 
 #include "notification-info.hpp"
 
@@ -90,5 +89,3 @@ class Daemon
 
     void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
 };
-
-#endif

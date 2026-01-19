@@ -1,5 +1,4 @@
-#ifndef TRAY_TRAY_HPP
-#define TRAY_TRAY_HPP
+#pragma once
 
 #include "item.hpp"
 #include "widgets/tray/host.hpp"
@@ -20,5 +19,3 @@ class WayfireStatusNotifier : public WayfireWidget
     void add_item(const Glib::ustring & service);
     void remove_item(const Glib::ustring & service);
 };
-
-#endif

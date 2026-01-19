@@ -1,8 +1,7 @@
-#include "battery.hpp"
-#include "wf-ipc.hpp"
 #include <gtk-utils.hpp>
 #include <iostream>
-#include <algorithm>
+
+#include "battery.hpp"
 
 #define UPOWER_NAME "org.freedesktop.UPower"
 #define DISPLAY_DEVICE "/org/freedesktop/UPower/devices/DisplayDevice"

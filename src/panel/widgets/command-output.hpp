@@ -1,8 +1,6 @@
-#ifndef COMMAND_OUTPUT_HPP
-#define COMMAND_OUTPUT_HPP
+#pragma once
 
 #include "../widget.hpp"
-#include "sigc++/connection.h"
 
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
@@ -10,6 +8,7 @@
 #include <gtkmm/scrolledwindow.h>
 
 #include <vector>
+#include <sigc++/connection.h>
 #include <wayfire/config/compound-option.hpp>
 
 class WfCommandOutputButtons : public WayfireWidget
@@ -55,5 +54,3 @@ class WfCommandOutputButtons : public WayfireWidget
     void init(Gtk::Box *container) override;
     void update_buttons();
 };
-
-#endif /* end of include guard: COMMAND_OUTPUT_HPP */

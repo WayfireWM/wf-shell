@@ -1,5 +1,4 @@
-#ifndef WIDGETS_CLOCK_HPP
-#define WIDGETS_CLOCK_HPP
+#pragma once
 
 #include "../widget.hpp"
 #include "wf-popover.hpp"
@@ -22,5 +21,3 @@ class WayfireClock : public WayfireWidget
     bool update_label();
     ~WayfireClock();
 };
-
-#endif /* end of include guard: WIDGETS_CLOCK_HPP */

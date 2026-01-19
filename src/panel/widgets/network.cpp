@@ -247,31 +247,6 @@ struct status_color
 
 #define MAX_COLORS (sizeof(status_colors) / sizeof(status_color))
 
-static Gdk::RGBA get_color_for_pc(int pc)
-{
-    for (int i = MAX_COLORS - 2; i >= 0; i--)
-    {
-        if (status_colors[i].point <= pc)
-        {
-            auto& r1 = status_colors[i].rgba;
-            auto& r2 = status_colors[i + 1].rgba;
-
-            double a = 1.0 * (pc - status_colors[i].point) /
-                (status_colors[i + 1].point - status_colors[i].point);
-            Gdk::RGBA result;
-            result.set_rgba(
-                r1.get_red() * (1 - a) + r2.get_red() * a,
-                r1.get_green() * (1 - a) + r2.get_green() * a,
-                r1.get_blue() * (1 - a) + r2.get_blue() * a,
-                r1.get_alpha() * (1 - a) + r2.get_alpha() * a);
-
-            return result;
-        }
-    }
-
-    return Gdk::RGBA{"#ffffff"};
-}
-
 void WayfireNetworkInfo::update_status()
 {
     std::string description = info->get_connection_name();

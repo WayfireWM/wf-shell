@@ -9,7 +9,6 @@
 #include <glib-object.h>
 #include <giomm/dbusmenumodel.h>
 
-#include <iostream>
 #include <cassert>
 
 static std::pair<Glib::ustring, Glib::ustring> name_and_obj_path(const Glib::ustring & service)

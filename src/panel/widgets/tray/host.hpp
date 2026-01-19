@@ -1,9 +1,8 @@
-#ifndef TRAY_HOST_HPP
-#define TRAY_HOST_HPP
+#pragma once
 
-#include "sigc++/connection.h"
 #include "watcher.hpp"
 
+#include <sigc++/connection.h>
 #include <giomm.h>
 
 class WayfireStatusNotifier;
@@ -30,5 +29,3 @@ class StatusNotifierHost
     explicit StatusNotifierHost(WayfireStatusNotifier *tray);
     ~StatusNotifierHost();
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef WIDGET_HPP
-#define WIDGET_HPP
+#pragma once
 
 #include <gtkmm/box.h>
 #include <wf-option-wrap.hpp>
@@ -23,5 +22,3 @@ class WayfireWidget
     virtual ~WayfireWidget()
     {}
 };
-
-#endif /* end of include guard: WIDGET_HPP */

@@ -1,17 +1,14 @@
-#ifndef TRAY_ITEM_HPP
-#define TRAY_ITEM_HPP
+#pragma once
 
 #include <giomm.h>
 #include <gtkmm.h>
 
 #include <wf-option-wrap.hpp>
 #include <libdbusmenu-glib/dbusmenu-glib.h>
-#include "dbusmenu.hpp"
-#include "sigc++/connection.h"
-#include <sstream>
+#include <sigc++/connection.h>
 #include <string>
 
-#include <optional>
+#include "dbusmenu.hpp"
 
 class StatusNotifierItem : public Gtk::Button
 {
@@ -66,5 +63,3 @@ class StatusNotifierItem : public Gtk::Button
     ~StatusNotifierItem();
     std::string get_unique_name();
 };
-
-#endif

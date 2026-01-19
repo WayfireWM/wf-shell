@@ -1,16 +1,17 @@
 #include <cstddef>
 #include <cstdint>
+
 #include <glibmm.h>
-#include <iostream>
+#include <gtkmm/button.h>
+
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 #include <wayfire/util/log.hpp>
 #include <xkbcommon/xkbregistry.h>
+
 #include "language.hpp"
-#include "gtkmm/button.h"
-#include "sigc++/functors/mem_fun.h"
 #include "wf-ipc.hpp"
 
 void WayfireLanguage::init(Gtk::Box *container)
