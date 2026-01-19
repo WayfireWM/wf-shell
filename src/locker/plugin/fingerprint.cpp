@@ -208,8 +208,8 @@ void WayfireLockerFingerprintPlugin::add_output(int id, WayfireLockerGrid *grid)
     image->add_css_class("fingerprint-icon");
     label->add_css_class("fingerprint-text");
 
-    grid->attach(*image,WfOption<std::string>{"locker/fingerprint_position"});
-    grid->attach(*label,WfOption<std::string>{"locker/fingerprint_position"});
+    grid->attach(*image, WfOption<std::string>{"locker/fingerprint_position"});
+    grid->attach(*label, WfOption<std::string>{"locker/fingerprint_position"});
 }
 
 void WayfireLockerFingerprintPlugin::remove_output(int id)
