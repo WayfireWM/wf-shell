@@ -1,10 +1,10 @@
 #include <memory>
 #include <glibmm.h>
 #include <gtkmm/box.h>
-#include "clock.hpp"
-#include "lockergrid.hpp"
 
+#include "lockergrid.hpp"
 #include "volume.hpp"
+#include "../../util/wf-option-wrap.hpp"
 
 static void default_sink_changed(GvcMixerControl *gvc_control,
     guint id, gpointer user_data)

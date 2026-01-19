@@ -1,13 +1,13 @@
 #ifndef LOCKER_PIN_PLUGIN_HPP
 #define LOCKER_PIN_PLUGIN_HPP
 
+#include <unordered_map>
 #include <gtkmm/label.h>
 #include <gtkmm/button.h>
 #include <gtkmm/grid.h>
-#include <unordered_map>
+#include <glibmm/refptr.h>
 
 #include "../plugin.hpp"
-#include "glibmm/refptr.h"
 #include "lockergrid.hpp"
 
 /* Rather than keep an unordered list for each widget, put them together */

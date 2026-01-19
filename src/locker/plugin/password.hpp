@@ -4,6 +4,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/entry.h>
 #include <unordered_map>
+
 #include "../plugin.hpp"
 #include "../../util/wf-option-wrap.hpp"
 #include "lockergrid.hpp"

@@ -1,13 +1,13 @@
 #ifndef LOCKER_BATTERY_PLUGIN_HPP
 #define LOCKER_BATTERY_PLUGIN_HPP
-#include <gtkmm/label.h>
-#include <gtkmm/image.h>
-#include <gtkmm/grid.h>
-
-#include <giomm.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <gtkmm/label.h>
+#include <gtkmm/image.h>
+#include <gtkmm/grid.h>
+#include <giomm.h>
+
 #include "../plugin.hpp"
 #include "../../util/wf-option-wrap.hpp"
 #include "lockergrid.hpp"

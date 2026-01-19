@@ -1,13 +1,14 @@
 #ifndef WF_LOCKER_HPP
 #define WF_LOCKER_HPP
 
-#include "plugin.hpp"
-#include "wf-shell-app.hpp"
 #include <memory>
-#include <wayland-client.h>
 #include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
 #include <gtk4-session-lock.h>
+#include <wayland-client.h>
+
+#include "wf-shell-app.hpp"
+#include "plugin.hpp"
 
 using Plugin = std::shared_ptr<WayfireLockerPlugin>;
 void on_session_locked_c(GtkSessionLockInstance *lock, void *data);

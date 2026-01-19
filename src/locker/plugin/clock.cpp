@@ -1,8 +1,9 @@
 #include <memory>
 #include <glibmm.h>
 #include <gtkmm/box.h>
-#include "clock.hpp"
+
 #include "lockergrid.hpp"
+#include "clock.hpp"
 
 bool WayfireLockerClockPlugin::should_enable()
 {

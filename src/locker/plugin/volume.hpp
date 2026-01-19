@@ -1,14 +1,14 @@
 #ifndef LOCKER_VOLUME_PLUGIN_HPP
 #define LOCKER_VOLUME_PLUGIN_HPP
 
+#include <memory>
+#include <unordered_map>
 #include <gtkmm/button.h>
 #include <gtkmm/popover.h>
 #include <gtkmm/scale.h>
-#include <memory>
-#include <unordered_map>
 #include <pulse/pulseaudio.h>
-#include "gvc-mixer-control.h"
 
+#include "gvc-mixer-control.h"
 #include "../plugin.hpp"
 #include "lockergrid.hpp"
 

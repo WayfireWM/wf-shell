@@ -1,6 +1,7 @@
 #include <memory>
 #include <gtkmm/button.h>
 #include <gtkmm/box.h>
+
 #include "../locker.hpp"
 #include "lockergrid.hpp"
 #include "instant.hpp"
