@@ -52,6 +52,27 @@ class WayfireLockerGrid : public Gtk::CenterBox
         {
             throw std::exception();
         }
+        if(col==0) 
+        {
+            widget.set_halign(Gtk::Align::START);
+        } else if (col == 1)
+        {
+            widget.set_halign(Gtk::Align::CENTER);
+        } else if (col == 2)
+        {
+            widget.set_halign(Gtk::Align::END);
+        }
+        if(row==0) 
+        {
+            widget.set_valign(Gtk::Align::START);
+        } else if (row == 1)
+        {
+            widget.set_valign(Gtk::Align::CENTER);
+        } else if (row == 2)
+        {
+            widget.set_valign(Gtk::Align::END);
+        }
+
 
         box[col + (row * 3)].append(widget);
     }
