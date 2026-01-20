@@ -187,6 +187,9 @@ revealer.wf-locker {
 .wf-locker .mpris image.albumart {
     -gtk-icon-size:96px;
 }
+.wf-locker .user image{
+    -gtk-icon-size:96px;
+}
 
 @keyframes embiggen {
     to {

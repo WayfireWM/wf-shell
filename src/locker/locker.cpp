@@ -19,6 +19,7 @@
 #include "plugin/password.hpp"
 #include "plugin/pin.hpp"
 #include "plugin/fingerprint.hpp"
+#include "plugin/user.hpp"
 #include "plugin/volume.hpp"
 #include "plugin/mpris.hpp"
 #include "wf-shell-app.hpp"
@@ -47,6 +48,7 @@ void WayfireLockerApp::on_activate()
     alternative_monitors = true; /* Don't use WayfireShellApp monitor tracking, we get a different set */
     new CssFromConfigString("locker/background_color", ".wf-locker {background-color:", ";}");
     new CssFromConfigFont("locker/clock_font", ".wf-locker .clock {", "}");
+    new CssFromConfigFont("locker/user_font", ".wf-locker .user {", "}");
     new CssFromConfigFont("locker/pin_pad_font", ".wf-locker .pinpad-button {", "}");
     new CssFromConfigFont("locker/pin_reply_font", ".wf-locker .pinpad-current {", "}");
     new CssFromConfigFont("locker/fingerprint_font", ".wf-locker .fingerprint-text {", "}");
@@ -66,6 +68,7 @@ void WayfireLockerApp::on_activate()
     plugins.emplace("fingerprint", Plugin(new WayfireLockerFingerprintPlugin()));
     plugins.emplace("volume", Plugin(new WayfireLockerVolumePlugin()));
     plugins.emplace("mpris", Plugin(new WayfireLockerMPRISPlugin()));
+    plugins.emplace("aboutuser", Plugin(new WayfireLockerUserPlugin()));
 
     for (auto& it : plugins)
     {
