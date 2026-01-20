@@ -1,5 +1,4 @@
-#ifndef WF_LOCKER_GRID
-#define WF_LOCKER_GRID
+#pragma once
 #include <exception>
 #include <gtkmm/centerbox.h>
 #include <gtkmm/box.h>
@@ -98,5 +97,3 @@ class WayfireLockerGrid : public Gtk::CenterBox
         box[8].set_halign(Gtk::Align::END);
     }
 };
-
-#endif

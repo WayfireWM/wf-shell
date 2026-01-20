@@ -1,6 +1,4 @@
-#ifndef LOCKER_PIN_PLUGIN_HPP
-#define LOCKER_PIN_PLUGIN_HPP
-
+#pragma once
 #include <unordered_map>
 #include <gtkmm/label.h>
 #include <gtkmm/button.h>
@@ -46,5 +44,3 @@ class WayfireLockerPinPlugin : public WayfireLockerPlugin
     std::string pin     = "";
     std::string pinhash = "nope";
 };
-
-#endif

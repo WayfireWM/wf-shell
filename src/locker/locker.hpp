@@ -1,6 +1,4 @@
-#ifndef WF_LOCKER_HPP
-#define WF_LOCKER_HPP
-
+#pragma once
 #include <memory>
 #include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
@@ -56,5 +54,3 @@ class WayfireLockerApp : public WayfireShellApp
 
   private:
 };
-
-#endif

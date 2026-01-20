@@ -1,6 +1,4 @@
-#ifndef LOCKER_PASSWORD_PLUGIN_HPP
-#define LOCKER_PASSWORD_PLUGIN_HPP
-
+#pragma once
 #include <gtkmm/label.h>
 #include <gtkmm/entry.h>
 #include <unordered_map>
@@ -33,5 +31,3 @@ class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
     std::string label_contents     = "";
     std::string submitted_password = "";
 };
-
-#endif

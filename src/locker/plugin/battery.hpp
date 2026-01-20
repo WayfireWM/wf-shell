@@ -1,5 +1,4 @@
-#ifndef LOCKER_BATTERY_PLUGIN_HPP
-#define LOCKER_BATTERY_PLUGIN_HPP
+#pragma once
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -60,5 +59,3 @@ class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
     std::unordered_map<int, std::shared_ptr<Gtk::Label>> subtexts;
     std::unordered_map<int, std::shared_ptr<Gtk::Label>> labels;
 };
-
-#endif

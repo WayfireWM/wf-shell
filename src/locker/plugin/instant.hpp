@@ -1,6 +1,4 @@
-#ifndef LOCKER_INSTANT_PLUGIN_HPP
-#define LOCKER_INSTANT_PLUGIN_HPP
-
+#pragma once
 #include <gtkmm/button.h>
 
 #include "../plugin.hpp"
@@ -21,5 +19,3 @@ class WayfireLockerInstantPlugin : public WayfireLockerPlugin
 
     std::unordered_map<int, std::shared_ptr<Gtk::Button>> buttons;
 };
-
-#endif

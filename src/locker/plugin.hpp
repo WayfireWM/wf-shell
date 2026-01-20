@@ -1,6 +1,4 @@
-#ifndef LOCKER_PLUGIN_HPP
-#define LOCKER_PLUGIN_HPP
-
+#pragma once
 #include "lockergrid.hpp"
 #define DEFAULT_PANEL_HEIGHT "48"
 #define DEFAULT_ICON_SIZE 32
@@ -24,5 +22,3 @@ class WayfireLockerPlugin
     virtual void init() = 0;
     virtual ~WayfireLockerPlugin() = default;
 };
-
-#endif

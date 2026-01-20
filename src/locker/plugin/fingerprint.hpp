@@ -1,6 +1,4 @@
-#ifndef LOCKER_FINGERPRINT_PLUGIN_HPP
-#define LOCKER_FINGERPRINT_PLUGIN_HPP
-
+#pragma once
 #include <unordered_map>
 #include <gtkmm/label.h>
 #include <gtkmm/image.h>
@@ -41,5 +39,3 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     std::string icon_contents  = "";
     std::string label_contents = "";
 };
-
-#endif

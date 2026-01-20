@@ -1,6 +1,4 @@
-#ifndef LOCKER_VOLUME_PLUGIN_HPP
-#define LOCKER_VOLUME_PLUGIN_HPP
-
+#pragma once
 #include <memory>
 #include <unordered_map>
 #include <gtkmm/button.h>
@@ -39,5 +37,3 @@ class WayfireLockerVolumePlugin : public WayfireLockerPlugin
     std::unordered_map<int, std::shared_ptr<Gtk::Button>> sink_buttons;
     std::unordered_map<int, std::shared_ptr<Gtk::Button>> source_buttons;
 };
-
-#endif
