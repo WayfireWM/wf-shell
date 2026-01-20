@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <glibmm/main.h>
 #include <glibmm/miscutils.h>
@@ -21,6 +20,7 @@
 #include "plugin/pin.hpp"
 #include "plugin/fingerprint.hpp"
 #include "plugin/volume.hpp"
+#include "plugin/mpris.hpp"
 #include "wf-shell-app.hpp"
 #include "locker.hpp"
 
@@ -65,6 +65,7 @@ void WayfireLockerApp::on_activate()
     plugins.emplace("pin", Plugin(new WayfireLockerPinPlugin()));
     plugins.emplace("fingerprint", Plugin(new WayfireLockerFingerprintPlugin()));
     plugins.emplace("volume", Plugin(new WayfireLockerVolumePlugin()));
+    plugins.emplace("mpris", Plugin(new WayfireLockerMPRISPlugin()));
 
     for (auto& it : plugins)
     {

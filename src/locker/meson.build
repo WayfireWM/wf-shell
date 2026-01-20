@@ -4,7 +4,8 @@ widget_sources = [
     'plugin/password.cpp',
     'plugin/instant.cpp',
     'plugin/pin.cpp',
-    'plugin/fingerprint.cpp'
+    'plugin/fingerprint.cpp',
+    'plugin/mpris.cpp',
 ]
 deps = [
   gtklayershell,

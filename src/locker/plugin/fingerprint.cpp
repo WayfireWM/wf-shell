@@ -105,6 +105,8 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
             Glib::Variant<bool> done;
             params.get_child(mesg, 0);
             params.get_child(done, 1);
+            bool is_done = done.get();
+
             update_labels(mesg.get());
             if (mesg.get() == "verify-match")
             {
@@ -123,9 +125,19 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
                 show();
                 update_image("nofingerprint");
                 update_labels("Invalid fingerprint");
+            } else if (mesg.get() == "verify-unknown-error")
+            {
+                is_done=true;
+                /* Reschedule fingerprint scan */
+                Glib::signal_timeout().connect_seconds(
+                    [this] ()
+                {
+                    this->start_fingerprint_scanning();
+                    return G_SOURCE_REMOVE;
+                }, 5);
             }
 
-            if (done.get())
+            if (is_done)
             {
                 is_scanning = false;
                 device_proxy->call_sync("VerifyStop");

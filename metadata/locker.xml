@@ -222,6 +222,67 @@
 	</option>
 	</group>
 	<group>
+	<_short>Now Playing</_short>
+	<option name="mpris_enable" type="bool">
+		<_short>Enable</_short>
+		<default>true</default>
+	</option>
+	<option name="mpris_format" type="string">
+		<_short>Format</_short>
+		<_long>What information, and how, to display on lockscreen.
+			%track  : Name of currently playing track
+			%album  : Name of currently playing album
+			%artist : Name of artist of currently playing track
+			%n      : New line
+		</_long>
+		<default>Now Playing:%n%track%n%album%n%artist</default>
+	</option>
+	<option name="mpris_control" type="bool">
+		<_short>Controls</_short>
+		<_long>show buttons to allow play, pause, skip and stop</_long>
+		<default>true</default>
+	</option>
+	<option name="mpris_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>bottom-center</default>
+	</option>
+	</group>
+	<group>
 	<_short>Battery</_short>
 	<option name="battery_enable" type="bool">
 		<_short>Enable</_short>
