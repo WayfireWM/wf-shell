@@ -76,6 +76,26 @@ class WayfireLockerGrid : public Gtk::CenterBox
         {
             box[i].set_orientation(Gtk::Orientation::VERTICAL);
         }
+
+        box[0].set_valign(Gtk::Align::START);
+        box[1].set_valign(Gtk::Align::START);
+        box[2].set_valign(Gtk::Align::START);
+        box[3].set_valign(Gtk::Align::CENTER);
+        box[4].set_valign(Gtk::Align::CENTER);
+        box[5].set_valign(Gtk::Align::CENTER);
+        box[6].set_valign(Gtk::Align::END);
+        box[7].set_valign(Gtk::Align::END);
+        box[8].set_valign(Gtk::Align::END);
+
+        box[0].set_halign(Gtk::Align::START);
+        box[1].set_halign(Gtk::Align::CENTER);
+        box[2].set_halign(Gtk::Align::END);
+        box[3].set_halign(Gtk::Align::START);
+        box[4].set_halign(Gtk::Align::CENTER);
+        box[5].set_halign(Gtk::Align::END);
+        box[6].set_halign(Gtk::Align::START);
+        box[7].set_halign(Gtk::Align::CENTER);
+        box[8].set_halign(Gtk::Align::END);
     }
 };
 
