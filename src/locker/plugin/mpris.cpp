@@ -9,7 +9,8 @@
 #include "mpris.hpp"
 
 /* Widget of controls for one player on one screen */
-WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name, Glib::RefPtr<Gio::DBus::Proxy>proxy): proxy(proxy),name(name)
+WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name,
+    Glib::RefPtr<Gio::DBus::Proxy> proxy) : proxy(proxy), name(name)
 {
     set_transition_type(Gtk::RevealerTransitionType::SLIDE_UP);
     image.add_css_class("albumart");
@@ -37,60 +38,62 @@ WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name, Glib::RefPt
     kill.set_halign(Gtk::Align::END);
 
     signals.push_back(next.signal_clicked().connect(
-        [proxy] () {
-            proxy->call("Next",[proxy](Glib::RefPtr<Gio::AsyncResult> res){proxy->call_finish(res);},nullptr);
-        }
-    ));
+        [proxy] ()
+    {
+        proxy->call("Next", [proxy] (Glib::RefPtr<Gio::AsyncResult> res) {proxy->call_finish(res);}, nullptr);
+    }));
 
     signals.push_back(prev.signal_clicked().connect(
-        [proxy] () {
-            proxy->call("Previous",[proxy](Glib::RefPtr<Gio::AsyncResult> res){proxy->call_finish(res);},nullptr);
-        }
-    ));
+        [proxy] ()
+    {
+        proxy->call("Previous",
+            [proxy] (Glib::RefPtr<Gio::AsyncResult> res) {proxy->call_finish(res);}, nullptr);
+    }));
 
     signals.push_back(playpause.signal_clicked().connect(
-        [proxy] () {
-            proxy->call("PlayPause",[proxy](Glib::RefPtr<Gio::AsyncResult> res){proxy->call_finish(res);},nullptr);
-        }
-    ));
+        [proxy] ()
+    {
+        proxy->call("PlayPause",
+            [proxy] (Glib::RefPtr<Gio::AsyncResult> res) {proxy->call_finish(res);}, nullptr);
+    }));
 
     signals.push_back(kill.signal_clicked().connect(
-        [proxy] () {
-            proxy->call("Stop",[proxy](Glib::RefPtr<Gio::AsyncResult> res){proxy->call_finish(res);},nullptr);
-        }
-    ));
+        [proxy] ()
+    {
+        proxy->call("Stop", [proxy] (Glib::RefPtr<Gio::AsyncResult> res) {proxy->call_finish(res);}, nullptr);
+    }));
 
     signals.push_back(proxy->signal_properties_changed().connect(
-        [this](const Gio::DBus::Proxy::MapChangedProperties& properties,
+        [this] (const Gio::DBus::Proxy::MapChangedProperties& properties,
                 const std::vector<Glib::ustring>& invalidated)
+    {
+        for (auto & it : properties)
         {
-            for (auto &it: properties)
+            auto [id, value] = it;
+            if (id == "PlaybackStatus")
             {
-                auto [id, value] = it;
-                if (id == "PlaybackStatus")
-                {
-                    auto value_string =Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(value);
-                    playbackstatus(value_string.get());
-                } else if (id == "Metadata")
-                {
-                    auto value_array = Glib::VariantBase::cast_dynamic<Glib::Variant<std::map<std::string, Glib::VariantBase>>>(value);
-                    metadata(value_array.get());
-                } else if (id == "CanGoNext")
-                {
-                    auto value_bool = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
-                    cangonext(value_bool.get());
-                } else if (id == "CanGoPrevious")
-                {
-                    auto value_bool = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
-                    cangoprev(value_bool.get());
-                } else if (id == "CanControl")
-                {
-                    auto value_bool = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
-                    cancontrol(value_bool.get());
-                }
+                auto value_string = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(value);
+                playbackstatus(value_string.get());
+            } else if (id == "Metadata")
+            {
+                auto value_array = Glib::VariantBase::cast_dynamic<Glib::Variant<std::map<std::string,
+                    Glib::VariantBase>>>(value);
+                metadata(value_array.get());
+            } else if (id == "CanGoNext")
+            {
+                auto value_bool = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
+                cangonext(value_bool.get());
+            } else if (id == "CanGoPrevious")
+            {
+                auto value_bool = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
+                cangoprev(value_bool.get());
+            } else if (id == "CanControl")
+            {
+                auto value_bool = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value);
+                cancontrol(value_bool.get());
             }
         }
-    ));
+    }));
 
     Glib::Variant<std::string> playbackstatus_value;
     proxy->get_cached_property(playbackstatus_value, "PlaybackStatus");
@@ -107,7 +110,7 @@ WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name, Glib::RefPt
     Glib::Variant<bool> cangoprev_value;
     proxy->get_cached_property(cangoprev_value, "CanGoPrevious");
     cangoprev(cangoprev_value.get());
-    
+
     Glib::Variant<bool> cancontrol_value;
     proxy->get_cached_property(cancontrol_value, "CanControl");
     cancontrol(cancontrol_value.get());
@@ -122,7 +125,7 @@ WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name, Glib::RefPt
 
 WayfireLockerMPRISWidget::~WayfireLockerMPRISWidget()
 {
-    for(auto signal : signals)
+    for (auto signal : signals)
     {
         signal.disconnect();
     }
@@ -130,7 +133,7 @@ WayfireLockerMPRISWidget::~WayfireLockerMPRISWidget()
 
 void WayfireLockerMPRISWidget::playbackstatus(std::string value)
 {
-    if(value == "Stopped")
+    if (value == "Stopped")
     {
         set_reveal_child(false);
     } else
@@ -141,8 +144,8 @@ void WayfireLockerMPRISWidget::playbackstatus(std::string value)
 
 void WayfireLockerMPRISWidget::metadata(std::map<std::string, Glib::VariantBase> value)
 {
-    std::string title="", album="", artist="", art="";
-    for (auto &it : value)
+    std::string title = "", album = "", artist = "", art = "";
+    for (auto & it : value)
     {
         std::string id = it.first;
         if (id == "xesam:title")
@@ -153,7 +156,8 @@ void WayfireLockerMPRISWidget::metadata(std::map<std::string, Glib::VariantBase>
             album = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(it.second).get();
         } else if (id == "xesam:artist")
         {
-            auto artists = Glib::VariantBase::cast_dynamic<Glib::Variant<std::vector<std::string>>>(it.second).get();
+            auto artists =
+                Glib::VariantBase::cast_dynamic<Glib::Variant<std::vector<std::string>>>(it.second).get();
             if (artists.size() > 0)
             {
                 artist = artists[0];
@@ -163,9 +167,10 @@ void WayfireLockerMPRISWidget::metadata(std::map<std::string, Glib::VariantBase>
             art = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(it.second).get();
         }
     }
+
     if (art.length() < 8)
     {
-        image_path="";
+        image_path = "";
         image.hide();
     } else
     {
@@ -177,14 +182,15 @@ void WayfireLockerMPRISWidget::metadata(std::map<std::string, Glib::VariantBase>
             image_path = art;
         }
     }
-    
+
     std::vector<std::tuple<std::string, std::string>> pairs = {
         {"%track", title},
         {"%album", album},
         {"%artist", artist},
-        {"%n","\n"}
+        {"%n", "\n"}
     };
-    Glib::ustring output = substitute_strings(pairs, (std::string)WfOption<std::string>{"locker/mpris_format"});
+    Glib::ustring output =
+        substitute_strings(pairs, (std::string)WfOption<std::string>{"locker/mpris_format"});
     label.set_label(output);
 }
 
@@ -235,53 +241,54 @@ void WayfireLockerMPRISCollective::rem_child(std::string id)
 
 WayfireLockerMPRISPlugin::WayfireLockerMPRISPlugin() :
     enable(WfOption<bool>{"locker/mpris_enable"})
-{ }
+{}
 
 void WayfireLockerMPRISPlugin::init()
 {
     Gio::DBus::Proxy::create_for_bus(Gio::DBus::BusType::SESSION,
-      "org.freedesktop.DBus",
-      "/org/freedesktop/DBus",
-      "org.freedesktop.DBus",
-      [this] (const Glib::RefPtr<Gio::AsyncResult> & result) {
-         // Got a dbus proxy
-         manager_proxy = Gio::DBus::Proxy::create_finish(result);
-         auto val =manager_proxy->call_sync("ListNames");
-         Glib::Variant<std::vector<std::string>> list;
-         val.get_child(list,0);
-         auto l2= list.get();
-         for (auto t : l2){
-            if (t.substr(0,23) == "org.mpris.MediaPlayer2.")
+        "org.freedesktop.DBus",
+        "/org/freedesktop/DBus",
+        "org.freedesktop.DBus",
+        [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
+    {
+        // Got a dbus proxy
+        manager_proxy = Gio::DBus::Proxy::create_finish(result);
+        auto val = manager_proxy->call_sync("ListNames");
+        Glib::Variant<std::vector<std::string>> list;
+        val.get_child(list, 0);
+        auto l2 = list.get();
+        for (auto t : l2)
+        {
+            if (t.substr(0, 23) == "org.mpris.MediaPlayer2.")
             {
                 add_client(t);
             }
-         }
-         manager_proxy->signal_signal().connect(
+        }
+
+        manager_proxy->signal_signal().connect(
             [this] (const Glib::ustring & sender_name,
                     const Glib::ustring & signal_name,
                     const Glib::VariantContainerBase & params)
+        {
+            if (signal_name == "NameOwnerChanged")
             {
-                if (signal_name == "NameOwnerChanged")
+                Glib::Variant<std::string> to, from, name;
+                params.get_child(name, 0);
+                params.get_child(to, 1);
+                params.get_child(from, 2);
+                if (name.get().substr(0, 23) == "org.mpris.MediaPlayer2.")
                 {
-                    Glib::Variant<std::string> to, from, name;
-                    params.get_child(name, 0);
-                    params.get_child(to, 1);
-                    params.get_child(from,2);
-                    if(name.get().substr(0,23) == "org.mpris.MediaPlayer2.")
+                    if (to.get() == "")
                     {
-                        if(to.get() == "")
-                        {
-                            add_client(name.get());
-                        }else if(from.get() == "")
-                        {
-                            rem_client(name.get());
-                        }
+                        add_client(name.get());
+                    } else if (from.get() == "")
+                    {
+                        rem_client(name.get());
                     }
                 }
             }
-         );
-      }
-    );
+        });
+    });
 }
 
 bool WayfireLockerMPRISPlugin::should_enable()
@@ -299,10 +306,11 @@ void WayfireLockerMPRISPlugin::add_output(int id, WayfireLockerGrid *grid)
     widgets.emplace(id, new WayfireLockerMPRISCollective());
 
     auto collective = widgets[id];
-    for (auto &it : clients)
+    for (auto & it : clients)
     {
         collective->add_child(it.first, it.second);
     }
+
     grid->attach(*collective, WfOption<std::string>{"locker/mpris_position"});
 }
 
@@ -314,41 +322,44 @@ std::string substitute_string(const std::string from, const std::string to, cons
     {
         output.replace(position, from.length(), to);
     }
+
     return output;
 }
 
-std::string substitute_strings(const std::vector<std::tuple<std::string, std::string>> pairs, const std::string in)
+std::string substitute_strings(const std::vector<std::tuple<std::string, std::string>> pairs,
+    const std::string in)
 {
     std::string output = in;
-    for (auto &it : pairs)
+    for (auto & it : pairs)
     {
         const auto [from, to] = it;
         output = substitute_string(from, to, output);
     }
+
     return output;
 }
 
 void WayfireLockerMPRISPlugin::add_client(std::string path)
 {
     Gio::DBus::Proxy::create_for_bus(Gio::DBus::BusType::SESSION,
-      path,
-      "/org/mpris/MediaPlayer2",
-      "org.mpris.MediaPlayer2.Player",
-      [this, path] (const Glib::RefPtr<Gio::AsyncResult> & result) {
+        path,
+        "/org/mpris/MediaPlayer2",
+        "org.mpris.MediaPlayer2.Player",
+        [this, path] (const Glib::RefPtr<Gio::AsyncResult> & result)
+    {
         auto proxy = Gio::DBus::Proxy::create_finish(result);
         clients.emplace(path, proxy);
-        for (auto &it : widgets)
+        for (auto & it : widgets)
         {
             it.second->add_child(path, proxy);
         }
-      }
-    );
+    });
 }
 
 void WayfireLockerMPRISPlugin::rem_client(std::string path)
 {
     clients.erase(path);
-    for (auto &it : widgets)
+    for (auto & it : widgets)
     {
         it.second->rem_child(path);
     }

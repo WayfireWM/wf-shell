@@ -11,7 +11,8 @@
 
 
 std::string substitute_string(const std::string from, const std::string to, const std::string in);
-std::string substitute_strings(const std::vector<std::tuple<std::string, std::string>> pairs, const std::string in);
+std::string substitute_strings(const std::vector<std::tuple<std::string, std::string>> pairs,
+    const std::string in);
 
 class WayfireLockerMPRISWidget : public Gtk::Revealer
 {
@@ -24,10 +25,11 @@ class WayfireLockerMPRISWidget : public Gtk::Revealer
     void cangoprev(bool value);
     void cancontrol(bool value);
     std::vector<sigc::connection> signals;
+
   public:
     Gtk::Label label;
     Gtk::Button next, prev, playpause, kill;
-    Gtk::Box box, controlbox,sidebox;
+    Gtk::Box box, controlbox, sidebox;
     Gtk::Image image;
     std::string image_path = "";
 
@@ -39,11 +41,13 @@ class WayfireLockerMPRISCollective : public Gtk::Box
 {
   private:
     std::map<std::string, Glib::RefPtr<WayfireLockerMPRISWidget>> children;
+
   public:
     void add_child(std::string name, Glib::RefPtr<Gio::DBus::Proxy> proxy);
     void rem_child(std::string name);
-    WayfireLockerMPRISCollective(){
-      set_orientation(Gtk::Orientation::VERTICAL);
+    WayfireLockerMPRISCollective()
+    {
+        set_orientation(Gtk::Orientation::VERTICAL);
     }
 };
 
@@ -54,6 +58,7 @@ class WayfireLockerMPRISPlugin : public WayfireLockerPlugin
     std::map<std::string, Glib::RefPtr<Gio::DBus::Proxy>> clients;
     std::map<int, Glib::RefPtr<WayfireLockerMPRISCollective>> widgets;
     bool enable;
+
   public:
     WayfireLockerMPRISPlugin();
     void add_output(int id, WayfireLockerGrid *grid) override;
