@@ -101,15 +101,15 @@
 			<value>bottom-right</value>
 			<_name>Bottom Right</_name>
 		</desc>
-		<default>center-center</default>
+		<default>bottom-center</default>
 	</option>
 	<option name="pin_pad_font" type="string">
 		<_short>Pin Pad Font</_short>
-		<default>default</default>
+		<default>32pt default</default>
 	</option>
 	<option name="pin_reply_font" type="string">
 		<_short>Pin Reply Font</_short>
-		<default>default</default>
+		<default>20pt default</default>
 	</option>
 	</group>
 	<group>
@@ -156,7 +156,7 @@
 			<value>bottom-right</value>
 			<_name>Bottom Right</_name>
 		</desc>
-		<default>center-center</default>
+		<default>center-right</default>
 	</option>
 	<option name="fingerprint_font" type="string">
 		<_short>Fingerprint Reply Font</_short>
@@ -218,7 +218,57 @@
 	</option>
 	<option name="clock_font" type="string">
 		<_short>Clock Font</_short>
-		<default>default</default>
+		<default>32pt default</default>
+	</option>
+	</group>
+	<group>
+	<_short>User</_short>
+	<option name="user_enable" type="bool">
+		<_short>Enable</_short>
+		<default>true</default>
+	</option>
+	<option name="user_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>center-center</default>
+	</option>
+	<option name="user_font" type="string">
+		<_short>Font</_short>
+		<default>16pt default</default>
 	</option>
 	</group>
 	<group>
@@ -279,7 +329,7 @@
 			<value>bottom-right</value>
 			<_name>Bottom Right</_name>
 		</desc>
-		<default>bottom-center</default>
+		<default>bottom-right</default>
 	</option>
 	</group>
 	<group>
@@ -341,15 +391,15 @@
 			<value>bottom-right</value>
 			<_name>Bottom Right</_name>
 		</desc>
-		<default>bottom-center</default>
+		<default>top-left</default>
 	</option>
 	<option name="battery_percent_font" type="string">
 		<_short>Percent Font</_short>
-		<default>default</default>
+		<default>32pt default</default>
 	</option>
 	<option name="battery_description_font" type="string">
 		<_short>Description Font</_short>
-		<default>default</default>
+		<default>10pt default</default>
 	</option>
 	<option name="battery_icon_size" type="int">
 		<_short>Icon Size</_short>
