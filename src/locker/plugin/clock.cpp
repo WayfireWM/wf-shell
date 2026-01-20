@@ -14,7 +14,7 @@ void WayfireLockerClockPlugin::update_labels(std::string text)
 {
     for (auto& it : labels)
     {
-        it.second->set_label(text);
+        it.second->set_markup(text);
     }
 
     label_contents = text;
@@ -26,6 +26,7 @@ void WayfireLockerClockPlugin::add_output(int id, WayfireLockerGrid *grid)
     auto label = labels[id];
     label->add_css_class("clock");
     label->set_label(label_contents);
+    label->set_justify(Gtk::Justification::CENTER);
 
     grid->attach(*label, WfOption<std::string>{"locker/clock_position"});
 }
