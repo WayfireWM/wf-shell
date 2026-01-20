@@ -1,6 +1,4 @@
-#ifndef LOCKER_CLOCK_PLUGIN_HPP
-#define LOCKER_CLOCK_PLUGIN_HPP
-
+#pragma once
 #include <gtkmm/label.h>
 #include <unordered_map>
 
@@ -27,5 +25,3 @@ class WayfireLockerClockPlugin : public WayfireLockerPlugin
     std::unordered_map<int, std::shared_ptr<Gtk::Label>> labels;
     std::string label_contents = "";
 };
-
-#endif

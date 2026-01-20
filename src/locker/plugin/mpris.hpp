@@ -1,6 +1,4 @@
-#ifndef LOCKER_MPRIS_PLUGIN_HPP
-#define LOCKER_MPRIS_PLUGIN_HPP
-
+#pragma once
 #include <gtkmm/label.h>
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
@@ -69,5 +67,3 @@ class WayfireLockerMPRISPlugin : public WayfireLockerPlugin
 
     gulong hook_play, hook_pause, hook_stop, hook_metadata;
 };
-
-#endif
