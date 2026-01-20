@@ -1,6 +1,4 @@
-#include <iostream>
 #include <memory>
-
 #include <giomm/asyncresult.h>
 #include <giomm/dbusconnection.h>
 #include <giomm/dbusproxy.h>
@@ -175,7 +173,6 @@ void WayfireLockerMPRISWidget::metadata(std::map<std::string, Glib::VariantBase>
         if (art != image_path)
         {
             image.show();
-            std::cout << art << std::endl;
             image.set(art);
             image_path = art;
         }
@@ -256,7 +253,6 @@ void WayfireLockerMPRISPlugin::init()
          for (auto t : l2){
             if (t.substr(0,23) == "org.mpris.MediaPlayer2.")
             {
-                std::cout << t << std::endl;
                 add_client(t);
             }
          }
@@ -273,7 +269,6 @@ void WayfireLockerMPRISPlugin::init()
                     params.get_child(from,2);
                     if(name.get().substr(0,23) == "org.mpris.MediaPlayer2.")
                     {
-                        std::cout << name.get() << " " << to.get() << " "<<from.get() << std::endl;
                         if(to.get() == "")
                         {
                             add_client(name.get());
@@ -311,31 +306,6 @@ void WayfireLockerMPRISPlugin::add_output(int id, WayfireLockerGrid *grid)
     grid->attach(*collective, WfOption<std::string>{"locker/mpris_position"});
 }
 
-//void WayfireLockerMPRISPlugin::update_widgets()
-//{
-   /* if(player==nullptr)
-    {
-        show(false);
-        return;
-    }
-    const std::string fmt = WfOption<std::string>{"locker/mpris_format"};
-    char* track_name = playerctl_player_get_title(player, nullptr);
-    char* artist_name = playerctl_player_get_artist(player, nullptr);
-    char* album_name = playerctl_player_get_album(player, nullptr);
-    std::cout << track_name << " " << artist_name << " " << album_name << " " << fmt << std::endl;
-*/
-    /*std::vector<std::tuple<std::string, std::string>> pairs = {
-        {"%track", track_name},
-        {"%album", album_name},
-        {"%artist", artist_name},
-        {"%n","\n"}
-    };
-    Glib::ustring output = substitute_strings(pairs, fmt);*/
-    //std::string output = track_name;
-    //update_widgets(output, false, true, true, true);
-    //show(true);
-//}
-
 std::string substitute_string(const std::string from, const std::string to, const std::string in)
 {
     std::string output = in;
@@ -366,7 +336,6 @@ void WayfireLockerMPRISPlugin::add_client(std::string path)
       "org.mpris.MediaPlayer2.Player",
       [this, path] (const Glib::RefPtr<Gio::AsyncResult> & result) {
         auto proxy = Gio::DBus::Proxy::create_finish(result);
-        std::cout << "Created proxy for : " << path << std::endl;
         clients.emplace(path, proxy);
         for (auto &it : widgets)
         {
