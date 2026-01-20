@@ -1,5 +1,4 @@
-#ifndef COMMAND_OUTPUT_HPP
-#define COMMAND_OUTPUT_HPP
+#pragma once
 
 #include "../widget.hpp"
 
@@ -8,13 +7,16 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scrolledwindow.h>
 
+#include <vector>
+#include <sigc++/connection.h>
 #include <wayfire/config/compound-option.hpp>
 
 class WfCommandOutputButtons : public WayfireWidget
 {
     struct CommandOutput : public Gtk::Button
     {
-        sigc::connection timeout_connection;
+        sigc::connection timeout_connection, command_sig;
+        std::vector<sigc::connection> signals;
 
         Gtk::Box box;
         Gtk::Image icon;
@@ -39,10 +41,7 @@ class WfCommandOutputButtons : public WayfireWidget
         CommandOutput& operator =(const CommandOutput&) = delete;
         bool query_tooltip(int i, int j, bool k, const std::shared_ptr<Gtk::Tooltip>& tooltip);
         void update_tooltip();
-        ~CommandOutput() override
-        {
-            timeout_connection.disconnect();
-        }
+        ~CommandOutput() override;
     };
 
     Gtk::Box box;
@@ -55,5 +54,3 @@ class WfCommandOutputButtons : public WayfireWidget
     void init(Gtk::Box *container) override;
     void update_buttons();
 };
-
-#endif /* end of include guard: COMMAND_OUTPUT_HPP */

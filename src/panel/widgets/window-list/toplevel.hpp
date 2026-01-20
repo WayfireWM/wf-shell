@@ -1,14 +1,11 @@
-#ifndef WAYFIRE_PANEL_TOPLEVEL_HPP
-#define WAYFIRE_PANEL_TOPLEVEL_HPP
+#pragma once
 
 #include <memory>
 #include <gtkmm/box.h>
 #include <cairomm/refptr.h>
 #include <cairomm/context.h>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
-
-#include "layout.hpp"
-#include "window-list.hpp"
+#include <wf-option-wrap.hpp>
 
 class WayfireWindowList;
 class WayfireWindowListBox;
@@ -38,5 +35,3 @@ class WayfireToplevel
   private:
     std::unique_ptr<impl> pimpl;
 };
-
-#endif /* end of include guard: WAYFIRE_PANEL_TOPLEVEL_HPP */

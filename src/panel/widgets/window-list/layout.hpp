@@ -1,7 +1,7 @@
-#include <gtkmm.h>
-#include "toplevel.hpp"
-#include <wf-option-wrap.hpp>
+#pragma once
 
+#include <gtkmm.h>
+#include <wf-option-wrap.hpp>
 
 class WayfireWindowList;
 

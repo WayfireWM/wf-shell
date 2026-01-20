@@ -1,6 +1,5 @@
 #include "wf-popover.hpp"
 #include "wf-autohide-window.hpp"
-#include <iostream>
 
 WayfireMenuButton::WayfireMenuButton(const std::string& section) :
     panel_position{section + "/position"}

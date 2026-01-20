@@ -16,7 +16,7 @@ void WayfireClock::init(Gtk::Box *container)
     button->get_popover()->get_style_context()->add_class("clock-popover");
     button->get_children()[0]->get_style_context()->add_class("flat");
     button->get_popover()->set_child(calendar);
-    button->get_popover()->signal_show().connect(
+    btn_sig = button->get_popover()->signal_show().connect(
         sigc::mem_fun(*this, &WayfireClock::on_calendar_shown));
 
     container->append(*button);
@@ -57,5 +57,6 @@ bool WayfireClock::update_label()
 
 WayfireClock::~WayfireClock()
 {
+    btn_sig.disconnect();
     timeout.disconnect();
 }

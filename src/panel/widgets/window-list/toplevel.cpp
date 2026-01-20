@@ -1,16 +1,17 @@
 #include <gtkmm.h>
 #include <giomm/desktopappinfo.h>
-#include <iostream>
 
 #include <gdkmm/seat.h>
 #include <gdk/wayland/gdkwayland.h>
 #include <cmath>
 
 #include <glibmm.h>
+#include <cassert>
+
 #include "toplevel.hpp"
+#include "window-list.hpp"
 #include "gtk-utils.hpp"
 #include "panel.hpp"
-#include <cassert>
 
 namespace
 {
@@ -43,6 +44,7 @@ class WayfireToplevel::impl
     // Gtk::PopoverMenu menu;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
     sigc::connection m_drag_timeout;
+    std::vector<sigc::connection> signals;
 
     Glib::ustring app_id, title;
 
@@ -80,11 +82,12 @@ class WayfireToplevel::impl
         close_action    = Gio::SimpleAction::create("close");
         minimize_action = Gio::SimpleAction::create_bool("minimize", false);
         maximize_action = Gio::SimpleAction::create_bool("maximize", false);
-        close_action->signal_activate().connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_menu_close));
-        minimize_action->signal_change_state().connect(sigc::mem_fun(*this,
-            &WayfireToplevel::impl::on_menu_minimize));
-        maximize_action->signal_change_state().connect(sigc::mem_fun(*this,
-            &WayfireToplevel::impl::on_menu_maximize));
+        signals.push_back(close_action->signal_activate().connect(sigc::mem_fun(*this,
+            &WayfireToplevel::impl::on_menu_close)));
+        signals.push_back(minimize_action->signal_change_state().connect(sigc::mem_fun(*this,
+            &WayfireToplevel::impl::on_menu_minimize)));
+        signals.push_back(maximize_action->signal_change_state().connect(sigc::mem_fun(*this,
+            &WayfireToplevel::impl::on_menu_maximize)));
 
         actions->add_action(close_action);
         actions->add_action(minimize_action);
@@ -106,17 +109,17 @@ class WayfireToplevel::impl
         popover.set_menu_model(menu);
 
         drag_gesture = Gtk::GestureDrag::create();
-        drag_gesture->signal_drag_begin().connect(
-            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_begin));
-        drag_gesture->signal_drag_update().connect(
-            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_update));
-        drag_gesture->signal_drag_end().connect(
-            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_end));
+        signals.push_back(drag_gesture->signal_drag_begin().connect(
+            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_begin)));
+        signals.push_back(drag_gesture->signal_drag_update().connect(
+            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_update)));
+        signals.push_back(drag_gesture->signal_drag_end().connect(
+            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_end)));
         button.add_controller(drag_gesture);
 
         auto click_gesture = Gtk::GestureClick::create();
         click_gesture->set_button(0);
-        click_gesture->signal_pressed().connect(
+        signals.push_back(click_gesture->signal_pressed().connect(
             [=] (int count, double x, double y)
         {
             int butt = click_gesture->get_current_button();
@@ -133,9 +136,9 @@ class WayfireToplevel::impl
                 zwlr_foreign_toplevel_handle_v1_close(handle);
                 click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
             }
-        });
+        }));
 
-        click_gesture->signal_released().connect(
+        signals.push_back(click_gesture->signal_released().connect(
             [=] (int count, double x, double y)
         {
             if (click_gesture->get_current_button() == 1)
@@ -148,7 +151,7 @@ class WayfireToplevel::impl
 
                 ignore_next_click = false;
             }
-        });
+        }));
         button.add_controller(click_gesture);
 
         this->window_list = window_list;
@@ -482,6 +485,11 @@ class WayfireToplevel::impl
         if (m_drag_timeout)
         {
             m_drag_timeout.disconnect();
+        }
+
+        for (auto signal : signals)
+        {
+            signal.disconnect();
         }
 
         zwlr_foreign_toplevel_handle_v1_destroy(handle);

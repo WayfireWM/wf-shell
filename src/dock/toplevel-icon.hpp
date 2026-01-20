@@ -1,5 +1,4 @@
-#ifndef WF_DOCK_TOPLEVEL_ICON_HPP
-#define WF_DOCK_TOPLEVEL_ICON_HPP
+#pragma once
 
 #include <memory>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
@@ -26,5 +25,3 @@ namespace IconProvider
 * They have the format icon_mapping_<app_id> = <icon file> */
 void load_custom_icons();
 }
-
-#endif /* end of include guard: WF_DOCK_TOPLEVEL_ICON_HPP */

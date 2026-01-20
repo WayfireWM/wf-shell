@@ -1,11 +1,11 @@
-#ifndef WIDGETS_NETWORK_HPP
-#define WIDGETS_NETWORK_HPP
+#pragma once
 
 #include <giomm/dbusproxy.h>
 #include <giomm/dbusconnection.h>
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
+#include <sigc++/connection.h>
 
 #include "../widget.hpp"
 
@@ -56,6 +56,8 @@ class WayfireNetworkInfo : public WayfireWidget
 
     std::unique_ptr<WfNetworkConnectionInfo> info;
 
+    std::vector<sigc::connection> signals;
+
     Gtk::Button button;
     Gtk::Box button_content;
     Gtk::Image icon;
@@ -82,5 +84,3 @@ class WayfireNetworkInfo : public WayfireWidget
     void handle_config_reload();
     virtual ~WayfireNetworkInfo();
 };
-
-#endif /* end of include guard: WIDGETS_NETWORK_HPP */

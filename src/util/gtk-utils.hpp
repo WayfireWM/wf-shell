@@ -1,5 +1,4 @@
-#ifndef WF_GTK_UTILS
-#define WF_GTK_UTILS
+#pragma once
 
 #include <gtkmm/image.h>
 #include <gtkmm/icontheme.h>
@@ -21,5 +20,3 @@ struct WfIconLoadOptions
 void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff);
 
 void image_set_icon(Gtk::Image *image, std::string path);
-
-#endif /* end of include guard: WF_GTK_UTILS */

@@ -1,5 +1,4 @@
-#ifndef WF_PANEL_POPOVER_HPP
-#define WF_PANEL_POPOVER_HPP
+#pragma once
 
 #include <gtkmm/menubutton.h>
 #include <gtkmm/popover.h>
@@ -49,5 +48,3 @@ class WayfireMenuButton : public Gtk::MenuButton
      */
     void grab_focus();
 };
-
-#endif /* end of include guard: WF_PANEL_POPOVER_HPP */

@@ -1,5 +1,4 @@
-#ifndef WIDGETS_BATTERY_HPP
-#define WIDGETS_BATTERY_HPP
+#pragma once
 
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
@@ -8,6 +7,8 @@
 
 #include <giomm/dbusproxy.h>
 #include <giomm/dbusconnection.h>
+
+#include <sigc++/connection.h>
 
 #include "../widget.hpp"
 
@@ -22,6 +23,8 @@ class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
     WfOption<std::string> status_opt{"panel/battery_status"};
+
+    sigc::connection btn_sig, disp_dev_sig;
 
     Gtk::Button button;
     Gtk::Label label;
@@ -44,8 +47,5 @@ class WayfireBatteryInfo : public WayfireWidget
 
   public:
     virtual void init(Gtk::Box *container);
-    virtual ~WayfireBatteryInfo() = default;
+    virtual ~WayfireBatteryInfo();
 };
-
-
-#endif /* end of include guard: WIDGETS_BATTERY_HPP */
