@@ -22,5 +22,5 @@ class WayfireLockerUserPlugin : public WayfireLockerPlugin
     std::unordered_map<int, Glib::RefPtr<Gtk::Image>> images;
     std::unordered_map<int, Glib::RefPtr<Gtk::Box>> boxes;
 
-    std::string image_path="";
+    std::string image_path = "";
 };
