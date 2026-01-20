@@ -11,7 +11,7 @@ class WayfireStatusNotifier : public WayfireWidget
   private:
     StatusNotifierHost host = StatusNotifierHost(this);
 
-    Gtk::Box icons_hbox;
+    Gtk::Box icons_box;
     std::map<Glib::ustring, StatusNotifierItem> items;
 
   public:

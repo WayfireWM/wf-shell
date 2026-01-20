@@ -104,7 +104,7 @@ class WayfireLogoutUI
     WayfireLogoutUIButton hibernate;
     WayfireLogoutUIButton switchuser;
     WayfireLogoutUIButton cancel;
-    Gtk::CenterBox hbox;
+    Gtk::CenterBox box;
     Gtk::Grid main_layout;
     std::vector<sigc::connection> signals;
     void create_logout_ui_button(WayfireLogoutUIButton *button,
@@ -126,7 +126,7 @@ class WayfireMenu : public WayfireWidget
     std::string search_contents = "";
 
     Gtk::Box flowbox_container;
-    Gtk::Box hbox, hbox_bottom, scroll_pair;
+    Gtk::Box box, box_bottom, scroll_pair;
     Gtk::Box bottom_pad;
     Gtk::Box popover_layout_box;
     Gtk::Box category_box;
@@ -179,6 +179,7 @@ class WayfireMenu : public WayfireWidget
     WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     WfOption<bool> menu_show_categories{"panel/menu_show_categories"};
+    void setup_popover_layout();
     void update_popover_layout();
     void update_category_width();
     void update_content_height();

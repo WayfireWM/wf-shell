@@ -2,9 +2,9 @@
 
 void WayfireStatusNotifier::init(Gtk::Box *container)
 {
-    icons_hbox.get_style_context()->add_class("tray");
-    icons_hbox.set_spacing(5);
-    container->append(icons_hbox);
+    icons_box.get_style_context()->add_class("tray");
+    icons_box.set_spacing(5);
+    container->append(icons_box);
 }
 
 void WayfireStatusNotifier::add_item(const Glib::ustring & service)
@@ -15,7 +15,7 @@ void WayfireStatusNotifier::add_item(const Glib::ustring & service)
     }
 
     items.emplace(service, service);
-    icons_hbox.append(items.at(service));
+    icons_box.append(items.at(service));
 }
 
 void WayfireStatusNotifier::remove_item(const Glib::ustring & service)
@@ -25,6 +25,6 @@ void WayfireStatusNotifier::remove_item(const Glib::ustring & service)
         return;
     }
 
-    icons_hbox.remove(items.at(service));
+    icons_box.remove(items.at(service));
     items.erase(service);
 }
