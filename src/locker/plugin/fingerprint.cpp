@@ -14,6 +14,12 @@
 #include "lockergrid.hpp"
 #include "fingerprint.hpp"
 
+/**
+ * Fingerprint Reader Auth
+ *
+ * Based on fprintd DBUS Spec:
+ * https://fprint.freedesktop.org/fprintd-dev/
+ */
 
 WayfireLockerFingerprintPlugin::WayfireLockerFingerprintPlugin() :
     dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SYSTEM,

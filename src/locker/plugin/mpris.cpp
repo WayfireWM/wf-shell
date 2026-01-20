@@ -8,7 +8,8 @@
 #include "lockergrid.hpp"
 #include "mpris.hpp"
 
-/* Widget of controls for one player on one screen */
+/* Widget of controls for one player on one screen
+ * https://specifications.freedesktop.org/mpris/latest/index.html */
 WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name,
     Glib::RefPtr<Gio::DBus::Proxy> proxy) : proxy(proxy), name(name)
 {
@@ -26,6 +27,7 @@ WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name,
 
     label.set_halign(Gtk::Align::START);
     label.set_valign(Gtk::Align::START);
+    label.set_wrap(true);
 
     controlbox.set_expand(true);
     controlbox.append(prev);
@@ -142,6 +144,7 @@ void WayfireLockerMPRISWidget::playbackstatus(std::string value)
     }
 }
 
+/* https://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/ */
 void WayfireLockerMPRISWidget::metadata(std::map<std::string, Glib::VariantBase> value)
 {
     std::string title = "", album = "", artist = "", art = "";
@@ -265,6 +268,7 @@ void WayfireLockerMPRISPlugin::init()
             }
         }
 
+        /* https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.NameOwnerChanged.html */
         manager_proxy->signal_signal().connect(
             [this] (const Glib::ustring & sender_name,
                     const Glib::ustring & signal_name,
