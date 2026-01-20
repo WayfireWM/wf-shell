@@ -127,7 +127,7 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
                 update_labels("Invalid fingerprint");
             } else if (mesg.get() == "verify-unknown-error")
             {
-                is_done=true;
+                is_done = true;
                 /* Reschedule fingerprint scan */
                 Glib::signal_timeout().connect_seconds(
                     [this] ()
