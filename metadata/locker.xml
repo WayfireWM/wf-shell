@@ -175,7 +175,7 @@
 	</option>
 	<option name="clock_format" type="string">
 		<_short>Clock Format</_short>
-		<default>%H:%M:%S</default>
+		<default>%H:%M%n&lt;span font-size='xx-small'&gt;%e %b %Y&lt;/span&gt;</default>
 	</option>
 	<option name="clock_position" type="string">
 		<desc>
