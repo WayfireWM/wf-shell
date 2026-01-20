@@ -187,6 +187,9 @@ static void handle_toplevel_closed(void *data, toplevel_t handle)
     zwlr_foreign_toplevel_handle_v1_destroy(handle);
 }
 
+static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t parent)
+{}
+
 namespace
 {
 struct zwlr_foreign_toplevel_handle_v1_listener toplevel_handle_v1_impl = {
@@ -196,6 +199,7 @@ struct zwlr_foreign_toplevel_handle_v1_listener toplevel_handle_v1_impl = {
     .output_leave = handle_toplevel_output_leave,
     .state  = handle_toplevel_state,
     .done   = handle_toplevel_done,
-    .closed = handle_toplevel_closed
+    .closed = handle_toplevel_closed,
+    .parent = handle_toplevel_parent
 };
 }

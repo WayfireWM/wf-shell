@@ -1,5 +1,4 @@
-#ifndef LAUNCHERS_HPP
-#define LAUNCHERS_HPP
+#pragma once
 
 #include "../widget.hpp"
 #include <vector>
@@ -13,6 +12,7 @@ struct WfLauncherButton
 {
     Gtk::Image m_icon;
     Gtk::Button button;
+    sigc::connection btn_sig;
     Glib::RefPtr<Gio::DesktopAppInfo> app_info;
 
     WfLauncherButton();
@@ -38,6 +38,3 @@ class WayfireLaunchers : public WayfireWidget
     virtual ~WayfireLaunchers()
     {}
 };
-
-
-#endif /* end of include guard: LAUNCHERS_HPP */

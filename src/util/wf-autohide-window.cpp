@@ -302,6 +302,7 @@ void WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
     }
 
     auto_exclusive_zone = has_zone;
+    update_auto_exclusive_zone();
 }
 
 void WayfireAutohidingWindow::increase_autohide()
@@ -476,8 +477,6 @@ void WayfireAutohidingWindow::setup_autohide()
 
     this->set_auto_exclusive_zone(!(output->output && autohide_opt));
     this->update_autohide();
-
-    this->update_auto_exclusive_zone();
 }
 
 void WayfireAutohidingWindow::update_autohide()

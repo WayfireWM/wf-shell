@@ -1,5 +1,4 @@
-#ifndef TRAY_TRAY_HPP
-#define TRAY_TRAY_HPP
+#pragma once
 
 #include "item.hpp"
 #include "widgets/tray/host.hpp"
@@ -11,7 +10,7 @@ class WayfireStatusNotifier : public WayfireWidget
   private:
     StatusNotifierHost host = StatusNotifierHost(this);
 
-    Gtk::Box icons_hbox;
+    Gtk::Box icons_box;
     std::map<Glib::ustring, StatusNotifierItem> items;
 
   public:
@@ -20,5 +19,3 @@ class WayfireStatusNotifier : public WayfireWidget
     void add_item(const Glib::ustring & service);
     void remove_item(const Glib::ustring & service);
 };
-
-#endif

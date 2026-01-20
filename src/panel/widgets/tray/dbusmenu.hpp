@@ -1,5 +1,4 @@
-#ifndef TRAY_DBUSMENU_HPP
-#define TRAY_DBUSMENU_HPP
+#pragma once
 
 #include <giomm.h>
 #include <gtkmm.h>
@@ -21,6 +20,9 @@ class DbusMenuModel
 
     std::string label_to_action_name(std::string, int counter);
 
+    gulong update_sig_handler_id;
+    sigc::connection act_sig;
+
   public:
     explicit DbusMenuModel();
     ~DbusMenuModel();
@@ -37,5 +39,3 @@ class DbusMenuModel
 
     type_signal_action_group signal_action_group();
 };
-
-#endif

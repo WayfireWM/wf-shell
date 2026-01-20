@@ -30,6 +30,7 @@ class WfDock::impl
         this->output = output;
         window = std::unique_ptr<WayfireAutohidingWindow>(
             new WayfireAutohidingWindow(output, "dock"));
+        window->set_auto_exclusive_zone(false);
         gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
         gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
         gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);

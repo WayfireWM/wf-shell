@@ -21,7 +21,7 @@ class WayfireNotificationCenter : public WayfireWidget
     Gtk::Image icon;
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::ScrolledWindow scrolled_window;
-    Gtk::Box vbox;
+    Gtk::Box box;
 
     std::map<Notification::id_type, std::unique_ptr<WfSingleNotification>> notification_widgets = {};
 

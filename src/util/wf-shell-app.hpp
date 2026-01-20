@@ -1,5 +1,4 @@
-#ifndef WF_SHELL_APP_HPP
-#define WF_SHELL_APP_HPP
+#pragma once
 
 #include <memory>
 #include <string>
@@ -92,5 +91,3 @@ class WayfireShellApp
      */
     static WayfireShellApp& get();
 };
-
-#endif /* end of include guard: WF_SHELL_APP_HPP */

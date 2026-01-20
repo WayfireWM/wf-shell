@@ -98,27 +98,37 @@
 }
 
 .wf-dock .box {
+    background-color: #33333355;
     padding-left: 1em;
     padding-right: 1em;
     border-radius: 1em;
 }
 
+.wf-dock button {
+    background: transparent;
+    padding-left: 0rem;
+    padding-right: 0rem;
+}
+
+.wf-dock button.activated {
+    border-bottom: 3px solid white;
+    margin-bottom: 5px;
+}
+
 .wf-dock image {
+    background: transparent;
+    padding-left: 0rem;
+    padding-right: 0rem;
     transition: 200ms;
-    -gtk-icon-transform: scale(1.0);
-    padding-left: 1rem;
-    padding-right: 1rem;
+    -gtk-icon-transform: scale(0.7);
 }
 
 .wf-dock image:hover {
+    background: transparent;
+    padding-left: 0rem;
+    padding-right: 0rem;
     transition: 200ms;
-    -gtk-icon-transform: scale(1.3);
-    padding-left: 2rem;
-    padding-right: 2rem;
-}
-
-.wf-dock .minimized image {
-    -gtk-icon-filter: grayscale(1);
+    -gtk-icon-transform: scale(1.0);
 }
 
 .wf-dock image {

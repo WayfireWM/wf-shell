@@ -2,9 +2,7 @@
 #include <glibmm.h>
 #include <gdk/wayland/gdkwayland.h>
 
-#include "toplevel.hpp"
 #include "window-list.hpp"
-#include "panel.hpp"
 
 #define DEFAULT_SIZE_PC 0.1
 

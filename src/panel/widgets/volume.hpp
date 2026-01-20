@@ -1,12 +1,10 @@
-#ifndef WIDGETS_VOLUME_HPP
-#define WIDGETS_VOLUME_HPP
+#pragma once
 
 #include "../widget.hpp"
-#include "wf-popover.hpp"
 #include <gtkmm/image.h>
 #include <gtkmm/scale.h>
 #include <pulse/pulseaudio.h>
-#include "gvc-mixer-control.h"
+#include <gvc-mixer-control.h>
 #include <wayfire/util/duration.hpp>
 
 /**
@@ -21,6 +19,7 @@ class WayfireVolumeScale : public Gtk::Scale
 
   public:
     WayfireVolumeScale();
+    ~WayfireVolumeScale();
 
     /* Gets the current target value */
     double get_target_value() const;
@@ -55,7 +54,7 @@ class WayfireVolume : public WayfireWidget
     gulong notify_is_muted_signal = 0;
     gulong notify_default_sink_changed = 0;
     sigc::connection popover_timeout;
-    sigc::connection volume_changed_signal;
+    std::vector<sigc::connection> signals;
     void disconnect_gvc_stream_signals();
 
     enum set_volume_flags_t
@@ -99,5 +98,3 @@ class WayfireVolume : public WayfireWidget
      */
     void check_set_popover_timeout();
 };
-
-#endif /* end of include guard: WIDGETS_VOLUME_HPP */

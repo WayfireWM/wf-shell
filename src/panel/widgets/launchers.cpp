@@ -1,13 +1,14 @@
 #include "launchers.hpp"
+
 #include <giomm/file.h>
 #include <glibmm/spawn.h>
 #include <glibmm/keyfile.h>
 #include <gtkmm/icontheme.h>
 #include <gdk/gdkcairo.h>
 #include <cassert>
-#include <iostream>
 #include <gtk-utils.hpp>
-#include <wf-shell-app.hpp>
+
+#include "wf-shell-app.hpp"
 
 bool WfLauncherButton::initialize(std::string name, std::string icon, std::string label)
 {
@@ -49,7 +50,7 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
     style->add_class("flat");
     style->add_class("launcher");
 
-    button.signal_clicked().connect([=] () { launch(); });
+    btn_sig = button.signal_clicked().connect([=] () { launch(); });
 
     update_icon();
 
@@ -74,7 +75,9 @@ void WfLauncherButton::launch()
 WfLauncherButton::WfLauncherButton()
 {}
 WfLauncherButton::~WfLauncherButton()
-{}
+{
+    btn_sig.disconnect();
+}
 
 static bool begins_with(const std::string& string, const std::string& prefix)
 {

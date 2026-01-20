@@ -1,6 +1,5 @@
 #include "toplevel.hpp"
-#include <iostream>
-#include "gtk/gtklayoutmanager.h"
+#include "window-list.hpp"
 
 WayfireWindowListLayout::WayfireWindowListLayout(WayfireWindowList *window_list)
 {

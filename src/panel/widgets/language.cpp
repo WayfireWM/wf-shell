@@ -1,16 +1,17 @@
 #include <cstddef>
 #include <cstdint>
+
 #include <glibmm.h>
-#include <iostream>
+#include <gtkmm/button.h>
+
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 #include <wayfire/util/log.hpp>
 #include <xkbcommon/xkbregistry.h>
+
 #include "language.hpp"
-#include "gtkmm/button.h"
-#include "sigc++/functors/mem_fun.h"
 #include "wf-ipc.hpp"
 
 void WayfireLanguage::init(Gtk::Box *container)
@@ -18,7 +19,7 @@ void WayfireLanguage::init(Gtk::Box *container)
     button.get_style_context()->add_class("language");
     button.get_style_context()->add_class("flat");
     button.get_style_context()->remove_class("activated");
-    button.signal_clicked().connect(sigc::mem_fun(*this, &WayfireLanguage::next_layout));
+    btn_sig = button.signal_clicked().connect(sigc::mem_fun(*this, &WayfireLanguage::next_layout));
     button.show();
 
     ipc_client->subscribe(this, {"keyboard-modifier-state-changed"});
@@ -121,4 +122,5 @@ WayfireLanguage::WayfireLanguage()
 WayfireLanguage::~WayfireLanguage()
 {
     ipc_client->unsubscribe(this);
+    btn_sig.disconnect();
 }
