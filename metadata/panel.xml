@@ -253,11 +253,7 @@
 	<option name="wp_quick_target_choice" type="string">
 		<_short>Quick action target</_short>
 		<_long>Which audio control will be the target of the quick actions (scrolling and muting on the widget)</_long>
-		<default>last_change</default>
-		<desc>
-			<value>last_change</value>
-			<_name>Last changed volume</_name>
-		</desc>
+		<default>default_sink</default>
 		<desc>
 			<value>default_sink</value>
 			<_name>Default sink</_name>
@@ -265,6 +261,10 @@
 		<desc>
 			<value>default_source</value>
 			<_name>Default source</_name>
+		</desc>
+		<desc>
+			<value>last_change</value>
+			<_name>Last changed volume</_name>
 		</desc>
 	</option>
 	<option name="wp_popup_on_change" type="bool">
