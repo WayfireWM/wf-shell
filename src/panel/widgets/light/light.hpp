@@ -49,28 +49,6 @@ class WfLightControl : public Gtk::Box
 
 };
 
-#ifdef HAVE_DDCUTIL
-class WfLightDdcControl : public WfLightControl
-{
-  protected:
-    DDCA_Display_Handle dh;
-};
-#endif
-
-class WfLightSysfsControl: public WfLightControl
-{
-  protected:
-    std::string path;
-    int get_max();
-
-    std::string get_name();
-
-  public:
-    WfLightSysfsControl(WayfireLight *parent, std::string path);
-    void set_brightness(double brightness);
-    double get_brightness();
-};
-
 class WayfireLight : public WayfireWidget {
   private:
     void init(Gtk::Box *container) override;
