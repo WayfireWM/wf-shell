@@ -26,6 +26,9 @@
 #ifdef HAVE_PULSE
     #include "widgets/volume.hpp"
 #endif
+#ifdef HAVE_WIREPLUMBER
+    #include "widgets/wireplumber.hpp"
+#endif
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
 #include "widgets/tray/tray.hpp"
@@ -162,6 +165,17 @@ class WayfirePanel::impl
 #else
     #warning "Pulse not found, volume widget will not be available."
             std::cerr << "Built without pulse support, volume widget "
+                         " is not available." << std::endl;
+#endif
+        }
+
+        if (name == "wireplumber")
+        {
+#ifdef HAVE_WIREPLUMBER
+            return Widget(new WayfireWireplumber());
+#else
+    #warning "Wireplumber not found, mixer widget will not be available."
+            std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
 #endif
         }

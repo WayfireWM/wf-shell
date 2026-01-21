@@ -39,6 +39,11 @@ if libpulse.found()
   deps += [libpulse, libgvc]
 endif
 
+if wireplumber.found()
+  widget_sources += 'widgets/wireplumber.cpp'
+  deps += wireplumber
+endif
+
 executable(
   'wf-panel',
   ['panel.cpp'] + widget_sources,
