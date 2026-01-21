@@ -21,7 +21,6 @@ wfconfig = dependency('wf-config', version: '>=0.7.0') #TODO fallback submodule
 epoxy = dependency('epoxy')
 gtklayershell = dependency('gtk4-layer-shell-0', fallback: ['gtk4-layer-shell'])
 libpulse = dependency('libpulse', required: get_option('pulse'))
-wireplumber = dependency('wireplumber-0.5', required: get_option('wireplumber'))
 ddcutil = dependency('libddcutil-5', required: get_option('ddcutil'))
 dbusmenu_gtk = dependency('dbusmenu-glib-0.4')
 libgvc = subproject('gvc', default_options: ['static=true'], required: get_option('pulse'))
