@@ -23,7 +23,7 @@
 	</option>
 	<option name="minimal_height" type="int">
 		<_short>Minimal Height</_short>
-		<default>24</default>
+		<default>40</default>
 	</option>
 	<option name="autohide" type="bool">
 		<_short>Autohide</_short>
@@ -82,8 +82,9 @@
 		<default>4</default>
 	</option>
 	<option name="launchers_size" type="int">
-		<_short>Launchers Size</_short>
-		<default>42</default>
+		<_short>Launchers Icon Size</_short>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	</group>
 	<group>
@@ -175,6 +176,11 @@
 		<_short>Menu Icon</_short>
 		<hint>file</hint>
 		<default></default>
+	</option>
+	<option name="menu_icon_size" type="int">
+		<_short>Menu Icon Size</_short>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	<option name="menu_min_category_width" type="int">
 		<_short>Menu Minimum Category Width</_short>

@@ -373,9 +373,10 @@ void WayfirePanelApp::on_activate()
 
     new CssFromConfigInt("panel/minimal_height", ".widget-icon {-gtk-icon-size:", "px;}");
 
-    const std::vector<std::vector<std::string>> icon_sizes_args =
+    const static std::vector<std::vector<std::string>> icon_sizes_args =
     {
-        { "panel/launchers_size", ".menu-button,.launcher{-gtk-icon-size:", "px;}" },
+        { "panel/menu_icon_size", ".menu-button{-gtk-icon-size:", "px;}" },
+        { "panel/launchers_size", ".launcher{-gtk-icon-size:", "px;}" },
         { "panel/battery_icon_size", ".battery image{-gtk-icon-size:", "px;}" },
         { "panel/network_icon_size", ".network{-gtk-icon-size:", "px;}" },
         { "panel/volume_icon_size", ".volume{-gtk-icon-size:", "px;" },
