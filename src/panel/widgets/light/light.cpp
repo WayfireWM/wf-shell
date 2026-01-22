@@ -88,9 +88,9 @@ void WayfireLight::init(Gtk::Box *container){
     update_icon();
 }
 
-void WayfireLight::add_control(std::unique_ptr<WfLightControl> control){
+void WayfireLight::add_control(WfLightControl *control){
     box.append(*control);
-    controls.push_back(std::move(control));
+    controls.push_back(control);
 }
 
 void WayfireLight::update_icon(){

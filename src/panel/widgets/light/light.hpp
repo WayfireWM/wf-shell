@@ -58,17 +58,17 @@ class WayfireLight : public WayfireWidget {
     Gtk::Popover *popover;
     Gtk::Box box;
 
-    std::vector<std::unique_ptr<WfLightControl>> controls;
+    std::vector<WfLightControl*> controls;
 
     WfOption<std::string> icon_target{"panel/light_icon_target"};
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
-    WfOption<double> invert_scroll{"panel/light_invert_scroll"};
+    WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
 
     void setup_sysfs();
     void setup_ddc();
 
   public:
-    void add_control(std::unique_ptr<WfLightControl> control);
+    void add_control(WfLightControl *control);
 
     void update_icon();
 };

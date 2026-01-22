@@ -1,9 +1,10 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <grp.h>
 #include <memory>
+#include <thread>
 #include <pwd.h>
+#include <grp.h>
 extern "C"{
     #include <sys/inotify.h>
 }
@@ -135,6 +136,8 @@ class SysfsSurveillor {
             for (const auto& entry : std::filesystem::directory_iterator(path)){
                 add_dev(entry);
             }
+
+            inotify_thread = std::thread(&SysfsSurveillor::handle_inotify_events, this);
         }
 
         static inline std::unique_ptr<SysfsSurveillor> instance;
@@ -161,10 +164,10 @@ class SysfsSurveillor {
 
                     if (event->mask & IN_CLOSE_WRITE){
                         // look for the watch descriptor
-                        for (auto const& pair : wd_to_controls){
-                            if (pair.first == event->wd){
+                        for (auto & pair : path_wd_to_controls){
+                            if (pair.first.second == event->wd){
                                 // it changed, so refresh the value of the controls
-                                for (auto const control : pair.second){
+                                for (auto control : pair.second){
                                     control->set_scale_target_value(control->get_brightness());
                                 }
                             }
@@ -218,29 +221,35 @@ class SysfsSurveillor {
             ))
                 std::cout << "Can read backlight, but cannot write. Control will only display brightness.\n";
 
-            for (auto widget : widgets){
-                widget->add_control(std::make_unique<WfLightSysfsControl>(widget, path));
-            }
-            devices.push_back(path);
             int wd = inotify_add_watch(fd, path.string().c_str(), IN_CLOSE_WRITE);
             if (wd == -1){
                 std::cerr << "Light widget: failed to register inotify watch descriptor.\n";
                 return;
             }
-            wd_to_controls.insert({wd, {}});
-        }
 
-        void catch_up_widget(WayfireLight* widget){
-            for (auto device : devices){
-                for (auto widget: widgets){
-                    widget->add_control(std::make_unique<WfLightSysfsControl>(widget, device));
-                }
+            std::pair path_wd = {path, wd};
+            path_wd_to_controls.insert({path_wd, {}});
+
+            for (auto widget : widgets)
+            {
+                auto control = new WfLightSysfsControl(widget, path);
+                path_wd_to_controls[path_wd].push_back(control);
+                widget->add_control(control);
             }
         }
 
-        std::vector<std::filesystem::path> devices;
+        void catch_up_widget(WayfireLight* widget){
+            for (auto it : path_wd_to_controls){
+                auto control = new WfLightSysfsControl(widget, it.first.first.string());
+                it.second.push_back(control);
+                widget->add_control(control);
+            }
+        }
+
+        // std::vector<std::filesystem::path> devices;
+        std::map<std::pair<std::filesystem::path, int>, std::vector<WfLightSysfsControl*>> path_wd_to_controls;
         std::vector<WayfireLight*> widgets;
-        std::map<int, std::vector<WfLightSysfsControl*>> wd_to_controls;
+        std::thread inotify_thread;
 
     public:
 

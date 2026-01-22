@@ -500,7 +500,7 @@ Set to -1 to only run it by clicking the button.
 		</desc>
 	</option>
 	<option name="light_icon_size" type="int">
-		<_short>Network Icon Size</_short>
+		<_short>Light icon size</_short>
 		<default>32</default>
 		<min>1</min>
 	</option>
