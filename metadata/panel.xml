@@ -23,7 +23,7 @@
 	</option>
 	<option name="minimal_height" type="int">
 		<_short>Minimal Height</_short>
-		<default>40</default>
+		<default>42</default>
 	</option>
 	<option name="autohide" type="bool">
 		<_short>Autohide</_short>
