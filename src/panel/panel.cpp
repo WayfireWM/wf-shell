@@ -366,7 +366,7 @@ void WayfirePanelApp::reload_css()
 
     const static std::vector<std::vector<std::string>> icon_sizes_args =
     {
-        {"panel/menu_icon_size", ".menu-button{-gtk-icon-size:", "px;}"},
+        {"panel/menu_icon_size", ".menu-icon{-gtk-icon-size:", "px;}"},
         {"panel/launchers_size", ".launcher{-gtk-icon-size:", "px;}"},
         {"panel/battery_icon_size", ".battery image{-gtk-icon-size:", "px;}"},
         {"panel/network_icon_size", ".network{-gtk-icon-size:", "px;}"},
