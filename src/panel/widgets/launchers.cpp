@@ -48,6 +48,7 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
     button.set_child(m_icon);
     auto style = button.get_style_context();
     style->add_class("flat");
+    style->add_class("widget-icon");
     style->add_class("launcher");
 
     btn_sig = button.signal_clicked().connect([=] () { launch(); });
@@ -149,6 +150,7 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
 
 void WayfireLaunchers::init(Gtk::Box *container)
 {
+    box.get_style_context()->add_class("widget-icon");
     box.get_style_context()->add_class("launchers");
     container->append(box);
     handle_config_reload();
