@@ -374,6 +374,7 @@ void WayfirePanelApp::reload_css()
     {
         config->remove_provider();
     }
+
     config_css.clear();
 
     const static std::vector<std::vector<std::string>> icon_sizes_args =
@@ -391,17 +392,24 @@ void WayfirePanelApp::reload_css()
     {
         if (WfOption<int>{strings[0]}.value())
         {
-            config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigInt(strings[0], strings[1], strings[2])));
+            config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigInt(strings[0], strings[1],
+                strings[2])));
         }
     }
 
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigInt("panel/launchers_spacing", ".launcher{padding: 0px ", "px;}")));
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}")));
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "")));
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "")));
+    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigInt("panel/launchers_spacing",
+        ".launcher{padding: 0px ", "px;}")));
+    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigString("panel/background_color",
+        ".wf-panel{background-color:", ";}")));
+    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigBool("panel/battery_icon_invert",
+        ".battery image{filter:invert(100%);}", "")));
+    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigBool("panel/network_icon_invert_color",
+        ".network-icon{filter:invert(100%);}", "")));
 
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigFont("panel/battery_font", ".battery {", "}")));
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigFont("panel/clock_font", ".clock {", "}")));
+    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigFont("panel/battery_font", ".battery {",
+        "}")));
+    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigFont("panel/clock_font", ".clock {",
+        "}")));
 }
 
 void WayfirePanelApp::on_activate()
