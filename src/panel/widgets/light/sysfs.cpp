@@ -11,6 +11,70 @@ extern "C"{
 
 #include "light.hpp"
 
+class WfLightSysfsControl: public WfLightControl
+{
+    protected:
+        std::string path;
+
+        int get_max(){
+            std::ifstream max_file(path + "/max_brightness");
+            if (!max_file.is_open()){
+                std::cerr << "Failed to get max brightness for device at " << path << '\n';
+                return 0;
+            }
+            int max;
+            max_file >> max;
+            max_file.close();
+            return max;
+        }
+
+        std::string get_name(){
+            std::string name;
+            name = "Integrated display";
+            return name;
+        }
+
+    public:
+        WfLightSysfsControl(WayfireLight *parent, std::string _path) : WfLightControl(parent){
+            path = _path;
+
+            scale.set_target_value(get_brightness());
+            label.set_text(get_name());
+
+            icons = brightness_display_icons;
+        }
+
+        // the permissions have already been checked and *most likely* won’t have changed, so we just read/write
+
+        void set_brightness(double brightness){
+            std::ofstream b_file(path + "/brightness");
+            if (!b_file.is_open()){
+                std::cerr << "Failed to open brightness for device at " << path << '\n';
+                return;
+            }
+            // something of the sort avoids formatting issues with locales
+            b_file << std::to_string((int)(brightness * (double)get_max()));
+            if (b_file.fail()){
+                std::cerr << "Failed to write brightness for device at " << path << '\n';
+            }
+        }
+
+        double get_brightness(){
+            std::ifstream b_file(path + "/brightness");
+            if (!b_file.is_open()){
+                std::cerr << "Failed to get brightness for device at " << path << '\n';
+                return 0;
+            }
+
+            int brightness, max;
+            b_file >> brightness;
+            b_file.close();
+            max = get_max();
+            return (((double)brightness + (double)max) / (double)max) - 1;
+        }
+};
+
+// utilities to check permissions
 bool is_group_member(gid_t file_group_id) {
     gid_t current_group = getgid();
     gid_t supplementary_groups[NGROUPS_MAX];
@@ -200,66 +264,3 @@ class SysfsSurveillor {
 void WayfireLight::setup_sysfs(){
     SysfsSurveillor::get().add_widget(this);
 }
-
-// the permissions have already been checked and *most likely* won’t have changed, so we just read/write
-
-class WfLightSysfsControl: public WfLightControl
-{
-    protected:
-        std::string path;
-
-        int get_max(){
-            std::ifstream max_file(path + "/max_brightness");
-            if (!max_file.is_open()){
-                std::cerr << "Failed to get max brightness for device at " << path << '\n';
-                return 0;
-            }
-            int max;
-            max_file >> max;
-            max_file.close();
-            return max;
-        }
-
-        std::string get_name(){
-            std::string name;
-            name = "Integrated display";
-            return name;
-        }
-
-    public:
-        WfLightSysfsControl(WayfireLight *parent, std::string _path) : WfLightControl(parent){
-            path = _path;
-
-            scale.set_target_value(get_brightness());
-            label.set_text(get_name());
-
-            icons = brightness_display_icons;
-        }
-
-        void set_brightness(double brightness){
-            std::ofstream b_file(path + "/brightness");
-            if (!b_file.is_open()){
-                std::cerr << "Failed to open brightness for device at " << path << '\n';
-                return;
-            }
-            // something of the sort avoids formatting issues with locales
-            b_file << std::to_string((int)(brightness * (double)get_max()));
-            if (b_file.fail()){
-                std::cerr << "Failed to write brightness for device at " << path << '\n';
-            }
-        }
-
-        double get_brightness(){
-            std::ifstream b_file(path + "/brightness");
-            if (!b_file.is_open()){
-                std::cerr << "Failed to get brightness for device at " << path << '\n';
-                return 0;
-            }
-
-            int brightness, max;
-            b_file >> brightness;
-            b_file.close();
-            max = get_max();
-            return (((double)brightness + (double)max) / (double)max) - 1;
-        }
-};
