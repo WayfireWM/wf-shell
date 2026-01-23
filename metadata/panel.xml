@@ -480,25 +480,6 @@ Set to -1 to only run it by clicking the button.
 		</_long>
 		<default>false</default>
 	</option>
-		<option name="light_icon_target" type="string">
-		<_short>Icon target</_short>
-		<_long>
-			How the widget decides which brighness to show in the icon, in the event there are multiple monitors.
-		</_long>
-		<default>brightest</default>
-		<desc>
-			<value>brightest</value>
-			<_name>Brightest</_name>
-		</desc>
-		<desc>
-			<value>dimmest</value>
-			<_name>Dimmest</_name>
-		</desc>
-		<desc>
-			<value>average</value>
-			<_name>Average</_name>
-		</desc>
-	</option>
 	<option name="light_icon_size" type="int">
 		<_short>Light icon size</_short>
 		<default>32</default>

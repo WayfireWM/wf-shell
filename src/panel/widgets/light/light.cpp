@@ -55,6 +55,22 @@ void WayfireLight::init(Gtk::Box *container){
     popover = button->get_popover();
     popover->set_autohide(false);
 
+    // layout
+    box.append(display_box);
+    box.set_orientation(Gtk::Orientation::VERTICAL);
+
+    disp_othr_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
+    box.append(disp_othr_sep);
+    box.append(other_box);
+
+    display_label.set_text("This monitor");
+    display_box.append(display_label);
+    display_box.set_orientation(Gtk::Orientation::VERTICAL);
+
+    other_label.set_text("Other monitors");
+    other_box.append(other_label);
+    other_box.set_orientation(Gtk::Orientation::VERTICAL);
+
     // scroll to brighten and dim all monitors
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
@@ -86,8 +102,6 @@ void WayfireLight::init(Gtk::Box *container){
 
     container->append(*button);
 
-    box.append(display_ctrl);
-
     setup_sysfs();
 
     update_icon();
@@ -99,7 +113,8 @@ void WayfireLight::add_control(WfLightControl *control){
     auto connector = monitor->get_connector();
     if (control->get_name() == connector)
     {
-        display_ctrl.append(*control);
+        ctrl_this_display = control;
+        display_box.append(*control);
     } else
     {
         box.append(*control);
@@ -109,35 +124,12 @@ void WayfireLight::add_control(WfLightControl *control){
 
 void WayfireLight::update_icon(){
     // if none, show unavailable
-    if (controls.size() == 0){
+    if (!ctrl_this_display){
         icon.set_from_icon_name(brightness_display_icons.at(BRIGHTNESS_LEVEL_OOR));
         return;
     }
-    if (icon_target.value() == ICON_TARGET_BRIGHTEST){
-        // since brightness is between 0 and 1, we can just start at 0
-        double max = 0;
-        for (int i = 0 ; i < (int)controls.size() ; i++){
-            if (controls[i]->get_brightness() > max){
-                max = controls[i]->get_brightness();
-            }
-        }
-        icon.set_from_icon_name(brightness_display_icons.at(light_icon_for(max)));
-    }
-    if (icon_target.value() == ICON_TARGET_DIMMEST){
-        // same as before, but just start from 1
-        double min = 1;
-        for (int i = 0 ; i < (int)controls.size() ; i++){
-            if (controls[i]->get_brightness() > min){
-                min = controls[i]->get_brightness();
-            }
-        }
-        icon.set_from_icon_name(brightness_display_icons.at(light_icon_for(min)));
-    }
-    if (icon_target.value() == ICON_TARGET_AVERAGE){
-        double sum = 0;
-        for (int i = 0 ; i < (int)controls.size() ; i++){
-            sum += controls[i]->get_brightness();
-        }
-        icon.set_from_icon_name(brightness_display_icons.at(light_icon_for(sum / controls.size())));
-    }
+
+    icon.set_from_icon_name(brightness_display_icons.at(
+        light_icon_for(ctrl_this_display->get_brightness()))
+    );
 }
