@@ -46,6 +46,11 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
 void WfLightControl::set_scale_target_value(double brightness)
 {
     scale.set_target_value(brightness);
+    parent->update_icon();
+}
+double WfLightControl::get_scale_target_value()
+{
+    return scale.get_target_value();
 }
 
 WayfireLight::WayfireLight(WayfireOutput *_output)
@@ -97,7 +102,7 @@ void WayfireLight::init(Gtk::Box *container){
             change *= -1;
 
         for (int i = 0 ; i < (int)controls.size() ; i++){
-            controls[i]->set_brightness(controls[i]->get_brightness() + change);
+            controls[i]->set_brightness(controls[i]->get_scale_target_value() + change);
         }
         return true;
     }, true);
@@ -135,6 +140,6 @@ void WayfireLight::update_icon(){
     }
 
     icon.set_from_icon_name(brightness_display_icons.at(
-        light_icon_for(ctrl_this_display->get_brightness()))
+        light_icon_for(ctrl_this_display->get_scale_target_value()))
     );
 }
