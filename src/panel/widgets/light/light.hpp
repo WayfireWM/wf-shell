@@ -7,10 +7,6 @@ extern "C" {
 #include "widget.hpp"
 #include "animated-scale.hpp"
 
-#define ICON_TARGET_BRIGHTEST "brightest"
-#define ICON_TARGET_DIMMEST "dimmest"
-#define ICON_TARGET_AVERAGE "average"
-
 enum BrightnessLevel
 {
   BRIGHTNESS_LEVEL_LOW,
@@ -56,11 +52,13 @@ class WayfireLight : public WayfireWidget {
     Gtk::Image icon;
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::Popover *popover;
-    Gtk::Box box, display_ctrl, other_ctrl;
+    Gtk::Box box, display_box, other_box;
+    Gtk::Label display_label, other_label;
+    Gtk::Separator disp_othr_sep;
 
+    WfLightControl *ctrl_this_display;
     std::vector<WfLightControl*> controls;
 
-    WfOption<std::string> icon_target{"panel/light_icon_target"};
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
 
