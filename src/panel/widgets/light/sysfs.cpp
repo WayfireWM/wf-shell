@@ -57,29 +57,6 @@ class WfLightSysfsControl: public WfLightControl
 
         std::string get_name(){
             return connector_name;
-            // std::regex pattern(R"(/card\d+-([^/]+)/)");
-            // std::smatch match;
-
-            // if (std::regex_search(realpath, match, pattern)){
-            //     return match[1].str();
-            // }
-
-            // return "";
-            // std::string_view prefix = "card0-";
-            // auto pos = path.rfind(prefix);
-
-            // if (pos == std::string_view::npos){
-            //     return "";
-            // }
-
-            // pos += prefix.length();
-            // auto end = path.find("/", pos);
-
-            // if (end == std::string_view::npos){
-            //     end = path.length();
-            // }
-
-            // return path.substr(pos, end - pos);
         }
 
         // the permissions have already been checked and are being monitored, so we just read/write
@@ -94,7 +71,9 @@ class WfLightSysfsControl: public WfLightControl
             b_file << std::to_string((int)(brightness * (double)get_max()));
             if (b_file.fail()){
                 std::cerr << "Failed to write brightness for device at " << path << '\n';
+                return;
             }
+            parent->update_icon();
         }
 
         double get_brightness(){
@@ -272,7 +251,10 @@ class SysfsSurveillor {
             if (!((perms & std::filesystem::perms::others_write) != std::filesystem::perms::none
                 || (is_in_file_group(b_path) && (perms & std::filesystem::perms::group_write) != std::filesystem::perms::none)
             ))
-                std::cout << "Can read backlight, but cannot write. Control will only display brightness.\n";
+            {
+                std::cout << "Can read backlight, but cannot write. Ignoring.\n";
+                return;
+            }
 
             int wd = inotify_add_watch(fd, path.string().c_str(), IN_CLOSE_WRITE);
             if (wd == -1){
