@@ -30,7 +30,7 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
 
     // preparation
     scale.set_range(0.0, 1.0);
-    scale.set_size_request(300);
+    scale.set_size_request(slider_length.value());
 
     scale.set_user_changed_callback([this](){
         this->set_brightness(scale.get_target_value());
@@ -56,6 +56,11 @@ double WfLightControl::get_scale_target_value()
 WayfireLight::WayfireLight(WayfireOutput *_output)
 {
     output = _output;
+}
+
+WayfireLight::~WayfireLight()
+{
+    quit_sysfs();
 }
 
 void WayfireLight::init(Gtk::Box *container){
@@ -119,11 +124,11 @@ void WayfireLight::init(Gtk::Box *container){
     update_icon();
 }
 
-void WayfireLight::add_control(WfLightControl *control){
+void WayfireLight::add_control(std::shared_ptr<WfLightControl> control){
     auto connector = output->monitor->get_connector();
     if (control->get_name() == connector)
     {
-        ctrl_this_display = control;
+        ctrl_this_display = std::shared_ptr(control);
         display_box.append(*control);
     } else
     {
@@ -142,4 +147,24 @@ void WayfireLight::update_icon(){
     icon.set_from_icon_name(brightness_display_icons.at(
         light_icon_for(ctrl_this_display->get_scale_target_value()))
     );
+}
+
+bool WayfireLight::on_popover_timeout(int timer)
+{
+    popover_timeout.disconnect();
+    popover->popdown();
+    return false;
+}
+
+void WayfireLight::check_set_popover_timeout()
+{
+    popover_timeout.disconnect();
+
+    popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
+        &WayfireLight::on_popover_timeout), 0), popup_timeout * 1000);
+}
+
+void WayfireLight::cancel_popover_timeout()
+{
+    popover_timeout.disconnect();
 }
