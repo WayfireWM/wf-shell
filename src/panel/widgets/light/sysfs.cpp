@@ -15,6 +15,7 @@ extern "C"{
 
 class WfLightSysfsControl: public WfLightControl
 {
+    friend class SysfsSurveillor;
     protected:
         std::string path, connector_name;
 
@@ -192,12 +193,9 @@ class SysfsSurveillor {
                     // a registered brightness file was changed
                     if (event->mask & IN_CLOSE_WRITE){
                         // look for the watch descriptor
-                        for (auto & pair : path_wd_to_controls){
-                            if (pair.first.second == event->wd){
-                                // it changed, so refresh the value of the controls
-                                for (auto control : pair.second){
-                                    control->set_scale_target_value(control->get_brightness());
-                                }
+                        if (wd_to_path_controls.find(event->wd) != wd_to_path_controls.end()){
+                            for (auto control : wd_to_path_controls[event->wd].second){
+                                control->set_scale_target_value(control->get_brightness());
                             }
                         }
                     }
@@ -276,30 +274,44 @@ class SysfsSurveillor {
                 return;
             }
 
-            std::pair path_wd = {path, wd};
-            path_wd_to_controls.insert({path_wd, {}});
+            wd_to_path_controls.insert({wd, {path, {}}});
 
             for (auto widget : widgets)
             {
-                auto control = new WfLightSysfsControl(widget, path);
-                path_wd_to_controls[path_wd].push_back(control);
+                auto control = std::make_shared<WfLightSysfsControl>(widget, path);
+                wd_to_path_controls[wd].second.push_back(std::shared_ptr<WfLightSysfsControl>(control));
+;
                 widget->add_control(control);
             }
         }
 
         void rem_dev(std::filesystem::path path){
-
-        }
-
-        void catch_up_widget(WayfireLight* widget){
-            for (auto& it : path_wd_to_controls){
-                auto control = new WfLightSysfsControl(widget, it.first.first.string());
-                it.second.push_back(control);
-                widget->add_control(control);
+            for (auto it : wd_to_path_controls){
+                if (it.second.first == path){
+                    auto& controls = it.second.second;
+                    for (auto control : controls){
+                        controls.erase(find(controls.begin(), controls.end(), control));
+                    }
+                    wd_to_path_controls.erase(it.first);
+                }
             }
         }
 
-        std::map<std::pair<std::filesystem::path, int>, std::vector<WfLightSysfsControl*>> path_wd_to_controls;
+        void catch_up_widget(WayfireLight* widget){
+            for (auto& it : wd_to_path_controls){
+                auto control = std::make_shared<WfLightSysfsControl>(widget, it.second.first.string());
+                it.second.second.push_back(std::shared_ptr<WfLightSysfsControl>(control));
+                widget->add_control((std::shared_ptr<WfLightControl>)control);
+            }
+        }
+
+        std::map<
+            int,
+            std::pair<
+                std::filesystem::path,
+                std::vector<std::shared_ptr<WfLightSysfsControl>>
+            >
+        > wd_to_path_controls;
         int wd_additions, wd_removal;
         std::vector<WayfireLight*> widgets;
         std::thread inotify_thread;
@@ -310,8 +322,20 @@ class SysfsSurveillor {
             widgets.push_back(widget);
             catch_up_widget(widget);
         }
-        void rem_widget(WayfireLight *widget){
 
+        void rem_widget(WayfireLight *widget){
+            for (auto& it : wd_to_path_controls)
+            {
+                auto& controls = it.second.second;
+                for (auto& control : controls)
+                {
+                    if (control->parent == widget)
+                    {
+                        controls.erase(find(controls.begin(), controls.end(), control));
+                    }
+                }
+            }
+            widgets.erase(find(widgets.begin(), widgets.end(), widget));
         }
 
         static SysfsSurveillor& get(){
@@ -325,4 +349,7 @@ class SysfsSurveillor {
 
 void WayfireLight::setup_sysfs(){
     SysfsSurveillor::get().add_widget(this);
+}
+void WayfireLight::quit_sysfs(){
+    SysfsSurveillor::get().rem_widget(this);
 }

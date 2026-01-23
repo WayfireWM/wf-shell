@@ -34,6 +34,8 @@ class WfLightControl : public Gtk::Box
     std::map<BrightnessLevel, std::string> icons;
     WayfireLight *parent;
 
+    WfOption<int> slider_length{"panel/light_slider_length"};
+
   public:
     WfLightControl(WayfireLight *parent);
 
@@ -59,23 +61,32 @@ class WayfireLight : public WayfireWidget {
     Gtk::Box box, display_box, other_box;
     Gtk::Label display_label, other_label;
     Gtk::Separator disp_othr_sep;
+    sigc::connection popover_timeout;
 
-    WfLightControl *ctrl_this_display = nullptr;
-    std::vector<WfLightControl*> controls;
+    std::shared_ptr<WfLightControl> ctrl_this_display;
 
     WfOption<bool> popup_on_change{"panel/light_popup_on_change"};
     WfOption<double> popup_timeout{"panel/light_popup_timeout"};
-    WfOption<int> slider_length{"panel/light_slider_length"};
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
 
+    bool on_popover_timeout(int timer);
+
     void setup_sysfs();
+    void quit_sysfs();
     void setup_ddc();
+    void quit_ddc();
 
   public:
     WayfireLight(WayfireOutput *output);
+    ~WayfireLight();
 
-    void add_control(WfLightControl *control);
+    std::vector<std::shared_ptr<WfLightControl>> controls;
+
+    void check_set_popover_timeout();
+    void cancel_popover_timeout();
+
+    void add_control(std::shared_ptr<WfLightControl> control);
 
     void update_icon();
 };
