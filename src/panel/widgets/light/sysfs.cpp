@@ -149,8 +149,12 @@ class SysfsSurveillor {
                 return;
             }
 
-            // look for present integrated backlights
             const auto path = "/sys/class/backlight";
+
+            wd_additions = inotify_add_watch(fd, path, IN_CREATE);
+            wd_additions = inotify_add_watch(fd, path, IN_DELETE);
+
+            // look for present integrated backlights
             if (!std::filesystem::exists(path)){
                 std::cout << "No backlight directory found for integrated screens, skipping.\n";
                 return;
@@ -200,12 +204,22 @@ class SysfsSurveillor {
 
                     // a backlight device appeared
                     if (event->mask & IN_CREATE){
-
+                        if (wd_additions == event->wd){
+                            if (event->len)
+                            {
+                                add_dev(event->name);
+                            }
+                        }
                     }
 
                     // a backlight device was removed
                     if (event->mask & IN_DELETE){
-
+                        if (wd_removal == event->wd){
+                            if (event->len)
+                            {
+                                rem_dev(event->name);
+                            }
+                        }
                     }
 
                     // metadata changed, so maybe permissions
@@ -273,6 +287,10 @@ class SysfsSurveillor {
             }
         }
 
+        void rem_dev(std::filesystem::path path){
+
+        }
+
         void catch_up_widget(WayfireLight* widget){
             for (auto& it : path_wd_to_controls){
                 auto control = new WfLightSysfsControl(widget, it.first.first.string());
@@ -282,6 +300,7 @@ class SysfsSurveillor {
         }
 
         std::map<std::pair<std::filesystem::path, int>, std::vector<WfLightSysfsControl*>> path_wd_to_controls;
+        int wd_additions, wd_removal;
         std::vector<WayfireLight*> widgets;
         std::thread inotify_thread;
 
