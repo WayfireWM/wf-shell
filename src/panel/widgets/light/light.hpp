@@ -63,6 +63,9 @@ class WayfireLight : public WayfireWidget {
     WfLightControl *ctrl_this_display = nullptr;
     std::vector<WfLightControl*> controls;
 
+    WfOption<bool> popup_on_change{"panel/light_popup_on_change"};
+    WfOption<double> popup_timeout{"panel/light_popup_timeout"};
+    WfOption<int> slider_length{"panel/light_slider_length"};
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
 
