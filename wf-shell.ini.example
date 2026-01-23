@@ -154,9 +154,9 @@ wp_quick_target_choice = default_sink # or default_source, or last_change
 # Pop up a slider when the volume of the quick target changes
 wp_popup_on_change = true
 
-# Number of seconds the popover will display atfer popping up,
+# Number of seconds the popup will display for,
 # wether due to scrolling or an external volume change
-wp_display_timeout = 2.5
+wp_popup_timeout = 2.5
 
 # Length of the volume sliders
 wp_slider_length = 300

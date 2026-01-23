@@ -272,8 +272,8 @@
 		<_long>Whether to show a popup with the new values upon a change to the quick action target</_long>
 		<default>true</default>
 	</option>
-	<option name="wp_display_timeout" type="double">
-		<_short>Display timeout</_short>
+	<option name="wp_popup_timeout" type="double">
+		<_short>Popup timeout</_short>
 		<default>2.5</default>
 		<min>0</min>
 	</option>
