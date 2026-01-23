@@ -239,14 +239,13 @@ class SysfsSurveillor {
         }
 
         void catch_up_widget(WayfireLight* widget){
-            for (auto it : path_wd_to_controls){
+            for (auto& it : path_wd_to_controls){
                 auto control = new WfLightSysfsControl(widget, it.first.first.string());
                 it.second.push_back(control);
                 widget->add_control(control);
             }
         }
 
-        // std::vector<std::filesystem::path> devices;
         std::map<std::pair<std::filesystem::path, int>, std::vector<WfLightSysfsControl*>> path_wd_to_controls;
         std::vector<WayfireLight*> widgets;
         std::thread inotify_thread;
