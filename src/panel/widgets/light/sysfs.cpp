@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <regex>
 #include <pwd.h>
 #include <grp.h>
 extern "C"{
@@ -15,7 +16,7 @@ extern "C"{
 class WfLightSysfsControl: public WfLightControl
 {
     protected:
-        std::string path;
+        std::string path, connector_name;
 
         int get_max(){
             std::ifstream max_file(path + "/max_brightness");
@@ -23,21 +24,30 @@ class WfLightSysfsControl: public WfLightControl
                 std::cerr << "Failed to get max brightness for device at " << path << '\n';
                 return 0;
             }
+
             int max;
             max_file >> max;
             max_file.close();
             return max;
         }
 
-        std::string get_name(){
-            std::string name;
-            name = "Integrated display";
-            return name;
-        }
-
     public:
         WfLightSysfsControl(WayfireLight *parent, std::string _path) : WfLightControl(parent){
             path = _path;
+
+            std::string realpath = std::filesystem::canonical(path);
+            // this resolves to something of the sort :
+            // /sys/devices/pciXXXX:XX/XXXX:XX:XX.X/XXXX:XX:XX.X/drm/cardX-<connector-name>/<name>
+            // what we are intersted in here is the connector name
+            std::regex pattern(R"(/card\d+-([^/]+)/)");
+            std::smatch match;
+
+            if (std::regex_search(realpath, match, pattern)){
+                connector_name = match[1].str();
+            } else // we failed :(
+            {
+                connector_name = "";
+            }
 
             scale.set_target_value(get_brightness());
             label.set_text(get_name());
@@ -45,7 +55,34 @@ class WfLightSysfsControl: public WfLightControl
             icons = brightness_display_icons;
         }
 
-        // the permissions have already been checked and *most likely* won’t have changed, so we just read/write
+        std::string get_name(){
+            return connector_name;
+            // std::regex pattern(R"(/card\d+-([^/]+)/)");
+            // std::smatch match;
+
+            // if (std::regex_search(realpath, match, pattern)){
+            //     return match[1].str();
+            // }
+
+            // return "";
+            // std::string_view prefix = "card0-";
+            // auto pos = path.rfind(prefix);
+
+            // if (pos == std::string_view::npos){
+            //     return "";
+            // }
+
+            // pos += prefix.length();
+            // auto end = path.find("/", pos);
+
+            // if (end == std::string_view::npos){
+            //     end = path.length();
+            // }
+
+            // return path.substr(pos, end - pos);
+        }
+
+        // the permissions have already been checked and are being monitored, so we just read/write
 
         void set_brightness(double brightness){
             std::ofstream b_file(path + "/brightness");
@@ -76,7 +113,8 @@ class WfLightSysfsControl: public WfLightControl
 };
 
 // utilities to check permissions
-bool is_group_member(gid_t file_group_id) {
+bool is_group_member(gid_t file_group_id)
+{
     gid_t current_group = getgid();
     gid_t supplementary_groups[NGROUPS_MAX];
     int n_groups = getgroups(NGROUPS_MAX, supplementary_groups);
@@ -84,7 +122,8 @@ bool is_group_member(gid_t file_group_id) {
     if (current_group == file_group_id)
         return true;
 
-    for (int i = 0; i < n_groups; ++i) {
+    for (int i = 0; i < n_groups; ++i)
+    {
         if (supplementary_groups[i] == file_group_id)
             return true;
     }
@@ -93,23 +132,28 @@ bool is_group_member(gid_t file_group_id) {
 }
 
 // let’s assume the file is not owned by the user and only bother with groups
-bool is_in_file_group(const std::filesystem::path& file_path) {
+bool is_in_file_group(const std::filesystem::path& file_path)
+{
     struct stat file_info;
-    if (stat(file_path.c_str(), &file_info) != 0) {
+    if (stat(file_path.c_str(), &file_info) != 0)
+    {
         std::cerr << "Failed to stat " << file_path << ".\n";
         return false;
     }
 
     struct group *file_group = getgrgid(file_info.st_gid);
 
-    if (!file_group) {
+    if (!file_group)
+    {
         std::cerr << "Failed to fetch owner/group info for " << file_path << ".\n";
         return false;
     }
 
-    if (is_group_member(file_info.st_gid)) {
+    if (is_group_member(file_info.st_gid))
+    {
         return true;
-    } else {
+    } else
+    {
         return false;
     }
 }
@@ -146,7 +190,7 @@ class SysfsSurveillor {
 
         void handle_inotify_events(){
             // according to the inotify man page, aligning as such ensures
-            // proper function and avoid performance loss for "some systems"
+            // proper function and avoids performance loss for "some systems"
             char buf[2048] __attribute__((aligned(__alignof__(struct inotify_event))));
             const struct inotify_event *event;
             ssize_t size;
@@ -162,6 +206,7 @@ class SysfsSurveillor {
                 for (char *ptr = buf ; ptr < buf + size ; ptr += sizeof(struct inotify_event) + event->len){
                     event = (const struct inotify_event*) ptr;
 
+                    // a registered brightness file was changed
                     if (event->mask & IN_CLOSE_WRITE){
                         // look for the watch descriptor
                         for (auto & pair : path_wd_to_controls){
@@ -174,10 +219,18 @@ class SysfsSurveillor {
                         }
                     }
 
+                    // a backlight device appeared
                     if (event->mask & IN_CREATE){
 
                     }
+
+                    // a backlight device was removed
                     if (event->mask & IN_DELETE){
+
+                    }
+
+                    // metadata changed, so maybe permissions
+                    if (event->mask & IN_ATTRIB){
 
                     }
                 }

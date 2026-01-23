@@ -37,10 +37,10 @@ class WfLightControl : public Gtk::Box
     std::map<BrightnessLevel, std::string> icons;
     WayfireLight *parent;
 
-    virtual std::string get_name() = 0;
-
   public:
     WfLightControl(WayfireLight *parent);
+
+    virtual std::string get_name() = 0;
 
     void set_scale_target_value(double value);
     // a double from 0 to 1 for min to max
@@ -56,7 +56,7 @@ class WayfireLight : public WayfireWidget {
     Gtk::Image icon;
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::Popover *popover;
-    Gtk::Box box;
+    Gtk::Box box, display_ctrl, other_ctrl;
 
     std::vector<WfLightControl*> controls;
 
