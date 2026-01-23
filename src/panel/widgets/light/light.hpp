@@ -1,3 +1,4 @@
+#include "wf-shell-app.hpp"
 #include <gtkmm.h>
 #ifdef HAVE_DDCUTIL
 extern "C" {
@@ -49,6 +50,8 @@ class WayfireLight : public WayfireWidget {
   private:
     void init(Gtk::Box *container) override;
 
+    WayfireOutput *output;
+
     Gtk::Image icon;
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::Popover *popover;
@@ -56,7 +59,7 @@ class WayfireLight : public WayfireWidget {
     Gtk::Label display_label, other_label;
     Gtk::Separator disp_othr_sep;
 
-    WfLightControl *ctrl_this_display;
+    WfLightControl *ctrl_this_display = nullptr;
     std::vector<WfLightControl*> controls;
 
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
@@ -66,6 +69,8 @@ class WayfireLight : public WayfireWidget {
     void setup_ddc();
 
   public:
+    WayfireLight(WayfireOutput *output);
+
     void add_control(WfLightControl *control);
 
     void update_icon();
