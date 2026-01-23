@@ -1,6 +1,9 @@
+#include <gdkmm/monitor.h>
+#include <memory>
+#include <wayland-client-core.h>
+
 #include "light.hpp"
 #include "wf-popover.hpp"
-#include <memory>
 
 static BrightnessLevel light_icon_for(double value)
 {
@@ -83,13 +86,24 @@ void WayfireLight::init(Gtk::Box *container){
 
     container->append(*button);
 
+    box.append(display_ctrl);
+
     setup_sysfs();
 
     update_icon();
 }
 
 void WayfireLight::add_control(WfLightControl *control){
-    box.append(*control);
+    auto monitors = button->get_display()->get_monitors();
+    Glib::RefPtr<Gdk::Monitor> monitor = monitors->get_typed_object<Gdk::Monitor>(0);
+    auto connector = monitor->get_connector();
+    if (control->get_name() == connector)
+    {
+        display_ctrl.append(*control);
+    } else
+    {
+        box.append(*control);
+    }
     controls.push_back(control);
 }
 
