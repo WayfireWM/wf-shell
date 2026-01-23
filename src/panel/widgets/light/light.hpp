@@ -40,6 +40,7 @@ class WfLightControl : public Gtk::Box
     virtual std::string get_name() = 0;
 
     void set_scale_target_value(double value);
+    double get_scale_target_value();
     // a double from 0 to 1 for min to max
     virtual void set_brightness(double brightness) = 0;
     virtual double get_brightness() = 0;
