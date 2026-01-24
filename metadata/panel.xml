@@ -297,6 +297,11 @@
 		<_long>Displays the mute and set default icon on the left</_long>
 		<default>false</default>
 	</option>
+	<option name="wp_spacing" type="int">
+		<_short>Spacing between controls</_short>
+		<default>8</default>
+		<min>0</min>
+	</option>
 	<option name="wp_left_click_action" type="string">
 		<_short>Left click action</_short>
 		<default>show_mixer</default>

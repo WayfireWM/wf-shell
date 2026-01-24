@@ -28,6 +28,19 @@ void WayfireWpMixer::cancel_popover_timeout()
 
 void WayfireWpMixer::reload_config()
 {
+    // adjust margins and spacing
+    static WfOption<int> spacing{"panel/wp_spacing"};
+    auto set_spacing = [&] (Gtk::Box& box)
+    {
+        box.set_spacing(spacing);
+        box.set_margin_top(spacing);
+        box.set_margin_bottom(spacing);
+    };
+
+    set_spacing(sinks_box);
+    set_spacing(sources_box);
+    set_spacing(streams_box);
+
     // big matching operation
     static WfOption<std::string> str_quick_target_choice{"panel/wp_quick_target_choice"};
     static WfOption<std::string> str_wp_left_click_action{"panel/wp_left_click_action"};
@@ -273,34 +286,26 @@ void WayfireWpMixer::init(Gtk::Box *container)
     master_box.append(in_streams_wall);
     master_box.append(streams_box);
 
-    auto set_categories_common = [&] (Gtk::Box& box)
-    {
-        box.set_orientation(Gtk::Orientation::VERTICAL);
-        box.set_spacing(icon_size / 3);
-        box.set_margin_top(icon_size / 3);
-        box.set_margin_bottom(icon_size / 3);
-    };
-
     // sinks
     output_label.set_text("Output devices");
     sinks_box.append(output_label);
     out_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     sinks_box.append(out_sep);
-    set_categories_common(sinks_box);
+    sinks_box.set_orientation(Gtk::Orientation::VERTICAL);
 
     // sources
     input_label.set_text("Input devices");
     sources_box.append(input_label);
     in_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     sources_box.append(in_sep);
-    set_categories_common(sources_box);
+    sources_box.set_orientation(Gtk::Orientation::VERTICAL);
 
     // streams
     streams_label.set_text("Audio streams");
     streams_box.append(streams_label);
     streams_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     streams_box.append(streams_sep);
-    set_categories_common(streams_box);
+    streams_box.set_orientation(Gtk::Orientation::VERTICAL);
 
     // add to the actual container
     container->append(*button);
