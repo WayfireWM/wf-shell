@@ -29,6 +29,7 @@
 #ifdef HAVE_WIREPLUMBER
     #include "widgets/wp-mixer/wp-mixer.hpp"
 #endif
+#include "widgets/light/light.hpp"
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
 #include "widgets/tray/tray.hpp"
@@ -175,6 +176,13 @@ class WayfirePanel::impl
 #else
             std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
+#endif
+        if (name == "light")
+        {
+            return Widget(new WayfireLight(output));
+#ifndef HAVE_DDCUTIL
+            std::cout << "Built without DDC/CI support, light widget "
+                         " doesn’t support external monitors." << std::endl;
 #endif
         }
 
@@ -381,6 +389,7 @@ void WayfirePanelApp::on_activate()
     new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
     new CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "");
     new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
+    new CssFromConfigInt("panel/light_icon_size", ".light{-gtk-icon-size:", "px;}");
 
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");

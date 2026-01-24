@@ -11,6 +11,12 @@ option(
     description: 'Build wireplumber and mixer widget',
 )
 option(
+    'ddcutil',
+    type: 'feature',
+    value: 'auto',
+    description: 'Build external monitor support for backlight widget'
+)
+option(
     'wayland-logout',
     type: 'boolean',
     value: true,
