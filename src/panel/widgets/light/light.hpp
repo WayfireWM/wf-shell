@@ -1,12 +1,9 @@
-/*
-  abstract light control class, which are handled by a widget
-  other .cpp files in this directory are backends for different ways of handling them
-*/
-
 #include <gtkmm.h>
+#ifdef HAVE_DDCUTIL
 extern "C" {
   #include "public/ddcutil_c_api.h"
 }
+#endif
 #include "widget.hpp"
 #include "animated-scale.hpp"
 
@@ -18,7 +15,7 @@ enum BrightnessLevel
   BRIGHTNESS_LEVEL_OOR, /* Out of range */
 };
 
-const std::map<BrightnessLevel, std::string> icon_name_from_state = {
+const std::map<BrightnessLevel, std::string> brightness_display_icons = {
   {BRIGHTNESS_LEVEL_LOW, "display-brightness-low"},
   {BRIGHTNESS_LEVEL_MEDIUM, "display-brightness-medium"},
   {BRIGHTNESS_LEVEL_HIGH, "display-brightness-high"},
@@ -33,7 +30,7 @@ class WfLightControl : public Gtk::Box
     Gtk::Label label;
     std::map<BrightnessLevel, std::string> icons;
 
-    virtual std::string get_name();
+    virtual std::string get_name() = 0;
 
   public:
     WfLightControl();
@@ -41,19 +38,29 @@ class WfLightControl : public Gtk::Box
     // a double from 0 to 1 for min to max
     virtual void set_brightness(double brightness) = 0;
     virtual double get_brightness() = 0;
+
 };
 
+#ifdef HAVE_DDCUTIL
 class WfLightDdcControl : public WfLightControl
 {
   protected:
     DDCA_Display_Handle dh;
 };
+#endif
 
 class WfLightFsControl: public WfLightControl
 {
   protected:
     std::string path;
+    int get_max();
 
+    std::string get_name();
+
+  public:
+    WfLightFsControl(std::string path);
+    void set_brightness(double brightness);
+    double get_brightness();
 };
 
 class WayfireLight : public WayfireWidget {
@@ -69,7 +76,8 @@ class WayfireLight : public WayfireWidget {
 
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
 
-
+    void setup_fs();
+    void setup_ddc();
 
   public:
     void update_icon();
