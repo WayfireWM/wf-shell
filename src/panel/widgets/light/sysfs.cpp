@@ -40,19 +40,14 @@ class WfLightSysfsControl: public WfLightControl
         WfLightSysfsControl(WayfireLight *parent, std::string _path) : WfLightControl(parent){
             path = _path;
 
-            std::string realpath = std::filesystem::canonical(path);
             // this resolves to something of the sort :
             // /sys/devices/pciXXXX:XX/XXXX:XX:XX.X/XXXX:XX:XX.X/drm/cardX-<connector-name>/<name>
             // what we are intersted in here is the connector name
-            std::regex pattern(R"(/card\d+-([^/]+)/)");
-            std::smatch match;
-
-            if (std::regex_search(realpath, match, pattern)){
-                connector_name = match[1].str();
-            } else // we failed :(
-            {
-                connector_name = "";
-            }
+            std::string realpath = std::filesystem::canonical(path);
+            // the offset is constant. This does break if cardX is > 9
+            connector_name = realpath.substr(66, realpath.size());
+            // then, the connector is what remains until /
+            connector_name = connector_name.substr(0, connector_name.find("/"));
 
             scale.set_target_value(get_brightness());
             label.set_text(get_name());
@@ -199,7 +194,7 @@ class SysfsSurveillor {
                         }
                     }
 
-                    // metadata changed, so maybe permissions did too
+                    // metadata changed, so maybe permissions
                     if (event->mask & IN_ATTRIB){
                         if (wd_to_path_controls.find(event->wd) != wd_to_path_controls.end())
                         {
