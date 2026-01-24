@@ -74,8 +74,10 @@ class WayfireLight : public WayfireWidget {
 
     void setup_sysfs();
     void quit_sysfs();
+    #ifdef HAVE_DDCUTIL
     void setup_ddc();
     void quit_ddc();
+    #endif
 
   public:
     WayfireLight(WayfireOutput *output);
