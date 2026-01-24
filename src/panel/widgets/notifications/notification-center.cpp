@@ -29,13 +29,27 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
     button->set_tooltip_text("Middle click to toggle DND mode.");
 
     auto click_gesture = Gtk::GestureClick::create();
-    click_gesture->set_button(2);
-    click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    auto long_press    = Gtk::GestureLongPress::create();
+    long_press->set_touch_only(true);
+    long_press->signal_pressed().connect(
+        [=] (double x, double y)
     {
         dnd_enabled = !dnd_enabled;
         updateIcon();
+        long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+        click_gesture->set_state(Gtk::EventSequenceState::DENIED);
+    });
+    click_gesture->set_button(2);
+    click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
         click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
     });
+    click_gesture->signal_released().connect([=] (int count, double x, double y)
+    {
+        dnd_enabled = !dnd_enabled;
+        updateIcon();
+    });
+    button->add_controller(long_press);
     button->add_controller(click_gesture);
 
     for (const auto & [id, _] : daemon->getNotifications())
