@@ -158,11 +158,6 @@ class SysfsSurveillor {
             wd_additions = inotify_add_watch(fd, path, IN_DELETE);
 
             // look for present integrated backlights
-            if (!std::filesystem::exists(path)){
-                std::cout << "No backlight directory found for integrated screens, skipping.\n";
-                return;
-            }
-
             for (const auto& entry : std::filesystem::directory_iterator(path)){
                 add_dev(entry);
             }
@@ -243,9 +238,7 @@ class SysfsSurveillor {
                             }
                         }
                     }
-
                 }
-
             }
         }
 
@@ -301,7 +294,7 @@ class SysfsSurveillor {
                 return;
 
             // create a watch descriptor on the brightness file
-            int wd = inotify_add_watch(fd, path.string().c_str(), IN_CLOSE_WRITE & IN_ATTRIB);
+            int wd = inotify_add_watch(fd, path.string().c_str(), IN_CLOSE_WRITE | IN_ATTRIB);
             if (wd == -1){
                 std::cerr << "Light widget: failed to register inotify watch descriptor.\n";
                 return;
