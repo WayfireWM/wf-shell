@@ -204,6 +204,26 @@ class SysfsSurveillor {
                         }
                     }
 
+                    // metadata changed, so maybe permissions did too
+                    if (event->mask & IN_ATTRIB){
+                        if (wd_to_path_controls.find(event->wd) != wd_to_path_controls.end())
+                        {
+                            // get the path without which file, just the directory
+                            auto path = wd_to_path_controls[event->wd].first;
+
+                            // only recheck if the permissions to brightness or max_brightenss changed
+                            if (event->name == (path.string() + "/brightness") ||
+                                event->name == (path.string() + "/max_brightness"))
+                            {
+                                // if we cannot do what’s needed on the device, remove it
+                                if (!check_perms(path)){
+                                    rem_dev(path);
+                                }
+
+                            }
+                        }
+                    }
+
                     // a backlight device appeared
                     if (event->mask & IN_CREATE){
                         if (wd_additions == event->wd){
@@ -224,16 +244,12 @@ class SysfsSurveillor {
                         }
                     }
 
-                    // metadata changed, so maybe permissions
-                    if (event->mask & IN_ATTRIB){
-
-                    }
                 }
 
             }
         }
 
-        void add_dev(std::filesystem::path path){
+        bool check_perms(std::filesystem::path path){
             // those are the two files we are interested in,
             // brightness for reading / setting the value (0 to max),
             // and max_brightness for getting the maximum value for this device.
@@ -244,11 +260,11 @@ class SysfsSurveillor {
             // verity they exist
             if (!std::filesystem::exists(b_path)){
                 std::cout << "No brightness found for " << path.string() << ", ignoring.\n";
-                return;
+                return false;
             }
             if (!std::filesystem::exists(b_path)){
                 std::cout << "No max_brightness found for " << path.string() << ", ignoring.\n";
-                return;
+                return false;
             }
 
             auto max_perms = std::filesystem::status(max_b_path).permissions();
@@ -257,7 +273,7 @@ class SysfsSurveillor {
                 || (is_in_file_group(max_b_path) && (max_perms & std::filesystem::perms::group_read) != std::filesystem::perms::none)
             )){
                 std::cout << "Cannot read max_brightness file.\n";
-                return;
+                return false;
             }
 
             auto perms = std::filesystem::status(b_path).permissions();
@@ -266,7 +282,7 @@ class SysfsSurveillor {
                 || (is_in_file_group(b_path) && (perms & std::filesystem::perms::group_read) != std::filesystem::perms::none)
             )){
                 std::cout << "Cannot read brightness file.\n";
-                return;
+                return false;
             }
             // and written?
             if (!((perms & std::filesystem::perms::others_write) != std::filesystem::perms::none
@@ -274,11 +290,18 @@ class SysfsSurveillor {
             ))
             {
                 std::cout << "Can read backlight, but cannot write. Ignoring.\n";
-                return;
+                return false;
             }
 
+            return true;
+        }
+
+        void add_dev(std::filesystem::path path){
+            if (!check_perms(path))
+                return;
+
             // create a watch descriptor on the brightness file
-            int wd = inotify_add_watch(fd, b_path.string().c_str(), IN_CLOSE_WRITE);
+            int wd = inotify_add_watch(fd, path.string().c_str(), IN_CLOSE_WRITE & IN_ATTRIB);
             if (wd == -1){
                 std::cerr << "Light widget: failed to register inotify watch descriptor.\n";
                 return;
