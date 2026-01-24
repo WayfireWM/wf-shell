@@ -16,6 +16,10 @@ extern "C"{
 class WfLightSysfsControl: public WfLightControl
 {
     friend class SysfsSurveillor;
+
+    // if we exist, it means we can just read/write, as the files and permissions
+    // have already been checked and are being monitored with inotify
+
     protected:
         std::string path, connector_name;
 
@@ -59,8 +63,6 @@ class WfLightSysfsControl: public WfLightControl
         std::string get_name(){
             return connector_name;
         }
-
-        // the permissions have already been checked and are being monitored, so we just read/write
 
         void set_brightness(double brightness){
             std::ofstream b_file(path + "/brightness");
@@ -180,6 +182,7 @@ class SysfsSurveillor {
             ssize_t size;
 
             for (;;){
+                // read, which will block until the next inotify event
                 size = read(fd, buf, sizeof(buf));
                 if (size == -1 && errno != EAGAIN){
                     std::cerr << "Light widget: error reading inotify event.\n";
@@ -194,6 +197,7 @@ class SysfsSurveillor {
                     if (event->mask & IN_CLOSE_WRITE){
                         // look for the watch descriptor
                         if (wd_to_path_controls.find(event->wd) != wd_to_path_controls.end()){
+                            // update every control
                             for (auto control : wd_to_path_controls[event->wd].second){
                                 control->set_scale_target_value(control->get_brightness());
                             }
@@ -230,9 +234,14 @@ class SysfsSurveillor {
         }
 
         void add_dev(std::filesystem::path path){
+            // those are the two files we are interested in,
+            // brightness for reading / setting the value (0 to max),
+            // and max_brightness for getting the maximum value for this device.
+            // we need to be able to read max_brightness and write to brightness.
             const std::filesystem::path b_path = path.string() + "/brightness";
             const std::filesystem::path max_b_path = path.string() + "/max_brightness";
 
+            // verity they exist
             if (!std::filesystem::exists(b_path)){
                 std::cout << "No brightness found for " << path.string() << ", ignoring.\n";
                 return;
@@ -268,7 +277,8 @@ class SysfsSurveillor {
                 return;
             }
 
-            int wd = inotify_add_watch(fd, path.string().c_str(), IN_CLOSE_WRITE);
+            // create a watch descriptor on the brightness file
+            int wd = inotify_add_watch(fd, b_path.string().c_str(), IN_CLOSE_WRITE);
             if (wd == -1){
                 std::cerr << "Light widget: failed to register inotify watch descriptor.\n";
                 return;
@@ -276,6 +286,7 @@ class SysfsSurveillor {
 
             wd_to_path_controls.insert({wd, {path, {}}});
 
+            // create a control for each widget, and insert it in the vector we just created
             for (auto widget : widgets)
             {
                 auto control = std::make_shared<WfLightSysfsControl>(widget, path);
@@ -286,6 +297,7 @@ class SysfsSurveillor {
         }
 
         void rem_dev(std::filesystem::path path){
+            // device was removed, we can remove the entire entry (wd path, controls)
             for (auto it : wd_to_path_controls){
                 if (it.second.first == path){
                     auto& controls = it.second.second;
@@ -298,6 +310,7 @@ class SysfsSurveillor {
         }
 
         void catch_up_widget(WayfireLight* widget){
+            // for each managed device, create a control and add it to the widget and keep track of it
             for (auto& it : wd_to_path_controls){
                 auto control = std::make_shared<WfLightSysfsControl>(widget, it.second.first.string());
                 it.second.second.push_back(std::shared_ptr<WfLightSysfsControl>(control));
@@ -305,6 +318,8 @@ class SysfsSurveillor {
             }
         }
 
+        // stores the data that goes with the inotify witch descriptor (the int)
+        // the controls are all the controls which represent this device, to be updated
         std::map<
             int,
             std::pair<
@@ -312,8 +327,14 @@ class SysfsSurveillor {
                 std::vector<std::shared_ptr<WfLightSysfsControl>>
             >
         > wd_to_path_controls;
+
+        // watch descriptors for files (so, a device) being added or removed
         int wd_additions, wd_removal;
+
+        // managed widgets
         std::vector<WayfireLight*> widgets;
+
+        // thread on which to run handle_inotify_event on loop
         std::thread inotify_thread;
 
     public:
@@ -324,6 +345,7 @@ class SysfsSurveillor {
         }
 
         void rem_widget(WayfireLight *widget){
+            // search the controls that belong to the widget we’re removing and erase
             for (auto& it : wd_to_path_controls)
             {
                 auto& controls = it.second.second;
