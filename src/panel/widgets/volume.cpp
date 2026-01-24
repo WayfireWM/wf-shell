@@ -216,13 +216,29 @@ void WayfireVolume::init(Gtk::Box *container)
 
     /* Middle click toggle mute */
     auto middle_click_gesture = Gtk::GestureClick::create();
+    auto long_press = Gtk::GestureLongPress::create();
+    long_press->set_touch_only(true);
+    long_press->signal_pressed().connect(
+        [=] (double x, double y)
+    {
+        bool muted = !(gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream));
+        gvc_mixer_stream_change_is_muted(gvc_stream, muted);
+        gvc_mixer_stream_push_volume(gvc_stream);
+        long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+        middle_click_gesture->set_state(Gtk::EventSequenceState::DENIED);
+    });
     middle_click_gesture->set_button(2);
     signals.push_back(middle_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        middle_click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
+    signals.push_back(middle_click_gesture->signal_released().connect([=] (int count, double x, double y)
     {
         bool muted = !(gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream));
         gvc_mixer_stream_change_is_muted(gvc_stream, muted);
         gvc_mixer_stream_push_volume(gvc_stream);
     }));
+    button.add_controller(long_press);
     button.add_controller(middle_click_gesture);
 
     /* Setup layout */

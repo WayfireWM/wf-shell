@@ -98,8 +98,22 @@ void StatusNotifierItem::init_widget()
     }, true));
 
     auto click_gesture = Gtk::GestureClick::create();
+    auto long_press    = Gtk::GestureLongPress::create();
+    long_press->set_touch_only(true);
+    long_press->signal_pressed().connect(
+        [=] (double x, double y)
+    {
+        popover.popup();
+        long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+        click_gesture->set_state(Gtk::EventSequenceState::DENIED);
+    });
     click_gesture->set_button(0);
     signals.push_back(click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+        return;
+    }));
+    signals.push_back(click_gesture->signal_released().connect([=] (int count, double x, double y)
     {
         int butt = click_gesture->get_current_button();
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({0, 0});
@@ -134,17 +148,11 @@ void StatusNotifierItem::init_widget()
         } else if (butt == tertiary_click)
         {
             item_proxy->call("SecondaryActivate", ev_coords);
-        } else
-        {
-            // Don't claim other buttons
-            click_gesture->set_state(Gtk::EventSequenceState::DENIED);
-            return;
         }
 
-        click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
         return;
     }));
-
+    add_controller(long_press);
     add_controller(scroll_gesture);
     add_controller(click_gesture);
 }

@@ -118,30 +118,27 @@ class WayfireToplevel::impl
         button.add_controller(drag_gesture);
 
         auto click_gesture = Gtk::GestureClick::create();
+        auto long_press    = Gtk::GestureLongPress::create();
+        long_press->set_touch_only(true);
+        signals.push_back(long_press->signal_pressed().connect(
+            [=] (double x, double y)
+        {
+            popover.popup();
+            long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+            click_gesture->set_state(Gtk::EventSequenceState::DENIED);
+        }));
         click_gesture->set_button(0);
         signals.push_back(click_gesture->signal_pressed().connect(
             [=] (int count, double x, double y)
         {
-            int butt = click_gesture->get_current_button();
-            if (butt == 3)
-            {
-                popover.popup();
-                click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-            } else if (butt == 1)
-            {
-                // Don't action it now because the press might be a drag!
-                click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-            } else if (butt = 2 && middle_click_close)
-            {
-                zwlr_foreign_toplevel_handle_v1_close(handle);
-                click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-            }
+            click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
         }));
 
         signals.push_back(click_gesture->signal_released().connect(
             [=] (int count, double x, double y)
         {
-            if (click_gesture->get_current_button() == 1)
+            int butt = click_gesture->get_current_button();
+            if (butt == 1)
             {
                 // Ah, it was a press after all!
                 if (!ignore_next_click)
@@ -150,8 +147,15 @@ class WayfireToplevel::impl
                 }
 
                 ignore_next_click = false;
+            } else if (butt == 2)
+            {
+                zwlr_foreign_toplevel_handle_v1_close(handle);
+            } else if (butt == 3)
+            {
+                popover.popup();
             }
         }));
+        button.add_controller(long_press);
         button.add_controller(click_gesture);
 
         this->window_list = window_list;
