@@ -2,39 +2,15 @@
 
 #include "../widget.hpp"
 #include <gtkmm/image.h>
-#include <gtkmm/scale.h>
+#include "../../util/animated-scale.hpp"
 #include <pulse/pulseaudio.h>
 #include <gvc-mixer-control.h>
 #include <wayfire/util/duration.hpp>
 
-/**
- * A custom scale which animates transitions when its value is
- * changed programatically.
- */
-class WayfireVolumeScale : public Gtk::Scale
-{
-    wf::animation::simple_animation_t current_volume{wf::create_option(200)};
-    sigc::connection value_changed;
-    std::function<void()> user_changed_callback;
-
-  public:
-    WayfireVolumeScale();
-    ~WayfireVolumeScale();
-
-    /* Gets the current target value */
-    double get_target_value() const;
-    /* Set a target value to animate towards */
-    void set_target_value(double value);
-    /** Set the callback when the user changes the scale value */
-    void set_user_changed_callback(std::function<void()> callback);
-    /** Callback to animate volume control */
-    gboolean update_animation(Glib::RefPtr<Gdk::FrameClock> clock);
-};
-
 class WayfireVolume : public WayfireWidget
 {
     Gtk::Image main_image;
-    WayfireVolumeScale volume_scale;
+    WayfireAnimatedScale volume_scale;
     Gtk::Button button;
     Gtk::Popover popover;
 
@@ -70,9 +46,8 @@ class WayfireVolume : public WayfireWidget
     };
 
     /**
-     * Set the current volume level to volume_level.
-     * This updates both the popover scale and the real pulseaudio volume,
-     * depending on the passed flags.
+     * Set the current volume level to volume_level. This updates both the popover scale and the real
+     * pulseaudio volume, depending on the passed flags.
      *
      * Precondition: volume_level should be between 0 and max_norm
      */
@@ -93,8 +68,7 @@ class WayfireVolume : public WayfireWidget
     void on_default_sink_changed();
 
     /**
-     * Check whether the popover should be auto-hidden, and if yes, start
-     * a timer to hide it
+     * Check whether the popover should be auto-hidden, and if yes, start a timer to hide it
      */
     void check_set_popover_timeout();
 };

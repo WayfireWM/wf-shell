@@ -26,6 +26,9 @@
 #ifdef HAVE_PULSE
     #include "widgets/volume.hpp"
 #endif
+#ifdef HAVE_WIREPLUMBER
+    #include "widgets/wp-mixer/wp-mixer.hpp"
+#endif
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
 #include "widgets/tray/tray.hpp"
@@ -160,8 +163,17 @@ class WayfirePanel::impl
 #ifdef HAVE_PULSE
             return Widget(new WayfireVolume());
 #else
-    #warning "Pulse not found, volume widget will not be available."
             std::cerr << "Built without pulse support, volume widget "
+                         " is not available." << std::endl;
+#endif
+        }
+
+        if (name == "wp-mixer")
+        {
+#ifdef HAVE_WIREPLUMBER
+            return Widget(new WayfireWpMixer());
+#else
+            std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
 #endif
         }
@@ -363,6 +375,7 @@ void WayfirePanelApp::on_activate()
     new CssFromConfigInt("panel/battery_icon_size", ".battery image{-gtk-icon-size:", "px;}");
     new CssFromConfigInt("panel/network_icon_size", ".network{-gtk-icon-size:", "px;}");
     new CssFromConfigInt("panel/volume_icon_size", ".volume{-gtk-icon-size:", "px;}");
+    new CssFromConfigInt("panel/wp_icon_size", ".wireplumber{-gtk-icon-size:", "px;}");
     new CssFromConfigInt("panel/notifications_icon_size", ".notification-center{-gtk-icon-size:", "px;}");
     new CssFromConfigInt("panel/tray_icon_size", ".tray-button{-gtk-icon-size:", "px;}");
     new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
