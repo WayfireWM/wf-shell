@@ -44,8 +44,9 @@ class WfLightSysfsControl: public WfLightControl
             // /sys/devices/pciXXXX:XX/XXXX:XX:XX.X/XXXX:XX:XX.X/drm/cardX-<connector-name>/<name>
             // what we are intersted in here is the connector name
             std::string realpath = std::filesystem::canonical(path);
-            // the offset is constant. This does break if cardX is > 9
-            connector_name = realpath.substr(66, realpath.size());
+            // the offset is constant until cardX, after which we look for the -.
+            connector_name = realpath.substr(60, realpath.size());
+            connector_name = connector_name.substr(connector_name.find("-") + 1, connector_name.size());
             // then, the connector is what remains until /
             connector_name = connector_name.substr(0, connector_name.find("/"));
 
