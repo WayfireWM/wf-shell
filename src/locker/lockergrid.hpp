@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <exception>
 #include <gtkmm/centerbox.h>
 #include <gtkmm/box.h>
@@ -10,6 +11,19 @@ class WayfireLockerGrid : public Gtk::CenterBox
     Gtk::Box box[9];
 
   public:
+
+    void remove(Gtk::Widget & widget)
+    {
+        for (int count = 0; count < 9; count++)
+        {
+            auto list = box[count].get_children();
+            int children = std::count(list.begin(), list.end(), &widget);
+            if (children == 1)
+            {
+                box[count].remove(widget);
+            }
+        }
+    }
     /* Config string to box from grid */
     void attach(Gtk::Widget & widget, std::string pos_string)
     {

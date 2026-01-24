@@ -1,14 +1,12 @@
 #pragma once
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <gtkmm/label.h>
 #include <gtkmm/image.h>
 #include <gtkmm/grid.h>
 #include <giomm.h>
 
-#include "../plugin.hpp"
-#include "../../util/wf-option-wrap.hpp"
+#include "plugin.hpp"
 #include "lockergrid.hpp"
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
@@ -37,25 +35,22 @@ class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
     bool setup_dbus();
 
   public:
-    WayfireLockerBatteryPlugin()
-    {}
-    void add_output(int id, WayfireLockerGrid *grid) override;
-    void remove_output(int id) override;
-    bool should_enable() override;
+    WayfireLockerBatteryPlugin();
+    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
+    void deinit() override;
     void hide();
     void show();
     bool show_state = true;
-
-    WfOption<std::string> battery_position{"locker/battery_position"};
-    WfOption<bool> enable{"locker/battery_enable"};
 
     void update_percentages(std::string text);
     void update_descriptions(std::string text);
     void update_images();
     void update_details();
 
-    std::unordered_map<int, std::shared_ptr<Gtk::Image>> images;
-    std::unordered_map<int, std::shared_ptr<Gtk::Label>> subtexts;
-    std::unordered_map<int, std::shared_ptr<Gtk::Label>> labels;
+    std::map<int, std::shared_ptr<Gtk::Image>> images;
+    std::map<int, std::shared_ptr<Gtk::Label>> subtexts;
+    std::map<int, std::shared_ptr<Gtk::Label>> labels;
+    std::map<int, std::shared_ptr<Gtk::Grid>> grids;
 };

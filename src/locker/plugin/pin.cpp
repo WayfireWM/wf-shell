@@ -11,7 +11,7 @@
 #include <openssl/evp.h>
 
 
-#include "../../util/wf-option-wrap.hpp"
+#include "plugin.hpp"
 #include "locker.hpp"
 #include "lockergrid.hpp"
 #include "pin.hpp"
@@ -88,10 +88,9 @@ void PinPad::init()
     set_row_homogeneous(true);
 }
 
-WayfireLockerPinPlugin::WayfireLockerPinPlugin()
+WayfireLockerPinPlugin::WayfireLockerPinPlugin():
+    WayfireLockerPlugin("locker/pin_enable", "locker/pin_position")
 {
-    WfOption<bool> enabled{"locker/pin_enable"};
-    enable = enabled;
     if (!enable)
     {
         return;
@@ -117,7 +116,7 @@ WayfireLockerPinPlugin::WayfireLockerPinPlugin()
     if (!f.is_open())
     {
         std::cerr << "No PIN hash set" << std::endl;
-        enable = false;
+        disabled = true;
         return;
     }
 
@@ -125,14 +124,14 @@ WayfireLockerPinPlugin::WayfireLockerPinPlugin()
     if (!getline(f, s))
     {
         std::cerr << "No PIN hash set" << std::endl;
-        enable = false;
+        disabled = true;
         return;
     }
 
     if (s.length() != 128)
     {
         std::cerr << "Invalid PIN hash" << std::endl;
-        enable = false;
+        disabled = true;
         return;
     }
 
@@ -142,23 +141,22 @@ WayfireLockerPinPlugin::WayfireLockerPinPlugin()
 void WayfireLockerPinPlugin::init()
 {}
 
-bool WayfireLockerPinPlugin::should_enable()
-{
-    return enable;
-}
+void WayfireLockerPinPlugin::deinit()
+{}
 
-void WayfireLockerPinPlugin::add_output(int id, WayfireLockerGrid *grid)
+void WayfireLockerPinPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     pinpads.emplace(id, new PinPad());
     auto pinpad = pinpads[id];
     pinpad->add_css_class("pinpad");
     pinpad->init();
-    grid->attach(*pinpad, WfOption<std::string>{"locker/pin_position"});
+    grid->attach(*pinpad, position);
     update_labels(); /* Update all to set this one? maybe overkill */
 }
 
-void WayfireLockerPinPlugin::remove_output(int id)
+void WayfireLockerPinPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
+    grid->remove(*pinpads[id]);
     pinpads.erase(id);
 }
 
@@ -188,7 +186,7 @@ void WayfireLockerPinPlugin::submit_pin()
     auto hash = sha512(pin);
     if (hash == pinhash)
     {
-        WayfireLockerApp::get().unlock();
+        WayfireLockerApp::get().perform_unlock();
     }
 
     pin = "";

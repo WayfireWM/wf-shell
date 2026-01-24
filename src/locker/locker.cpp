@@ -12,6 +12,7 @@
 #include <wayfire/config/file.hpp>
 
 #include "css-config.hpp"
+#include "giomm/application.h"
 #include "lockergrid.hpp"
 #include "plugin/battery.hpp"
 #include "plugin/clock.hpp"
@@ -22,16 +23,55 @@
 #include "plugin/user.hpp"
 #include "plugin/volume.hpp"
 #include "plugin/mpris.hpp"
+#include "wf-option-wrap.hpp"
 #include "wf-shell-app.hpp"
 #include "locker.hpp"
 
+Gio::Application::Flags WayfireLockerApp::get_extra_application_flags()
+{
+    return Gio::Application::Flags::NONE;
+}
+
+std::string WayfireLockerApp::get_application_name()
+{
+    return "org.wayfire.locker";
+}
+
+WayfireLockerApp::WayfireLockerApp() 
+{}
 
 WayfireLockerApp::~WayfireLockerApp()
 {}
 
+void WayfireLockerApp::perform_lock()
+{
+    if (is_debug())
+    {
+        if(!m_is_locked)
+        {
+            on_monitor_present(nullptr);
+        }
+    } else
+    {
+        /* Demand the session be locked */
+        gtk_session_lock_instance_lock(lock);
+    }
+}
+
 void WayfireLockerApp::on_activate()
 {
+    if (activated)
+    {
+        if (!m_is_locked)
+        {
+            perform_lock();
+        }
+        return;
+    }
+    std::cout << "Starting App" << std::endl;
     WayfireShellApp::on_activate();
+    exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
+
     auto debug = Glib::getenv("WF_LOCKER_DEBUG");
     if (debug == "1")
     {
@@ -72,20 +112,48 @@ void WayfireLockerApp::on_activate()
 
     for (auto& it : plugins)
     {
-        if (it.second->should_enable())
+        Plugin plugin = it.second;
+        if (plugin->enable)
         {
             it.second->init();
         }
+        plugin->enable.set_callback(
+            [plugin, this] () {
+                if (plugin->enable)
+                {
+                    std::cout << "Plugin enable" << std::endl;
+                    plugin->init();
+                    for(auto &it : window_list)
+                    {
+                        std::cout << "Adding to window"<<std::endl;
+                        int id = it.first;
+                        plugin->add_output(id, grid_list[id]);
+                    }
+                } else {
+                    std::cout << "Plugin disable" << std::endl;
+                    for(auto &it : window_list)
+                    {
+                        std::cout << "Removing from window"<<std::endl;
+                        int id = it.first;
+                        plugin->remove_output(id, grid_list[id]);
+                    }
+                    plugin->deinit();
+                }
+            }
+        );
+        plugin->position.set_callback(
+            [this, plugin] () {
+                for(auto &it : grid_list)
+                {
+                    int id = it.first;
+                    auto grid = it.second;
+                    plugin->remove_output(id, grid);
+                    plugin->add_output(id, grid);
+                }
+            }
+        );
     }
-
-    if (is_debug())
-    {
-        on_monitor_present(nullptr);
-    } else
-    {
-        /* Demand the session be locked */
-        gtk_session_lock_instance_lock(lock);
-    }
+    perform_lock();
 }
 
 /* A new monitor has been added to the lockscreen */
@@ -96,14 +164,17 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     /* Create lockscreen with a grid for contents */
     auto window = new Gtk::Window();
     window->add_css_class("wf-locker");
-    auto grid = new WayfireLockerGrid();
+    auto grid = std::shared_ptr<WayfireLockerGrid>(new WayfireLockerGrid());
 
     window->set_child(*grid);
     grid->set_expand(true);
+    grid_list.emplace(id, grid);
+    window_list.emplace(id, window);
 
     for (auto& it : plugins)
     {
-        if (it.second->should_enable())
+        Plugin plugin = it.second;
+        if (plugin->enable)
         {
             it.second->add_output(id, grid);
         }
@@ -113,13 +184,26 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     {
         for (auto& it : plugins)
         {
-            it.second->remove_output(id);
+            Plugin plugin = it.second;
+            if (plugin->enable)
+            {
+                plugin->remove_output(id, grid_list[id]);
+            }
+        }
+        if (m_is_debug)
+        {
+            m_is_locked = false;
+            if (exit_on_unlock)
+            {
+                exit(0);
+            }
         }
 
         return false;
     }, false);
     if (is_debug())
     {
+        m_is_locked = true;
         window->present();
     } else
     {
@@ -128,14 +212,24 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
 }
 
 /* Called on any successful auth to unlock & end locker */
-void WayfireLockerApp::unlock()
+void WayfireLockerApp::perform_unlock()
 {
-    if (is_debug())
+    if (m_is_debug)
     {
-        exit(0);
+        /* We need to manually close in debug mode */
+        for(auto &it : window_list)
+        {
+            it.second->close();
+        }
+        if (WayfireLockerApp::get().exit_on_unlock)
+        {
+            exit(0);
+        }
+    } else
+    {
+        gtk_session_lock_instance_unlock(lock);
     }
-
-    gtk_session_lock_instance_unlock(lock);
+    window_list.clear();
 }
 
 void WayfireLockerApp::create(int argc, char **argv)
@@ -146,7 +240,18 @@ void WayfireLockerApp::create(int argc, char **argv)
     }
 
     instance = std::unique_ptr<WayfireShellApp>(new WayfireLockerApp{});
+    instance->init_app();
     instance->run(argc, argv);
+}
+
+bool WayfireLockerApp::is_locked()
+{
+    return m_is_locked;
+}
+
+void WayfireLockerApp::set_is_locked(bool locked)
+{
+    m_is_locked = locked;
 }
 
 /* Starting point */
@@ -166,24 +271,32 @@ int main(int argc, char **argv)
 /* lock session calllbacks */
 void on_session_locked_c(GtkSessionLockInstance *lock, void *data)
 {
+    WayfireLockerApp::get().set_is_locked(true);
     std::cout << "Session locked" << std::endl;
 }
 
 void on_session_lock_failed_c(GtkSessionLockInstance *lock, void *data)
 {
+    WayfireLockerApp::get().set_is_locked(false);
     std::cout << "Session lock failed" << std::endl;
-    exit(0);
+    if (WayfireLockerApp::get().exit_on_unlock)
+    {
+        exit(0);
+    }
 }
 
 void on_session_unlocked_c(GtkSessionLockInstance *lock, void *data)
 {
+    WayfireLockerApp::get().set_is_locked(false);
     std::cout << "Session unlocked" << std::endl;
-    // Exiting here causes wf to lock up
-    Glib::signal_timeout().connect_seconds([] () -> bool
+    if (WayfireLockerApp::get().exit_on_unlock)
     {
-        exit(0);
-        return 0;
-    }, 1);
+        // Exiting too early causes a lock-out
+        Glib::signal_timeout().connect_seconds([] () -> bool 
+        {
+            exit(0);
+        },1);
+    }
 }
 
 void on_monitor_present_c(GtkSessionLockInstance *lock, GdkMonitor *monitor, void *data)

@@ -2,20 +2,19 @@
 #include <gtkmm/label.h>
 #include <unordered_map>
 
-#include "../plugin.hpp"
-#include "../../util/wf-option-wrap.hpp"
+#include "plugin.hpp"
+#include "wf-option-wrap.hpp"
 #include "lockergrid.hpp"
 
 class WayfireLockerClockPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerClockPlugin();
-    void add_output(int id, WayfireLockerGrid *grid) override;
-    void remove_output(int id) override;
-    bool should_enable() override;
+    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
+    void deinit() override;
 
-    WfOption<bool> enable{"locker/clock_enable"};
     WfOption<std::string> format{"locker/clock_format"};
 
     sigc::connection timeout;

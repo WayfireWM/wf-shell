@@ -6,7 +6,7 @@
 #include <gtkmm/revealer.h>
 #include <giomm.h>
 
-#include "../plugin.hpp"
+#include "plugin.hpp"
 #include "lockergrid.hpp"
 
 
@@ -57,15 +57,13 @@ class WayfireLockerMPRISPlugin : public WayfireLockerPlugin
     Glib::RefPtr<Gio::DBus::Proxy> manager_proxy;
     std::map<std::string, Glib::RefPtr<Gio::DBus::Proxy>> clients;
     std::map<int, Glib::RefPtr<WayfireLockerMPRISCollective>> widgets;
-    bool enable;
 
   public:
     WayfireLockerMPRISPlugin();
-    void add_output(int id, WayfireLockerGrid *grid) override;
-    void remove_output(int id) override;
-    bool should_enable() override;
+    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
-
+    void deinit() override;
 
     void add_client(std::string client);
     void rem_client(std::string client);

@@ -1,4 +1,5 @@
 #pragma once
+#include "wf-option-wrap.hpp"
 #include "lockergrid.hpp"
 #define DEFAULT_PANEL_HEIGHT "48"
 #define DEFAULT_ICON_SIZE 32
@@ -12,13 +13,15 @@
 class WayfireLockerPlugin
 {
   public:
-    /* If true, plugin should be instantiated, init called, and used in lock screen
-     *  If false, plugin will be instantiated but never init'ed.
-     *
-     *  We *do not* do config reloading. Sample config on construction or init, but not live */
-    virtual bool should_enable() = 0;
-    virtual void add_output(int id, WayfireLockerGrid *grid) = 0;
-    virtual void remove_output(int id) = 0;
+    WayfireLockerPlugin(std::string option_name, std::string position_name): 
+      enable(WfOption<bool>{option_name}), 
+      position(WfOption<std::string>{position_name})
+    {};
+    WfOption<bool> enable;
+    WfOption<std::string> position;
+    virtual void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) = 0;
+    virtual void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) = 0;
     virtual void init() = 0;
+    virtual void deinit() = 0;
     virtual ~WayfireLockerPlugin() = default;
 };

@@ -9,7 +9,6 @@
 #include <gtkmm/box.h>
 #include <glib.h>
 
-#include "../../util/wf-option-wrap.hpp"
 #include "locker.hpp"
 #include "lockergrid.hpp"
 #include "fingerprint.hpp"
@@ -22,10 +21,10 @@
  */
 
 WayfireLockerFingerprintPlugin::WayfireLockerFingerprintPlugin() :
+    WayfireLockerPlugin("locker/fingerprint_enable", "locker/fingerprint_position"),
     dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SYSTEM,
         "net.reactivated.Fprint",
-        sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_bus_acquired))),
-    enable(WfOption<bool>{"locker/fingerprint_enable"})
+        sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_bus_acquired)))
 {}
 
 WayfireLockerFingerprintPlugin::~WayfireLockerFingerprintPlugin()
@@ -63,7 +62,6 @@ void WayfireLockerFingerprintPlugin::on_bus_acquired(const Glib::RefPtr<Gio::DBu
                 sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
         } catch (Glib::Error & e) /* TODO : Narrow down? */
         {
-            enable = false;
             hide();
             return;
         }
@@ -116,7 +114,7 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
             update_labels(mesg.get());
             if (mesg.get() == "verify-match")
             {
-                WayfireLockerApp::get().unlock();
+                WayfireLockerApp::get().perform_unlock();
             }
 
             if (mesg.get() == "verify-no-match")
@@ -207,7 +205,10 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 void WayfireLockerFingerprintPlugin::init()
 {}
 
-void WayfireLockerFingerprintPlugin::add_output(int id, WayfireLockerGrid *grid)
+void WayfireLockerFingerprintPlugin::deinit()
+{}
+
+void WayfireLockerFingerprintPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
     images.emplace(id, std::shared_ptr<Gtk::Image>(new Gtk::Image()));
@@ -227,19 +228,16 @@ void WayfireLockerFingerprintPlugin::add_output(int id, WayfireLockerGrid *grid)
     image->add_css_class("fingerprint-icon");
     label->add_css_class("fingerprint-text");
 
-    grid->attach(*image, WfOption<std::string>{"locker/fingerprint_position"});
-    grid->attach(*label, WfOption<std::string>{"locker/fingerprint_position"});
+    grid->attach(*image, position);
+    grid->attach(*label, position);
 }
 
-void WayfireLockerFingerprintPlugin::remove_output(int id)
+void WayfireLockerFingerprintPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
+    grid->remove(*labels[id]);
+    grid->remove(*images[id]);
     labels.erase(id);
     images.erase(id);
-}
-
-bool WayfireLockerFingerprintPlugin::should_enable()
-{
-    return enable;
 }
 
 void WayfireLockerFingerprintPlugin::update_image(std::string image)

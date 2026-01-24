@@ -14,7 +14,6 @@
 #include <css-config.hpp>
 #include "panel.hpp"
 
-#include "wf-ipc.hpp"
 #include "widgets/battery.hpp"
 #include "widgets/command-output.hpp"
 #include "widgets/language.hpp"
@@ -416,7 +415,18 @@ void WayfirePanelApp::create(int argc, char **argv)
     }
 
     instance = std::unique_ptr<WayfireShellApp>(new WayfirePanelApp{});
+    instance->init_app();
     instance->run(argc, argv);
+}
+
+std::string WayfirePanelApp::get_application_name()
+{
+    return "org.wayfire.panel";
+}
+
+Gio::Application::Flags WayfirePanelApp::get_extra_application_flags()
+{
+    return Gio::Application::Flags::NON_UNIQUE;
 }
 
 WayfirePanelApp::~WayfirePanelApp() = default;

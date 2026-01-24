@@ -16,6 +16,7 @@
 #include <glib-unix.h>
 
 #include "background.hpp"
+#include "giomm/application.h"
 
 
 
@@ -631,6 +632,7 @@ class WayfireBackgroundApp : public WayfireShellApp
     {
         WayfireShellApp::instance =
             std::make_unique<WayfireBackgroundApp>();
+        instance->init_app();
         g_unix_signal_add(SIGUSR1, sigusr1_handler, (void*)instance.get());
         instance->run(argc, argv);
     }
@@ -654,6 +656,16 @@ class WayfireBackgroundApp : public WayfireShellApp
         }
 
         return TRUE;
+    }
+
+    std::string get_application_name() override
+    {
+        return "org.wayfire.background";
+    }
+
+    Gio::Application::Flags get_extra_application_flags() override
+    {
+        return Gio::Application::Flags::NON_UNIQUE; 
     }
 };
 

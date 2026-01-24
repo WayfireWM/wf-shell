@@ -4,7 +4,7 @@
 
 #include "lockergrid.hpp"
 #include "volume.hpp"
-#include "../../util/wf-option-wrap.hpp"
+#include "plugin.hpp"
 
 static void default_sink_changed(GvcMixerControl *gvc_control,
     guint id, gpointer user_data)
@@ -55,9 +55,9 @@ void WayfireLockerVolumePlugin::update_button_images()
     }
 }
 
-WayfireLockerVolumePlugin::WayfireLockerVolumePlugin()
+WayfireLockerVolumePlugin::WayfireLockerVolumePlugin():
+    WayfireLockerPlugin("locker/volume_enable", "locker/volume_position")
 {
-    enable = WfOption<bool>{"locker/volume_enable"};
     /* Setup gvc control */
     gvc_control = gvc_mixer_control_new("Wayfire Volume Control");
     g_signal_connect(gvc_control,
@@ -67,25 +67,22 @@ WayfireLockerVolumePlugin::WayfireLockerVolumePlugin()
     gvc_mixer_control_open(gvc_control);
 }
 
-bool WayfireLockerVolumePlugin::should_enable()
-{
-    return (bool)enable;
-}
 
-void WayfireLockerVolumePlugin::add_output(int id, WayfireLockerGrid *grid)
+void WayfireLockerVolumePlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     source_buttons.emplace(id, std::shared_ptr<Gtk::Button>(new Gtk::Button()));
     sink_buttons.emplace(id, std::shared_ptr<Gtk::Button>(new Gtk::Button()));
+    inner_boxes.emplace(id, std::shared_ptr<Gtk::Box>(new Gtk::Box));
     auto source_button = source_buttons[id];
     auto sink_button   = sink_buttons[id];
 
     sink_button->add_css_class("volume-button");
     source_button->add_css_class("mic-button");
 
-    auto inner_box = Gtk::Box();
-    inner_box.append(*source_button);
-    inner_box.append(*sink_button);
-    grid->attach(inner_box, WfOption<std::string>{"locker/volume_position"});
+    auto inner_box = inner_boxes[id];
+    inner_box->append(*source_button);
+    inner_box->append(*sink_button);
+    grid->attach(*inner_box, position);
 
     sink_button->signal_clicked().connect(
         [=] ()
@@ -114,13 +111,17 @@ void WayfireLockerVolumePlugin::add_output(int id, WayfireLockerGrid *grid)
     update_button_images();
 }
 
-void WayfireLockerVolumePlugin::remove_output(int id)
+void WayfireLockerVolumePlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
+
     source_buttons.erase(id);
     sink_buttons.erase(id);
 }
 
 void WayfireLockerVolumePlugin::init()
+{}
+
+void WayfireLockerVolumePlugin::deinit()
 {}
 
 void WayfireLockerVolumePlugin::disconnect_gvc_stream_sink_signals()

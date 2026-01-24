@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <unordered_map>
 #include <gtkmm/button.h>
 #include <gtkmm/popover.h>
 #include <gtkmm/scale.h>
@@ -23,17 +22,17 @@ class WayfireLockerVolumePlugin : public WayfireLockerPlugin
 
   public:
     WayfireLockerVolumePlugin();
-    void add_output(int id, WayfireLockerGrid *grid) override;
-    void remove_output(int id) override;
-    bool should_enable() override;
+    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
-    bool enable;
+    void deinit() override;
     void update_button_images();
 
     /** Called when the default sink changes */
     void on_default_sink_changed();
     void on_default_source_changed();
 
-    std::unordered_map<int, std::shared_ptr<Gtk::Button>> sink_buttons;
-    std::unordered_map<int, std::shared_ptr<Gtk::Button>> source_buttons;
+    std::map<int, std::shared_ptr<Gtk::Box>> inner_boxes;
+    std::map<int, std::shared_ptr<Gtk::Button>> sink_buttons;
+    std::map<int, std::shared_ptr<Gtk::Button>> source_buttons;
 };
