@@ -7,7 +7,7 @@
 #include <glibmm/refptr.h>
 
 #include "lockergrid.hpp"
-#include "../plugin.hpp"
+#include "plugin.hpp"
 
 class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
 {
@@ -21,14 +21,13 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     void on_device_acquired(const Glib::RefPtr<Gio::AsyncResult> & result);
     void claim_device();
     void start_fingerprint_scanning();
-    void add_output(int id, WayfireLockerGrid *grid) override;
-    void remove_output(int id) override;
-    bool should_enable() override;
+    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
+    void deinit() override;
     void hide();
     void show();
 
-    bool enable;
     bool is_scanning;
     bool show_state = false;
     void update_labels(std::string text);

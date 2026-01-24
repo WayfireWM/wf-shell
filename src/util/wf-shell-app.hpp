@@ -48,6 +48,7 @@ class WayfireShellApp
     std::optional<std::string> cmdline_css;
 
     Glib::RefPtr<Gtk::Application> app;
+    bool activated = false;
 
     void output_list_updated(int pos, int rem, int add);
     virtual void add_output(GMonitor monitor);
@@ -73,6 +74,7 @@ class WayfireShellApp
 
     WayfireShellApp();
     virtual ~WayfireShellApp();
+    void init_app();
 
     virtual std::string get_config_file();
     virtual std::string get_css_config_dir();
@@ -83,7 +85,8 @@ class WayfireShellApp
     void on_css_reload();
     void clear_css_rules();
     void add_css_file(std::string file, int priority);
-
+    virtual Gio::Application::Flags get_extra_application_flags();
+    virtual std::string get_application_name() = 0; 
 
     /**
      * WayfireShellApp is a singleton class.

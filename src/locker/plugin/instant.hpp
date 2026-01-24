@@ -1,21 +1,17 @@
 #pragma once
 #include <gtkmm/button.h>
 
-#include "../plugin.hpp"
-#include "../../util/wf-option-wrap.hpp"
+#include "plugin.hpp"
 #include "lockergrid.hpp"
 
 class WayfireLockerInstantPlugin : public WayfireLockerPlugin
 {
   public:
-    WayfireLockerInstantPlugin()
-    {}
-    void add_output(int id, WayfireLockerGrid *grid) override;
-    void remove_output(int id) override;
-    bool should_enable() override;
+    WayfireLockerInstantPlugin();
+    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
-
-    WfOption<bool> enable{"locker/instant_unlock_enable"};
+    void deinit() override;
 
     std::unordered_map<int, std::shared_ptr<Gtk::Button>> buttons;
 };

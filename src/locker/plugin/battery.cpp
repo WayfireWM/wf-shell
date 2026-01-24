@@ -60,11 +60,6 @@ static std::string uint_to_time(int64_t time)
     return format_digit(hrs) + ":" + format_digit(min);
 }
 
-bool WayfireLockerBatteryPlugin::should_enable()
-{
-    return (bool)enable;
-}
-
 void WayfireLockerBatteryPlugin::update_percentages(std::string text)
 {
     for (auto& it : labels)
@@ -91,12 +86,13 @@ void WayfireLockerBatteryPlugin::update_images()
     }
 }
 
-void WayfireLockerBatteryPlugin::add_output(int id, WayfireLockerGrid *grid)
+void WayfireLockerBatteryPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    Gtk::Grid *batt_grid = new Gtk::Grid();
+    grids.emplace(id, std::shared_ptr<Gtk::Grid>(new Gtk::Grid));
     labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
     subtexts.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
     images.emplace(id, std::shared_ptr<Gtk::Image>(new Gtk::Image()));
+    auto batt_grid = grids[id];
     auto label   = labels[id];
     auto subtext = subtexts[id];
     auto image   = images[id];
@@ -116,14 +112,18 @@ void WayfireLockerBatteryPlugin::add_output(int id, WayfireLockerGrid *grid)
     batt_grid->attach(*label, 1, 0);
     batt_grid->attach(*subtext, 0, 1, 2, 1);
 
-    grid->attach(*batt_grid, (std::string)battery_position);
+    grid->attach(*batt_grid, (std::string)position);
 
     update_details();
 }
 
-void WayfireLockerBatteryPlugin::remove_output(int id)
+void WayfireLockerBatteryPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
+    grid->remove(*grids[id]);
+    grids.erase(id);
     labels.erase(id);
+    subtexts.erase(id);
+    images.erase(id);
 }
 
 void WayfireLockerBatteryPlugin::init()
@@ -132,6 +132,13 @@ void WayfireLockerBatteryPlugin::init()
     {
         return;
     }
+}
+
+void WayfireLockerBatteryPlugin::deinit()
+{
+    // TODO Clean up.
+
+
 }
 
 bool WayfireLockerBatteryPlugin::setup_dbus()
@@ -285,3 +292,7 @@ void WayfireLockerBatteryPlugin::show()
         it.second->show();
     }
 }
+
+WayfireLockerBatteryPlugin::WayfireLockerBatteryPlugin():
+    WayfireLockerPlugin("locker/battery_enable", "locker/battery_position")
+{ }

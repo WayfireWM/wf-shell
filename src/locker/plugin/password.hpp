@@ -3,8 +3,7 @@
 #include <gtkmm/entry.h>
 #include <unordered_map>
 
-#include "../plugin.hpp"
-#include "../../util/wf-option-wrap.hpp"
+#include "plugin.hpp"
 #include "lockergrid.hpp"
 
 int pam_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp,
@@ -14,14 +13,12 @@ class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerPasswordPlugin();
-    void add_output(int id, WayfireLockerGrid *grid) override;
-    void remove_output(int id) override;
-    bool should_enable() override;
+    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
+    void deinit() override;
     void submit_user_password(std::string password);
     void blank_passwords();
-
-    WfOption<bool> enable{"locker/password_enable"};
 
     sigc::connection timeout;
     void update_labels(std::string text);

@@ -9,12 +9,9 @@
 
 #include "locker.hpp"
 #include "lockergrid.hpp"
+#include "plugin.hpp"
 #include "password.hpp"
 
-bool WayfireLockerPasswordPlugin::should_enable()
-{
-    return (bool)enable;
-}
 
 void WayfireLockerPasswordPlugin::update_labels(std::string text)
 {
@@ -34,7 +31,7 @@ void WayfireLockerPasswordPlugin::blank_passwords()
     }
 }
 
-void WayfireLockerPasswordPlugin::add_output(int id, WayfireLockerGrid *grid)
+void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
     entries.emplace(id, std::shared_ptr<Gtk::Entry>(new Gtk::Entry));
@@ -55,18 +52,21 @@ void WayfireLockerPasswordPlugin::add_output(int id, WayfireLockerGrid *grid)
         }
     }, true);
     /* Add to window */
-    grid->attach(*entry, WfOption<std::string>{"locker/password_position"});
-    grid->attach(*label, WfOption<std::string>{"locker/password_position"});
+    grid->attach(*entry, position);
+    grid->attach(*label, position);
 }
 
-void WayfireLockerPasswordPlugin::remove_output(int id)
+void WayfireLockerPasswordPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
+    grid->remove(*entries[id]);
+    grid->remove(*labels[id]);
     labels.erase(id);
     entries.erase(id);
 }
 
-WayfireLockerPasswordPlugin::WayfireLockerPasswordPlugin()
-{}
+WayfireLockerPasswordPlugin::WayfireLockerPasswordPlugin():
+    WayfireLockerPlugin("locker/password_enable", "locker/password_position")
+{ }
 
 /* PAM password C code... */
 int pam_conversation(int num_mesg, const struct pam_message **mesg, struct pam_response **resp,
@@ -146,9 +146,12 @@ void WayfireLockerPasswordPlugin::submit_user_password(std::string password)
     retval = pam_end(local_auth_handle, retval);
     if (unlock)
     {
-        WayfireLockerApp::get().unlock();
+        WayfireLockerApp::get().perform_unlock();
     }
 }
 
 void WayfireLockerPasswordPlugin::init()
+{}
+
+void WayfireLockerPasswordPlugin::deinit()
 {}

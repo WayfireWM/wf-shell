@@ -26,9 +26,14 @@ class WayfireLockerApp : public WayfireShellApp
     std::map<std::string, Plugin> plugins = {};
 
     bool m_is_debug     = false;
+    bool m_is_locked    = false;
     int window_id_count = 0;
+    
+    std::map<int, std::shared_ptr<Gtk::Window>> window_list;
+    std::map<int, std::shared_ptr<WayfireLockerGrid>> grid_list;
 
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
+
 
   public:
     using WayfireShellApp::WayfireShellApp;
@@ -37,6 +42,8 @@ class WayfireLockerApp : public WayfireShellApp
     {
         return (WayfireLockerApp&)WayfireShellApp::get();
     }
+    Gio::Application::Flags get_extra_application_flags();
+    std::string get_application_name() override;
 
     /* Starts the program. get() is valid afterward the first (and the only)
      * call to create() */
@@ -47,10 +54,19 @@ class WayfireLockerApp : public WayfireShellApp
         return m_is_debug;
     }
 
+    bool exit_on_unlock = true;
+
+
+    bool is_locked();
+    void set_is_locked(bool locked);
+    WayfireLockerApp();
     ~WayfireLockerApp();
 
     Plugin get_plugin(std::string name);
-    void unlock();
+
+    /* Give commands to compositor about lock state, or emulate them*/
+    void perform_unlock();
+    void perform_lock();
 
   private:
 };

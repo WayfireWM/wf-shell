@@ -3,20 +3,17 @@
 #include <gtkmm/image.h>
 #include <unordered_map>
 
-#include "../plugin.hpp"
-#include "../../util/wf-option-wrap.hpp"
+#include "plugin.hpp"
 #include "lockergrid.hpp"
 
 class WayfireLockerUserPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerUserPlugin();
-    void add_output(int id, WayfireLockerGrid *grid) override;
-    void remove_output(int id) override;
-    bool should_enable() override;
+    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
-
-    bool enable;
+    void deinit() override;
 
     std::unordered_map<int, Glib::RefPtr<Gtk::Label>> labels;
     std::unordered_map<int, Glib::RefPtr<Gtk::Image>> images;

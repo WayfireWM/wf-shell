@@ -9,6 +9,10 @@
 		<_short>Background Color</_short>
 		<default>gtk_headerbar</default>
 	</option>
+	<option name="exit_on_unlock" type="bool">
+		<_short>Exit lockscreen process on unlock</_short>
+		<default>true</default>
+	</option>
 	</group>
 	<group>
 	<_short>Password</_short>

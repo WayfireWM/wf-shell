@@ -1,10 +1,11 @@
 #include <iostream>
 
 #include "lockergrid.hpp"
+#include "plugin.hpp"
 #include "user.hpp"
 
-WayfireLockerUserPlugin::WayfireLockerUserPlugin() :
-    enable(WfOption<bool>{"locker/user_enable"})
+WayfireLockerUserPlugin::WayfireLockerUserPlugin():
+    WayfireLockerPlugin("locker/user_enable", "locker/user_position")
 {}
 
 void WayfireLockerUserPlugin::init()
@@ -42,7 +43,10 @@ void WayfireLockerUserPlugin::init()
     std::cout << "No user image .face... no image in lockscreen" << std::endl;
 }
 
-void WayfireLockerUserPlugin::add_output(int id, WayfireLockerGrid *grid)
+void WayfireLockerUserPlugin::deinit()
+{}
+
+void WayfireLockerUserPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     labels.emplace(id, Glib::RefPtr<Gtk::Label>(new Gtk::Label()));
     images.emplace(id, Glib::RefPtr<Gtk::Image>(new Gtk::Image()));
@@ -73,17 +77,13 @@ void WayfireLockerUserPlugin::add_output(int id, WayfireLockerGrid *grid)
 
     box->append(*image);
     box->append(*label);
-    grid->attach(*box, WfOption<std::string>{"locker/user_position"});
+    grid->attach(*box, position);
 }
 
-void WayfireLockerUserPlugin::remove_output(int id)
+void WayfireLockerUserPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
+    grid->remove(*boxes[id]);
     labels.erase(id);
     images.erase(id);
     boxes.erase(id);
-}
-
-bool WayfireLockerUserPlugin::should_enable()
-{
-    return enable;
 }

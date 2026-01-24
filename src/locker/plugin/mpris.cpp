@@ -6,6 +6,7 @@
 #include <wf-option-wrap.hpp>
 
 #include "lockergrid.hpp"
+#include "plugin.hpp"
 #include "mpris.hpp"
 
 /* Widget of controls for one player on one screen
@@ -243,8 +244,8 @@ void WayfireLockerMPRISCollective::rem_child(std::string id)
 }
 
 WayfireLockerMPRISPlugin::WayfireLockerMPRISPlugin() :
-    enable(WfOption<bool>{"locker/mpris_enable"})
-{}
+    WayfireLockerPlugin("locker/mpris_enable", "locker/mpris_position")
+{ }
 
 void WayfireLockerMPRISPlugin::init()
 {
@@ -295,17 +296,16 @@ void WayfireLockerMPRISPlugin::init()
     });
 }
 
-bool WayfireLockerMPRISPlugin::should_enable()
-{
-    return enable;
-}
+void WayfireLockerMPRISPlugin::deinit()
+{}
 
-void WayfireLockerMPRISPlugin::remove_output(int id)
+void WayfireLockerMPRISPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
+    grid->remove(*widgets[id]);
     widgets.erase(id);
 }
 
-void WayfireLockerMPRISPlugin::add_output(int id, WayfireLockerGrid *grid)
+void WayfireLockerMPRISPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerMPRISCollective());
 
@@ -315,7 +315,7 @@ void WayfireLockerMPRISPlugin::add_output(int id, WayfireLockerGrid *grid)
         collective->add_child(it.first, it.second);
     }
 
-    grid->attach(*collective, WfOption<std::string>{"locker/mpris_position"});
+    grid->attach(*collective, position);
 }
 
 std::string substitute_string(const std::string from, const std::string to, const std::string in)

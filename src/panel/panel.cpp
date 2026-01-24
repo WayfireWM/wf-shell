@@ -462,7 +462,18 @@ void WayfirePanelApp::create(int argc, char **argv)
     }
 
     instance = std::unique_ptr<WayfireShellApp>(new WayfirePanelApp{});
+    instance->init_app();
     instance->run(argc, argv);
+}
+
+std::string WayfirePanelApp::get_application_name()
+{
+    return "org.wayfire.panel";
+}
+
+Gio::Application::Flags WayfirePanelApp::get_extra_application_flags()
+{
+    return Gio::Application::Flags::NON_UNIQUE;
 }
 
 WayfirePanelApp::~WayfirePanelApp() = default;
