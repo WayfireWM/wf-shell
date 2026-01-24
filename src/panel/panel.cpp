@@ -181,8 +181,7 @@ class WayfirePanel::impl
         {
             return Widget(new WayfireLight(output));
 #ifndef HAVE_DDCUTIL
-    #warning "Libddcutil not found, light widget will not support external monitors."
-            std::cerr << "Built without DDC/CI support, light widget "
+            std::cout << "Built without DDC/CI support, light widget "
                          " doesn’t support external monitors." << std::endl;
 #endif
         }
