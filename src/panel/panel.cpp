@@ -371,8 +371,6 @@ void WayfirePanelApp::on_activate()
 {
     WayfireShellApp::on_activate();
 
-    new CssFromConfigInt("panel/minimal_height", ".wf-panel .widget-icon {-gtk-icon-size:", "px;}");
-
     const static std::vector<std::pair<std::string, std::string>> icon_sizes_args =
     {
         {"panel/minimal_height", ""},
