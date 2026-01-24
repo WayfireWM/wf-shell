@@ -33,6 +33,9 @@
 #ifdef HAVE_WIREPLUMBER
     #include "widgets/wp-mixer/wp-mixer.hpp"
 #endif
+// #ifdef HAVE_LIGHT
+    #include "widgets/light/light.hpp"
+// #endif
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
 #include "widgets/tray/tray.hpp"
@@ -186,6 +189,15 @@ class WayfirePanel::impl
             std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
 #endif
+        if (name == "light")
+        {
+// #ifdef HAVE_LIGHT
+            return Widget(new WayfireLight());
+// #else
+    // #warning "Light libraries not found, light widget will not be available."
+            // std::cerr << "Built without light support, light widget "
+                         // " is not available." << std::endl;
+// #endif
         }
 
         if (name == "window-list")
