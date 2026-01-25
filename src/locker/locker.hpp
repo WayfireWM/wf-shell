@@ -41,7 +41,7 @@ class WayfireLockerApp : public WayfireShellApp
     {
         return (WayfireLockerApp&)WayfireShellApp::get();
     }
-    Gio::Application::Flags get_extra_application_flags();
+    Gio::Application::Flags get_extra_application_flags() override;
     std::string get_application_name() override;
 
     /* Starts the program. get() is valid afterward the first (and the only)
