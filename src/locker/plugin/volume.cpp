@@ -58,13 +58,7 @@ void WayfireLockerVolumePlugin::update_button_images()
 WayfireLockerVolumePlugin::WayfireLockerVolumePlugin():
     WayfireLockerPlugin("locker/volume_enable", "locker/volume_position")
 {
-    /* Setup gvc control */
-    gvc_control = gvc_mixer_control_new("Wayfire Volume Control");
-    g_signal_connect(gvc_control,
-        "default-sink-changed", G_CALLBACK(default_sink_changed), this);
-    g_signal_connect(gvc_control,
-        "default-source-changed", G_CALLBACK(default_source_changed), this);
-    gvc_mixer_control_open(gvc_control);
+    
 }
 
 
@@ -119,10 +113,31 @@ void WayfireLockerVolumePlugin::remove_output(int id, std::shared_ptr<WayfireLoc
 }
 
 void WayfireLockerVolumePlugin::init()
-{}
+{
+    /* Setup gvc control */
+    gvc_control = gvc_mixer_control_new("Wayfire Volume Control");
+    notify_sink_changed = g_signal_connect(gvc_control,
+        "default-sink-changed", G_CALLBACK(default_sink_changed), this);
+    notify_source_changed = g_signal_connect(gvc_control,
+        "default-source-changed", G_CALLBACK(default_source_changed), this);
+    gvc_mixer_control_open(gvc_control);
+}
 
 void WayfireLockerVolumePlugin::deinit()
-{}
+{
+    disconnect_gvc_stream_sink_signals();
+    disconnect_gvc_stream_source_signals();
+    if (notify_sink_muted_signal)
+    {
+        g_signal_handler_disconnect(gvc_sink_stream, notify_sink_muted_signal);
+    }
+    notify_sink_changed = 0;
+    if (notify_sink_muted_signal)
+    {
+        g_signal_handler_disconnect(gvc_sink_stream, notify_sink_muted_signal);
+    }
+    notify_source_changed = 0;
+}
 
 void WayfireLockerVolumePlugin::disconnect_gvc_stream_sink_signals()
 {

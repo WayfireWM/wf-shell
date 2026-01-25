@@ -21,10 +21,7 @@
  */
 
 WayfireLockerFingerprintPlugin::WayfireLockerFingerprintPlugin() :
-    WayfireLockerPlugin("locker/fingerprint_enable", "locker/fingerprint_position"),
-    dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SYSTEM,
-        "net.reactivated.Fprint",
-        sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_bus_acquired)))
+    WayfireLockerPlugin("locker/fingerprint_enable", "locker/fingerprint_position")
 {}
 
 WayfireLockerFingerprintPlugin::~WayfireLockerFingerprintPlugin()
@@ -35,7 +32,7 @@ WayfireLockerFingerprintPlugin::~WayfireLockerFingerprintPlugin()
     }
 }
 
-void WayfireLockerFingerprintPlugin::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection,
+void WayfireLockerFingerprintPlugin::on_connection(const Glib::RefPtr<Gio::DBus::Connection> & connection,
     const Glib::ustring & name)
 {
     /* Bail here if config has this disabled */
@@ -99,10 +96,15 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
     update_labels("Finger print device found");
 
     /* Attach a listener now, useful when we start scanning */
-    device_proxy->signal_signal().connect([this] (const Glib::ustring & sender_name,
+    signal = device_proxy->signal_signal().connect([this] (const Glib::ustring & sender_name,
                                                   const Glib::ustring & signal_name,
                                                   const Glib::VariantContainerBase & params)
     {
+        std::cout << signal_name << " " << device_proxy << std::endl;
+        if (device_proxy==nullptr)
+        {
+            return; // Skip close-down messages
+        }
         if (signal_name == "VerifyStatus")
         {
             Glib::Variant<Glib::ustring> mesg;
@@ -146,6 +148,11 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
                 is_scanning = false;
                 device_proxy->call_sync("VerifyStop");
             }
+        } else if (signal_name == "VerifyFingerSelected")
+        {
+            Glib::Variant<Glib::ustring> finger_name;
+            params.get_child(finger_name,0);
+            std::cout << "Finger : " << finger_name.get() << std::endl;
         }
     }, false);
     claim_device();
@@ -178,7 +185,12 @@ void WayfireLockerFingerprintPlugin::claim_device()
 
     /* Start fingerprint reader 5 seconds after start
      *  This fixes an issue where the fingerprint reader
-     *  is a button which locks the screen */
+     *  is a button which locks the screen  */
+}
+
+void WayfireLockerFingerprintPlugin::release_device()
+{
+    device_proxy->call_sync("Release");
 }
 
 void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
@@ -202,11 +214,59 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
     }
 }
 
+void WayfireLockerFingerprintPlugin::stop_fingerprint_scanning()
+{
+    device_proxy->call_sync("VerifyStop");
+    is_scanning = false;
+}
+
 void WayfireLockerFingerprintPlugin::init()
-{}
+{
+    auto cancellable = Gio::Cancellable::create();
+    connection = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM, cancellable);
+    if (!connection)
+    {
+        std::cerr << "Failed to connect to dbus" << std::endl;
+        return;
+    }
+    Gio::DBus::Proxy::create(
+        connection,
+        "net.reactivated.Fprint",
+        "/net/reactivated/Fprint/Manager",
+        "net.reactivated.Fprint.Manager",
+        [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
+    {
+        auto manager_proxy = Gio::DBus::Proxy::create_finish(result);
+        try {
+            auto default_device = manager_proxy->call_sync("GetDefaultDevice");
+            Glib::Variant<Glib::ustring> item_path;
+            default_device.get_child(item_path, 0);
+            Gio::DBus::Proxy::create(connection,
+                "net.reactivated.Fprint",
+                item_path.get(),
+                "net.reactivated.Fprint.Device",
+                sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
+        } catch (Glib::Error & e) /* TODO : Narrow down? */
+        {
+            hide();
+            return;
+        }
+    });
+}
 
 void WayfireLockerFingerprintPlugin::deinit()
-{}
+{
+    if(is_scanning)
+    {
+        stop_fingerprint_scanning();
+    }
+    release_device();
+    if(signal)
+    {
+        signal.disconnect();
+    }
+    device_proxy = nullptr;
+}
 
 void WayfireLockerFingerprintPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {

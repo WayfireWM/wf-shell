@@ -1,10 +1,10 @@
 #pragma once
 #include <memory>
-#include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
 #include <gtk4-session-lock.h>
 #include <wayland-client.h>
 
+#include "lockscreen.hpp"
 #include "wf-shell-app.hpp"
 #include "plugin.hpp"
 
@@ -29,8 +29,7 @@ class WayfireLockerApp : public WayfireShellApp
     bool m_is_locked    = false;
     int window_id_count = 0;
     
-    std::map<int, std::shared_ptr<Gtk::Window>> window_list;
-    std::map<int, std::shared_ptr<WayfireLockerGrid>> grid_list;
+    std::map<int, std::shared_ptr<WayfireLockerAppLockscreen>> window_list;
 
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
 
@@ -67,6 +66,7 @@ class WayfireLockerApp : public WayfireShellApp
     /* Give commands to compositor about lock state, or emulate them*/
     void perform_unlock();
     void perform_lock();
-
+    void init_plugins();
+    void deinit_plugins();
   private:
 };

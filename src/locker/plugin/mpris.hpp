@@ -8,6 +8,7 @@
 
 #include "plugin.hpp"
 #include "lockergrid.hpp"
+#include "sigc++/connection.h"
 
 
 std::string substitute_string(const std::string from, const std::string to, const std::string in);
@@ -57,7 +58,7 @@ class WayfireLockerMPRISPlugin : public WayfireLockerPlugin
     Glib::RefPtr<Gio::DBus::Proxy> manager_proxy;
     std::map<std::string, Glib::RefPtr<Gio::DBus::Proxy>> clients;
     std::map<int, Glib::RefPtr<WayfireLockerMPRISCollective>> widgets;
-
+    sigc::connection signal;
   public:
     WayfireLockerMPRISPlugin();
     void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;

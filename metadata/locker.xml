@@ -13,6 +13,11 @@
 		<_short>Exit lockscreen process on unlock</_short>
 		<default>true</default>
 	</option>
+	<option name="hide_time" type="int">
+		<_short>Hide contents when inactive</_short>
+		<_long>When no user input is detected, hide the unlock controls. 0 means never</_long>
+		<default>5</default>
+	</option>
 	</group>
 	<group>
 	<_short>Password</_short>
