@@ -128,17 +128,20 @@ void WayfireLockerBatteryPlugin::remove_output(int id, std::shared_ptr<WayfireLo
 
 void WayfireLockerBatteryPlugin::init()
 {
-    if (!setup_dbus())
-    {
-        return;
+    if(!setup_dbus()){
+        hide();
     }
 }
 
 void WayfireLockerBatteryPlugin::deinit()
 {
-    // TODO Clean up.
-
-
+    if(signal)
+    {
+        signal.disconnect();
+    }
+    display_device = nullptr;
+    upower_proxy = nullptr;
+    connection = nullptr;
 }
 
 bool WayfireLockerBatteryPlugin::setup_dbus()
@@ -173,7 +176,7 @@ bool WayfireLockerBatteryPlugin::setup_dbus()
     display_device->get_cached_property(present, SHOULD_DISPLAY);
     if (present.get())
     {
-        display_device->signal_properties_changed().connect(
+        signal = display_device->signal_properties_changed().connect(
             sigc::mem_fun(*this, &WayfireLockerBatteryPlugin::on_properties_changed));
 
         return true;
@@ -217,6 +220,11 @@ void WayfireLockerBatteryPlugin::on_properties_changed(
 
 void WayfireLockerBatteryPlugin::update_details()
 {
+    if (display_device==nullptr)
+    {
+        std::cout << "No battery proxy!" <<std::endl;
+        return;
+    }
     Glib::Variant<guint32> type;
     display_device->get_cached_property(type, TYPE);
 

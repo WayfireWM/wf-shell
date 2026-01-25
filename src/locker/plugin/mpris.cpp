@@ -270,7 +270,7 @@ void WayfireLockerMPRISPlugin::init()
         }
 
         /* https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.NameOwnerChanged.html */
-        manager_proxy->signal_signal().connect(
+        signal = manager_proxy->signal_signal().connect(
             [this] (const Glib::ustring & sender_name,
                     const Glib::ustring & signal_name,
                     const Glib::VariantContainerBase & params)
@@ -297,7 +297,13 @@ void WayfireLockerMPRISPlugin::init()
 }
 
 void WayfireLockerMPRISPlugin::deinit()
-{}
+{
+    if (signal)
+    {
+        signal.disconnect();
+    }
+    manager_proxy = nullptr;
+}
 
 void WayfireLockerMPRISPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {

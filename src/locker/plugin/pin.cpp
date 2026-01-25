@@ -146,6 +146,10 @@ void WayfireLockerPinPlugin::deinit()
 
 void WayfireLockerPinPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
+    if(disabled)
+    {
+        return;
+    }
     pinpads.emplace(id, new PinPad());
     auto pinpad = pinpads[id];
     pinpad->add_css_class("pinpad");
@@ -156,6 +160,10 @@ void WayfireLockerPinPlugin::add_output(int id, std::shared_ptr<WayfireLockerGri
 
 void WayfireLockerPinPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
+    if(disabled)
+    {
+        return;
+    }
     grid->remove(*pinpads[id]);
     pinpads.erase(id);
 }

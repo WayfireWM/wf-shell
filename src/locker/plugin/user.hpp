@@ -1,7 +1,6 @@
 #pragma once
 #include <gtkmm/label.h>
 #include <gtkmm/image.h>
-#include <unordered_map>
 
 #include "plugin.hpp"
 #include "lockergrid.hpp"
@@ -15,9 +14,9 @@ class WayfireLockerUserPlugin : public WayfireLockerPlugin
     void init() override;
     void deinit() override;
 
-    std::unordered_map<int, Glib::RefPtr<Gtk::Label>> labels;
-    std::unordered_map<int, Glib::RefPtr<Gtk::Image>> images;
-    std::unordered_map<int, Glib::RefPtr<Gtk::Box>> boxes;
+    std::map<int, Glib::RefPtr<Gtk::Label>> labels;
+    std::map<int, Glib::RefPtr<Gtk::Image>> images;
+    std::map<int, Glib::RefPtr<Gtk::Box>> boxes;
 
     std::string image_path = "";
 };

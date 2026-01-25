@@ -33,6 +33,7 @@ class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
         const Gio::DBus::Proxy::MapChangedProperties& properties,
         const std::vector<Glib::ustring>& invalidated);
     bool setup_dbus();
+    sigc::connection signal;
 
   public:
     WayfireLockerBatteryPlugin();

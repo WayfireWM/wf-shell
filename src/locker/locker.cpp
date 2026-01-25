@@ -1,7 +1,6 @@
 #include <iostream>
 #include <glibmm/main.h>
 #include <glibmm/miscutils.h>
-#include <gtkmm/window.h>
 #include <gtkmm/headerbar.h>
 #include <gtkmm/box.h>
 #include <gtkmm/centerbox.h>
@@ -14,6 +13,7 @@
 #include "css-config.hpp"
 #include "giomm/application.h"
 #include "lockergrid.hpp"
+#include "lockscreen.hpp"
 #include "plugin/battery.hpp"
 #include "plugin/clock.hpp"
 #include "plugin/instant.hpp"
@@ -45,6 +45,7 @@ WayfireLockerApp::~WayfireLockerApp()
 
 void WayfireLockerApp::perform_lock()
 {
+
     if (is_debug())
     {
         if(!m_is_locked)
@@ -110,32 +111,25 @@ void WayfireLockerApp::on_activate()
     plugins.emplace("mpris", Plugin(new WayfireLockerMPRISPlugin()));
     plugins.emplace("aboutuser", Plugin(new WayfireLockerUserPlugin()));
 
-    for (auto& it : plugins)
+    /* Create plugin option callbacks */
+    for (auto &it : plugins)
     {
         Plugin plugin = it.second;
-        if (plugin->enable)
-        {
-            it.second->init();
-        }
         plugin->enable.set_callback(
             [plugin, this] () {
                 if (plugin->enable)
                 {
-                    std::cout << "Plugin enable" << std::endl;
                     plugin->init();
                     for(auto &it : window_list)
                     {
-                        std::cout << "Adding to window"<<std::endl;
                         int id = it.first;
-                        plugin->add_output(id, grid_list[id]);
+                        plugin->add_output(id, it.second->grid);
                     }
                 } else {
-                    std::cout << "Plugin disable" << std::endl;
                     for(auto &it : window_list)
                     {
-                        std::cout << "Removing from window"<<std::endl;
                         int id = it.first;
-                        plugin->remove_output(id, grid_list[id]);
+                        plugin->remove_output(id, it.second->grid);
                     }
                     plugin->deinit();
                 }
@@ -143,17 +137,43 @@ void WayfireLockerApp::on_activate()
         );
         plugin->position.set_callback(
             [this, plugin] () {
-                for(auto &it : grid_list)
+                for(auto &it : window_list)
                 {
                     int id = it.first;
-                    auto grid = it.second;
-                    plugin->remove_output(id, grid);
-                    plugin->add_output(id, grid);
+                    auto window = it.second;
+                    plugin->remove_output(id, window->grid);
+                    plugin->add_output(id, window->grid);
                 }
             }
         );
     }
     perform_lock();
+}
+
+/** Called just as lock starts but before window is shown */
+void WayfireLockerApp::init_plugins()
+{
+    for (auto &it : plugins)
+    {
+        Plugin plugin = it.second;
+        if (plugin->enable)
+        {
+            it.second->init();
+        }
+    }
+}
+
+/** Called after an unlock */
+void WayfireLockerApp::deinit_plugins()
+{
+    for (auto &it : plugins)
+    {
+        Plugin plugin = it.second;
+        if (plugin->enable)
+        {
+            it.second->deinit();
+        }
+    }
 }
 
 /* A new monitor has been added to the lockscreen */
@@ -162,21 +182,15 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     int id = window_id_count;
     window_id_count++;
     /* Create lockscreen with a grid for contents */
-    auto window = new Gtk::Window();
-    window->add_css_class("wf-locker");
-    auto grid = std::shared_ptr<WayfireLockerGrid>(new WayfireLockerGrid());
-
-    window->set_child(*grid);
-    grid->set_expand(true);
-    grid_list.emplace(id, grid);
-    window_list.emplace(id, window);
+    window_list.emplace(id, new WayfireLockerAppLockscreen());
+    auto window = window_list[id];
 
     for (auto& it : plugins)
     {
         Plugin plugin = it.second;
         if (plugin->enable)
         {
-            it.second->add_output(id, grid);
+            it.second->add_output(id, window->grid);
         }
     }
 
@@ -187,11 +201,12 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
             Plugin plugin = it.second;
             if (plugin->enable)
             {
-                plugin->remove_output(id, grid_list[id]);
+                plugin->remove_output(id, window_list[id]->grid);
             }
         }
         if (m_is_debug)
         {
+            deinit_plugins();
             m_is_locked = false;
             if (exit_on_unlock)
             {
@@ -203,6 +218,7 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     }, false);
     if (is_debug())
     {
+        init_plugins();
         m_is_locked = true;
         window->present();
     } else
@@ -246,6 +262,10 @@ void WayfireLockerApp::create(int argc, char **argv)
 
 bool WayfireLockerApp::is_locked()
 {
+    if (!m_is_debug)
+    {
+        return gtk_session_lock_instance_is_locked(lock);
+    }
     return m_is_locked;
 }
 
@@ -272,6 +292,7 @@ int main(int argc, char **argv)
 void on_session_locked_c(GtkSessionLockInstance *lock, void *data)
 {
     WayfireLockerApp::get().set_is_locked(true);
+    WayfireLockerApp::get().init_plugins();
     std::cout << "Session locked" << std::endl;
 }
 
@@ -288,6 +309,7 @@ void on_session_lock_failed_c(GtkSessionLockInstance *lock, void *data)
 void on_session_unlocked_c(GtkSessionLockInstance *lock, void *data)
 {
     WayfireLockerApp::get().set_is_locked(false);
+    WayfireLockerApp::get().deinit_plugins();
     std::cout << "Session unlocked" << std::endl;
     if (WayfireLockerApp::get().exit_on_unlock)
     {

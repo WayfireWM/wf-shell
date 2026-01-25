@@ -5,22 +5,27 @@
 #include <giomm.h>
 #include <giomm/dbusproxy.h>
 #include <glibmm/refptr.h>
+#include <sigc++/connection.h>
 
 #include "lockergrid.hpp"
 #include "plugin.hpp"
-
+using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
+using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
 class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
 {
-  public:
-    guint dbus_name_id;
+  private:
+    DBusConnection connection;
     Glib::RefPtr<Gio::DBus::Proxy> device_proxy;
+  public:
 
     WayfireLockerFingerprintPlugin();
     ~WayfireLockerFingerprintPlugin();
-    void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
+    void on_connection(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
     void on_device_acquired(const Glib::RefPtr<Gio::AsyncResult> & result);
     void claim_device();
+    void release_device();
     void start_fingerprint_scanning();
+    void stop_fingerprint_scanning();
     void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
@@ -28,6 +33,7 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     void hide();
     void show();
 
+    sigc::connection signal;
     bool is_scanning;
     bool show_state = false;
     void update_labels(std::string text);

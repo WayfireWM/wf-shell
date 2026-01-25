@@ -6,7 +6,7 @@
 #include <pulse/pulseaudio.h>
 
 #include "gvc-mixer-control.h"
-#include "../plugin.hpp"
+#include "plugin.hpp"
 #include "lockergrid.hpp"
 
 class WayfireLockerVolumePlugin : public WayfireLockerPlugin
@@ -17,6 +17,8 @@ class WayfireLockerVolumePlugin : public WayfireLockerPlugin
     GvcMixerStream *gvc_source_stream = NULL;
     gulong notify_sink_muted_signal   = 0;
     gulong notify_source_muted_signal = 0;
+    gulong notify_sink_changed = 0;
+    gulong notify_source_changed = 0;
     void disconnect_gvc_stream_sink_signals();
     void disconnect_gvc_stream_source_signals();
 

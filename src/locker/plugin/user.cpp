@@ -34,7 +34,6 @@ void WayfireLockerUserPlugin::init()
         struct stat sb;
         if ((stat(home_path_file.c_str(), &sb) == 0) && !(sb.st_mode & S_IFDIR))
         {
-            std::cout << home_path_file << " Selected" << std::endl;
             image_path = home_path_file;
             return;
         }
@@ -44,7 +43,9 @@ void WayfireLockerUserPlugin::init()
 }
 
 void WayfireLockerUserPlugin::deinit()
-{}
+{
+    image_path="";
+}
 
 void WayfireLockerUserPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
