@@ -1,5 +1,4 @@
-#ifndef WIDGET_SPACING_HPP
-#define WIDGET_SPACING_HPP
+#pragma once
 
 #include "../widget.hpp"
 
@@ -14,6 +13,3 @@ class WayfireSpacing : public WayfireWidget
     virtual ~WayfireSpacing()
     {}
 };
-
-
-#endif /* end of include guard: WIDGET_SPACING_HPP */

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <glibmm.h>
 #include <gtkmm.h>

@@ -21,21 +21,35 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
     popover->set_size_request(WIDTH, HEIGHT);
     popover->get_style_context()->add_class("notification-popover");
 
-    vbox.set_valign(Gtk::Align::START);
-    vbox.set_orientation(Gtk::Orientation::VERTICAL);
-    scrolled_window.set_child(vbox);
+    box.set_valign(Gtk::Align::START);
+    box.set_orientation(Gtk::Orientation::VERTICAL);
+    scrolled_window.set_child(box);
     popover->set_child(scrolled_window);
 
     button->set_tooltip_text("Middle click to toggle DND mode.");
 
     auto click_gesture = Gtk::GestureClick::create();
-    click_gesture->set_button(2);
-    click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    auto long_press    = Gtk::GestureLongPress::create();
+    long_press->set_touch_only(true);
+    long_press->signal_pressed().connect(
+        [=] (double x, double y)
     {
         dnd_enabled = !dnd_enabled;
         updateIcon();
+        long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+        click_gesture->set_state(Gtk::EventSequenceState::DENIED);
+    });
+    click_gesture->set_button(2);
+    click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
         click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
     });
+    click_gesture->signal_released().connect([=] (int count, double x, double y)
+    {
+        dnd_enabled = !dnd_enabled;
+        updateIcon();
+    });
+    button->add_controller(long_press);
     button->add_controller(click_gesture);
 
     for (const auto & [id, _] : daemon->getNotifications())
@@ -60,7 +74,7 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id, bool s
     g_assert(notification_widgets.count(id) == 0);
     notification_widgets.insert({id, std::make_unique<WfSingleNotification>(notification)});
     auto & widget = notification_widgets.at(id);
-    vbox.append(*widget);
+    box.append(*widget);
     widget->set_reveal_child();
     if (show_popup && !dnd_enabled || (show_critical_in_dnd && (notification.hints.urgency == 2)))
     {

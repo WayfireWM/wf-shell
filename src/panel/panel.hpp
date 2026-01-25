@@ -1,5 +1,4 @@
-#ifndef WF_PANEL_HPP
-#define WF_PANEL_HPP
+#pragma once
 
 #include <memory>
 #include <wayland-client.h>
@@ -48,5 +47,3 @@ class WayfirePanelApp : public WayfireShellApp
     class impl;
     std::unique_ptr<impl> priv;
 };
-
-#endif /* end of include guard: WF_PANEL_HPP */

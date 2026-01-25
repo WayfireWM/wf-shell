@@ -22,6 +22,7 @@ wfconfig = dependency('wf-config', version: '>=0.7.0') #TODO fallback submodule
 epoxy = dependency('epoxy')
 gtklayershell = dependency('gtk4-layer-shell-0', fallback: ['gtk4-layer-shell'])
 libpulse = dependency('libpulse', required: get_option('pulse'))
+wireplumber = dependency('wireplumber-0.5', required: get_option('wireplumber'))
 dbusmenu_gtk = dependency('dbusmenu-glib-0.4')
 libgvc = subproject('gvc', default_options: ['static=true'], required: get_option('pulse'))
 xkbregistry = dependency('xkbregistry')
@@ -35,6 +36,10 @@ endif
 if libpulse.found()
 	libgvc = libgvc.get_variable('libgvc_dep')
 	add_project_arguments('-DHAVE_PULSE=1', language: 'cpp')
+endif
+
+if wireplumber.found()
+	add_project_arguments('-DHAVE_WIREPLUMBER=1', language: 'cpp')
 endif
 
 needs_libinotify = ['freebsd', 'dragonfly'].contains(host_machine.system())

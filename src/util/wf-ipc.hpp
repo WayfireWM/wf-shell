@@ -1,13 +1,12 @@
-#ifndef WF_IPC_HPP
-#define WF_IPC_HPP
+#pragma once
 
-#include "giomm/cancellable.h"
-#include "giomm/outputstream.h"
-#include "giomm/socketconnection.h"
-#include "glibmm/iochannel.h"
-#include "glibmm/refptr.h"
+#include <giomm/cancellable.h>
+#include <giomm/outputstream.h>
+#include <giomm/socketconnection.h>
+#include <glibmm/iochannel.h>
+#include <glibmm/refptr.h>
 #include <wayfire/nonstd/json.hpp>
-#include "sigc++/connection.h"
+#include <sigc++/connection.h>
 #include <functional>
 #include <memory>
 #include <queue>
@@ -80,5 +79,3 @@ class WayfireIPC : public std::enable_shared_from_this<WayfireIPC>
     WayfireIPC();
     ~WayfireIPC();
 };
-
-#endif // WF_IPC_HPP

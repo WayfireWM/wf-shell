@@ -1,12 +1,11 @@
-#ifndef WIDGETS_WINDOW_LIST_HPP
-#define WIDGETS_WINDOW_LIST_HPP
+#pragma once
+
+#include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
+#include <gtkmm.h>
 
 #include "../../widget.hpp"
-#include "panel.hpp"
-#include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
-
-#include <gtkmm.h>
 #include "toplevel.hpp"
+#include "layout.hpp"
 
 class WayfireToplevel;
 
@@ -71,5 +70,3 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     int get_default_button_width();
     int get_target_button_width();
 };
-
-#endif /* end of include guard: WIDGETS_WINDOW_LIST_HPP */

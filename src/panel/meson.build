@@ -35,8 +35,25 @@ deps = [
 ]
 
 if libpulse.found()
-  widget_sources += 'widgets/volume.cpp'
+  widget_sources += [
+    'widgets/volume.cpp',
+    'widgets/volume-level.cpp',
+  ]
   deps += [libpulse, libgvc]
+else
+  message('Pulse not found, volume widget will not be available.')
+endif
+
+if wireplumber.found()
+  widget_sources += [
+    'widgets/wp-mixer/wp-mixer.cpp',
+    'widgets/wp-mixer/wf-wp-control.cpp',
+    'widgets/wp-mixer/wp-common.cpp',
+    'widgets/volume-level.cpp',
+  ]
+  deps += wireplumber
+else
+  message('Wireplumber not found, mixer widget will not be available.')
 endif
 
 executable(

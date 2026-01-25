@@ -1,13 +1,12 @@
-#ifndef WF_DOCK_HPP
-#define WF_DOCK_HPP
+#pragma once
 
 #include <gtkmm/box.h>
 #include <wayland-client.h>
+#include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
+#include <wf-option-wrap.hpp>
 
 #include "giomm/application.h"
 #include "wf-shell-app.hpp"
-#include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
-#include <wf-option-wrap.hpp>
 
 class WfDock
 {
@@ -52,5 +51,3 @@ class WfDockApp : public WayfireShellApp
     class impl;
     std::unique_ptr<impl> priv;
 };
-
-#endif /* end of include guard: WF_DOCK_HPP */

@@ -7,6 +7,7 @@ util = static_library(
         'wf-popover.cpp',
         'css-config.cpp',
         'wf-ipc.cpp',
+        'animated-scale.cpp',
     ],
     dependencies: [wf_protos, gtklayershell, wayland_client, gtkmm, wfconfig, libinotify, json],
 )
