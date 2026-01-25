@@ -143,7 +143,7 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
                 }, 5);
             }
 
-            if (is_done)
+            if (is_done && device_proxy != nullptr)
             {
                 is_scanning = false;
                 device_proxy->call_sync("VerifyStop");
