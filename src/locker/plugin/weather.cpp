@@ -27,7 +27,6 @@ void WayfireLockerWeatherPlugin::update_icons(std::string path)
     }
 
     icon_path = path;
-    std::cout << "icon_path: " << icon_path << std::endl;
 }
 
 void WayfireLockerWeatherPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
@@ -43,7 +42,6 @@ void WayfireLockerWeatherPlugin::add_output(int id, std::shared_ptr<WayfireLocke
 
     Gtk::Image icon(icon_path);
     icon.add_css_class("weather");
-    std::cout << "appending icon: " << icon_path << std::endl;
     weather_widget->append(icon);
 
     grid->attach(*weather_widget, position);
@@ -70,7 +68,7 @@ void WayfireLockerWeatherPlugin::update_weather()
 
     if (doc == NULL)
     {
-        std::cerr << "Error reading JSON file: " << err.msg << std::endl;
+        std::cerr << "Error reading JSON file " << file_path << ": " << err.msg << std::endl;
         return;
     }
 
@@ -84,7 +82,6 @@ void WayfireLockerWeatherPlugin::update_weather()
         while ((key = yyjson_obj_iter_next(&iter)))
         {
             val = yyjson_obj_iter_get_val(key);
-            printf("Key: %s, Type: %s\n", yyjson_get_str(key), yyjson_get_type_desc(val));
 
             if (yyjson_get_str(key) == std::string("temp"))
             {
