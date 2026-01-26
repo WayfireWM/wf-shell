@@ -107,8 +107,15 @@ WayfireLockerWeatherPlugin::WayfireLockerWeatherPlugin():
 void WayfireLockerWeatherPlugin::init()
 {
     update_weather();
+    timeout = Glib::signal_timeout().connect_seconds(
+        [this] ()
+    {
+        this->update_weather();
+        return G_SOURCE_CONTINUE;
+    }, 600);
 }
 
 void WayfireLockerWeatherPlugin::deinit()
 {
+    timeout.disconnect();
 }
