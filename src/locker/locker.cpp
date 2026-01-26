@@ -16,6 +16,7 @@
 #include "lockscreen.hpp"
 #include "plugin/battery.hpp"
 #include "plugin/clock.hpp"
+#include "plugin/weather.hpp"
 #include "plugin/instant.hpp"
 #include "plugin/password.hpp"
 #include "plugin/pin.hpp"
@@ -89,6 +90,7 @@ void WayfireLockerApp::on_activate()
     alternative_monitors = true; /* Don't use WayfireShellApp monitor tracking, we get a different set */
     new CssFromConfigString("locker/background_color", ".wf-locker {background-color:", ";}");
     new CssFromConfigFont("locker/clock_font", ".wf-locker .clock {", "}");
+    new CssFromConfigFont("locker/weather_font", ".wf-locker .weather {", "}");
     new CssFromConfigFont("locker/user_font", ".wf-locker .user {", "}");
     new CssFromConfigFont("locker/pin_pad_font", ".wf-locker .pinpad-button {", "}");
     new CssFromConfigFont("locker/pin_reply_font", ".wf-locker .pinpad-current {", "}");
@@ -102,6 +104,7 @@ void WayfireLockerApp::on_activate()
 
     /* Init plugins */
     plugins.emplace("clock", Plugin(new WayfireLockerClockPlugin()));
+    plugins.emplace("weather", Plugin(new WayfireLockerWeatherPlugin()));
     plugins.emplace("battery", Plugin(new WayfireLockerBatteryPlugin()));
     plugins.emplace("password", Plugin(new WayfireLockerPasswordPlugin()));
     plugins.emplace("instant", (Plugin(new WayfireLockerInstantPlugin())));

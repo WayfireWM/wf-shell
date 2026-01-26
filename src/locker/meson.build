@@ -1,5 +1,6 @@
 widget_sources = [
     'plugin/clock.cpp',
+    'plugin/weather.cpp',
     'plugin/battery.cpp',
     'plugin/password.cpp',
     'plugin/instant.cpp',
@@ -18,7 +19,8 @@ deps = [
   xkbregistry,
   json,
   pam,
-  openssl
+  openssl,
+  yyjson
 ]
 
 if libpulse.found()

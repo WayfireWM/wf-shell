@@ -28,6 +28,7 @@ libgvc = subproject('gvc', default_options: ['static=true'], required: get_optio
 xkbregistry = dependency('xkbregistry')
 json = subproject('wf-json').get_variable('wfjson')
 openssl = dependency('openssl')
+yyjson = dependency('yyjson')
 
 if get_option('wayland-logout') == true
 	wayland_logout = subproject('wayland-logout')
