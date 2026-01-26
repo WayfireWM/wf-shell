@@ -2,6 +2,7 @@ widget_sources = [
   'widgets/battery.cpp',
   'widgets/menu.cpp',
   'widgets/clock.cpp',
+  'widgets/weather.cpp',
   'widgets/command-output.cpp',
   'widgets/language.cpp',
   'widgets/launchers.cpp',
