@@ -146,7 +146,7 @@ void WayfireLockerPasswordPlugin::submit_user_password(std::string password)
     retval = pam_end(local_auth_handle, retval);
     if (unlock)
     {
-        WayfireLockerApp::get().perform_unlock();
+        WayfireLockerApp::get().perform_unlock("PAM Password authenticated");
     }
 }
 

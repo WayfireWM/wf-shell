@@ -1,4 +1,5 @@
 #include <iostream>
+#include <giomm/application.h>
 #include <glibmm/main.h>
 #include <glibmm/miscutils.h>
 #include <gtkmm/headerbar.h>
@@ -8,10 +9,10 @@
 #include <gdkmm/monitor.h>
 #include <gdk/wayland/gdkwayland.h>
 #include <gtk4-session-lock.h>
+#include <memory>
 #include <wayfire/config/file.hpp>
 
 #include "css-config.hpp"
-#include "giomm/application.h"
 #include "lockergrid.hpp"
 #include "lockscreen.hpp"
 #include "plugin/battery.hpp"
@@ -60,18 +61,45 @@ void WayfireLockerApp::perform_lock()
     }
 }
 
+/* Called before each activate */
+void WayfireLockerApp::command_line()
+{
+    //virtual bool parse_cfgfile(const Glib::ustring & option_name,
+    ///    const Glib::ustring & value, bool has_value)
+    can_early_wake = true;
+    app->add_main_option_entry(
+        [=](const Glib::ustring & option_name,
+                 const Glib::ustring & value, bool has_value){
+            can_early_wake = false;
+            return true;
+        },
+        "now", 'n', "Instant lock", "", Glib::OptionEntry::Flags::NO_ARG);
+}
+
 void WayfireLockerApp::on_activate()
 {
     if (activated)
     {
         if (!m_is_locked)
         {
+            if (can_early_wake)
+            {
+                Glib::signal_timeout().connect_seconds([this](){
+                    can_early_wake = false;
+                    return G_SOURCE_REMOVE;
+                }, WfOption<int> {"locker/prewake"});
+            }
             perform_lock();
         }
         return;
     }
-    std::cout << "Starting App" << std::endl;
+    /* Set a timer for early-wake unlock */
     WayfireShellApp::on_activate();
+        Glib::signal_timeout().connect_seconds([this](){
+        can_early_wake = false;
+        return G_SOURCE_REMOVE;
+    }, WfOption<int> {"locker/prewake"});
+    /* TODO Hot config for this? */
     exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
 
     auto debug = Glib::getenv("WF_LOCKER_DEBUG");
@@ -80,7 +108,6 @@ void WayfireLockerApp::on_activate()
         m_is_debug = true;
     }
 
-    std::cout << "Locker activate" << std::endl;
     lock = gtk_session_lock_instance_new();
     /* Session lock callbacks */
     g_signal_connect(lock, "locked", G_CALLBACK(on_session_locked_c), lock);
@@ -101,6 +128,7 @@ void WayfireLockerApp::on_activate()
     new CssFromConfigInt("locker/battery_icon_size", ".wf-locker .battery-image {-gtk-icon-size:", "px;}");
     new CssFromConfigInt("locker/fingerprint_icon_size", ".wf-locker .fingerprint-icon {-gtk-icon-size:",
         "px;}");
+    new CssFromConfigInt("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ", "s; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0;} to {opacity:1;}}");
 
     /* Init plugins */
     plugins.emplace("clock", Plugin(new WayfireLockerClockPlugin()));
@@ -231,24 +259,33 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
 }
 
 /* Called on any successful auth to unlock & end locker */
-void WayfireLockerApp::perform_unlock()
+void WayfireLockerApp::perform_unlock(std::string reason)
 {
-    if (m_is_debug)
-    {
-        /* We need to manually close in debug mode */
+    /* Offset the actual logic so that any callbacks that call
+       this get a chance to exit cleanly. */
+    Glib::signal_idle().connect([this, reason] () {
+        std::cout << "Unlocked : " << reason << std::endl;
+        if (m_is_debug)
+        {
+            /* We need to manually close in debug mode */
+            for(auto &it : window_list)
+            {
+                it.second->close();
+            }
+            if (WayfireLockerApp::get().exit_on_unlock)
+            {
+                exit(0);
+            }
+        } else
+        {
+            gtk_session_lock_instance_unlock(lock);
+        }
         for(auto &it : window_list)
         {
-            it.second->close();
+            it.second->disconnect();
         }
-        if (WayfireLockerApp::get().exit_on_unlock)
-        {
-            exit(0);
-        }
-    } else
-    {
-        gtk_session_lock_instance_unlock(lock);
-    }
-    window_list.clear();
+        return G_SOURCE_REMOVE;
+    });
 }
 
 void WayfireLockerApp::create(int argc, char **argv)
@@ -287,22 +324,21 @@ int main(int argc, char **argv)
     }
 
     WayfireLockerApp::create(argc, argv);
-    std::cout << "Exit" << std::endl;
     return 0;
 }
 
 /* lock session calllbacks */
 void on_session_locked_c(GtkSessionLockInstance *lock, void *data)
 {
+    std::cout << "Session locked" << std::endl;
     WayfireLockerApp::get().set_is_locked(true);
     WayfireLockerApp::get().init_plugins();
-    std::cout << "Session locked" << std::endl;
 }
 
 void on_session_lock_failed_c(GtkSessionLockInstance *lock, void *data)
 {
-    WayfireLockerApp::get().set_is_locked(false);
     std::cout << "Session lock failed" << std::endl;
+    WayfireLockerApp::get().set_is_locked(false);
     if (WayfireLockerApp::get().exit_on_unlock)
     {
         exit(0);
@@ -311,9 +347,9 @@ void on_session_lock_failed_c(GtkSessionLockInstance *lock, void *data)
 
 void on_session_unlocked_c(GtkSessionLockInstance *lock, void *data)
 {
+    std::cout << "Session unlocked" << std::endl;
     WayfireLockerApp::get().set_is_locked(false);
     WayfireLockerApp::get().deinit_plugins();
-    std::cout << "Session unlocked" << std::endl;
     if (WayfireLockerApp::get().exit_on_unlock)
     {
         // Exiting too early causes a lock-out
@@ -322,6 +358,10 @@ void on_session_unlocked_c(GtkSessionLockInstance *lock, void *data)
             exit(0);
         },1);
     }
+    // Lose windows
+    WayfireLockerApp::get().window_list.clear();
+    // Replace the lock object
+    //lock = gtk_session_lock_instance_new();
 }
 
 void on_monitor_present_c(GtkSessionLockInstance *lock, GdkMonitor *monitor, void *data)
@@ -359,4 +399,13 @@ Plugin WayfireLockerApp::get_plugin(std::string name)
     }
 
     return plugins.at(name);
+}
+
+void WayfireLockerApp::user_activity()
+{
+    if (can_early_wake)
+    {
+        can_early_wake = false;
+        perform_unlock("Early Activity");
+    }
 }

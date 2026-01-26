@@ -194,7 +194,7 @@ void WayfireLockerPinPlugin::submit_pin()
     auto hash = sha512(pin);
     if (hash == pinhash)
     {
-        WayfireLockerApp::get().perform_unlock();
+        WayfireLockerApp::get().perform_unlock("PIN Authenticated");
     }
 
     pin = "";

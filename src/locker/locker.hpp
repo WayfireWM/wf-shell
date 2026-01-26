@@ -14,6 +14,7 @@ void on_session_lock_failed_c(GtkSessionLockInstance *lock, void *data);
 void on_session_unlocked_c(GtkSessionLockInstance *lock, void *data);
 void on_monitor_present_c(GtkSessionLockInstance *lock, GdkMonitor *monitor, void *data);
 
+
 class WayfireLockerApp : public WayfireShellApp
 {
   private:
@@ -27,13 +28,10 @@ class WayfireLockerApp : public WayfireShellApp
 
     bool m_is_debug     = false;
     bool m_is_locked    = false;
+    bool instant_lock   = false;
     int window_id_count = 0;
     
-    std::map<int, std::shared_ptr<WayfireLockerAppLockscreen>> window_list;
-
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
-
-
   public:
     using WayfireShellApp::WayfireShellApp;
     static void create(int argc, char **argv);
@@ -43,6 +41,7 @@ class WayfireLockerApp : public WayfireShellApp
     }
     Gio::Application::Flags get_extra_application_flags() override;
     std::string get_application_name() override;
+    void command_line() override;
 
     /* Starts the program. get() is valid afterward the first (and the only)
      * call to create() */
@@ -64,9 +63,12 @@ class WayfireLockerApp : public WayfireShellApp
     Plugin get_plugin(std::string name);
 
     /* Give commands to compositor about lock state, or emulate them*/
-    void perform_unlock();
+    void perform_unlock(std::string reason);
     void perform_lock();
     void init_plugins();
     void deinit_plugins();
-  private:
+    bool can_early_wake;
+    void user_activity();
+
+    std::map<int, std::shared_ptr<WayfireLockerAppLockscreen>> window_list;
 };

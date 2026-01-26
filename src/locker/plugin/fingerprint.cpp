@@ -100,7 +100,6 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
                                                   const Glib::ustring & signal_name,
                                                   const Glib::VariantContainerBase & params)
     {
-        std::cout << signal_name << " " << device_proxy << std::endl;
         if (device_proxy==nullptr)
         {
             return; // Skip close-down messages
@@ -116,13 +115,13 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
             update_labels(mesg.get());
             if (mesg.get() == "verify-match")
             {
-                WayfireLockerApp::get().perform_unlock();
+                WayfireLockerApp::get().perform_unlock("Fingerprint verified");
             }
 
             if (mesg.get() == "verify-no-match")
             {
                 /* Reschedule fingerprint scan */
-                Glib::signal_timeout().connect_seconds(
+                starting_fingerprint = Glib::signal_timeout().connect_seconds(
                     [this] ()
                 {
                     this->start_fingerprint_scanning();
@@ -145,11 +144,12 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
 
             if (is_done && device_proxy != nullptr)
             {
-                is_scanning = false;
-                device_proxy->call_sync("VerifyStop");
+                stop_fingerprint_scanning();
             }
         } else if (signal_name == "VerifyFingerSelected")
         {
+            /* TODO potentially present this to user to tell them
+               which fingerprint is being expected */
             Glib::Variant<Glib::ustring> finger_name;
             params.get_child(finger_name,0);
             std::cout << "Finger : " << finger_name.get() << std::endl;
@@ -190,7 +190,10 @@ void WayfireLockerFingerprintPlugin::claim_device()
 
 void WayfireLockerFingerprintPlugin::release_device()
 {
-    device_proxy->call_sync("Release");
+    if (device_proxy)
+    {
+        device_proxy->call_sync("Release");
+    }
 }
 
 void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
@@ -199,12 +202,10 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
     {
         return;
     }
-
-    if (device_proxy && !is_scanning)
+    if (device_proxy)
     {
         show();
         update_labels("Use fingerprint to unlock");
-        is_scanning = true;
         device_proxy->call_sync("VerifyStart",
             nullptr,
             Glib::Variant<std::tuple<Glib::ustring>>::create({""}));
@@ -216,8 +217,22 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 
 void WayfireLockerFingerprintPlugin::stop_fingerprint_scanning()
 {
-    device_proxy->call_sync("VerifyStop");
-    is_scanning = false;
+    if (starting_fingerprint){
+        starting_fingerprint.disconnect();
+    }
+    if (!device_proxy)
+    {
+        return;
+    }
+    /* Stop if running. Eventually log or respond to errors
+       but for now, avoid crashing lockscreen on close-down */
+    try{
+        device_proxy->call_sync("VerifyStop");
+    } catch(Glib::Error & e)
+    {
+        
+    }
+    
 }
 
 void WayfireLockerFingerprintPlugin::init()
@@ -256,10 +271,8 @@ void WayfireLockerFingerprintPlugin::init()
 
 void WayfireLockerFingerprintPlugin::deinit()
 {
-    if(is_scanning)
-    {
-        stop_fingerprint_scanning();
-    }
+    // Ensure we return state to allow other programs to use scanner
+    stop_fingerprint_scanning();
     release_device();
     if(signal)
     {
