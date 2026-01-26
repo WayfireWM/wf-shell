@@ -79,6 +79,7 @@ class WayfireShellApp
     virtual std::string get_config_file();
     virtual std::string get_css_config_dir();
     virtual void run(int argc, char **argv);
+    virtual void command_line(){};
 
     virtual void on_config_reload()
     {}

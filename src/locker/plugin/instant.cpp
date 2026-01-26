@@ -22,7 +22,7 @@ void WayfireLockerInstantPlugin::add_output(int id, std::shared_ptr<WayfireLocke
 
     button->signal_clicked().connect([] ()
     {
-        WayfireLockerApp::get().perform_unlock();
+        WayfireLockerApp::get().perform_unlock("Instant unlock pressed");
     }, false);
 }
 

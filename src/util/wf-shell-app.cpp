@@ -311,7 +311,7 @@ void WayfireShellApp::init_app()
     app->add_main_option_entry(
         sigc::mem_fun(*this, &WayfireShellApp::parse_cssfile),
         "css", 's', "css style directory to use", "directory");
-
+    this->command_line();
     // Activate app after parsing command line
     app->signal_command_line().connect_notify([=] (auto&)
     {

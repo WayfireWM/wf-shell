@@ -34,7 +34,7 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     void show();
 
     sigc::connection signal;
-    bool is_scanning;
+    sigc::connection starting_fingerprint;
     bool show_state = false;
     void update_labels(std::string text);
     void update_image(std::string image);
