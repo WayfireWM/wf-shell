@@ -231,6 +231,56 @@
 	</option>
 	</group>
 	<group>
+	<_short>Weather</_short>
+	<option name="weather_enable" type="bool">
+		<_short>Enable</_short>
+		<default>true</default>
+	</option>
+	<option name="weather_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>bottom-left</default>
+	</option>
+	<option name="weather_font" type="string">
+		<_short>Weather Font</_short>
+		<default>64pt default</default>
+	</option>
+	</group>
+	<group>
 	<_short>User</_short>
 	<option name="user_enable" type="bool">
 		<_short>Enable</_short>
