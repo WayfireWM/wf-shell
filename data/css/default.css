@@ -190,6 +190,13 @@ revealer.wf-locker {
 .wf-locker .user image{
     -gtk-icon-size:96px;
 }
+.wf-locker image.weather {
+    -gtk-icon-size:150px;
+    padding-bottom: 25px;
+}
+.wf-locker label.weather {
+    padding-left: 25px;
+}
 
 @keyframes embiggen {
     to {
