@@ -57,6 +57,7 @@
 #   -l, --location LOCATION
 #   -k, --apikey APIKEY
 #   -m, --metric
+#   -d, --debug
 #
 # Copyright (c) 2026 Scott Moreau <oreaus@gmail.com>
 #
@@ -113,7 +114,8 @@ def get_weather_info():
             units = "imperial"
         weather_data_url = "http://api.openweathermap.org/data/2.5/weather?q=" + str(weather["location_key"]) + "&units=" + units + "&appid=" + str(weather["api_key"])
         weather_data = json.loads(requests.get(weather_data_url).content)
-        #print(weather_data)
+        if weather["debug"]:
+            print(weather_data)
         if weather["metric_units"] is True:
             weather["temperature"] = str(int(weather_data["main"]["temp"])) + "°C"
         else:
@@ -147,6 +149,7 @@ def main():
     parser.add_argument("-l", "--location")
     parser.add_argument("-k", "--apikey")
     parser.add_argument("-m", "--metric", action="store_true")
+    parser.add_argument("-d", "--debug", action="store_true")
     args = parser.parse_args()
     if args.apikey is None:
         print("Provide OpenWeatherMap APIKEY with -k or --apikey")
@@ -157,6 +160,7 @@ def main():
     weather["location_key"] = args.location
     weather["api_key"] = args.apikey
     weather["metric_units"] = args.metric
+    weather["debug"] = args.debug
 
     weather["icon_directory"] = os.getenv("HOME") + "/.local/share/weather/icons"
     icon_dir = Path(weather["icon_directory"])
