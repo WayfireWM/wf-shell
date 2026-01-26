@@ -21,8 +21,6 @@ class WayfireLockerWeatherPlugin : public WayfireLockerPlugin
     void update_weather();
 
     std::unordered_map<int, std::shared_ptr<Gtk::Box>> weather_widgets;
-    std::vector<std::shared_ptr<Gtk::Label>> labels;
-    std::vector<std::shared_ptr<Gtk::Image>> icons;
     std::string label_contents = "";
     std::string icon_path = "";
 };
