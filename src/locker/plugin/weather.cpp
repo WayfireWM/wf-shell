@@ -1,4 +1,5 @@
 #include <memory>
+#include <fstream>
 #include <iostream>
 #include <glibmm.h>
 #include <gtkmm/box.h>
@@ -6,7 +7,7 @@
 
 #include "lockergrid.hpp"
 #include "weather.hpp"
-#include "yyjson.h"
+#include "wayfire/nonstd/json.hpp"
 
 
 void WayfireLockerWeatherPlugin::update_labels(std::string text)
@@ -65,42 +66,40 @@ void WayfireLockerWeatherPlugin::update_weather()
 
     std::string file_path = weather_data_dir + "/data.json";
 
-    yyjson_read_flag flg = 0;
-    yyjson_read_err err;
+    std::ifstream input_file(file_path);
 
-    yyjson_doc *doc = yyjson_read_file(file_path.c_str(), flg, NULL, &err);
-
-    if (doc == NULL)
+    if (!input_file)
     {
-        std::cerr << "Error reading JSON file " << file_path << ": " << err.msg << std::endl;
+        std::cerr << "Error reading json file " << file_path << std::endl;
         hide();
         return;
     }
-    show();
 
-    yyjson_val *root_obj = yyjson_doc_get_root(doc);
+    std::stringstream buf;
+    buf << input_file.rdbuf();
 
-    if (root_obj && yyjson_is_obj(root_obj))
+    wf::json_t json_data;
+
+    auto err = wf::json_t::parse_string(buf.str(), json_data);
+
+    if (err.has_value())
     {
-        yyjson_obj_iter iter;
-        yyjson_obj_iter_init(root_obj, &iter);
-        yyjson_val *key, *val;
-        while ((key = yyjson_obj_iter_next(&iter)))
-        {
-            val = yyjson_obj_iter_get_val(key);
-
-            if (yyjson_get_str(key) == std::string("temp"))
-            {
-                this->update_labels(yyjson_get_str(val));
-            } else if (yyjson_get_str(key) == std::string("icon"))
-            {
-                update_icons(yyjson_get_str(val));
-            }
-        }
+        std::cerr << "Error parsing json data " << file_path << ": " << *err << std::endl;
+        hide();
+        return;
     }
 
-    yyjson_doc_free(doc);
+    if (!json_data.has_member("temp") || !json_data.has_member("icon"))
+    {
+        std::cerr << "Unexpected weather json data in " << file_path << std::endl;
+        hide();
+        return;
+    }
 
+    update_labels(json_data["temp"]);
+    update_icons(json_data["icon"]);
+
+    show();
 }
 
 WayfireLockerWeatherPlugin::WayfireLockerWeatherPlugin():
