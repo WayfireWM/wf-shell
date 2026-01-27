@@ -191,7 +191,9 @@ revealer.wf-locker {
     -gtk-icon-size:96px;
 }
 .wf-locker image.weather {
-    -gtk-icon-size:150px;
+    -gtk-icon-size:80px;
+    padding-left: 25px;
+    padding-right: 25px;
     padding-bottom: 25px;
 }
 .wf-locker label.weather {
