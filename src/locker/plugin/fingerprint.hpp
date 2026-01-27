@@ -15,12 +15,13 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
 {
   private:
     DBusConnection connection;
-    Glib::RefPtr<Gio::DBus::Proxy> device_proxy;
+    Glib::RefPtr<Gio::DBus::Proxy> device_proxy, manager_proxy;
   public:
 
     WayfireLockerFingerprintPlugin();
     ~WayfireLockerFingerprintPlugin();
     void on_connection(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
+    void get_device();
     void on_device_acquired(const Glib::RefPtr<Gio::AsyncResult> & result);
     void claim_device();
     void release_device();

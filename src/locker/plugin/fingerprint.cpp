@@ -47,22 +47,32 @@ void WayfireLockerFingerprintPlugin::on_connection(const Glib::RefPtr<Gio::DBus:
         "net.reactivated.Fprint.Manager",
         [this, connection] (const Glib::RefPtr<Gio::AsyncResult> & result)
     {
-        auto manager_proxy = Gio::DBus::Proxy::create_finish(result);
-        try {
-            auto default_device = manager_proxy->call_sync("GetDefaultDevice");
-            Glib::Variant<Glib::ustring> item_path;
-            default_device.get_child(item_path, 0);
-            Gio::DBus::Proxy::create(connection,
-                "net.reactivated.Fprint",
-                item_path.get(),
-                "net.reactivated.Fprint.Device",
-                sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
-        } catch (Glib::Error & e) /* TODO : Narrow down? */
-        {
-            hide();
-            return;
-        }
+        manager_proxy = Gio::DBus::Proxy::create_finish(result);
+        get_device();
     });
+}
+
+void WayfireLockerFingerprintPlugin::get_device()
+{
+    if (device_proxy != nullptr)
+    {
+        std::cerr << "get_device when device_proxy is not null" << std::endl;
+        return;
+    }
+    try {
+        auto default_device = manager_proxy->call_sync("GetDefaultDevice");
+        Glib::Variant<Glib::ustring> item_path;
+        default_device.get_child(item_path, 0);
+        Gio::DBus::Proxy::create(connection,
+            "net.reactivated.Fprint",
+            item_path.get(),
+            "net.reactivated.Fprint.Device",
+            sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
+    } catch (Glib::Error & e) /* TODO : Narrow down? */
+    {
+        hide();
+        return;
+    }
 }
 
 void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::AsyncResult> & result)
@@ -140,6 +150,22 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
                     this->start_fingerprint_scanning();
                     return G_SOURCE_REMOVE;
                 }, 5);
+            } else if (mesg.get() == "verify-disconnected")
+            {
+                /* This needs testing on a machine with removable fprint reader */
+                device_proxy = nullptr;
+                if (signal)
+                {
+                    signal.disconnect();
+                }
+                /* Delay, cools down a repeated failing loop */
+                Glib::signal_timeout().connect_seconds(
+                    [this] () {
+                        get_device();
+                        return G_SOURCE_REMOVE;
+                    }, 2
+                );
+                return;
             }
 
             if (is_done && device_proxy != nullptr)
