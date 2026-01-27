@@ -37,10 +37,11 @@ WayfireLockerWeatherPluginWidget::WayfireLockerWeatherPluginWidget(std::string c
     label.add_css_class("weather");
     label.set_markup(contents);
     label.set_justify(Gtk::Justification::CENTER);
-    box.append(label);
+    box.prepend(label);
 
     image.add_css_class("weather");
     image.set(icon_path);
+    box.append(image);
 }
 
 void WayfireLockerWeatherPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
