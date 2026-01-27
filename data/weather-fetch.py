@@ -56,6 +56,7 @@
 #   -h, --help            show this help message and exit
 #   -l, --location LOCATION
 #   -k, --apikey APIKEY
+#   -c, --classic-icons
 #   -m, --metric
 #   -d, --debug
 #
@@ -93,6 +94,27 @@ import json
 import sys
 import os
 
+icon_map = {
+    "01d": "1",  # clear sky day
+    "01n": "33", # clear sky night
+    "02d": "2",  # few clouds day
+    "02n": "34", # few clouds night
+    "03d": "3",  # scattered clouds day
+    "03n": "35", # scattered clouds night
+    "04d": "4",  # broken clouds day
+    "04n": "36", # broken clouds night
+    "09d": "14", # shower rain day
+    "09n": "39", # shower rain night
+    "10d": "13", # rain day
+    "10n": "40", # rain night
+    "11d": "16", # thunderstorm day
+    "11n": "42", # thunderstorm night
+    "13d": "23", # snow day
+    "13n": "44", # snow night
+    "50d": "5",  # mist day
+    "50n": "37", # mist night
+}
+
 weather = {}
 
 def get_weather_info():
@@ -121,11 +143,16 @@ def get_weather_info():
         else:
             weather["temperature"] = str(int(weather_data["main"]["temp"])) + "°F"
         weather_icon_code = weather_data["weather"][0]["icon"]
-        weather_icon_name = weather_icon_code + "@2x.png"
-        weather_icon_path = weather["icon_directory"] + "/" + weather_icon_name
-        if not os.path.exists(weather_icon_path):
+        if weather["classic-icons"]:
+            weather_icon_name = weather_icon_code + "@2x.png"
             weather_icon_url = "https://openweathermap.org/img/wn/" + weather_icon_name
-            img_data = requests.get(weather_icon_url).content
+        else:
+            weather_icon_name = icon_map[weather_icon_code] + ".svg"
+            weather_icon_url = "https://www.accuweather.com/assets/images/weather-icons/v2a/" + weather_icon_name
+        weather_icon_path = weather["icon_directory"] + "/" + weather_icon_name
+        print(f"Checking for icon {weather_icon_path}")
+        if not os.path.exists(weather_icon_path):
+            img_data = requests.get(weather_icon_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}).content
             with open(weather_icon_path, 'wb') as weather_icon:
                 weather_icon.write(img_data)
         print(f"Weather information for {weather_data["name"]}, {weather_data["sys"]["country"]}: {weather["temperature"]} - {weather_data["weather"][0]["description"]}")
@@ -148,6 +175,7 @@ def main():
         epilog="Copyright (c) 2026 Scott Moreau <oreaus@gmail.com>")
     parser.add_argument("-l", "--location")
     parser.add_argument("-k", "--apikey")
+    parser.add_argument("-c", "--classic-icons", action="store_true")
     parser.add_argument("-m", "--metric", action="store_true")
     parser.add_argument("-d", "--debug", action="store_true")
     args = parser.parse_args()
@@ -159,6 +187,7 @@ def main():
         exit(-1)
     weather["location_key"] = args.location
     weather["api_key"] = args.apikey
+    weather["classic-icons"] = args.classic_icons
     weather["metric_units"] = args.metric
     weather["debug"] = args.debug
 
@@ -171,7 +200,7 @@ def main():
     data_dir = Path(weather["data_directory"])
     if not data_dir.exists():
         data_dir.mkdir(parents=True, exist_ok=True)
-    
+
     get_weather_info()
 
 if __name__ == "__main__":
