@@ -8,6 +8,7 @@
 
 #include "plugin.hpp"
 #include "lockergrid.hpp"
+#include "timedrevealer.hpp"
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
 using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
@@ -23,6 +24,15 @@ using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
 #define TIMETOFULL     "TimeToFull"
 #define TIMETOEMPTY    "TimeToEmpty"
 #define SHOULD_DISPLAY "IsPresent"
+
+class WayfireLockerBatteryPluginWidget : public WayfireLockerTimedRevealer
+{
+  public:
+    Gtk::Grid grid;
+    Gtk::Image image;
+    Gtk::Label label, subtext;
+    WayfireLockerBatteryPluginWidget();
+};
 
 class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
 {
@@ -50,8 +60,6 @@ class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
     void update_images();
     void update_details();
 
-    std::map<int, std::shared_ptr<Gtk::Image>> images;
-    std::map<int, std::shared_ptr<Gtk::Label>> subtexts;
-    std::map<int, std::shared_ptr<Gtk::Label>> labels;
-    std::map<int, std::shared_ptr<Gtk::Grid>> grids;
+
+    std::map<int, std::shared_ptr<WayfireLockerBatteryPluginWidget>> widgets;
 };

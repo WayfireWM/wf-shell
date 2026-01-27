@@ -29,7 +29,7 @@ endif
 
 executable(
   'wf-locker',
-  ['locker.cpp', 'lockscreen.cpp'] + widget_sources,
+  ['locker.cpp', 'lockscreen.cpp', 'timedrevealer.cpp'] + widget_sources,
   dependencies: deps,
   install: true,
 )

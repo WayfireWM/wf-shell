@@ -13,11 +13,12 @@
 class WayfireLockerPlugin
 {
   public:
-    WayfireLockerPlugin(std::string option_name, std::string position_name): 
-      enable(WfOption<bool>{option_name}), 
-      position(WfOption<std::string>{position_name})
+    WayfireLockerPlugin(std::string prefix): 
+      enable(WfOption<bool>{prefix+"_enable"}), 
+      always(WfOption<bool>{prefix+"_always"}),
+      position(WfOption<std::string>{prefix+"_position"})
     {};
-    WfOption<bool> enable;
+    WfOption<bool> enable, always;
     WfOption<std::string> position;
     virtual void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) = 0;
     virtual void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) = 0;

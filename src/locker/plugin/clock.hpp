@@ -3,8 +3,16 @@
 #include <unordered_map>
 
 #include "plugin.hpp"
+#include "timedrevealer.hpp"
 #include "wf-option-wrap.hpp"
 #include "lockergrid.hpp"
+
+class WayfireLockerClockPluginWidget : public WayfireLockerTimedRevealer
+{
+  public:
+    Gtk::Label label;
+    WayfireLockerClockPluginWidget(std::string contents);
+};
 
 class WayfireLockerClockPlugin : public WayfireLockerPlugin
 {
@@ -21,6 +29,6 @@ class WayfireLockerClockPlugin : public WayfireLockerPlugin
     void update_labels(std::string text);
     void update_time();
 
-    std::unordered_map<int, std::shared_ptr<Gtk::Label>> labels;
+    std::unordered_map<int, std::shared_ptr<WayfireLockerClockPluginWidget>> widgets;
     std::string label_contents = "";
 };

@@ -12,9 +12,11 @@
 /* Widget of controls for one player on one screen
  * https://specifications.freedesktop.org/mpris/latest/index.html */
 WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name,
-    Glib::RefPtr<Gio::DBus::Proxy> proxy) : proxy(proxy), name(name)
+    Glib::RefPtr<Gio::DBus::Proxy> proxy) : 
+    WayfireLockerTimedRevealer("locker/mpris_always"),
+    proxy(proxy), 
+    name(name)
 {
-    set_transition_type(Gtk::RevealerTransitionType::SLIDE_UP);
     image.add_css_class("albumart");
     add_css_class("mpris");
 
@@ -136,13 +138,7 @@ WayfireLockerMPRISWidget::~WayfireLockerMPRISWidget()
 
 void WayfireLockerMPRISWidget::playbackstatus(std::string value)
 {
-    if (value == "Stopped")
-    {
-        set_reveal_child(false);
-    } else
-    {
-        set_reveal_child(true);
-    }
+    activity();
 }
 
 /* https://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/ */
@@ -196,6 +192,7 @@ void WayfireLockerMPRISWidget::metadata(std::map<std::string, Glib::VariantBase>
     Glib::ustring output =
         substitute_strings(pairs, (std::string)WfOption<std::string>{"locker/mpris_format"});
     label.set_label(output);
+    activity();
 }
 
 void WayfireLockerMPRISWidget::cangonext(bool value)
@@ -233,18 +230,18 @@ void WayfireLockerMPRISWidget::cancontrol(bool value)
 
 void WayfireLockerMPRISCollective::add_child(std::string id, Glib::RefPtr<Gio::DBus::Proxy> proxy)
 {
-    children.emplace(id, Glib::RefPtr<WayfireLockerMPRISWidget>(new WayfireLockerMPRISWidget(id, proxy)));
-    append(*children[id]);
+    children.emplace(id, new WayfireLockerMPRISWidget(id, proxy));
+    box.append(*children[id]);
 }
 
 void WayfireLockerMPRISCollective::rem_child(std::string id)
 {
-    remove(*children[id]);
+    box.remove(*children[id]);
     children.erase(id);
 }
 
 WayfireLockerMPRISPlugin::WayfireLockerMPRISPlugin() :
-    WayfireLockerPlugin("locker/mpris_enable", "locker/mpris_position")
+    WayfireLockerPlugin("locker/mpris")
 { }
 
 void WayfireLockerMPRISPlugin::init()
@@ -372,5 +369,14 @@ void WayfireLockerMPRISPlugin::rem_client(std::string path)
     for (auto & it : widgets)
     {
         it.second->rem_child(path);
+    }
+}
+
+void WayfireLockerMPRISCollective::activity()
+{
+    set_reveal_child(true);
+    for (auto &it : children)
+    {
+        it.second->activity();
     }
 }

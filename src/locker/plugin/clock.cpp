@@ -3,34 +3,41 @@
 #include <gtkmm/box.h>
 
 #include "lockergrid.hpp"
+#include "timedrevealer.hpp"
 #include "clock.hpp"
 
 
 void WayfireLockerClockPlugin::update_labels(std::string text)
 {
-    for (auto& it : labels)
+    for (auto& it : widgets)
     {
-        it.second->set_markup(text);
+        it.second->label.set_markup(text);
     }
 
     label_contents = text;
 }
 
+WayfireLockerClockPluginWidget::WayfireLockerClockPluginWidget(std::string contents):
+    WayfireLockerTimedRevealer("locker/clock_always")
+{
+    set_child(label);
+    label.add_css_class("clock");
+    label.set_markup(contents);
+    label.set_justify(Gtk::Justification::CENTER);
+}
+
 void WayfireLockerClockPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
-    auto label = labels[id];
-    label->add_css_class("clock");
-    label->set_markup(label_contents);
-    label->set_justify(Gtk::Justification::CENTER);
+    widgets.emplace(id, new WayfireLockerClockPluginWidget(label_contents));
+    auto widget = widgets[id];
 
-    grid->attach(*label, position);
+    grid->attach(*widget, position);
 }
 
 void WayfireLockerClockPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    grid->remove(*labels[id]);
-    labels.erase(id);
+    grid->remove(*widgets[id]);
+    widgets.erase(id);
 }
 
 void WayfireLockerClockPlugin::update_time()
@@ -54,7 +61,7 @@ void WayfireLockerClockPlugin::update_time()
 }
 
 WayfireLockerClockPlugin::WayfireLockerClockPlugin():
-  WayfireLockerPlugin("locker/clock_enable", "locker/clock_position")
+  WayfireLockerPlugin("locker/clock")
 {}
 
 void WayfireLockerClockPlugin::init()

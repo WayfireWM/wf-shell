@@ -2,11 +2,11 @@
 #include <fstream>
 #include <iostream>
 #include <glibmm.h>
-#include <gtkmm/box.h>
-#include <gtkmm/image.h>
 
+#include "gtkmm/enums.h"
 #include "lockergrid.hpp"
 #include "weather.hpp"
+#include "timedrevealer.hpp"
 #include "wayfire/nonstd/json.hpp"
 
 
@@ -14,7 +14,7 @@ void WayfireLockerWeatherPlugin::update_labels(std::string text)
 {
     for (auto& it : weather_widgets)
     {
-        ((Gtk::Label *)it.second->get_first_child())->set_markup(text);
+        it.second->label.set_markup(text);
     }
 
     label_contents = text;
@@ -24,31 +24,34 @@ void WayfireLockerWeatherPlugin::update_icons(std::string path)
 {
     for (auto& it : weather_widgets)
     {
-        ((Gtk::Image *)it.second->get_first_child()->get_next_sibling())->set(path);
+        it.second->image.set(path);
     }
 
     icon_path = path;
 }
 
+WayfireLockerWeatherPluginWidget::WayfireLockerWeatherPluginWidget(std::string contents, std::string icon_path):
+    WayfireLockerTimedRevealer("locker/weather_always")
+{
+    set_child(box);
+    label.add_css_class("weather");
+    label.set_markup(contents);
+    label.set_justify(Gtk::Justification::CENTER);
+    box.append(label);
+
+    image.add_css_class("weather");
+    image.set(icon_path);
+}
+
 void WayfireLockerWeatherPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    weather_widgets.emplace(id, std::shared_ptr<Gtk::Box>(new Gtk::Box()));
+    weather_widgets.emplace(id, new WayfireLockerWeatherPluginWidget(label_contents, icon_path));
 
     auto weather_widget = weather_widgets[id];
     if (!shown)
     {
         weather_widget->hide();
     }
-    auto label = Gtk::Label();
-    label.add_css_class("weather");
-    label.set_markup(label_contents);
-    label.set_justify(Gtk::Justification::CENTER);
-    weather_widget->append(label);
-
-    Gtk::Image icon(icon_path);
-    icon.add_css_class("weather");
-    weather_widget->append(icon);
-
     grid->attach(*weather_widget, position);
 }
 
@@ -103,7 +106,7 @@ void WayfireLockerWeatherPlugin::update_weather()
 }
 
 WayfireLockerWeatherPlugin::WayfireLockerWeatherPlugin():
-  WayfireLockerPlugin("locker/weather_enable", "locker/weather_position")
+  WayfireLockerPlugin("locker/weather")
 {}
 
 void WayfireLockerWeatherPlugin::init()

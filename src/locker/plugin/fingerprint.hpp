@@ -1,5 +1,5 @@
 #pragma once
-#include <unordered_map>
+#include <gtkmm/box.h>
 #include <gtkmm/label.h>
 #include <gtkmm/image.h>
 #include <giomm.h>
@@ -9,8 +9,20 @@
 
 #include "lockergrid.hpp"
 #include "plugin.hpp"
+#include "timedrevealer.hpp"
+
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
 using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
+
+class WayfireLockerFingerprintPluginWidget : public WayfireLockerTimedRevealer
+{
+  public:
+    Gtk::Box box;
+    Gtk::Image image;
+    Gtk::Label label;
+    WayfireLockerFingerprintPluginWidget(std::string label_contents, std::string image_contents);
+};
+
 class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
 {
   private:
@@ -40,8 +52,7 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     void update_labels(std::string text);
     void update_image(std::string image);
 
-    std::unordered_map<int, std::shared_ptr<Gtk::Label>> labels;
-    std::unordered_map<int, std::shared_ptr<Gtk::Image>> images;
+    std::map<int, std::shared_ptr<WayfireLockerFingerprintPluginWidget>> widgets;
     std::string icon_contents  = "";
     std::string label_contents = "";
 };

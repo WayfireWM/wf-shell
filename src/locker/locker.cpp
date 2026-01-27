@@ -1,6 +1,6 @@
 #include <iostream>
 #include <giomm/application.h>
-#include <glibmm/main.h>
+#include <glibmm.h>
 #include <glibmm/miscutils.h>
 #include <gtkmm/headerbar.h>
 #include <gtkmm/box.h>
@@ -13,7 +13,6 @@
 #include <wayfire/config/file.hpp>
 
 #include "css-config.hpp"
-#include "lockergrid.hpp"
 #include "lockscreen.hpp"
 #include "plugin/battery.hpp"
 #include "plugin/clock.hpp"
@@ -47,7 +46,7 @@ WayfireLockerApp::~WayfireLockerApp()
 
 void WayfireLockerApp::perform_lock()
 {
-
+    WayfireLockerApp::get().init_plugins();
     if (is_debug())
     {
         if(!m_is_locked)
@@ -64,9 +63,6 @@ void WayfireLockerApp::perform_lock()
 /* Called before each activate */
 void WayfireLockerApp::command_line()
 {
-    //virtual bool parse_cfgfile(const Glib::ustring & option_name,
-    ///    const Glib::ustring & value, bool has_value)
-    can_early_wake = true;
     app->add_main_option_entry(
         [=](const Glib::ustring & option_name,
                  const Glib::ustring & value, bool has_value){
@@ -95,12 +91,12 @@ void WayfireLockerApp::on_activate()
     }
     /* Set a timer for early-wake unlock */
     WayfireShellApp::on_activate();
-        Glib::signal_timeout().connect_seconds([this](){
+    Glib::signal_timeout().connect([this](){
         can_early_wake = false;
         return G_SOURCE_REMOVE;
     }, WfOption<int> {"locker/prewake"});
     /* TODO Hot config for this? */
-    exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
+    //exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
 
     auto debug = Glib::getenv("WF_LOCKER_DEBUG");
     if (debug == "1")
@@ -128,7 +124,7 @@ void WayfireLockerApp::on_activate()
     new CssFromConfigInt("locker/battery_icon_size", ".wf-locker .battery-image {-gtk-icon-size:", "px;}");
     new CssFromConfigInt("locker/fingerprint_icon_size", ".wf-locker .fingerprint-icon {-gtk-icon-size:",
         "px;}");
-    new CssFromConfigInt("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ", "s; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0;} to {opacity:1;}}");
+    new CssFromConfigInt("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ", "ms; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0;} to {opacity:1;}}");
 
     /* Init plugins */
     plugins.emplace("clock", Plugin(new WayfireLockerClockPlugin()));
@@ -312,6 +308,10 @@ bool WayfireLockerApp::is_locked()
 void WayfireLockerApp::set_is_locked(bool locked)
 {
     m_is_locked = locked;
+    if (!locked)
+    {
+        can_early_wake = true; // Reset state Before next activate
+    }
 }
 
 /* Starting point */
@@ -332,7 +332,6 @@ void on_session_locked_c(GtkSessionLockInstance *lock, void *data)
 {
     std::cout << "Session locked" << std::endl;
     WayfireLockerApp::get().set_is_locked(true);
-    WayfireLockerApp::get().init_plugins();
 }
 
 void on_session_lock_failed_c(GtkSessionLockInstance *lock, void *data)
@@ -353,15 +352,16 @@ void on_session_unlocked_c(GtkSessionLockInstance *lock, void *data)
     if (WayfireLockerApp::get().exit_on_unlock)
     {
         // Exiting too early causes a lock-out
-        Glib::signal_timeout().connect_seconds([] () -> bool 
+        Glib::signal_idle().connect([] () -> bool 
         {
             exit(0);
         },1);
     }
-    // Lose windows
-    WayfireLockerApp::get().window_list.clear();
-    // Replace the lock object
-    //lock = gtk_session_lock_instance_new();
+    // Lose windows, but not right away to avoid lock-screen-crash for 1 frame
+    Glib::signal_idle().connect([] () {
+        WayfireLockerApp::get().window_list.clear();
+        return G_SOURCE_REMOVE;
+    });
 }
 
 void on_monitor_present_c(GtkSessionLockInstance *lock, GdkMonitor *monitor, void *data)
