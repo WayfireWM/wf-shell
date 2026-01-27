@@ -10,7 +10,6 @@ class WayfireLockerAppLockscreen: public Gtk::Window
 {
     public:
     std::shared_ptr<WayfireLockerGrid> grid;
-    Gtk::Revealer revealer;
     sigc::connection timeout;
     WfOption<int> hide_timeout {"locker/hide_time"};
     std::vector<sigc::connection> signals;
@@ -20,4 +19,6 @@ class WayfireLockerAppLockscreen: public Gtk::Window
 
     void start_disappear_timer();
     void disconnect();
+
+    void window_activity();
 };

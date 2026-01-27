@@ -2,6 +2,7 @@
 #include <memory>
 #include <glibmm.h>
 #include "gtkmm/entry.h"
+#include "gtkmm/enums.h"
 #include "gtkmm/label.h"
 #include <unistd.h>
 #include <security/_pam_types.h>
@@ -10,14 +11,15 @@
 #include "locker.hpp"
 #include "lockergrid.hpp"
 #include "plugin.hpp"
+#include "timedrevealer.hpp"
 #include "password.hpp"
 
 
 void WayfireLockerPasswordPlugin::update_labels(std::string text)
 {
-    for (auto& it : labels)
+    for (auto& it : widgets)
     {
-        it.second->set_label(text);
+        it.second->label.set_label(text);
     }
 
     label_contents = text;
@@ -25,47 +27,52 @@ void WayfireLockerPasswordPlugin::update_labels(std::string text)
 
 void WayfireLockerPasswordPlugin::blank_passwords()
 {
-    for (auto& it : entries)
+    for (auto& it : widgets)
     {
-        it.second->set_text("");
+        it.second->entry.set_text("");
     }
 }
 
 void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
-    entries.emplace(id, std::shared_ptr<Gtk::Entry>(new Gtk::Entry));
-    auto label = labels[id];
-    auto entry = entries[id];
-    label->add_css_class("password-reply");
-    entry->add_css_class("password-entry");
-    entry->set_placeholder_text("Password");
-    label->set_label(label_contents);
-    entry->set_visibility(false);
+    widgets.emplace(id, new WayfireLockerPasswordPluginWidget(label_contents));
+    auto widget = widgets[id];
+    
     /* Set entry callback for return */
-    entry->signal_activate().connect([this, entry] ()
+    widget->entry.signal_activate().connect([this, widget] ()
     {
-        auto password = entry->get_text();
+        auto password = widget->entry.get_text();
         if (password.length() > 0)
         {
             submit_user_password(password);
         }
     }, true);
     /* Add to window */
-    grid->attach(*entry, position);
-    grid->attach(*label, position);
+    grid->attach(*widget, position);
+}
+
+WayfireLockerPasswordPluginWidget::WayfireLockerPasswordPluginWidget(std::string label_contents):
+    WayfireLockerTimedRevealer("locker/password_always")
+{
+    set_child(box);
+    box.append(entry);
+    box.append(label);
+    box.set_orientation(Gtk::Orientation::VERTICAL);
+    label.add_css_class("password-reply");
+    entry.add_css_class("password-entry");
+    entry.set_placeholder_text("Password");
+    label.set_label(label_contents);
+    entry.set_visibility(false);
 }
 
 void WayfireLockerPasswordPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    grid->remove(*entries[id]);
-    grid->remove(*labels[id]);
-    labels.erase(id);
-    entries.erase(id);
+    grid->remove(*widgets[id]);
+    widgets.erase(id);
 }
 
 WayfireLockerPasswordPlugin::WayfireLockerPasswordPlugin():
-    WayfireLockerPlugin("locker/password_enable", "locker/password_position")
+    WayfireLockerPlugin("locker/password")
 { }
 
 /* PAM password C code... */

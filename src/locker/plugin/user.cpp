@@ -2,10 +2,11 @@
 
 #include "lockergrid.hpp"
 #include "plugin.hpp"
+#include "timedrevealer.hpp"
 #include "user.hpp"
 
 WayfireLockerUserPlugin::WayfireLockerUserPlugin():
-    WayfireLockerPlugin("locker/user_enable", "locker/user_position")
+    WayfireLockerPlugin("locker/user")
 {}
 
 void WayfireLockerUserPlugin::init()
@@ -34,6 +35,7 @@ void WayfireLockerUserPlugin::init()
         struct stat sb;
         if ((stat(home_path_file.c_str(), &sb) == 0) && !(sb.st_mode & S_IFDIR))
         {
+            std::cout << "Chosen image "<<home_path_file << std::endl;
             image_path = home_path_file;
             return;
         }
@@ -47,44 +49,39 @@ void WayfireLockerUserPlugin::deinit()
     image_path="";
 }
 
-void WayfireLockerUserPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+WayfireLockerUserPluginWidget::WayfireLockerUserPluginWidget(std::string image_path):
+    WayfireLockerTimedRevealer("locker/user_always")
 {
-    labels.emplace(id, Glib::RefPtr<Gtk::Label>(new Gtk::Label()));
-    images.emplace(id, Glib::RefPtr<Gtk::Image>(new Gtk::Image()));
-    boxes.emplace(id, Glib::RefPtr<Gtk::Box>(new Gtk::Box));
-
-    auto label = labels[id];
-    auto image = images[id];
-    auto box   = boxes[id];
-
-    box->add_css_class("user");
-    box->set_orientation(Gtk::Orientation::VERTICAL);
-    image->set_halign(Gtk::Align::CENTER);
-    image->set_valign(Gtk::Align::END);
-    label->set_halign(Gtk::Align::CENTER);
-    label->set_valign(Gtk::Align::START);
-    label->set_justify(Gtk::Justification::CENTER);
-
+    set_child(box);
+    box.add_css_class("user");
+    box.set_orientation(Gtk::Orientation::VERTICAL);
+    image.set_halign(Gtk::Align::CENTER);
+    image.set_valign(Gtk::Align::END);
+    label.set_halign(Gtk::Align::CENTER);
+    label.set_valign(Gtk::Align::START);
+    label.set_justify(Gtk::Justification::CENTER);
     std::string username = getlogin();
-
-    label->set_label(username);
+    label.set_label(username);
     if (image_path == "")
     {
-        image->hide();
+        image.hide();
     } else
     {
-        image->set(image_path);
+        image.set(image_path);
     }
+    box.append(image);
+    box.append(label);
+}
 
-    box->append(*image);
-    box->append(*label);
-    grid->attach(*box, position);
+void WayfireLockerUserPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+{
+    widgets.emplace(id, new WayfireLockerUserPluginWidget(image_path));
+    auto widget = widgets[id];
+    grid->attach(*widget, position);
 }
 
 void WayfireLockerUserPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    grid->remove(*boxes[id]);
-    labels.erase(id);
-    images.erase(id);
-    boxes.erase(id);
+    grid->remove(*widgets[id]);
+    widgets.erase(id);
 }

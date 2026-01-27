@@ -2,8 +2,10 @@
 #include <iostream>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
+#include <string>
 
 #include "lockergrid.hpp"
+#include "timedrevealer.hpp"
 #include "battery.hpp"
 
 
@@ -62,17 +64,17 @@ static std::string uint_to_time(int64_t time)
 
 void WayfireLockerBatteryPlugin::update_percentages(std::string text)
 {
-    for (auto& it : labels)
+    for (auto& it : widgets)
     {
-        it.second->set_label(text);
+        it.second->label.set_label(text);
     }
 }
 
 void WayfireLockerBatteryPlugin::update_descriptions(std::string text)
 {
-    for (auto& it : subtexts)
+    for (auto& it : widgets)
     {
-        it.second->set_label(text);
+        it.second->subtext.set_label(text);
     }
 }
 
@@ -80,50 +82,45 @@ void WayfireLockerBatteryPlugin::update_images()
 {
     Glib::Variant<Glib::ustring> icon_name;
     display_device->get_cached_property(icon_name, ICON);
-    for (auto& it : images)
+    for (auto& it : widgets)
     {
-        it.second->set_from_icon_name(icon_name.get());
+        it.second->image.set_from_icon_name(icon_name.get());
     }
+}
+
+WayfireLockerBatteryPluginWidget::WayfireLockerBatteryPluginWidget():
+    WayfireLockerTimedRevealer("locker/battery_always")
+{
+    set_child(grid);
+    label.add_css_class("battery-percent");
+    subtext.add_css_class("battery-description");
+    image.add_css_class("battery-image");
+
+    grid.attach(image, 0, 0);
+    grid.attach(label, 1, 0);
+    grid.attach(subtext, 0, 1, 2, 1);
+
+
 }
 
 void WayfireLockerBatteryPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    grids.emplace(id, std::shared_ptr<Gtk::Grid>(new Gtk::Grid));
-    labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
-    subtexts.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
-    images.emplace(id, std::shared_ptr<Gtk::Image>(new Gtk::Image()));
-    auto batt_grid = grids[id];
-    auto label   = labels[id];
-    auto subtext = subtexts[id];
-    auto image   = images[id];
+    widgets.emplace(id, new WayfireLockerBatteryPluginWidget());
+    auto widget = widgets[id];
 
     if (!show_state)
     {
-        label->hide();
-        subtext->hide();
-        image->hide();
+        widget->hide();
     }
-
-    label->add_css_class("battery-percent");
-    subtext->add_css_class("battery-description");
-    image->add_css_class("battery-image");
-
-    batt_grid->attach(*image, 0, 0);
-    batt_grid->attach(*label, 1, 0);
-    batt_grid->attach(*subtext, 0, 1, 2, 1);
-
-    grid->attach(*batt_grid, (std::string)position);
+    grid->attach(*widget, (std::string)position);
 
     update_details();
 }
 
 void WayfireLockerBatteryPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    grid->remove(*grids[id]);
-    grids.erase(id);
-    labels.erase(id);
-    subtexts.erase(id);
-    images.erase(id);
+    grid->remove(*widgets[id]);
+    widgets.erase(id);
 }
 
 void WayfireLockerBatteryPlugin::init()
@@ -266,17 +263,7 @@ void WayfireLockerBatteryPlugin::update_details()
 void WayfireLockerBatteryPlugin::hide()
 {
     show_state = false;
-    for (auto& it : labels)
-    {
-        it.second->hide();
-    }
-
-    for (auto& it : images)
-    {
-        it.second->hide();
-    }
-
-    for (auto & it : subtexts)
+    for (auto& it : widgets)
     {
         it.second->hide();
     }
@@ -285,22 +272,12 @@ void WayfireLockerBatteryPlugin::hide()
 void WayfireLockerBatteryPlugin::show()
 {
     show_state = true;
-    for (auto& it : labels)
-    {
-        it.second->show();
-    }
-
-    for (auto& it : images)
-    {
-        it.second->show();
-    }
-
-    for (auto& it : subtexts)
+    for (auto& it : widgets)
     {
         it.second->show();
     }
 }
 
 WayfireLockerBatteryPlugin::WayfireLockerBatteryPlugin():
-    WayfireLockerPlugin("locker/battery_enable", "locker/battery_position")
+    WayfireLockerPlugin("locker/battery")
 { }

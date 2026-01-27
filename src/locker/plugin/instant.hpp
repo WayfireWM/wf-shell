@@ -3,6 +3,14 @@
 
 #include "plugin.hpp"
 #include "lockergrid.hpp"
+#include "timedrevealer.hpp"
+
+class WayfireLockerInstantPluginWidget : public WayfireLockerTimedRevealer
+{
+  public:
+    Gtk::Button button;
+    WayfireLockerInstantPluginWidget();
+};
 
 class WayfireLockerInstantPlugin : public WayfireLockerPlugin
 {
@@ -13,5 +21,5 @@ class WayfireLockerInstantPlugin : public WayfireLockerPlugin
     void init() override;
     void deinit() override;
 
-    std::unordered_map<int, std::shared_ptr<Gtk::Button>> buttons;
+    std::unordered_map<int, std::shared_ptr<WayfireLockerInstantPluginWidget>> widgets;
 };

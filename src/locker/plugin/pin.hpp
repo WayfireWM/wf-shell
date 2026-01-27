@@ -7,17 +7,17 @@
 
 #include "../plugin.hpp"
 #include "lockergrid.hpp"
+#include "timedrevealer.hpp"
 
-/* Rather than keep an unordered list for each widget, put them together */
-class WayfireLockerPinPlugin;
-class PinPad : public Gtk::Grid
+class WayfireLockerPinPluginWidget : public WayfireLockerTimedRevealer
 {
   public:
-    PinPad();
-    ~PinPad();
+    WayfireLockerPinPluginWidget();
+    ~WayfireLockerPinPluginWidget();
+    Gtk::Grid grid;
     Gtk::Button bsub, bcan;
     Gtk::Label label;
-    void init();
+    void init(std::string label);
     void check();
     Gtk::Button numbers[10];
 };
@@ -38,7 +38,7 @@ class WayfireLockerPinPlugin : public WayfireLockerPlugin
     void add_digit(std::string digit);
     std::string sha512(const std::string input);
 
-    std::unordered_map<int, Glib::RefPtr<PinPad>> pinpads;
+    std::unordered_map<int, Glib::RefPtr<WayfireLockerPinPluginWidget>> pinpads;
 
     std::string pin     = "";
     std::string pinhash = "nope";

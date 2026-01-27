@@ -11,6 +11,7 @@
 
 #include "locker.hpp"
 #include "lockergrid.hpp"
+#include "timedrevealer.hpp"
 #include "fingerprint.hpp"
 
 /**
@@ -21,7 +22,7 @@
  */
 
 WayfireLockerFingerprintPlugin::WayfireLockerFingerprintPlugin() :
-    WayfireLockerPlugin("locker/fingerprint_enable", "locker/fingerprint_position")
+    WayfireLockerPlugin("locker/fingerprint")
 {}
 
 WayfireLockerFingerprintPlugin::~WayfireLockerFingerprintPlugin()
@@ -307,43 +308,42 @@ void WayfireLockerFingerprintPlugin::deinit()
     device_proxy = nullptr;
 }
 
+WayfireLockerFingerprintPluginWidget::WayfireLockerFingerprintPluginWidget(std::string label_contents, std::string image_contents):
+    WayfireLockerTimedRevealer("locker/fingerprint_always")
+{
+    set_child(box);
+    image.set_from_icon_name(image_contents);
+    label.set_label(label_contents);
+
+    image.add_css_class("fingerprint-icon");
+    label.add_css_class("fingerprint-text");
+    box.set_orientation(Gtk::Orientation::VERTICAL);
+    box.append(image);
+    box.append(label);
+}
+
 void WayfireLockerFingerprintPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    labels.emplace(id, std::shared_ptr<Gtk::Label>(new Gtk::Label()));
-    images.emplace(id, std::shared_ptr<Gtk::Image>(new Gtk::Image()));
-
-    auto image = images[id];
-    auto label = labels[id];
-
+    widgets.emplace(id, new WayfireLockerFingerprintPluginWidget(label_contents, icon_contents));
+    auto widget = widgets[id];
     if (!show_state)
     {
-        image->hide();
-        label->hide();
+        widget->hide();
     }
-
-    image->set_from_icon_name("fingerprint");
-    label->set_label("No Fingerprint device found");
-
-    image->add_css_class("fingerprint-icon");
-    label->add_css_class("fingerprint-text");
-
-    grid->attach(*image, position);
-    grid->attach(*label, position);
+    grid->attach(*widget, position);
 }
 
 void WayfireLockerFingerprintPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    grid->remove(*labels[id]);
-    grid->remove(*images[id]);
-    labels.erase(id);
-    images.erase(id);
+    grid->remove(*widgets[id]);
+    widgets.erase(id);
 }
 
 void WayfireLockerFingerprintPlugin::update_image(std::string image)
 {
-    for (auto& it : images)
+    for (auto& it : widgets)
     {
-        it.second->set_from_icon_name(image);
+        it.second->image.set_from_icon_name(image);
     }
 
     icon_contents = image;
@@ -351,9 +351,9 @@ void WayfireLockerFingerprintPlugin::update_image(std::string image)
 
 void WayfireLockerFingerprintPlugin::update_labels(std::string text)
 {
-    for (auto& it : labels)
+    for (auto& it : widgets)
     {
-        it.second->set_label(text);
+        it.second->label.set_label(text);
     }
 
     label_contents = text;
@@ -362,12 +362,7 @@ void WayfireLockerFingerprintPlugin::update_labels(std::string text)
 void WayfireLockerFingerprintPlugin::hide()
 {
     show_state = false;
-    for (auto& it : labels)
-    {
-        it.second->hide();
-    }
-
-    for (auto& it : images)
+    for (auto &it : widgets)
     {
         it.second->hide();
     }
@@ -376,12 +371,7 @@ void WayfireLockerFingerprintPlugin::hide()
 void WayfireLockerFingerprintPlugin::show()
 {
     show_state = true;
-    for (auto& it : labels)
-    {
-        it.second->show();
-    }
-
-    for (auto& it : images)
+    for (auto &it : widgets)
     {
         it.second->show();
     }

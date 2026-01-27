@@ -4,6 +4,16 @@
 
 #include "plugin.hpp"
 #include "lockergrid.hpp"
+#include "timedrevealer.hpp"
+
+class WayfireLockerUserPluginWidget : public WayfireLockerTimedRevealer
+{
+  public:
+    Gtk::Box box;
+    Gtk::Image image;
+    Gtk::Label label;
+    WayfireLockerUserPluginWidget(std::string image_path);
+};
 
 class WayfireLockerUserPlugin : public WayfireLockerPlugin
 {
@@ -14,9 +24,7 @@ class WayfireLockerUserPlugin : public WayfireLockerPlugin
     void init() override;
     void deinit() override;
 
-    std::map<int, Glib::RefPtr<Gtk::Label>> labels;
-    std::map<int, Glib::RefPtr<Gtk::Image>> images;
-    std::map<int, Glib::RefPtr<Gtk::Box>> boxes;
+    std::map<int, Glib::RefPtr<WayfireLockerUserPluginWidget>> widgets;
 
     std::string image_path = "";
 };

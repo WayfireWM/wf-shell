@@ -14,6 +14,7 @@
 #include "plugin.hpp"
 #include "locker.hpp"
 #include "lockergrid.hpp"
+#include "timedrevealer.hpp"
 #include "pin.hpp"
 
 
@@ -25,7 +26,8 @@
  *  and any non-digit will render it impossible to unlock.
  */
 
-PinPad::PinPad()
+WayfireLockerPinPluginWidget::WayfireLockerPinPluginWidget():
+    WayfireLockerTimedRevealer("locker/pin_always")
 {
     for (int count = 0; count < 10; count++)
     {
@@ -65,42 +67,40 @@ PinPad::PinPad()
     label.add_css_class("pinpad-current");
 }
 
-PinPad::~PinPad()
+WayfireLockerPinPluginWidget::~WayfireLockerPinPluginWidget()
 {}
 
-void PinPad::init()
+void WayfireLockerPinPluginWidget::init(std::string label_text)
 {
-    attach(label, 0, 0, 3);
-    attach(numbers[1], 0, 1);
-    attach(numbers[2], 1, 1);
-    attach(numbers[3], 2, 1);
-    attach(numbers[4], 0, 2);
-    attach(numbers[5], 1, 2);
-    attach(numbers[6], 2, 2);
-    attach(numbers[7], 0, 3);
-    attach(numbers[8], 1, 3);
-    attach(numbers[9], 2, 3);
-    attach(bsub, 2, 4);
-    attach(numbers[0], 1, 4);
-    attach(bcan, 0, 4);
-    set_vexpand(true);
-    set_column_homogeneous(true);
-    set_row_homogeneous(true);
+    set_child(grid);
+    grid.add_css_class("pinpad");
+    grid.attach(label, 0, 0, 3);
+    grid.attach(numbers[1], 0, 1);
+    grid.attach(numbers[2], 1, 1);
+    grid.attach(numbers[3], 2, 1);
+    grid.attach(numbers[4], 0, 2);
+    grid.attach(numbers[5], 1, 2);
+    grid.attach(numbers[6], 2, 2);
+    grid.attach(numbers[7], 0, 3);
+    grid.attach(numbers[8], 1, 3);
+    grid.attach(numbers[9], 2, 3);
+    grid.attach(bsub, 2, 4);
+    grid.attach(numbers[0], 1, 4);
+    grid.attach(bcan, 0, 4);
+    grid.set_vexpand(true);
+    grid.set_column_homogeneous(true);
+    grid.set_row_homogeneous(true);
+    label.set_text(label_text);
 }
 
 WayfireLockerPinPlugin::WayfireLockerPinPlugin():
-    WayfireLockerPlugin("locker/pin_enable", "locker/pin_position")
+    WayfireLockerPlugin("locker/pin")
 {
+    /* TODO Watch for file changes and update in-memory hash */
     if (!enable)
     {
         return;
     }
-
-    /* TODO ... */
-    // if (cmdline_config.has_value())
-    // {
-    // return cmdline_config.value();
-    // }
     std::string config_dir;
 
     char *config_home = getenv("XDG_CONFIG_HOME");
@@ -150,12 +150,11 @@ void WayfireLockerPinPlugin::add_output(int id, std::shared_ptr<WayfireLockerGri
     {
         return;
     }
-    pinpads.emplace(id, new PinPad());
+    pinpads.emplace(id, new WayfireLockerPinPluginWidget());
     auto pinpad = pinpads[id];
-    pinpad->add_css_class("pinpad");
-    pinpad->init();
+    std::string asterisks(pin.length(), '*');
+    pinpad->init(asterisks);
     grid->attach(*pinpad, position);
-    update_labels(); /* Update all to set this one? maybe overkill */
 }
 
 void WayfireLockerPinPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)

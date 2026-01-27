@@ -5,22 +5,28 @@
 #include "locker.hpp"
 #include "lockergrid.hpp"
 #include "plugin.hpp"
+#include "timedrevealer.hpp"
 #include "instant.hpp"
 
 WayfireLockerInstantPlugin::WayfireLockerInstantPlugin():
-    WayfireLockerPlugin("locker/instant_unlock_enable", "locker/instant_unlock_position")
+    WayfireLockerPlugin("locker/instant_unlock")
 { }
+
+WayfireLockerInstantPluginWidget::WayfireLockerInstantPluginWidget():
+    WayfireLockerTimedRevealer("locker/instant_unlock_always")
+{
+    set_child(button);
+    button.set_label("Unlock now");
+    button.add_css_class("instant-unlock");
+}
 
 void WayfireLockerInstantPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    buttons.emplace(id, std::shared_ptr<Gtk::Button>(new Gtk::Button()));
-    auto button = buttons[id];
-    button->set_label("Press to unlock");
-    button->add_css_class("instant-unlock");
+    widgets.emplace(id, new WayfireLockerInstantPluginWidget());
+    auto widget = widgets[id];
+    grid->attach(*widget, position);
 
-    grid->attach(*button, position);
-
-    button->signal_clicked().connect([] ()
+    widget->button.signal_clicked().connect([] ()
     {
         WayfireLockerApp::get().perform_unlock("Instant unlock pressed");
     }, false);
@@ -28,8 +34,8 @@ void WayfireLockerInstantPlugin::add_output(int id, std::shared_ptr<WayfireLocke
 
 void WayfireLockerInstantPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    grid->remove(*buttons[id]);
-    buttons.erase(id);
+    grid->remove(*widgets[id]);
+    widgets.erase(id);
 }
 
 void WayfireLockerInstantPlugin::init()

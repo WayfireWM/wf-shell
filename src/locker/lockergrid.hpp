@@ -3,7 +3,9 @@
 #include <exception>
 #include <gtkmm/centerbox.h>
 #include <gtkmm/box.h>
-#include <gtkmm/widget.h>
+
+#include "timedrevealer.hpp"
+
 
 class WayfireLockerGrid : public Gtk::CenterBox
 {
@@ -11,8 +13,19 @@ class WayfireLockerGrid : public Gtk::CenterBox
     Gtk::Box box[9];
 
   public:
-
-    void remove(Gtk::Widget & widget)
+    void window_activity()
+    {
+        for (int count = 0; count < 9; count++)
+        {
+            for (auto child = box[count].get_first_child(); child!=nullptr; child = child->get_next_sibling())
+            {
+                auto cast_child = (WayfireLockerTimedRevealer*) child;
+                cast_child->activity();
+            }
+        }
+    }
+    
+    void remove(WayfireLockerTimedRevealer & widget)
     {
         for (int count = 0; count < 9; count++)
         {
@@ -25,7 +38,7 @@ class WayfireLockerGrid : public Gtk::CenterBox
         }
     }
     /* Config string to box from grid */
-    void attach(Gtk::Widget & widget, std::string pos_string)
+    void attach(WayfireLockerTimedRevealer & widget, std::string pos_string)
     {
         if (pos_string == "top-left")
         {
@@ -60,7 +73,7 @@ class WayfireLockerGrid : public Gtk::CenterBox
         }
     }
 
-    void attach(Gtk::Widget & widget, int col, int row)
+    void attach(WayfireLockerTimedRevealer & widget, int col, int row)
     {
         if ((col > 2) || (row > 2) || (col < 0) || (row < 0))
         {

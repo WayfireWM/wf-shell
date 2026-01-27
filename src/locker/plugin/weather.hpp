@@ -1,10 +1,22 @@
 #pragma once
 #include <gtkmm/label.h>
+#include <gtkmm/box.h>
+#include <gtkmm/image.h>
 #include <unordered_map>
 
 #include "plugin.hpp"
+#include "timedrevealer.hpp"
 #include "wf-option-wrap.hpp"
 #include "lockergrid.hpp"
+
+class WayfireLockerWeatherPluginWidget : public WayfireLockerTimedRevealer
+{
+  public:
+    Gtk::Box box;
+    Gtk::Label label;
+    Gtk::Image image;
+    WayfireLockerWeatherPluginWidget(std::string contents, std::string icon_path);
+};
 
 class WayfireLockerWeatherPlugin : public WayfireLockerPlugin
 {
@@ -23,7 +35,7 @@ class WayfireLockerWeatherPlugin : public WayfireLockerPlugin
     void hide();
     void show();
 
-    std::unordered_map<int, std::shared_ptr<Gtk::Box>> weather_widgets;
+    std::unordered_map<int, std::shared_ptr<WayfireLockerWeatherPluginWidget>> weather_widgets;
     std::string label_contents = "";
     std::string icon_path = "";
     bool shown;

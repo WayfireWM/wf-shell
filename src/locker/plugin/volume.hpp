@@ -8,6 +8,16 @@
 #include "gvc-mixer-control.h"
 #include "plugin.hpp"
 #include "lockergrid.hpp"
+#include "timedrevealer.hpp"
+
+class WayfireLockerVolumePluginWidget : public WayfireLockerTimedRevealer
+{
+  public:
+    Gtk::Box box;
+    Gtk::Button sink_button;
+    Gtk::Button source_button;
+    WayfireLockerVolumePluginWidget();
+};
 
 class WayfireLockerVolumePlugin : public WayfireLockerPlugin
 {
@@ -34,7 +44,5 @@ class WayfireLockerVolumePlugin : public WayfireLockerPlugin
     void on_default_sink_changed();
     void on_default_source_changed();
 
-    std::map<int, std::shared_ptr<Gtk::Box>> inner_boxes;
-    std::map<int, std::shared_ptr<Gtk::Button>> sink_buttons;
-    std::map<int, std::shared_ptr<Gtk::Button>> source_buttons;
+    std::map<int, std::shared_ptr<WayfireLockerVolumePluginWidget>> widgets;
 };

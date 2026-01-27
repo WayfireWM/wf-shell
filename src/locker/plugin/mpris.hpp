@@ -5,17 +5,20 @@
 #include <gtkmm/image.h>
 #include <gtkmm/revealer.h>
 #include <giomm.h>
+#include <sigc++/connection.h>
 
+#include "glib.h"
+#include "glibmm/main.h"
 #include "plugin.hpp"
 #include "lockergrid.hpp"
-#include "sigc++/connection.h"
+#include "timedrevealer.hpp"
 
 
 std::string substitute_string(const std::string from, const std::string to, const std::string in);
 std::string substitute_strings(const std::vector<std::tuple<std::string, std::string>> pairs,
     const std::string in);
 
-class WayfireLockerMPRISWidget : public Gtk::Revealer
+class WayfireLockerMPRISWidget : public WayfireLockerTimedRevealer
 {
   private:
     Glib::RefPtr<Gio::DBus::Proxy> proxy;
@@ -27,6 +30,7 @@ class WayfireLockerMPRISWidget : public Gtk::Revealer
     void cancontrol(bool value);
     std::vector<sigc::connection> signals;
 
+
   public:
     Gtk::Label label;
     Gtk::Button next, prev, playpause, kill;
@@ -36,20 +40,30 @@ class WayfireLockerMPRISWidget : public Gtk::Revealer
 
     WayfireLockerMPRISWidget(std::string name, Glib::RefPtr<Gio::DBus::Proxy> proxy);
     ~WayfireLockerMPRISWidget();
+
 };
 
-class WayfireLockerMPRISCollective : public Gtk::Box
+class WayfireLockerMPRISCollective : public WayfireLockerTimedRevealer
 {
   private:
     std::map<std::string, Glib::RefPtr<WayfireLockerMPRISWidget>> children;
+    Gtk::Box box;
 
   public:
     void add_child(std::string name, Glib::RefPtr<Gio::DBus::Proxy> proxy);
     void rem_child(std::string name);
-    WayfireLockerMPRISCollective()
+    WayfireLockerMPRISCollective():
+      WayfireLockerTimedRevealer("locker/mpris_always")
     {
-        set_orientation(Gtk::Orientation::VERTICAL);
+        /* At next chance, force visibility */
+        Glib::signal_idle().connect([this] () {
+          set_reveal_child(true);
+          return G_SOURCE_REMOVE;
+        });
+        set_child(box);
+        box.set_orientation(Gtk::Orientation::VERTICAL);
     }
+    void activity() override;
 };
 
 class WayfireLockerMPRISPlugin : public WayfireLockerPlugin

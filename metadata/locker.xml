@@ -15,13 +15,65 @@
 	</option>
 	<option name="hide_time" type="int">
 		<_short>Hide contents when inactive</_short>
-		<_long>When no user input is detected, hide the unlock controls. 0 means never</_long>
-		<default>5</default>
+		<_long>When no user input is detected, hide the unlock controls. 0 means never. Time is in milliseconds</_long>
+		<default>5000</default>
+		<min>0</min>
+	</option>
+	<option name="hide_anim" type="int">
+		<_short>Hide contents animation</_short>
+		<default>1</default>
+		<desc>
+			<value>0</value>
+			<_name>None</_name>
+		</desc>
+		<desc>
+			<value>1</value>
+			<_name>Fade</_name>
+		</desc>
+		<desc>
+			<value>2</value>
+			<_name>Slide Down</_name>
+		</desc>
+		<desc>
+			<value>3</value>
+			<_name>Slide Left</_name>
+		</desc>
+		<desc>
+			<value>4</value>
+			<_name>Slide Right</_name>
+		</desc>
+		<desc>
+			<value>5</value>
+			<_name>Slide Up</_name>
+		</desc>
+		<desc>
+			<value>6</value>
+			<_name>Swing Down</_name>
+		</desc>
+		<desc>
+			<value>7</value>
+			<_name>Swing Left</_name>
+		</desc>
+		<desc>
+			<value>8</value>
+			<_name>Swing Right</_name>
+		</desc>
+		<desc>
+			<value>9</value>
+			<_name>Swing Up</_name>
+		</desc>
+	</option>
+	<option name="hide_anim_dur" type="int">
+		<_short>Hide contents duration</_short>
+		<_long>Number of milliseconds to animate hide/show of inactive windows</_long>
+		<default>400</default>
+		<min>0</min>
 	</option>
 	<option name="prewake" type="int">
 		<_short>Early instant unlock</_short>
-		<_long>If the user moves mouse or presses a key within this time limit of starting, instantly unlock</_long>
-		<default>4</default>
+		<_long>If the user moves mouse or presses a key within this many milliseconds of lock, instantly unlock</_long>
+		<default>1000</default>
+		<min>0</min>
 	</option>
 	</group>
 	<group>
@@ -69,6 +121,10 @@
 			<_name>Bottom Right</_name>
 		</desc>
 		<default>center-center</default>
+	</option>
+	<option name="password_always" type="bool">
+	    <_short>Always show</_short>
+		<default>false</default>
 	</option>
 	</group>
 	<group>
@@ -125,6 +181,10 @@
 		<_short>Pin Reply Font</_short>
 		<default>20pt default</default>
 	</option>
+	<option name="pin_always" type="bool">
+	    <_short>Always show</_short>
+		<default>false</default>
+	</option>
 	</group>
 	<group>
 	<_short>Fingerprint</_short>
@@ -180,6 +240,10 @@
 		<_short>Fingerprint Icon Size</_short>
 		<default>128</default>
 	</option>
+	<option name="fingerprint_always" type="bool">
+	    <_short>Always show</_short>
+		<default>false</default>
+	</option>
 	</group>
 	<group>
 	<_short>Clock</_short>
@@ -229,6 +293,10 @@
 			<_name>Bottom Right</_name>
 		</desc>
 		<default>top-center</default>
+	</option>
+	<option name="clock_always" type="bool">
+	    <_short>Always show</_short>
+	    <default>true</default>	
 	</option>
 	<option name="clock_font" type="string">
 		<_short>Clock Font</_short>
@@ -284,6 +352,10 @@
 		<_short>Weather Font</_short>
 		<default>64pt default</default>
 	</option>
+	<option name="weather_always" type="bool">
+	    <_short>Always show</_short>
+		<default>true</default>
+	</option>
 	</group>
 	<group>
 	<_short>User</_short>
@@ -333,6 +405,10 @@
 	<option name="user_font" type="string">
 		<_short>Font</_short>
 		<default>16pt default</default>
+	</option>
+	<option name="user_always" type="bool">
+	    <_short>Always show</_short>
+		<default>true</default>
 	</option>
 	</group>
 	<group>
@@ -394,6 +470,10 @@
 			<_name>Bottom Right</_name>
 		</desc>
 		<default>bottom-right</default>
+	</option>
+	<option name="mpris_always" type="bool">
+	    <_short>Always show</_short>
+		<default>false</default>
 	</option>
 	</group>
 	<group>
@@ -470,8 +550,13 @@
 		<default>96</default>
 		<min>16</min>
 	</option>
+	<option name="battery_always" type="bool">
+	    <_short>Always show</_short>
+		<default>true</default>
+	</option>
 	</group>
 	<group>
+	<_short>Volume</_short>
 	<option name="volume_enable" type="bool">
 		<_short>Enable</_short>
 		<default>true</default>
@@ -515,7 +600,10 @@
 		</desc>
 		<default>top-right</default>
 	</option>
-	
+	<option name="volume_always" type="bool">
+	    <_short>Always show</_short>
+		<default>false</default>
+	</option>
 	</group>
 	<group>
 	<_short>Instant Unlock</_short>
@@ -566,6 +654,10 @@
 	<option name="instant_unlock_font" type="string">
 		<_short>Font</_short>
 		<default>default</default>
+	</option>
+	<option name="instant_unlock_always" type="bool">
+	    <_short>Always show</_short>
+		<default>false</default>
 	</option>
 	</group>
 	</plugin>
