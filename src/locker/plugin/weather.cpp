@@ -34,6 +34,10 @@ void WayfireLockerWeatherPlugin::add_output(int id, std::shared_ptr<WayfireLocke
     weather_widgets.emplace(id, std::shared_ptr<Gtk::Box>(new Gtk::Box()));
 
     auto weather_widget = weather_widgets[id];
+    if (!shown)
+    {
+        weather_widget->hide();
+    }
     auto label = Gtk::Label();
     label.add_css_class("weather");
     label.set_markup(label_contents);
@@ -69,8 +73,10 @@ void WayfireLockerWeatherPlugin::update_weather()
     if (doc == NULL)
     {
         std::cerr << "Error reading JSON file " << file_path << ": " << err.msg << std::endl;
+        hide();
         return;
     }
+    show();
 
     yyjson_val *root_obj = yyjson_doc_get_root(doc);
 
@@ -115,4 +121,24 @@ void WayfireLockerWeatherPlugin::init()
 void WayfireLockerWeatherPlugin::deinit()
 {
     timeout.disconnect();
+}
+
+void WayfireLockerWeatherPlugin::hide()
+{
+    for (auto& it : weather_widgets)
+    {
+        it.second->hide();
+    }
+
+    shown = false;
+}
+
+void WayfireLockerWeatherPlugin::show()
+{
+    for (auto& it : weather_widgets)
+    {
+        it.second->show();
+    }
+
+    shown = true;
 }
