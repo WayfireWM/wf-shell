@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <regex>
+#include <string>
 
 void CssFromConfig::add_provider()
 {
@@ -32,13 +33,15 @@ CssFromConfigInt::CssFromConfigInt(std::string option_name, std::string css_befo
     provider = Gtk::CssProvider::create();
     option_value.set_callback([=]
     {
+        int value = option_value;
         // TODO When we go up to c++20 use std::format
         std::stringstream ss;
-        ss << css_before << option_value << css_after;
+        ss << css_before << std::to_string(value) << css_after;
         provider->load_from_string(ss.str());
     });
+    int value = option_value;
     std::stringstream ss;
-    ss << css_before << option_value << css_after;
+    ss << css_before << std::to_string(value) << css_after;
     provider->load_from_string(ss.str());
 
     add_provider();

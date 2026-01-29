@@ -7,7 +7,6 @@ WayfireLockerAppLockscreen::WayfireLockerAppLockscreen()
     grid = std::shared_ptr<WayfireLockerGrid>(new WayfireLockerGrid());
     set_child(*grid);
     add_css_class("wf-locker");
-    add_css_class("fade-in");
     grid->set_expand(true);
 
     /* Mouse press or screen touch */

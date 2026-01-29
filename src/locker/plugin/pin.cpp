@@ -44,10 +44,7 @@ WayfireLockerPinPluginWidget::WayfireLockerPinPluginWidget():
         });
     }
 
-    bsub.set_label("✔️");
     bcan.set_label("❌");
-    bsub.add_css_class("pinpad-submit");
-    bsub.add_css_class("pinpad-button");
     bcan.add_css_class("pinpad-cancel");
     bcan.add_css_class("pinpad-button");
     bcan.signal_clicked().connect(
@@ -56,13 +53,6 @@ WayfireLockerPinPluginWidget::WayfireLockerPinPluginWidget():
         auto plugin = WayfireLockerApp::get().get_plugin("pin");
         auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
         plugin_cast->reset_pin();
-    });
-    bsub.signal_clicked().connect(
-        [] ()
-    {
-        auto plugin = WayfireLockerApp::get().get_plugin("pin");
-        auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
-        plugin_cast->submit_pin();
     });
     label.add_css_class("pinpad-current");
 }
@@ -84,7 +74,6 @@ void WayfireLockerPinPluginWidget::init(std::string label_text)
     grid.attach(numbers[7], 0, 3);
     grid.attach(numbers[8], 1, 3);
     grid.attach(numbers[9], 2, 3);
-    grid.attach(bsub, 2, 4);
     grid.attach(numbers[0], 1, 4);
     grid.attach(bcan, 0, 4);
     grid.set_vexpand(true);
@@ -171,10 +160,16 @@ void WayfireLockerPinPlugin::add_digit(std::string digit)
 {
     pin = pin + digit;
     update_labels();
+
+    submit_pin();
 }
 
 void WayfireLockerPinPlugin::reset_pin()
 {
+    if (pin.length() > 0)
+    {
+        WayfireLockerApp::get().recieved_bad_auth();
+    }
     pin = "";
     update_labels();
 }
@@ -195,8 +190,6 @@ void WayfireLockerPinPlugin::submit_pin()
     {
         WayfireLockerApp::get().perform_unlock("PIN Authenticated");
     }
-
-    pin = "";
     update_labels();
 }
 
@@ -218,4 +211,21 @@ std::string WayfireLockerPinPlugin::sha512(const std::string input)
     }
 
     return ss.str();
+}
+
+void WayfireLockerPinPluginWidget::lockout_changed(bool lockout)
+{
+    for (int i = 0; i < 10; i ++)
+    {
+        numbers[i].set_sensitive(!lockout);   
+    }
+    bcan.set_sensitive(!lockout);
+}
+
+void WayfireLockerPinPlugin::lockout_changed(bool lockout)
+{
+    for (auto &it : pinpads)
+    {
+        it.second->lockout_changed(lockout);
+    }
 }
