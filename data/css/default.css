@@ -180,9 +180,17 @@
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
 }
-
-revealer.wf-locker {
-    border: 2px solid rgba(128,128,128,0.1);
+.wf-locker .fingerprint-overlay-image {
+    -gtk-icon-size: 64px;
+}
+.wf-locker .fingerprint-overlay-image.good {
+    color: #0f0;
+}
+.wf-locker .fingerprint-overlay-image.bad {
+    color: #f00;
+}
+.wf-locker .fingerprint-overlay-image.info {
+    color: #88f;
 }
 .wf-locker .mpris image.albumart {
     -gtk-icon-size:96px;

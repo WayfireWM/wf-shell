@@ -14,8 +14,9 @@ class WayfireLockerPinPluginWidget : public WayfireLockerTimedRevealer
   public:
     WayfireLockerPinPluginWidget();
     ~WayfireLockerPinPluginWidget();
+    void lockout_changed(bool lockout);
     Gtk::Grid grid;
-    Gtk::Button bsub, bcan;
+    Gtk::Button bcan;
     Gtk::Label label;
     void init(std::string label);
     void check();
@@ -30,6 +31,7 @@ class WayfireLockerPinPlugin : public WayfireLockerPlugin
     void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
+    void lockout_changed(bool lockout) override;
     bool disabled = false;
 
     void update_labels();

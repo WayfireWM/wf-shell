@@ -30,8 +30,11 @@ class WayfireLockerApp : public WayfireShellApp
     bool m_is_locked    = false;
     bool instant_lock   = false;
     int window_id_count = 0;
-    
+    int bad_auth_count  = 0;
+    bool lockout        = false;
+
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
+    sigc::connection lockout_signal, prewake_signal;
   public:
     using WayfireShellApp::WayfireShellApp;
     static void create(int argc, char **argv);
@@ -67,8 +70,11 @@ class WayfireLockerApp : public WayfireShellApp
     void perform_lock();
     void init_plugins();
     void deinit_plugins();
-    bool can_early_wake;
+    bool can_early_wake = true;
     void user_activity();
+
+    void recieved_bad_auth();
+    bool is_locked_out();
 
     std::map<int, std::shared_ptr<WayfireLockerAppLockscreen>> window_list;
 };

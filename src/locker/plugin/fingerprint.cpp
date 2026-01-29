@@ -79,34 +79,43 @@ void WayfireLockerFingerprintPlugin::get_device()
 void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::AsyncResult> & result)
 {
     device_proxy = Gio::DBus::Proxy::create_finish(result);
-    update_labels("Listing fingers...");
+    update("Listing fingers...", "system-search-symbolic", "info");
     char *username = getlogin();
     auto reply     = device_proxy->call_sync("ListEnrolledFingers", nullptr,
         Glib::Variant<std::tuple<Glib::ustring>>::create(username));
     Glib::Variant<std::vector<Glib::ustring>> array;
     reply.get_child(array, 0);
 
-    if (array.get_n_children() > 0)
-    {
-        // User has at least one fingerprint on file!
-        show();
-        update_labels("Fingerprint Ready");
-        update_image("fingerprint");
-    } else
+    if (array.get_n_children() == 0)
     {
         // Zero fingers for this user.
         show();
-        update_labels("No fingerprints enrolled");
-        update_image("nofingerprint");
+        update("No fingerprints enrolled", "dialog-error-symbolic", "bad");
         // Don't hide entirely, allow the user to see this specific fail
         return;
     }
-
+    show();
+    update("Fingerprint Device Ready", "system-search-symbolic", "info");
     Glib::Variant<Glib::ustring> finger;
     reply.get_child(finger, 0);
-    update_labels("Finger print device found");
 
-    /* Attach a listener now, useful when we start scanning */
+    start_fingerprint_scanning();
+}
+
+void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
+{
+    if (!enable)
+    {
+        return;
+    }
+    if (WayfireLockerApp::get().is_locked_out())
+    {
+        return;
+    }
+    if (signal)
+    {
+        signal.disconnect();
+    }
     signal = device_proxy->signal_signal().connect([this] (const Glib::ustring & sender_name,
                                                   const Glib::ustring & signal_name,
                                                   const Glib::VariantContainerBase & params)
@@ -123,36 +132,45 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
             params.get_child(done, 1);
             bool is_done = done.get();
 
-            update_labels(mesg.get());
+            update(mesg.get(),"system-search-symbolic", "info");
             if (mesg.get() == "verify-match")
             {
+                std::cout << "Match" << std::endl;
+                stop_fingerprint_scanning();
                 WayfireLockerApp::get().perform_unlock("Fingerprint verified");
+                return;
             }
-
             if (mesg.get() == "verify-no-match")
             {
+                std::cout << "No match" << std::endl;
+                show();
+                update("Invalid fingerprint", "dialog-error-symbolic", "bad");
+                stop_fingerprint_scanning();
+                WayfireLockerApp::get().recieved_bad_auth();
+
                 /* Reschedule fingerprint scan */
-                starting_fingerprint = Glib::signal_timeout().connect_seconds(
+                starting_fingerprint = Glib::signal_timeout().connect(
                     [this] ()
                 {
                     this->start_fingerprint_scanning();
                     return G_SOURCE_REMOVE;
-                }, 5);
-                show();
-                update_image("nofingerprint");
-                update_labels("Invalid fingerprint");
+                }, 500);
+                return;
             } else if (mesg.get() == "verify-unknown-error")
             {
-                is_done = true;
+                update("Unknown error", "dialog-error-symbolic", "info");
+                stop_fingerprint_scanning();
                 /* Reschedule fingerprint scan */
-                Glib::signal_timeout().connect_seconds(
+                starting_fingerprint = Glib::signal_timeout().connect(
                     [this] ()
                 {
                     this->start_fingerprint_scanning();
                     return G_SOURCE_REMOVE;
-                }, 5);
+                }, 500);
+                return;
             } else if (mesg.get() == "verify-disconnected")
             {
+                update("Reader disconnected", "dialog-error-symbolic", "bad");
                 /* This needs testing on a machine with removable fprint reader */
                 device_proxy = nullptr;
                 if (signal)
@@ -160,7 +178,7 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
                     signal.disconnect();
                 }
                 /* Delay, cools down a repeated failing loop */
-                Glib::signal_timeout().connect_seconds(
+                finding_new_device = Glib::signal_timeout().connect_seconds(
                     [this] () {
                         get_device();
                         return G_SOURCE_REMOVE;
@@ -182,63 +200,38 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
             std::cout << "Finger : " << finger_name.get() << std::endl;
         }
     }, false);
-    claim_device();
-}
-
-void WayfireLockerFingerprintPlugin::claim_device()
-{
-    try {
-        char *username = getlogin();
-        device_proxy->call_sync("Claim", nullptr,
+    if (device_proxy)
+    {
+        if (starting_fingerprint)
+        {
+            starting_fingerprint.disconnect();
+        }
+        try {
+            char *username = getlogin();
+            device_proxy->call_sync("Claim", nullptr,
             Glib::Variant<std::tuple<Glib::ustring>>::create({username}));
-        /* Start scanning in 5 seconds */
-        Glib::signal_timeout().connect_seconds(
-            [this] ()
+        } catch (Glib::Error & e) /* TODO : Narrow down? */
         {
-            this->start_fingerprint_scanning();
-            return G_SOURCE_REMOVE;
-        }, 5);
-    } catch (Glib::Error & e) /* TODO : Narrow down? */
-    {
-        std::cout << "Fingerprint device already claimed, try in 5s" << std::endl;
-        update_labels("Fingerprint reader busy...");
-        Glib::signal_timeout().connect_seconds(
-            [this] ()
-        {
-            this->claim_device();
-            return G_SOURCE_REMOVE;
-        }, 5);
-    }
-
-    /* Start fingerprint reader 5 seconds after start
-     *  This fixes an issue where the fingerprint reader
-     *  is a button which locks the screen  */
-}
-
-void WayfireLockerFingerprintPlugin::release_device()
-{
-    if (device_proxy)
-    {
-        device_proxy->call_sync("Release");
-    }
-}
-
-void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
-{
-    if (!enable)
-    {
-        return;
-    }
-    if (device_proxy)
-    {
+            stop_fingerprint_scanning();
+            std::cout << "Fingerprint device already claimed, try in 3s" << std::endl;
+            update("Fingerprint reader busy...", "dialog-error-symbolic", "info");
+            Glib::signal_timeout().connect_seconds(
+                [this] ()
+            {
+                this->start_fingerprint_scanning();
+                return G_SOURCE_REMOVE;
+            }, 3);
+            return;
+        }
         show();
-        update_labels("Use fingerprint to unlock");
+        update("Use fingerprint to unlock", "process-completed-symbolic", "good");
         device_proxy->call_sync("VerifyStart",
             nullptr,
             Glib::Variant<std::tuple<Glib::ustring>>::create({""}));
     } else
     {
-        update_labels("Unable to start fingerprint scan");
+        update("Unable to start fingerprint scan", "dialog-error-symbolic", "bad");
+        hide();
     }
 }
 
@@ -251,10 +244,15 @@ void WayfireLockerFingerprintPlugin::stop_fingerprint_scanning()
     {
         return;
     }
+    if(signal)
+    {
+        signal.disconnect();
+    }
     /* Stop if running. Eventually log or respond to errors
        but for now, avoid crashing lockscreen on close-down */
     try{
         device_proxy->call_sync("VerifyStop");
+        device_proxy->call_sync("Release");
     } catch(Glib::Error & e)
     {
         
@@ -300,31 +298,66 @@ void WayfireLockerFingerprintPlugin::deinit()
 {
     // Ensure we return state to allow other programs to use scanner
     stop_fingerprint_scanning();
-    release_device();
-    if(signal)
+    if (signal)
     {
         signal.disconnect();
+    }
+    if (starting_fingerprint)
+    {
+        starting_fingerprint.disconnect();
+    }
+    if (finding_new_device)
+    {
+        finding_new_device.disconnect();
     }
     device_proxy = nullptr;
 }
 
-WayfireLockerFingerprintPluginWidget::WayfireLockerFingerprintPluginWidget(std::string label_contents, std::string image_contents):
+WayfireLockerFingerprintPluginWidget::WayfireLockerFingerprintPluginWidget(std::string label_contents, std::string image_contents, std::string color_contents):
     WayfireLockerTimedRevealer("locker/fingerprint_always")
 {
     set_child(box);
-    image.set_from_icon_name(image_contents);
+    image_print.set_from_icon_name("auth-fingerprint-symbolic");
+    image_overlay.set_from_icon_name(image_contents);
     label.set_label(label_contents);
+    overlay.set_child(image_print);
+    overlay.add_overlay(image_overlay);
+    image_overlay.set_halign(Gtk::Align::END);
+    image_overlay.set_valign(Gtk::Align::END);
 
-    image.add_css_class("fingerprint-icon");
+    overlay.add_css_class("fingerprint-overlay");
+    image_print.add_css_class("fingerprint-icon");
+    image_overlay.add_css_class("fingerprint-overlay-image");
     label.add_css_class("fingerprint-text");
+    if(color_contents != "")
+    {
+        image_overlay.add_css_class(color_contents);
+    }
+
     box.set_orientation(Gtk::Orientation::VERTICAL);
-    box.append(image);
+    box.append(overlay);
     box.append(label);
+}
+
+void WayfireLockerFingerprintPlugin::lockout_changed(bool lockout)
+{
+    if (lockout)
+    {
+        update("Too many attempts", "dialog-error-symbolic", "bad");
+        stop_fingerprint_scanning();
+    } else
+    {
+        if (enable && device_proxy)
+        {
+            show();
+            start_fingerprint_scanning();
+        }
+    }
 }
 
 void WayfireLockerFingerprintPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    widgets.emplace(id, new WayfireLockerFingerprintPluginWidget(label_contents, icon_contents));
+    widgets.emplace(id, new WayfireLockerFingerprintPluginWidget(label_contents, icon_contents, color_contents));
     auto widget = widgets[id];
     if (!show_state)
     {
@@ -339,24 +372,23 @@ void WayfireLockerFingerprintPlugin::remove_output(int id, std::shared_ptr<Wayfi
     widgets.erase(id);
 }
 
-void WayfireLockerFingerprintPlugin::update_image(std::string image)
+void WayfireLockerFingerprintPlugin::update(std::string label, std::string image, std::string color)
 {
-    for (auto& it : widgets)
-    {
-        it.second->image.set_from_icon_name(image);
-    }
-
     icon_contents = image;
-}
+    label_contents = label;
+    color_contents = color;
 
-void WayfireLockerFingerprintPlugin::update_labels(std::string text)
-{
     for (auto& it : widgets)
     {
-        it.second->label.set_label(text);
+        it.second->label.set_label(label);
+        auto widget = &it.second->image_overlay;
+        widget->set_from_icon_name(image);
+        widget->remove_css_class("info");
+        widget->remove_css_class("bad");
+        widget->remove_css_class("good");
+        widget->add_css_class(color);
     }
 
-    label_contents = text;
 }
 
 void WayfireLockerFingerprintPlugin::hide()

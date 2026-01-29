@@ -120,7 +120,7 @@ WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name,
     proxy->get_cached_property(cancontrol_value, "CanControl");
     cancontrol(cancontrol_value.get());
 
-    kill.set_icon_name("close");
+    kill.set_icon_name("media-playback-stop");
     playpause.set_icon_name("media-playback-pause");
     prev.set_icon_name("media-skip-backward");
     next.set_icon_name("media-skip-forward");
@@ -138,6 +138,19 @@ WayfireLockerMPRISWidget::~WayfireLockerMPRISWidget()
 
 void WayfireLockerMPRISWidget::playbackstatus(std::string value)
 {
+    if (value == "Stopped")
+    {
+        box.hide();
+        return;
+    } 
+    box.show();
+    if (value == "Paused")
+    {
+        playpause.set_icon_name("media-playback-start");
+    } else
+    {
+        playpause.set_icon_name("media-playback-pause");
+    }
     activity();
 }
 

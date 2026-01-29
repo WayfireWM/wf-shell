@@ -80,18 +80,19 @@ void WayfireLockerApp::on_activate()
         {
             if (can_early_wake)
             {
-                Glib::signal_timeout().connect_seconds([this](){
+                prewake_signal = Glib::signal_timeout().connect([this](){
                     can_early_wake = false;
                     return G_SOURCE_REMOVE;
                 }, WfOption<int> {"locker/prewake"});
             }
             perform_lock();
         }
+        /* Called again but already screen locked. No worries */
         return;
     }
     /* Set a timer for early-wake unlock */
     WayfireShellApp::on_activate();
-    Glib::signal_timeout().connect([this](){
+    prewake_signal = Glib::signal_timeout().connect([this](){
         can_early_wake = false;
         return G_SOURCE_REMOVE;
     }, WfOption<int> {"locker/prewake"});
@@ -220,7 +221,6 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
             it.second->add_output(id, window->grid);
         }
     }
-
     window->signal_close_request().connect([this, id] ()
     {
         for (auto& it : plugins)
@@ -252,6 +252,10 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     {
         gtk_session_lock_instance_assign_window_to_monitor(lock, window->gobj(), monitor);
     }
+    if (can_early_wake)
+    {
+        window->add_css_class("fade-in");
+    }
 }
 
 /* Called on any successful auth to unlock & end locker */
@@ -276,9 +280,17 @@ void WayfireLockerApp::perform_unlock(std::string reason)
         {
             gtk_session_lock_instance_unlock(lock);
         }
-        for(auto &it : window_list)
+        for (auto &it : window_list)
         {
             it.second->disconnect();
+        }
+        if (lockout_signal)
+        {
+            lockout_signal.disconnect();
+        }
+        if (prewake_signal)
+        {
+            prewake_signal.disconnect();
         }
         return G_SOURCE_REMOVE;
     });
@@ -308,10 +320,6 @@ bool WayfireLockerApp::is_locked()
 void WayfireLockerApp::set_is_locked(bool locked)
 {
     m_is_locked = locked;
-    if (!locked)
-    {
-        can_early_wake = true; // Reset state Before next activate
-    }
 }
 
 /* Starting point */
@@ -408,4 +416,34 @@ void WayfireLockerApp::user_activity()
         can_early_wake = false;
         perform_unlock("Early Activity");
     }
+}
+
+void WayfireLockerApp::recieved_bad_auth()
+{
+    bad_auth_count ++;
+    if (bad_auth_count > WfOption<int>{"locker/lockout_attempts"})
+    {
+        // Lockout now
+        lockout = true;
+        for (auto &it : plugins)
+        {
+            it.second->lockout_changed(true);
+        }
+        // 
+        lockout_signal = Glib::signal_timeout().connect_seconds(
+            [this] () {
+                lockout = false;
+                bad_auth_count = 0;
+                for (auto &it : plugins)
+                {
+                    it.second->lockout_changed(false);
+                }
+                return G_SOURCE_REMOVE;
+            }, WfOption<int>{"locker/lockout_timer"});
+    }
+}
+
+bool WayfireLockerApp::is_locked_out()
+{
+  return lockout;
 }
