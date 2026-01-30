@@ -4,6 +4,7 @@
 #include <gtk4-session-lock.h>
 #include <wayland-client.h>
 
+#include "glibmm/refptr.h"
 #include "lockscreen.hpp"
 #include "wf-shell-app.hpp"
 #include "plugin.hpp"
@@ -26,12 +27,18 @@ class WayfireLockerApp : public WayfireShellApp
     GtkSessionLockInstance *lock;
     std::map<std::string, Plugin> plugins = {};
 
-    bool m_is_debug     = false;
-    bool m_is_locked    = false;
-    bool instant_lock   = false;
-    int window_id_count = 0;
-    int bad_auth_count  = 0;
-    bool lockout        = false;
+    bool m_is_debug        = false;
+    bool m_is_locked       = false;
+    bool instant_lock      = false;
+    int window_id_count    = 0;
+    int bad_auth_count     = 0;
+    bool lockout           = false;
+    std::string cache_file = "";
+    std::string background_path = "";
+
+    int inotify_bg_file;
+    Glib::RefPtr<BackgroundImage> background_file;
+
 
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
     sigc::connection lockout_signal, prewake_signal;
@@ -75,6 +82,7 @@ class WayfireLockerApp : public WayfireShellApp
 
     void recieved_bad_auth();
     bool is_locked_out();
+    void reload_background();
 
     std::map<int, std::shared_ptr<WayfireLockerAppLockscreen>> window_list;
 };

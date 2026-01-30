@@ -1,13 +1,37 @@
+#include "glib.h"
 #include "locker.hpp"
+#include "lockergrid.hpp"
 #include "lockscreen.hpp"
 
 
-WayfireLockerAppLockscreen::WayfireLockerAppLockscreen()
+WayfireLockerAppLockscreen::WayfireLockerAppLockscreen(std::string background_path)
 {
-    grid = std::shared_ptr<WayfireLockerGrid>(new WayfireLockerGrid());
-    set_child(*grid);
+    grid = std::make_shared<WayfireLockerGrid>();
+    set_child(overlay);
+    overlay.set_child(background);
+    overlay.add_overlay(*grid);
+    grid->set_halign(Gtk::Align::FILL);
+    grid->set_valign(Gtk::Align::FILL);
     add_css_class("wf-locker");
     grid->set_expand(true);
+
+    /* Prepare background */
+    Glib::signal_idle().connect([this,background_path] () {
+        background.show_image(background_path);
+        return G_SOURCE_REMOVE;
+    });
+
+    auto wf_background_cb = [this] () {
+        if ((bool)wf_background)
+        {
+            background.show();
+        } else
+        {
+            background.hide();
+        }
+    };
+    wf_background.set_callback(wf_background_cb);
+    wf_background_cb();
 
     /* Mouse press or screen touch */
     auto click_gesture = Gtk::GestureClick::create();
