@@ -20,6 +20,7 @@ deps = [
   json,
   pam,
   openssl,
+  epoxy,
 ]
 
 if libpulse.found()

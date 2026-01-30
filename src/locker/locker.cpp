@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <giomm/application.h>
 #include <glibmm.h>
 #include <glibmm/miscutils.h>
@@ -11,8 +12,11 @@
 #include <gtk4-session-lock.h>
 #include <memory>
 #include <wayfire/config/file.hpp>
+#include <sys/inotify.h>
 
+#include "background-gl.hpp"
 #include "css-config.hpp"
+#include "glib.h"
 #include "lockscreen.hpp"
 #include "plugin/battery.hpp"
 #include "plugin/clock.hpp"
@@ -27,6 +31,8 @@
 #include "wf-option-wrap.hpp"
 #include "wf-shell-app.hpp"
 #include "locker.hpp"
+
+#define INOT_BUF_SIZE (1024 * sizeof(inotify_event))
 
 Gio::Application::Flags WayfireLockerApp::get_extra_application_flags()
 {
@@ -139,6 +145,28 @@ void WayfireLockerApp::on_activate()
     plugins.emplace("mpris", Plugin(new WayfireLockerMPRISPlugin()));
     plugins.emplace("aboutuser", Plugin(new WayfireLockerUserPlugin()));
 
+    /* Get background cache */
+    char *xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+    if (xdg_runtime_dir)
+    {
+        this->cache_file = std::string(xdg_runtime_dir) + "/wf-background.cache";
+        std::cout << "Using cache file "<< this->cache_file << std::endl;
+        inotify_bg_file = inotify_init();
+        Glib::signal_io().connect(
+            [this] (Glib::IOCondition cond)
+        {
+            char buf[INOT_BUF_SIZE];
+            read(inotify_bg_file, buf, INOT_BUF_SIZE);
+            reload_background(); 
+            return G_SOURCE_CONTINUE;
+        },
+            inotify_bg_file, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
+        reload_background();
+    } else 
+    {
+        std::cout << "Not reading from cache file " << std::endl;
+    }
+
     /* Create plugin option callbacks */
     for (auto &it : plugins)
     {
@@ -210,7 +238,7 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     int id = window_id_count;
     window_id_count++;
     /* Create lockscreen with a grid for contents */
-    window_list.emplace(id, new WayfireLockerAppLockscreen());
+    window_list.emplace(id, new WayfireLockerAppLockscreen(background_path));
     auto window = window_list[id];
 
     for (auto& it : plugins)
@@ -446,4 +474,31 @@ void WayfireLockerApp::recieved_bad_auth()
 bool WayfireLockerApp::is_locked_out()
 {
   return lockout;
+}
+
+void WayfireLockerApp::reload_background()
+{
+    if (cache_file.length() > 1)
+    {
+        std::ifstream f(cache_file);
+        if (f.is_open())
+        {
+            std::string s;
+            if (getline(f, s))
+            {
+                std::cout << "Background " << s << std::endl;
+                for (auto &it : window_list)
+                {
+                    auto widget = it.second;
+                    widget->background.show_image(s); 
+                }
+                background_path = s;
+            }
+        }
+    } 
+    // Re add notify
+    inotify_add_watch(inotify_bg_file,
+            cache_file.c_str(),
+            IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
+    
 }
