@@ -1,3 +1,4 @@
+#include <iostream>
 extern "C"{
 	#include <ddcutil_c_api.h>
 	#include <ddcutil_status_codes.h>
@@ -5,7 +6,13 @@ extern "C"{
 
 #include "light.hpp"
 
-#define VCP_BRIGHTNESS_CODE 10
+#define VCP_BRIGHTNESS_CODE 0x10
+
+void show_err(std::string location, DDCA_Status status){
+	// if (!status)
+		std::cerr << location << " :" << ddca_rc_name(status) << " : " << ddca_rc_desc(status) << "\n";
+}
+
 
 class WfLightDdcaControl : public WfLightControl
 {
@@ -20,6 +27,7 @@ class WfLightDdcaControl : public WfLightControl
 	public:
 		WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Ref ref) : WfLightControl(parent){
 			DDCA_Status status = ddca_open_display2(ref, false, &handle);
+			show_err("open display", status);
 
 			DDCA_Non_Table_Vcp_Value value;
 			status = ddca_get_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, &value);
@@ -41,11 +49,13 @@ class WfLightDdcaControl : public WfLightControl
 			uint8_t sh = value >> 8;
 			uint8_t sl = value & 0xFF;
 			DDCA_Status status = ddca_set_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, sh, sl);
+			show_err("set brigthness", status);
         }
 
         double get_brightness(){
 			DDCA_Non_Table_Vcp_Value value;
 			DDCA_Status status = ddca_get_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, &value);
+			show_err("get brightness", status);
 			return value.sh << 8 | value.sl;
 	    }
 };
