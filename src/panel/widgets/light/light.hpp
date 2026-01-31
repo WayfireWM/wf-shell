@@ -1,4 +1,5 @@
 #include <gtkmm.h>
+#include <sigc++/connection.h>
 #include <filesystem>
 #include <thread>
 #ifdef HAVE_DDCUTIL
@@ -37,6 +38,7 @@ class WfLightControl : public Gtk::Box
     Gtk::Label label;
     std::map<BrightnessLevel, std::string> icons;
     WayfireLight *parent;
+    std::vector<sigc::connection> signals;
 
     WfOption<int> slider_length{"panel/light_slider_length"};
 
@@ -142,14 +144,15 @@ class WayfireLight : public WayfireWidget {
 
     WfOption<bool> popup_on_change{"panel/light_popup_on_change"};
     WfOption<double> popup_timeout{"panel/light_popup_timeout"};
-    WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
-    WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
 
     bool on_popover_timeout(int timer);
 
   public:
     WayfireLight(WayfireOutput *output);
     ~WayfireLight();
+
+    WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
+    WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
 
     std::vector<std::shared_ptr<WfLightControl>> controls;
 
