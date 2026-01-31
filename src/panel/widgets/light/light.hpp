@@ -1,10 +1,14 @@
-#include "wf-shell-app.hpp"
 #include <gtkmm.h>
+#include <filesystem>
+#include <thread>
 #ifdef HAVE_DDCUTIL
-extern "C" {
-  #include "public/ddcutil_c_api.h"
+extern "C"{
+	#include <ddcutil_c_api.h>
+	#include <ddcutil_status_codes.h>
 }
 #endif
+
+#include "wf-shell-app.hpp"
 #include "widget.hpp"
 #include "animated-scale.hpp"
 
@@ -40,6 +44,7 @@ class WfLightControl : public Gtk::Box
     WfLightControl(WayfireLight *parent);
 
     virtual std::string get_name() = 0;
+    WayfireLight *get_parent();
 
     void set_scale_target_value(double value);
     double get_scale_target_value();
@@ -48,6 +53,76 @@ class WfLightControl : public Gtk::Box
     virtual double get_brightness() = 0;
 
 };
+
+class LightManager {
+  protected:
+    LightManager(){}
+    // managed widgets
+    std::vector<WayfireLight*> widgets;
+
+    virtual void catch_up_widget(WayfireLight *widget) = 0;
+    virtual void strip_widget(WayfireLight *widget) = 0;
+
+  public:
+    void add_widget(WayfireLight *widget);
+    void rem_widget(WayfireLight *widget);
+};
+
+// singleton that monitors sysfs and calls the necessary functions
+// monitors appearance and deletion of backlight devices
+// and the brightness of each of them
+class SysfsSurveillor : public LightManager {
+  private:
+    SysfsSurveillor();
+    void handle_inotify_events();
+    bool check_perms(std::filesystem::path);
+    void add_dev(std::filesystem::path);
+    void rem_dev(std::filesystem::path);
+    void catch_up_widget(WayfireLight *widget);
+    void strip_widget(WayfireLight *widget);
+
+    static inline std::unique_ptr<SysfsSurveillor> instance;
+
+    int fd; // inotify file descriptor
+
+    // stores the data that goes with the inotify watch descriptor (the int)
+    // the controls are all the controls which represent this device, to be updated
+    std::map<
+        int,
+        std::pair<
+            std::filesystem::path,
+            std::vector<std::shared_ptr<WfLightControl>>
+        >
+    > wd_to_path_controls;
+
+    // watch descriptors for files (so, a device) being added or removed
+    int wd_additions, wd_removal;
+
+    // managed widgets
+    std::vector<WayfireLight*> widgets;
+
+    // thread on which to run handle_inotify_event on loop
+    std::thread inotify_thread;
+
+  public:
+    static SysfsSurveillor& get();
+};
+
+#ifdef HAVE_DDCUTIL
+class DdcaSurveillor : public LightManager {
+  private:
+    DdcaSurveillor();
+    void catch_up_widget(WayfireLight *widget);
+    void strip_widget(WayfireLight *widget);
+
+    static inline std::unique_ptr<DdcaSurveillor> instance;
+
+    std::vector<DDCA_Display_Info*> displays_info;
+
+  public:
+    static DdcaSurveillor& get();
+};
+#endif
 
 class WayfireLight : public WayfireWidget {
   private:
@@ -71,13 +146,6 @@ class WayfireLight : public WayfireWidget {
     WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
 
     bool on_popover_timeout(int timer);
-
-    void setup_sysfs();
-    void quit_sysfs();
-    #ifdef HAVE_DDCUTIL
-    void setup_ddc();
-    void quit_ddc();
-    #endif
 
   public:
     WayfireLight(WayfireOutput *output);

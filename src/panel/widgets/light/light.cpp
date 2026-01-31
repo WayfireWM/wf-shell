@@ -43,6 +43,10 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
     append(scale);
 }
 
+WayfireLight *WfLightControl::get_parent(){
+    return parent;
+}
+
 void WfLightControl::set_scale_target_value(double brightness)
 {
     scale.set_target_value(brightness);
@@ -53,6 +57,16 @@ double WfLightControl::get_scale_target_value()
     return scale.get_target_value();
 }
 
+void LightManager::add_widget(WayfireLight *widget){
+    widgets.push_back(widget);
+    catch_up_widget(widget);
+}
+
+void LightManager::rem_widget(WayfireLight *widget){
+    strip_widget(widget);
+    widgets.erase(find(widgets.begin(), widgets.end(), widget));
+}
+
 WayfireLight::WayfireLight(WayfireOutput *_output)
 {
     output = _output;
@@ -60,7 +74,10 @@ WayfireLight::WayfireLight(WayfireOutput *_output)
 
 WayfireLight::~WayfireLight()
 {
-    quit_sysfs();
+    SysfsSurveillor::get().rem_widget(this);
+    #ifdef HAVE_DDCUTIL
+    DdcaSurveillor::get().rem_widget(this);
+    #endif
 }
 
 void WayfireLight::init(Gtk::Box *container){
@@ -119,9 +136,9 @@ void WayfireLight::init(Gtk::Box *container){
 
     container->append(*button);
 
-    setup_sysfs();
+    SysfsSurveillor::get().add_widget(this);
     #ifdef HAVE_DDCUTIL
-    setup_ddc();
+    DdcaSurveillor::get().add_widget(this);
     #endif
 
     update_icon();
