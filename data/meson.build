@@ -1,5 +1,6 @@
 install_data('wayfire.png', install_dir: icon_dir)
 install_data('wallpaper.jpg', install_dir: resource_dir)
+install_data('wf-locker-pin.desktop', install_dir: join_paths(get_option('prefix'), 'share', 'applications'))
 
 install_data(join_paths('icons', '48x48', 'wayfire.png'), install_dir: join_paths(get_option('prefix'), 'share', 'icons', 'hicolor', '48x48', 'apps'))
 install_data(join_paths('icons', '64x64', 'wayfire.png'), install_dir: join_paths(get_option('prefix'), 'share', 'icons', 'hicolor', '64x64', 'apps'))
