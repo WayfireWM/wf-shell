@@ -136,14 +136,11 @@ class WayfireLight : public WayfireWidget {
 
     Gtk::Image icon;
     std::unique_ptr<WayfireMenuButton> button;
-    Gtk::Popover *popover;
     Gtk::Box box, display_box, other_box;
     Gtk::Label display_label, other_label;
     Gtk::Separator disp_othr_sep;
     sigc::connection popover_timeout;
 
-
-    WfOption<bool> popup_on_change{"panel/light_popup_on_change"};
     WfOption<double> popup_timeout{"panel/light_popup_timeout"};
 
     bool on_popover_timeout(int timer);
@@ -154,6 +151,9 @@ class WayfireLight : public WayfireWidget {
 
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
+    WfOption<bool> popup_on_change{"panel/light_popup_on_change"};
+
+    Gtk::Popover *popover;
 
     std::shared_ptr<WfLightControl> ctrl_this_display;
 
