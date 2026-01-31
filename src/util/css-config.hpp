@@ -22,6 +22,14 @@ class CssFromConfigBool : public CssFromConfig
     CssFromConfigBool(std::string config_opt, std::string css_true, std::string css_false);
 };
 
+class CssFromConfigIconSize : public CssFromConfig
+{
+    WfOption<int> option_value;
+
+  public:
+    CssFromConfigIconSize(std::string option_name, std::string css_class);
+};
+
 class CssFromConfigString : public CssFromConfig
 {
     WfOption<std::string> option_value;

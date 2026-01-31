@@ -41,7 +41,6 @@ class WayfirePanelApp : public WayfireShellApp
 
   private:
     WayfirePanelApp();
-    std::vector<std::unique_ptr<CssFromConfig>> config_css;
 
     class impl;
     std::unique_ptr<impl> priv;

@@ -361,64 +361,42 @@ class WayfirePanelApp::impl
 
 void WayfirePanelApp::on_config_reload()
 {
-    reload_css();
     for (auto& p : priv->panels)
     {
         p.second->handle_config_reload();
     }
 }
 
-void WayfirePanelApp::reload_css()
-{
-    for (auto& config : config_css)
-    {
-        config->remove_provider();
-    }
-
-    config_css.clear();
-
-    const static std::vector<std::vector<std::string>> icon_sizes_args =
-    {
-        { "panel/menu_icon_size", ".menu-button{-gtk-icon-size:", "px;}" },
-        { "panel/launchers_size", ".launcher{-gtk-icon-size:", "px;}" },
-        { "panel/battery_icon_size", ".battery image{-gtk-icon-size:", "px;}" },
-        { "panel/network_icon_size", ".network{-gtk-icon-size:", "px;}" },
-        { "panel/volume_icon_size", ".volume{-gtk-icon-size:", "px;" },
-        { "panel/wp_icon_size", ".wireplumber{-gtk-icon-size:", "px;}" },
-        { "panel/notifications_icon_size", ".notification-center{-gtk-icon-size:", "px;}" },
-        { "panel/tray_icon_size", ".tray-button{-gtk-icon-size:", "px;}" }
-    };
-    for (auto strings : icon_sizes_args)
-    {
-        if (WfOption<int>{strings[0]}.value())
-        {
-            config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigInt(strings[0], strings[1],
-                strings[2])));
-        }
-    }
-
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigInt("panel/launchers_spacing",
-        ".launcher{padding: 0px ", "px;}")));
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigString("panel/background_color",
-        ".wf-panel{background-color:", ";}")));
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigBool("panel/battery_icon_invert",
-        ".battery image{filter:invert(100%);}", "")));
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigBool("panel/network_icon_invert_color",
-        ".network-icon{filter:invert(100%);}", "")));
-
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigFont("panel/battery_font", ".battery {",
-        "}")));
-    config_css.push_back(std::make_unique<CssFromConfig>(CssFromConfigFont("panel/clock_font", ".clock {",
-        "}")));
-}
-
 void WayfirePanelApp::on_activate()
 {
     WayfireShellApp::on_activate();
 
-    new CssFromConfigInt("panel/minimal_height", ".widget-icon {-gtk-icon-size:", "px;}");
+    new CssFromConfigInt("panel/minimal_height", ".wf-panel .widget-icon {-gtk-icon-size:", "px;}");
 
-    reload_css();
+    const static std::vector<std::pair<std::string, std::string>> icon_sizes_args =
+    {
+        {"panel/minimal_height", ""},
+        {"panel/menu_icon_size", ".menu-icon"},
+        {"panel/launchers_size", ".launcher"},
+        {"panel/battery_icon_size", ".battery image"},
+        {"panel/network_icon_size", ".network"},
+        {"panel/volume_icon_size", ".volume"},
+        {"panel/wp_icon_size", ".wireplumber{-gtk-icon-size:", "px;}"},
+        {"panel/notifications_icon_size", ".notification-center"},
+        {"panel/tray_icon_size", ".tray-button"}
+    };
+    for (auto pair : icon_sizes_args)
+    {
+        new CssFromConfigIconSize(pair.first, pair.second);
+    }
+
+    new CssFromConfigInt("panel/launchers_spacing", ".launcher{padding: 0px ", "px;}");
+    new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
+    new CssFromConfigBool("panel/battery_icon_invert", ".battery image{filter:invert(100%);}", "");
+    new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
+
+    new CssFromConfigFont("panel/battery_font", ".battery {", "}");
+    new CssFromConfigFont("panel/clock_font", ".clock {", "}");
 }
 
 void WayfirePanelApp::handle_new_output(WayfireOutput *output)
