@@ -496,8 +496,8 @@ Set to -1 to only run it by clicking the button.
 	</option>
 	<option name="light_icon_size" type="int">
 		<_short>Light icon size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	</group>
 	</plugin>

@@ -391,7 +391,8 @@ void WayfirePanelApp::on_activate()
         {"panel/volume_icon_size", ".volume"},
         {"panel/wp_icon_size", ".wireplumber"},
         {"panel/notifications_icon_size", ".notification-center "},
-        {"panel/tray_icon_size", ".tray-button"}
+        {"panel/tray_icon_size", ".tray-button"},
+        {"panel/light_icon_size", ".light"}
     };
     for (auto pair : icon_sizes_args)
     {
