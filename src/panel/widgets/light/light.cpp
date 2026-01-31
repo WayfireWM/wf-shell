@@ -89,6 +89,10 @@ double WfLightControl::get_scale_target_value()
 void WfLightControl::update_parent_icon(){
     if (parent->ctrl_this_display.get() == this){
         parent->update_icon();
+        if (parent->popup_on_change){
+            parent->popover->popup();
+            parent->check_set_popover_timeout();
+        }
     }
 }
 

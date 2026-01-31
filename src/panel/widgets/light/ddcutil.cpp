@@ -39,9 +39,6 @@ class WfLightDdcaControl : public WfLightControl
 			ddca_close_display(handle);
 		}
 
-		~WfLightDdcaControl(){
-		}
-
 		std::string get_name(){
 			std::string name;
 			name = "display";
