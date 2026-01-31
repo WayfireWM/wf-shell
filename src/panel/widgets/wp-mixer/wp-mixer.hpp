@@ -28,7 +28,7 @@ class WayfireWpMixer : public WayfireWidget
 
     Gtk::Image main_image;
 
-    WfOption<double> timeout{"panel/wp_display_timeout"};
+    WfOption<double> timeout{"panel/wp_popup_timeout"};
 
     void on_volume_value_changed();
     bool on_popover_timeout(int timer);

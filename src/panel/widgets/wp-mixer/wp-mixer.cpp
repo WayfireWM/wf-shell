@@ -217,6 +217,7 @@ void WayfireWpMixer::init(Gtk::Box *container)
     // sets up the "widget part"
 
     button = std::make_unique<WayfireMenuButton>("panel");
+    button->get_style_context()->add_class("widget-icon");
     button->get_style_context()->add_class("wireplumber");
     button->get_style_context()->add_class("flat");
     button->get_children()[0]->get_style_context()->add_class("flat");

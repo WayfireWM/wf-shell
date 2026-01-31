@@ -1,5 +1,4 @@
-#include "command-output.hpp"
-
+#include <gtkmm/cssprovider.h>
 #include <glibmm/main.h>
 #include <glibmm/shell.h>
 #include <glibmm/spawn.h>
@@ -10,6 +9,9 @@
 #include <ctime>
 
 #include <gtk-utils.hpp>
+#include <string>
+
+#include "command-output.hpp"
 
 static sigc::connection label_set_from_command(std::string command_line,
     Gtk::Label& label)
@@ -50,11 +52,19 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     const std::string & icon_position)
 {
     this->tooltip_command = tooltip_command;
+
+    image_set_icon(&icon, icon_name);
+
     if (icon_size > 0)
     {
-        image_set_icon(&icon, icon_name);
+        css_provider = Gtk::CssProvider::create();
+        css_provider->load_from_string(".command-icon-" + name + "{-gtk-icon-size:" + std::to_string(
+            icon_size) + "px;}");
+        icon.get_style_context()->add_class("command-icon-" + name);
+        icon.get_style_context()->add_provider(css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
     }
 
+    icon.get_style_context()->add_class("widget-icon");
     get_style_context()->add_class("command-output");
     get_style_context()->add_class("icon-" + icon_position);
 

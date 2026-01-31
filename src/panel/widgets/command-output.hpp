@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../widget.hpp"
+#include "glibmm/refptr.h"
 
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
@@ -21,6 +22,8 @@ class WfCommandOutputButtons : public WayfireWidget
         Gtk::Box box;
         Gtk::Image icon;
         Gtk::Label main_label;
+
+        Glib::RefPtr<Gtk::CssProvider> css_provider;
 
         Gtk::Label tooltip_label;
         time_t last_tooltip_update = 0;
