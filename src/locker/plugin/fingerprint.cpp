@@ -263,7 +263,7 @@ void WayfireLockerFingerprintPlugin::stop_fingerprint_scanning()
     }
 
     /* Stop if running. Eventually log or respond to errors
-    *   but for now, avoid crashing lockscreen on close-down */
+     *   but for now, avoid crashing lockscreen on close-down */
     try {
         device_proxy->call_sync("VerifyStop");
         device_proxy->call_sync("Release");
