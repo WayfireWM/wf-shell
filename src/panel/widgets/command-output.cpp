@@ -62,11 +62,9 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
             icon_size) + "px;}");
         icon.get_style_context()->add_class("command-icon-" + name);
         icon.get_style_context()->add_provider(provider, 1);
-    } else
-    {
-        icon.get_style_context()->add_class("widget-icon");
     }
 
+    icon.get_style_context()->add_class("widget-icon");
     get_style_context()->add_class("command-output");
     get_style_context()->add_class("icon-" + icon_position);
 

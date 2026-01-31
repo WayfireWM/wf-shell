@@ -380,7 +380,7 @@ void WayfirePanelApp::on_activate()
         {"panel/network_icon_size", ".network"},
         {"panel/volume_icon_size", ".volume"},
         {"panel/wp_icon_size", ".wireplumber"},
-        {"panel/notifications_icon_size", ".notification-center"},
+        {"panel/notifications_icon_size", ".notification-center "},
         {"panel/tray_icon_size", ".tray-button"}
     };
     for (auto pair : icon_sizes_args)
