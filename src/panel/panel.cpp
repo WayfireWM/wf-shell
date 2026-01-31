@@ -177,6 +177,8 @@ class WayfirePanel::impl
             std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
 #endif
+        }
+
         if (name == "light")
         {
             return Widget(new WayfireLight(output));
