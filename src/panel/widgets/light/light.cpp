@@ -1,7 +1,9 @@
 #include <gdkmm/monitor.h>
 #include <memory>
+#include <pulse/proplist.h>
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
+#include <iostream>
 
 #include "light.hpp"
 #include "wf-popover.hpp"
@@ -34,7 +36,6 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
 
     scale.set_user_changed_callback([this](){
         this->set_brightness(scale.get_target_value());
-        parent->update_icon();
     });
 
     // layout
@@ -77,12 +78,18 @@ WayfireLight *WfLightControl::get_parent(){
 void WfLightControl::set_scale_target_value(double brightness)
 {
     scale.set_target_value(brightness);
-    parent->update_icon();
+    update_parent_icon();
 }
 
 double WfLightControl::get_scale_target_value()
 {
     return scale.get_target_value();
+}
+
+void WfLightControl::update_parent_icon(){
+    if (parent->ctrl_this_display.get() == this){
+        parent->update_icon();
+    }
 }
 
 void LightManager::add_widget(WayfireLight *widget){
@@ -175,25 +182,31 @@ void WayfireLight::init(Gtk::Box *container){
 }
 
 void WayfireLight::add_control(std::shared_ptr<WfLightControl> control){
-    auto connector = output->monitor->get_connector();
-    if (control->get_name() == connector)
-    {
-        ctrl_this_display = std::shared_ptr(control);
-        display_box.append(*control);
-    } else
-    {
-        box.append(*control);
+    if (!ctrl_this_display){
+        auto connector = output->monitor->get_connector();
+        if (control->get_name() == connector)
+        {
+            ctrl_this_display = std::shared_ptr(control);
+            display_box.append(*control);
+        } else
+        {
+            box.append(*control);
+        }
     }
+
     controls.push_back(control);
 }
 
 void WayfireLight::update_icon(){
+    std::cout << "updating icon : ";
     // if none, show unavailable
     if (!ctrl_this_display){
+        std::cout << "no face\n";
         icon.set_from_icon_name(brightness_display_icons.at(BRIGHTNESS_LEVEL_OOR));
         return;
     }
 
+    std::cout << "normal\n";
     icon.set_from_icon_name(brightness_display_icons.at(
         light_icon_for(ctrl_this_display->get_scale_target_value()))
     );
