@@ -117,8 +117,8 @@
 	</option>
 	<option name="battery_icon_size" type="int">
 		<_short>Battery Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	<option name="battery_icon_invert" type="bool">
 		<_short>Battery Icon Invert Color</_short>
@@ -149,8 +149,8 @@
 	</option>
 	<option name="network_icon_size" type="int">
 		<_short>Network Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	<option name="network_icon_invert_color" type="bool">
 		<_short>Network Icon Invert Color</_short>
@@ -240,8 +240,8 @@
 	</option>
 	<option name="volume_icon_size" type="int">
 		<_short>Volume Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	<option name="volume_scroll_sensitivity" type="double">
 		<_short>Volume Scroll Sensitivity</_short>
@@ -366,8 +366,8 @@
 	</option>
 	<option name="notifications_icon_size" type="int">
 		<_short>Notifications Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	</group>
 	<group>
@@ -379,8 +379,8 @@
 	</option>
 	<option name="tray_icon_size" type="int">
 		<_short>Default Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	<option name="tray_menu_on_middle_click" type="bool">
 		<_short>Middle Button Activates Menu</_short>
@@ -424,8 +424,8 @@ Set to -1 to only run it by clicking the button.
 		</entry>
 		<entry prefix="command_output_icon_size_" type="int" name="icon_size">
 			<_short>Icon Size</_short>
-			<default>32</default>
-			<min>1</min>
+			<default>0</default>
+			<min>0</min>
 		</entry>
 		<entry prefix="command_output_icon_position_" type="string" name="icon_position">
 			<_short>Icon Position</_short>

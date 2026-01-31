@@ -83,6 +83,7 @@ void StatusNotifierItem::init_widget()
     setup_tooltip();
     init_menu();
     auto style = get_style_context();
+    style->add_class("widget-icon");
     style->add_class("tray-button");
     style->add_class("flat");
     gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(gobj()));

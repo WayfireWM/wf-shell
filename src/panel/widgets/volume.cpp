@@ -147,6 +147,7 @@ void WayfireVolume::init(Gtk::Box *container)
         }
     }));
     auto style = button.get_style_context();
+    style->add_class("widget-icon");
     style->add_class("volume");
     style->add_class("flat");
 
