@@ -61,7 +61,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
         provider->load_from_string(".command-icon-" + name + "{-gtk-icon-size:" + std::to_string(
             icon_size) + "px;}");
         icon.get_style_context()->add_class("command-icon-" + name);
-        icon.get_style_context()->add_provider(provider, 1);
+        icon.get_style_context()->add_provider(provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
     }
 
     icon.get_style_context()->add_class("widget-icon");
