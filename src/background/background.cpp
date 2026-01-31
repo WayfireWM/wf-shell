@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <wordexp.h>
 #include <glibmm/main.h>
 #include <gtkmm.h>
@@ -8,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <sys/stat.h>
 
 #include <gtk-utils.hpp>
 #include <gtk4-layer-shell.h>
@@ -126,6 +128,18 @@ std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string p
         exit(0);
     }
 
+    std::vector<std::string> images;
+    struct stat s;
+    if (stat(path.c_str(), &s)==0)
+    {
+        if (s.st_mode & S_IFREG || s.st_mode & S_IFLNK)
+        {
+            wordfree(&exp);
+            images.push_back(path);
+            return images;
+        }
+    }
+
     auto dir = opendir(exp.we_wordv[0]);
     if (!dir)
     {
@@ -133,7 +147,6 @@ std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string p
         exit(0);
     }
 
-    std::vector<std::string> images;
     /* Iterate over all files in the directory */
     dirent *file;
     while ((file = readdir(dir)) != 0)
