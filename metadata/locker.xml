@@ -256,6 +256,65 @@
 	</option>
 	</group>
 	<group>
+	<_short>Network</_short>
+	<option name="network_enable" type="bool">
+		<_short>Enable</_short>
+		<default>true</default>
+	</option>
+	<option name="network_position" type="string">
+		<desc>
+			<value>top-left</value>
+			<_name>Top Left</_name>
+		</desc>
+		<desc>
+		    <value>top-center</value>
+	        <_name>Top</_name>
+		</desc>
+		<desc>
+			<value>top-right</value>
+			<_name>Top Right</_name>
+		</desc>
+		<desc>
+			<value>center-left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>center-center</value>
+			<_name>Center</_name>
+		</desc>
+		<desc>
+			<value>center-right</value>
+			<_name>Right</_name>
+		</desc>
+		<desc>
+			<value>bottom-left</value>
+			<_name>Bottom Left</_name>
+		</desc>
+		<desc>
+			<value>bottom-center</value>
+			<_name>Bottom</_name>
+		</desc>
+		<desc>
+			<value>bottom-right</value>
+			<_name>Bottom Right</_name>
+		</desc>
+		<default>top-right</default>
+	</option>
+	<option name="network_always" type="bool">
+	    <_short>Always show</_short>
+	    <default>true</default>	
+	</option>
+	<option name="network_font" type="string">
+		<_short>Clock Font</_short>
+		<default>20pt default</default>
+	</option>
+	<option name="network_icon_size" type="int">
+		<_short>Icon Size</_short>
+		<default>48</default>
+		<min>16</min>
+	</option>
+	</group>
+	<group>
 	<_short>Clock</_short>
 	<option name="clock_enable" type="bool">
 		<_short>Enable</_short>
