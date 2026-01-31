@@ -120,6 +120,9 @@ void WayfireLight::init(Gtk::Box *container){
     container->append(*button);
 
     setup_sysfs();
+    #ifdef HAVE_DDCUTIL
+    setup_ddc();
+    #endif
 
     update_icon();
 }

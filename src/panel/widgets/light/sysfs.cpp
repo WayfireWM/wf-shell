@@ -20,7 +20,7 @@ class WfLightSysfsControl: public WfLightControl
     // if we exist, it means we can just read/write, as the files and permissions
     // have already been checked and are being monitored with inotify
 
-    protected:
+    private:
         std::string path, connector_name;
 
         int get_max(){
