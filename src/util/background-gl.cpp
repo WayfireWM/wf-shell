@@ -202,11 +202,10 @@ void BackgroundImage::generate_adjustments(int width, int height)
     }
 }
 
-
 bool BackgroundGLArea::show_image(std::string path)
 {
     std::shared_ptr<BackgroundImage> image = std::make_shared<BackgroundImage>();
-    std::string fill_mode = WfOption<std::string> {"background/fill_mode"};
+    std::string fill_mode = WfOption<std::string>{"background/fill_mode"};
 
     image->fill_type = fill_mode;
 
@@ -231,25 +230,29 @@ void BackgroundGLArea::show_image(std::shared_ptr<BackgroundImage> next_image)
     int window_width = get_width(), window_height = get_height();
     if (!next_image || !next_image->source)
     {
-        to_image = nullptr;
-        from_image= nullptr;
+        to_image   = nullptr;
+        from_image = nullptr;
         return;
     }
+
     if ((window_width <= 0) || (window_height <= 0))
     {
         /* Retry momentarily */
         Glib::signal_idle().connect([this, next_image]
-        () {
+            ()
+        {
             show_image(next_image);
             return G_SOURCE_REMOVE;
         });
         return;
     }
+
     if (to_image)
     {
         from_image = to_image;
     }
-    to_image   = next_image;
+
+    to_image = next_image;
 
     int width, height;
 
@@ -263,7 +266,7 @@ void BackgroundGLArea::show_image(std::shared_ptr<BackgroundImage> next_image)
     glBindTexture(GL_TEXTURE_2D, 0);
 
     fade = {
-        WfOption<int> {"background/fade_duration"},
+        WfOption<int>{"background/fade_duration"},
         wf::animation::smoothing::sigmoid
     };
     fade.animate(0.0, 1.0);
@@ -301,14 +304,15 @@ BackgroundGLArea::BackgroundGLArea()
     signal_realize().connect(sigc::mem_fun(*this, &BackgroundGLArea::realize));
     signal_render().connect(sigc::mem_fun(*this, &BackgroundGLArea::render), false);
     signal_resize().connect(
-        [this](int width, int height){
-            if(to_image){
-                int window_width = get_width(), window_height = get_height();
-                to_image->generate_adjustments(window_width, window_height);
-                queue_draw();
-            }
+        [this] (int width, int height)
+    {
+        if (to_image)
+        {
+            int window_width = get_width(), window_height = get_height();
+            to_image->generate_adjustments(window_width, window_height);
+            queue_draw();
         }
-    );
+    });
 }
 
 void BackgroundGLArea::realize()
@@ -323,6 +327,7 @@ bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
     {
         return true;
     }
+
     static const float vertices[] = {
         1.0f, 1.0f,
         -1.0f, 1.0f,

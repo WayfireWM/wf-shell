@@ -187,10 +187,11 @@ static struct wl_registry_listener registry_listener =
 
 void WayfireShellApp::on_activate()
 {
-    if(activated)
+    if (activated)
     {
         return;
     }
+
     activated = true;
     app->hold();
 
@@ -287,7 +288,6 @@ void WayfireShellApp::rem_output(GMonitor monitor)
         handle_output_removed(it->get());
         monitors.erase(it);
     }
-
 }
 
 Gio::Application::Flags WayfireShellApp::get_extra_application_flags()
@@ -296,13 +296,13 @@ Gio::Application::Flags WayfireShellApp::get_extra_application_flags()
 }
 
 WayfireShellApp::WayfireShellApp()
-{
-}
+{}
 
 void WayfireShellApp::init_app()
 {
     std::cout << "setting up" << std::endl;
-    app = Gtk::Application::create(this->get_application_name(), Gio::Application::Flags::NONE| this->get_extra_application_flags());
+    app = Gtk::Application::create(
+        this->get_application_name(), Gio::Application::Flags::NONE | this->get_extra_application_flags());
     app->signal_activate().connect(
         sigc::mem_fun(*this, &WayfireShellApp::on_activate));
     app->add_main_option_entry(

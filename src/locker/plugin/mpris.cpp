@@ -12,9 +12,9 @@
 /* Widget of controls for one player on one screen
  * https://specifications.freedesktop.org/mpris/latest/index.html */
 WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name,
-    Glib::RefPtr<Gio::DBus::Proxy> proxy) : 
+    Glib::RefPtr<Gio::DBus::Proxy> proxy) :
     WayfireLockerTimedRevealer("locker/mpris_always"),
-    proxy(proxy), 
+    proxy(proxy),
     name(name)
 {
     image.add_css_class("albumart");
@@ -142,7 +142,8 @@ void WayfireLockerMPRISWidget::playbackstatus(std::string value)
     {
         box.hide();
         return;
-    } 
+    }
+
     box.show();
     if (value == "Paused")
     {
@@ -151,6 +152,7 @@ void WayfireLockerMPRISWidget::playbackstatus(std::string value)
     {
         playpause.set_icon_name("media-playback-pause");
     }
+
     activity();
 }
 
@@ -255,7 +257,7 @@ void WayfireLockerMPRISCollective::rem_child(std::string id)
 
 WayfireLockerMPRISPlugin::WayfireLockerMPRISPlugin() :
     WayfireLockerPlugin("locker/mpris")
-{ }
+{}
 
 void WayfireLockerMPRISPlugin::init()
 {
@@ -312,6 +314,7 @@ void WayfireLockerMPRISPlugin::deinit()
     {
         signal.disconnect();
     }
+
     manager_proxy = nullptr;
 }
 
@@ -388,7 +391,7 @@ void WayfireLockerMPRISPlugin::rem_client(std::string path)
 void WayfireLockerMPRISCollective::activity()
 {
     set_reveal_child(true);
-    for (auto &it : children)
+    for (auto & it : children)
     {
         it.second->activity();
     }

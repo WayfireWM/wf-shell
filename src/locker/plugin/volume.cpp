@@ -37,13 +37,14 @@ static void notify_source_muted(GvcMixerControl *gvc_control,
 
 void WayfireLockerVolumePlugin::update_button_images()
 {
-    for (auto &it : widgets)
+    for (auto & it : widgets)
     {
         if (gvc_sink_stream)
         {
             it.second->sink_button.set_icon_name(gvc_mixer_stream_get_is_muted(
                 gvc_sink_stream) ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic");
         }
+
         if (gvc_source_stream)
         {
             it.second->source_button.set_icon_name(gvc_mixer_stream_get_is_muted(
@@ -52,13 +53,11 @@ void WayfireLockerVolumePlugin::update_button_images()
     }
 }
 
-WayfireLockerVolumePlugin::WayfireLockerVolumePlugin():
+WayfireLockerVolumePlugin::WayfireLockerVolumePlugin() :
     WayfireLockerPlugin("locker/volume")
-{
-    
-}
+{}
 
-WayfireLockerVolumePluginWidget::WayfireLockerVolumePluginWidget():
+WayfireLockerVolumePluginWidget::WayfireLockerVolumePluginWidget() :
     WayfireLockerTimedRevealer("locker/volume_always")
 {
     set_child(box);
@@ -68,7 +67,6 @@ WayfireLockerVolumePluginWidget::WayfireLockerVolumePluginWidget():
     box.append(source_button);
     box.append(sink_button);
 }
-
 
 void WayfireLockerVolumePlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
@@ -128,11 +126,13 @@ void WayfireLockerVolumePlugin::deinit()
     {
         g_signal_handler_disconnect(gvc_sink_stream, notify_sink_muted_signal);
     }
+
     notify_sink_changed = 0;
     if (notify_sink_muted_signal)
     {
         g_signal_handler_disconnect(gvc_sink_stream, notify_sink_muted_signal);
     }
+
     notify_source_changed = 0;
 }
 

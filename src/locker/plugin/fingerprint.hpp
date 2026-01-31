@@ -23,7 +23,8 @@ class WayfireLockerFingerprintPluginWidget : public WayfireLockerTimedRevealer
     Gtk::Image image_print;
     Gtk::Image image_overlay;
     Gtk::Label label;
-    WayfireLockerFingerprintPluginWidget(std::string label_contents, std::string image_contents, std::string color_contents);
+    WayfireLockerFingerprintPluginWidget(std::string label_contents, std::string image_contents,
+        std::string color_contents);
 };
 
 class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
@@ -33,6 +34,7 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     Glib::RefPtr<Gio::DBus::Proxy> device_proxy, manager_proxy;
     sigc::connection signal;
     sigc::connection starting_fingerprint, finding_new_device;
+
   public:
 
     WayfireLockerFingerprintPlugin();

@@ -41,6 +41,7 @@ class BackgroundGLArea : public Gtk::GLArea
      * are used as offsets when preserve aspect is set. */
     std::shared_ptr<BackgroundImage> to_image, from_image;
     void show_image(std::shared_ptr<BackgroundImage> image);
+
   public:
     BackgroundGLArea();
     void realize();
@@ -51,4 +52,4 @@ class BackgroundGLArea : public Gtk::GLArea
     {
         return to_image;
     }
- };
+};

@@ -44,7 +44,7 @@ std::string WayfireLockerApp::get_application_name()
     return "org.wayfire.locker";
 }
 
-WayfireLockerApp::WayfireLockerApp() 
+WayfireLockerApp::WayfireLockerApp()
 {}
 
 WayfireLockerApp::~WayfireLockerApp()
@@ -55,7 +55,7 @@ void WayfireLockerApp::perform_lock()
     WayfireLockerApp::get().init_plugins();
     if (is_debug())
     {
-        if(!m_is_locked)
+        if (!m_is_locked)
         {
             on_monitor_present(nullptr);
         }
@@ -70,11 +70,12 @@ void WayfireLockerApp::perform_lock()
 void WayfireLockerApp::command_line()
 {
     app->add_main_option_entry(
-        [=](const Glib::ustring & option_name,
-                 const Glib::ustring & value, bool has_value){
-            can_early_wake = false;
-            return true;
-        },
+        [=] (const Glib::ustring & option_name,
+             const Glib::ustring & value, bool has_value)
+    {
+        can_early_wake = false;
+        return true;
+    },
         "now", 'n', "Instant lock", "", Glib::OptionEntry::Flags::NO_ARG);
 }
 
@@ -86,24 +87,29 @@ void WayfireLockerApp::on_activate()
         {
             if (can_early_wake)
             {
-                prewake_signal = Glib::signal_timeout().connect([this](){
+                prewake_signal = Glib::signal_timeout().connect([this] ()
+                {
                     can_early_wake = false;
                     return G_SOURCE_REMOVE;
-                }, WfOption<int> {"locker/prewake"});
+                }, WfOption<int>{"locker/prewake"});
             }
+
             perform_lock();
         }
+
         /* Called again but already screen locked. No worries */
         return;
     }
+
     /* Set a timer for early-wake unlock */
     WayfireShellApp::on_activate();
-    prewake_signal = Glib::signal_timeout().connect([this](){
+    prewake_signal = Glib::signal_timeout().connect([this] ()
+    {
         can_early_wake = false;
         return G_SOURCE_REMOVE;
-    }, WfOption<int> {"locker/prewake"});
+    }, WfOption<int>{"locker/prewake"});
     /* TODO Hot config for this? */
-    //exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
+    // exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
 
     auto debug = Glib::getenv("WF_LOCKER_DEBUG");
     if (debug == "1")
@@ -131,7 +137,8 @@ void WayfireLockerApp::on_activate()
     new CssFromConfigInt("locker/battery_icon_size", ".wf-locker .battery-image {-gtk-icon-size:", "px;}");
     new CssFromConfigInt("locker/fingerprint_icon_size", ".wf-locker .fingerprint-icon {-gtk-icon-size:",
         "px;}");
-    new CssFromConfigInt("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ", "ms; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0;} to {opacity:1;}}");
+    new CssFromConfigInt("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ",
+        "ms; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0;} to {opacity:1;}}");
 
     /* Init plugins */
     plugins.emplace("clock", Plugin(new WayfireLockerClockPlugin()));
@@ -150,66 +157,69 @@ void WayfireLockerApp::on_activate()
     if (xdg_runtime_dir)
     {
         this->cache_file = std::string(xdg_runtime_dir) + "/wf-background.cache";
-        std::cout << "Using cache file "<< this->cache_file << std::endl;
+        std::cout << "Using cache file " << this->cache_file << std::endl;
         inotify_bg_file = inotify_init();
         Glib::signal_io().connect(
             [this] (Glib::IOCondition cond)
         {
             char buf[INOT_BUF_SIZE];
             read(inotify_bg_file, buf, INOT_BUF_SIZE);
-            reload_background(); 
+            reload_background();
             return G_SOURCE_CONTINUE;
         },
             inotify_bg_file, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
         reload_background();
-    } else 
+    } else
     {
         std::cout << "Not reading from cache file " << std::endl;
     }
 
     /* Create plugin option callbacks */
-    for (auto &it : plugins)
+    for (auto & it : plugins)
     {
         Plugin plugin = it.second;
         plugin->enable.set_callback(
-            [plugin, this] () {
-                if (plugin->enable)
-                {
-                    plugin->init();
-                    for(auto &it : window_list)
-                    {
-                        int id = it.first;
-                        plugin->add_output(id, it.second->grid);
-                    }
-                } else {
-                    for(auto &it : window_list)
-                    {
-                        int id = it.first;
-                        plugin->remove_output(id, it.second->grid);
-                    }
-                    plugin->deinit();
-                }
-            }
-        );
-        plugin->position.set_callback(
-            [this, plugin] () {
-                for(auto &it : window_list)
+            [plugin, this] ()
+        {
+            if (plugin->enable)
+            {
+                plugin->init();
+                for (auto & it : window_list)
                 {
                     int id = it.first;
-                    auto window = it.second;
-                    plugin->remove_output(id, window->grid);
-                    plugin->add_output(id, window->grid);
+                    plugin->add_output(id, it.second->grid);
                 }
+            } else
+            {
+                for (auto & it : window_list)
+                {
+                    int id = it.first;
+                    plugin->remove_output(id, it.second->grid);
+                }
+
+                plugin->deinit();
             }
-        );
+        });
+        plugin->position.set_callback(
+            [this, plugin] ()
+        {
+            for (auto & it : window_list)
+            {
+                int id = it.first;
+                auto window = it.second;
+                plugin->remove_output(id, window->grid);
+                plugin->add_output(id, window->grid);
+            }
+        });
     }
+
     perform_lock();
 }
 
 /** Called just as lock starts but before window is shown */
 void WayfireLockerApp::init_plugins()
 {
-    for (auto &it : plugins)
+    for (auto & it : plugins)
     {
         Plugin plugin = it.second;
         if (plugin->enable)
@@ -222,7 +232,7 @@ void WayfireLockerApp::init_plugins()
 /** Called after an unlock */
 void WayfireLockerApp::deinit_plugins()
 {
-    for (auto &it : plugins)
+    for (auto & it : plugins)
     {
         Plugin plugin = it.second;
         if (plugin->enable)
@@ -249,6 +259,7 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
             it.second->add_output(id, window->grid);
         }
     }
+
     window->signal_close_request().connect([this, id] ()
     {
         for (auto& it : plugins)
@@ -259,6 +270,7 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
                 plugin->remove_output(id, window_list[id]->grid);
             }
         }
+
         if (m_is_debug)
         {
             deinit_plugins();
@@ -280,6 +292,7 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     {
         gtk_session_lock_instance_assign_window_to_monitor(lock, window->gobj(), monitor);
     }
+
     if (can_early_wake)
     {
         window->add_css_class("fade-in");
@@ -290,16 +303,18 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
 void WayfireLockerApp::perform_unlock(std::string reason)
 {
     /* Offset the actual logic so that any callbacks that call
-       this get a chance to exit cleanly. */
-    Glib::signal_idle().connect([this, reason] () {
+     *  this get a chance to exit cleanly. */
+    Glib::signal_idle().connect([this, reason] ()
+    {
         std::cout << "Unlocked : " << reason << std::endl;
         if (m_is_debug)
         {
             /* We need to manually close in debug mode */
-            for(auto &it : window_list)
+            for (auto & it : window_list)
             {
                 it.second->close();
             }
+
             if (WayfireLockerApp::get().exit_on_unlock)
             {
                 exit(0);
@@ -308,18 +323,22 @@ void WayfireLockerApp::perform_unlock(std::string reason)
         {
             gtk_session_lock_instance_unlock(lock);
         }
-        for (auto &it : window_list)
+
+        for (auto & it : window_list)
         {
             it.second->disconnect();
         }
+
         if (lockout_signal)
         {
             lockout_signal.disconnect();
         }
+
         if (prewake_signal)
         {
             prewake_signal.disconnect();
         }
+
         return G_SOURCE_REMOVE;
     });
 }
@@ -342,6 +361,7 @@ bool WayfireLockerApp::is_locked()
     {
         return gtk_session_lock_instance_is_locked(lock);
     }
+
     return m_is_locked;
 }
 
@@ -388,13 +408,15 @@ void on_session_unlocked_c(GtkSessionLockInstance *lock, void *data)
     if (WayfireLockerApp::get().exit_on_unlock)
     {
         // Exiting too early causes a lock-out
-        Glib::signal_idle().connect([] () -> bool 
+        Glib::signal_idle().connect([] () -> bool
         {
             exit(0);
-        },1);
+        }, 1);
     }
+
     // Lose windows, but not right away to avoid lock-screen-crash for 1 frame
-    Glib::signal_idle().connect([] () {
+    Glib::signal_idle().connect([] ()
+    {
         WayfireLockerApp::get().window_list.clear();
         return G_SOURCE_REMOVE;
     });
@@ -448,32 +470,35 @@ void WayfireLockerApp::user_activity()
 
 void WayfireLockerApp::recieved_bad_auth()
 {
-    bad_auth_count ++;
+    bad_auth_count++;
     if (bad_auth_count > WfOption<int>{"locker/lockout_attempts"})
     {
         // Lockout now
         lockout = true;
-        for (auto &it : plugins)
+        for (auto & it : plugins)
         {
             it.second->lockout_changed(true);
         }
-        // 
+
+        //
         lockout_signal = Glib::signal_timeout().connect_seconds(
-            [this] () {
-                lockout = false;
-                bad_auth_count = 0;
-                for (auto &it : plugins)
-                {
-                    it.second->lockout_changed(false);
-                }
-                return G_SOURCE_REMOVE;
-            }, WfOption<int>{"locker/lockout_timer"});
+            [this] ()
+        {
+            lockout = false;
+            bad_auth_count = 0;
+            for (auto & it : plugins)
+            {
+                it.second->lockout_changed(false);
+            }
+
+            return G_SOURCE_REMOVE;
+        }, WfOption<int>{"locker/lockout_timer"});
     }
 }
 
 bool WayfireLockerApp::is_locked_out()
 {
-  return lockout;
+    return lockout;
 }
 
 void WayfireLockerApp::reload_background()
@@ -487,18 +512,19 @@ void WayfireLockerApp::reload_background()
             if (getline(f, s))
             {
                 std::cout << "Background " << s << std::endl;
-                for (auto &it : window_list)
+                for (auto & it : window_list)
                 {
                     auto widget = it.second;
-                    widget->background.show_image(s); 
+                    widget->background.show_image(s);
                 }
+
                 background_path = s;
             }
         }
-    } 
+    }
+
     // Re add notify
     inotify_add_watch(inotify_bg_file,
-            cache_file.c_str(),
-            IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
-    
+        cache_file.c_str(),
+        IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
 }

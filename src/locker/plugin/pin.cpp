@@ -26,7 +26,7 @@
  *  and any non-digit will render it impossible to unlock.
  */
 
-WayfireLockerPinPluginWidget::WayfireLockerPinPluginWidget():
+WayfireLockerPinPluginWidget::WayfireLockerPinPluginWidget() :
     WayfireLockerTimedRevealer("locker/pin_always")
 {
     for (int count = 0; count < 10; count++)
@@ -82,7 +82,7 @@ void WayfireLockerPinPluginWidget::init(std::string label_text)
     label.set_text(label_text);
 }
 
-WayfireLockerPinPlugin::WayfireLockerPinPlugin():
+WayfireLockerPinPlugin::WayfireLockerPinPlugin() :
     WayfireLockerPlugin("locker/pin")
 {
     /* TODO Watch for file changes and update in-memory hash */
@@ -90,6 +90,7 @@ WayfireLockerPinPlugin::WayfireLockerPinPlugin():
     {
         return;
     }
+
     std::string config_dir;
 
     char *config_home = getenv("XDG_CONFIG_HOME");
@@ -135,10 +136,11 @@ void WayfireLockerPinPlugin::deinit()
 
 void WayfireLockerPinPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    if(disabled)
+    if (disabled)
     {
         return;
     }
+
     pinpads.emplace(id, new WayfireLockerPinPluginWidget());
     auto pinpad = pinpads[id];
     std::string asterisks(pin.length(), '*');
@@ -148,10 +150,11 @@ void WayfireLockerPinPlugin::add_output(int id, std::shared_ptr<WayfireLockerGri
 
 void WayfireLockerPinPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    if(disabled)
+    if (disabled)
     {
         return;
     }
+
     grid->remove(*pinpads[id]);
     pinpads.erase(id);
 }
@@ -170,6 +173,7 @@ void WayfireLockerPinPlugin::reset_pin()
     {
         WayfireLockerApp::get().recieved_bad_auth();
     }
+
     pin = "";
     update_labels();
 }
@@ -190,6 +194,7 @@ void WayfireLockerPinPlugin::submit_pin()
     {
         WayfireLockerApp::get().perform_unlock("PIN Authenticated");
     }
+
     update_labels();
 }
 
@@ -215,16 +220,17 @@ std::string WayfireLockerPinPlugin::sha512(const std::string input)
 
 void WayfireLockerPinPluginWidget::lockout_changed(bool lockout)
 {
-    for (int i = 0; i < 10; i ++)
+    for (int i = 0; i < 10; i++)
     {
-        numbers[i].set_sensitive(!lockout);   
+        numbers[i].set_sensitive(!lockout);
     }
+
     bcan.set_sensitive(!lockout);
 }
 
 void WayfireLockerPinPlugin::lockout_changed(bool lockout)
 {
-    for (auto &it : pinpads)
+    for (auto & it : pinpads)
     {
         it.second->lockout_changed(lockout);
     }
