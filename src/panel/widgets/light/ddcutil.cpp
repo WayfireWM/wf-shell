@@ -17,7 +17,7 @@ void show_err(std::string location, DDCA_Status status){
 class WfLightDdcaControl : public WfLightControl
 {
 	private:
-		DDCA_Display_Handle handle;
+		DDCA_Display_Ref ref;
 		int max;
 
 		int get_max(){
@@ -25,17 +25,21 @@ class WfLightDdcaControl : public WfLightControl
 		}
 
 	public:
-		WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Ref ref) : WfLightControl(parent){
+		WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Ref _ref) : WfLightControl(parent){
+			ref = _ref;
+
+			DDCA_Display_Handle handle;
 			DDCA_Status status = ddca_open_display2(ref, false, &handle);
 			show_err("open display", status);
 
 			DDCA_Non_Table_Vcp_Value value;
 			status = ddca_get_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, &value);
 			max = value.mh << 8 | value.ml;
+
+			ddca_close_display(handle);
 		}
 
 		~WfLightDdcaControl(){
-			ddca_close_display(handle);
 		}
 
 		std::string get_name(){
@@ -45,17 +49,27 @@ class WfLightDdcaControl : public WfLightControl
 		}
 
         void set_brightness(double brightness){
+			DDCA_Display_Handle handle;
+			DDCA_Status status = ddca_open_display2(ref, false, &handle);
+			show_err("open display", status);
+
 			uint16_t value = (uint16_t)(get_max() * brightness);
 			uint8_t sh = value >> 8;
 			uint8_t sl = value & 0xFF;
-			DDCA_Status status = ddca_set_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, sh, sl);
+			status = ddca_set_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, sh, sl);
 			show_err("set brigthness", status);
+			ddca_close_display(handle);
         }
 
         double get_brightness(){
+			DDCA_Display_Handle handle;
+			DDCA_Status status = ddca_open_display2(ref, false, &handle);
+			show_err("open display", status);
+
 			DDCA_Non_Table_Vcp_Value value;
-			DDCA_Status status = ddca_get_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, &value);
+			status = ddca_get_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, &value);
 			show_err("get brightness", status);
+			ddca_close_display(handle);
 			return value.sh << 8 | value.sl;
 	    }
 };
