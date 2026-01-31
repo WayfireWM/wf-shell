@@ -354,8 +354,8 @@
 	</option>
 	<option name="wp_icon_size" type="int">
 		<_short>Icon size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	</group>
 	<group>
