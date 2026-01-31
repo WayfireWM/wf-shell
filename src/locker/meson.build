@@ -8,6 +8,7 @@ widget_sources = [
     'plugin/fingerprint.cpp',
     'plugin/mpris.cpp',
     'plugin/user.cpp',
+    'plugin/network.cpp',
 ]
 deps = [
   gtklayershell,

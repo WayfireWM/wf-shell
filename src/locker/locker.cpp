@@ -28,6 +28,7 @@
 #include "plugin/user.hpp"
 #include "plugin/volume.hpp"
 #include "plugin/mpris.hpp"
+#include "plugin/network.hpp"
 #include "wf-option-wrap.hpp"
 #include "wf-shell-app.hpp"
 #include "locker.hpp"
@@ -139,6 +140,8 @@ void WayfireLockerApp::on_activate()
         "px;}");
     new CssFromConfigInt("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ",
         "ms; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0;} to {opacity:1;}}");
+    new CssFromConfigFont("locker/network_font", ".wf-locker .network {", "}");
+    new CssFromConfigInt("locker/network_icon_size", ".wf-locker .network {-gtk-icon-size:","px;}");
 
     /* Init plugins */
     plugins.emplace("clock", Plugin(new WayfireLockerClockPlugin()));
@@ -151,6 +154,7 @@ void WayfireLockerApp::on_activate()
     plugins.emplace("volume", Plugin(new WayfireLockerVolumePlugin()));
     plugins.emplace("mpris", Plugin(new WayfireLockerMPRISPlugin()));
     plugins.emplace("aboutuser", Plugin(new WayfireLockerUserPlugin()));
+    plugins.emplace("network", Plugin(new WayfireLockerNetworkPlugin()));
 
     /* Get background cache */
     char *xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");

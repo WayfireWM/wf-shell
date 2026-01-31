@@ -50,6 +50,34 @@ struct NoConnectionInfo : public WfNetworkConnectionInfo
     {}
 };
 
+struct VPNConnectionInfo : public WfNetworkConnectionInfo
+{
+    VPNConnectionInfo(const std::shared_ptr<Gio::DBus::Connection>& connection, std::string path)
+    { }
+    virtual std::string get_icon_name(WfConnectionState state) override
+    {
+        return "network-vpn-symbolic";
+    }
+
+    int get_connection_strength() override
+    {
+        return 0;
+    }
+
+    std::string get_strength_str() override
+    {
+        return "excellent";
+    }
+
+    std::string get_ip() override
+    {
+        return "0.0.0.0";
+    }
+
+    virtual ~VPNConnectionInfo()
+    {}
+};
+
 struct WifiConnectionInfo : public WfNetworkConnectionInfo
 {
     WayfireNetworkInfo *widget;
@@ -304,11 +332,16 @@ void WayfireNetworkInfo::update_active_connection()
         {
             info = std::unique_ptr<WfNetworkConnectionInfo>(
                 new EthernetConnectionInfo(connection, object));
-        } else if (type.find("bluetooth"))
+        } else if (type.find("bluetooth") != type.npos)
         {
             std::cout << "Unimplemented: bluetooth connection" << std::endl;
             set_no_connection();
             // TODO
+        } else if (type.find("vpn") != type.npos)
+        {
+            info = std::unique_ptr<WfNetworkConnectionInfo>(
+                new VPNConnectionInfo(connection, object)
+            );
         } else
         {
             std::cout << "Unimplemented: unknown connection type" << std::endl;
