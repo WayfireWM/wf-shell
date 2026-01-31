@@ -53,7 +53,7 @@ struct NoConnectionInfo : public WfNetworkConnectionInfo
 struct VPNConnectionInfo : public WfNetworkConnectionInfo
 {
     VPNConnectionInfo(const std::shared_ptr<Gio::DBus::Connection>& connection, std::string path)
-    { }
+    {}
     virtual std::string get_icon_name(WfConnectionState state) override
     {
         return "network-vpn-symbolic";
@@ -340,8 +340,7 @@ void WayfireNetworkInfo::update_active_connection()
         } else if (type.find("vpn") != type.npos)
         {
             info = std::unique_ptr<WfNetworkConnectionInfo>(
-                new VPNConnectionInfo(connection, object)
-            );
+                new VPNConnectionInfo(connection, object));
         } else
         {
             std::cout << "Unimplemented: unknown connection type" << std::endl;

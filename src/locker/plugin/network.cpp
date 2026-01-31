@@ -42,7 +42,7 @@ struct NoConnectionInfo : public WfPluginNetworkConnectionInfo
 struct VPNPluginConnectionInfo : public WfPluginNetworkConnectionInfo
 {
     VPNPluginConnectionInfo(const std::shared_ptr<Gio::DBus::Connection>& connection, std::string path)
-    { }
+    {}
     virtual std::string get_icon_name(WfPluginConnectionState state) override
     {
         return "network-vpn-symbolic";
@@ -89,7 +89,8 @@ struct WifiPluginConnectionInfo : public WfPluginNetworkConnectionInfo
         }
     }
 
-    void on_properties_changed(const Gio::DBus::Proxy::MapChangedProperties& changed, const std::vector<Glib::ustring>& invalid)
+    void on_properties_changed(const Gio::DBus::Proxy::MapChangedProperties& changed,
+        const std::vector<Glib::ustring>& invalid)
     {
         bool needs_refresh = false;
         for (auto& prop : changed)
@@ -231,7 +232,9 @@ struct EthernetPluginConnectionInfo : public WfPluginNetworkConnectionInfo
 
 /* Main plugin */
 
-WayfireLockerNetworkPluginWidget::WayfireLockerNetworkPluginWidget(std::string image_contents, std::string label_contents, std::string css_contents) :
+WayfireLockerNetworkPluginWidget::WayfireLockerNetworkPluginWidget(std::string image_contents,
+    std::string label_contents,
+    std::string css_contents) :
     WayfireLockerTimedRevealer("locker/network_always")
 {
     box.add_css_class("network");
@@ -246,7 +249,7 @@ WayfireLockerNetworkPluginWidget::WayfireLockerNetworkPluginWidget(std::string i
 
 WayfireLockerNetworkPlugin::WayfireLockerNetworkPlugin() :
     WayfireLockerPlugin("locker/network")
-{ }
+{}
 
 void WayfireLockerNetworkPlugin::init()
 {
@@ -254,7 +257,7 @@ void WayfireLockerNetworkPlugin::init()
 }
 
 void WayfireLockerNetworkPlugin::deinit()
-{ }
+{}
 
 void WayfireLockerNetworkPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
@@ -324,6 +327,7 @@ void WayfireLockerNetworkPlugin::update_active_connection()
     {
         active_connection_proxy = nullptr;
     }
+
     if (!active_connection_proxy)
     {
         info = std::make_unique<NoConnectionInfo>();
@@ -351,6 +355,7 @@ void WayfireLockerNetworkPlugin::update_active_connection()
     {
         info = std::make_unique<NoConnectionInfo>();
     }
+
     Glib::Variant<Glib::ustring> vname;
     active_connection_proxy->get_cached_property(vname, "Id");
     info->connection_name = vname.get();
@@ -373,10 +378,10 @@ void WayfireLockerNetworkPlugin::set_state()
 {
     label_contents = info->get_connection_name();
     image_contents = info->get_icon_name(get_connection_state(active_connection_proxy));
-    css_contents = info->get_strength_str();
-    std::cout << label_contents << " "<< image_contents << std::endl;
+    css_contents   = info->get_strength_str();
+    std::cout << label_contents << " " << image_contents << std::endl;
 
-    for (auto &it: widgets)
+    for (auto & it : widgets)
     {
         it.second->label.remove_css_class("excellent");
         it.second->label.remove_css_class("good");

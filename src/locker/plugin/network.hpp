@@ -39,13 +39,15 @@ struct WfPluginNetworkConnectionInfo
 class WayfireLockerNetworkPluginWidget : public WayfireLockerTimedRevealer
 {
   public:
-    WayfireLockerNetworkPluginWidget(std::string image_contents, std::string label_contents, std::string css_contents);
+    WayfireLockerNetworkPluginWidget(std::string image_contents, std::string label_contents,
+        std::string css_contents);
     Gtk::Label label;
     Gtk::Image image;
     Gtk::Box box;
 };
 
-class WayfireLockerNetworkPlugin : public WayfireLockerPlugin{
+class WayfireLockerNetworkPlugin : public WayfireLockerPlugin
+{
   private:
     std::shared_ptr<Gio::DBus::Connection> connection;
     std::shared_ptr<Gio::DBus::Proxy> nm_proxy, active_connection_proxy;
@@ -60,10 +62,12 @@ class WayfireLockerNetworkPlugin : public WayfireLockerPlugin{
     void deinit() override;
 
     bool setup_dbus();
-    void on_nm_properties_changed(const Gio::DBus::Proxy::MapChangedProperties& properties, const std::vector<Glib::ustring>& invalidated);
+    void on_nm_properties_changed(const Gio::DBus::Proxy::MapChangedProperties& properties,
+        const std::vector<Glib::ustring>& invalidated);
     void update_active_connection();
     void set_state();
     std::unordered_map<int, std::shared_ptr<WayfireLockerNetworkPluginWidget>> widgets;
 
-    std::string image_contents = "network-error-symbolic", label_contents = "Unknown state", css_contents="";
+    std::string image_contents = "network-error-symbolic", label_contents = "Unknown state",
+        css_contents = "";
 };
