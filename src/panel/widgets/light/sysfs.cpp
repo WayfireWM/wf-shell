@@ -69,6 +69,7 @@ class WfLightSysfsControl: public WfLightControl
                 std::cerr << "Failed to write brightness for device at " << path << '\n';
                 return;
             }
+
             parent->update_icon();
         }
 

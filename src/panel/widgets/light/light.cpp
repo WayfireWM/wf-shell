@@ -41,6 +41,33 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
     set_orientation(Gtk::Orientation::VERTICAL);
     append(label);
     append(scale);
+
+    // scroll
+    auto scroll_gesture = Gtk::EventControllerScroll::create();
+    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
+    {
+        double change = 0;
+
+        if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
+        {
+            // +- number of clicks.
+            change = (dy * parent->scroll_sensitivity) / 10;
+        } else
+        {
+            // Number of pixels expected to have scrolled. usually in 100s
+            change = (dy * parent->scroll_sensitivity) / 100;
+        }
+        if (!(parent->invert_scroll))
+            change *= -1;
+
+        // correct for a "good feeling" change at sensitivity 1
+        change *= 0.2;
+
+        set_brightness(get_scale_target_value() + change);
+        return true;
+    }, true);
+    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    add_controller(scroll_gesture);
 }
 
 WayfireLight *WfLightControl::get_parent(){
@@ -52,6 +79,7 @@ void WfLightControl::set_scale_target_value(double brightness)
     scale.set_target_value(brightness);
     parent->update_icon();
 }
+
 double WfLightControl::get_scale_target_value()
 {
     return scale.get_target_value();
@@ -106,7 +134,7 @@ void WayfireLight::init(Gtk::Box *container){
     other_box.append(other_label);
     other_box.set_orientation(Gtk::Orientation::VERTICAL);
 
-    // scroll to brighten and dim all monitors
+    // scroll to brighten and dim the monitor the panel is on
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
@@ -124,9 +152,10 @@ void WayfireLight::init(Gtk::Box *container){
         if (!invert_scroll)
             change *= -1;
 
-        for (int i = 0 ; i < (int)controls.size() ; i++){
-            controls[i]->set_brightness(controls[i]->get_scale_target_value() + change);
-        }
+        // correct for a "good feeling" change at sensitivity 1
+        change *= 0.2;
+
+        ctrl_this_display->set_brightness(ctrl_this_display->get_scale_target_value() + change);
         return true;
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
