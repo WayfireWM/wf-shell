@@ -130,7 +130,7 @@ std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string p
 
     std::vector<std::string> images;
     struct stat s;
-    if (stat(path.c_str(), &s)==0)
+    if (stat(path.c_str(), &s) == 0)
     {
         if (s.st_mode & S_IFREG || s.st_mode & S_IFLNK)
         {
