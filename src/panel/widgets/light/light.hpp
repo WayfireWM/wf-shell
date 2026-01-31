@@ -40,6 +40,8 @@ class WfLightControl : public Gtk::Box
     WayfireLight *parent;
     std::vector<sigc::connection> signals;
 
+    void update_parent_icon();
+
     WfOption<int> slider_length{"panel/light_slider_length"};
 
   public:
@@ -140,7 +142,6 @@ class WayfireLight : public WayfireWidget {
     Gtk::Separator disp_othr_sep;
     sigc::connection popover_timeout;
 
-    std::shared_ptr<WfLightControl> ctrl_this_display;
 
     WfOption<bool> popup_on_change{"panel/light_popup_on_change"};
     WfOption<double> popup_timeout{"panel/light_popup_timeout"};
@@ -153,6 +154,8 @@ class WayfireLight : public WayfireWidget {
 
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
+
+    std::shared_ptr<WfLightControl> ctrl_this_display;
 
     std::vector<std::shared_ptr<WfLightControl>> controls;
 

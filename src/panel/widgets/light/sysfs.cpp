@@ -70,7 +70,7 @@ class WfLightSysfsControl: public WfLightControl
                 return;
             }
 
-            parent->update_icon();
+            update_parent_icon();
         }
 
         double get_brightness(){
