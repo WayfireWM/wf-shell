@@ -28,6 +28,7 @@ void WfWpControl::init()
     // build layout
 
     button.set_child(volume_icon);
+    button.get_style_context()->add_class("widget-icon");
     button.get_style_context()->add_class("wireplumber");
     button.get_style_context()->add_class("flat");
 
@@ -218,6 +219,7 @@ WfWpControlDevice::~WfWpControlDevice()
 
 void WfWpControlDevice::init()
 {
+    default_btn.get_style_context()->add_class("widget-icon");
     default_btn.get_style_context()->add_class("wireplumber");
     default_btn.get_style_context()->add_class("flat");
 

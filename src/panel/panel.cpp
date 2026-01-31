@@ -379,7 +379,7 @@ void WayfirePanelApp::on_activate()
         {"panel/battery_icon_size", ".battery image"},
         {"panel/network_icon_size", ".network"},
         {"panel/volume_icon_size", ".volume"},
-        {"panel/wp_icon_size", ".wireplumber{-gtk-icon-size:", "px;}"},
+        {"panel/wp_icon_size", ".wireplumber"},
         {"panel/notifications_icon_size", ".notification-center"},
         {"panel/tray_icon_size", ".tray-button"}
     };
