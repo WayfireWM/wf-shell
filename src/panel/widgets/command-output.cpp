@@ -1,5 +1,4 @@
 #include <gtkmm/cssprovider.h>
-
 #include <glibmm/main.h>
 #include <glibmm/shell.h>
 #include <glibmm/spawn.h>
@@ -13,7 +12,6 @@
 #include <string>
 
 #include "command-output.hpp"
-#include "css-config.hpp"
 
 static sigc::connection label_set_from_command(std::string command_line,
     Gtk::Label& label)
@@ -60,7 +58,8 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     if (icon_size > 0)
     {
         auto provider = Gtk::CssProvider::create();
-        provider->load_from_string(".command-icon-" + name + "{-gtk-icon-size:" + std::to_string(icon_size) + "px;}");
+        provider->load_from_string(".command-icon-" + name + "{-gtk-icon-size:" + std::to_string(
+            icon_size) + "px;}");
         icon.get_style_context()->add_class("command-icon-" + name);
         icon.get_style_context()->add_provider(provider, 1);
     } else
