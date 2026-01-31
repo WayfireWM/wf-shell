@@ -59,7 +59,7 @@ CssFromConfigIconSize::CssFromConfigIconSize(std::string option_name,
         }
 
         std::stringstream ss;
-        ss << ".wf-panel .widget-icon" << css_class << "{-gtk-icon-size:" << option_value.value() << "px;}";
+        ss << ".wf-panel " << css_class << ".widget-icon {-gtk-icon-size:" << option_value.value() << "px;}";
         provider->load_from_string(ss.str());
     };
 
