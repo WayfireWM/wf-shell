@@ -5,6 +5,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
 
+#include "css-config.hpp"
 #include "wf-shell-app.hpp"
 
 class WayfirePanel
@@ -36,10 +37,10 @@ class WayfirePanelApp : public WayfireShellApp
     void handle_new_output(WayfireOutput *output) override;
     void handle_output_removed(WayfireOutput *output) override;
     void on_config_reload() override;
+    void reload_css();
 
   private:
     WayfirePanelApp();
-
 
     class impl;
     std::unique_ptr<impl> priv;

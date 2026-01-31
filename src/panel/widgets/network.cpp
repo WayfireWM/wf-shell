@@ -384,6 +384,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     }
 
     auto style = button.get_style_context();
+    style->add_class("widget-icon");
     style->add_class("flat");
     style->add_class("network");
 

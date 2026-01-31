@@ -45,6 +45,30 @@ CssFromConfigInt::CssFromConfigInt(std::string option_name, std::string css_befo
     add_provider();
 }
 
+CssFromConfigIconSize::CssFromConfigIconSize(std::string option_name,
+    std::string css_class) : option_value{option_name}
+{
+    provider = Gtk::CssProvider::create();
+
+    auto reload_css = [=] ()
+    {
+        if (option_value.value() == 0)
+        {
+            provider->load_from_string("");
+            return;
+        }
+
+        std::stringstream ss;
+        ss << ".wf-panel " << css_class << ".widget-icon {-gtk-icon-size:" << option_value.value() << "px;}";
+        provider->load_from_string(ss.str());
+    };
+
+    option_value.set_callback(reload_css);
+
+    reload_css();
+    add_provider();
+}
+
 CssFromConfigString::CssFromConfigString(std::string option_name, std::string css_before,
     std::string css_after) :
     option_value{option_name}
