@@ -88,7 +88,7 @@ void WayfireLockerBatteryPlugin::update_images()
     }
 }
 
-WayfireLockerBatteryPluginWidget::WayfireLockerBatteryPluginWidget():
+WayfireLockerBatteryPluginWidget::WayfireLockerBatteryPluginWidget() :
     WayfireLockerTimedRevealer("locker/battery_always")
 {
     set_child(grid);
@@ -99,8 +99,6 @@ WayfireLockerBatteryPluginWidget::WayfireLockerBatteryPluginWidget():
     grid.attach(image, 0, 0);
     grid.attach(label, 1, 0);
     grid.attach(subtext, 0, 1, 2, 1);
-
-
 }
 
 void WayfireLockerBatteryPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
@@ -112,6 +110,7 @@ void WayfireLockerBatteryPlugin::add_output(int id, std::shared_ptr<WayfireLocke
     {
         widget->hide();
     }
+
     grid->attach(*widget, (std::string)position);
 
     update_details();
@@ -125,20 +124,22 @@ void WayfireLockerBatteryPlugin::remove_output(int id, std::shared_ptr<WayfireLo
 
 void WayfireLockerBatteryPlugin::init()
 {
-    if(!setup_dbus()){
+    if (!setup_dbus())
+    {
         hide();
     }
 }
 
 void WayfireLockerBatteryPlugin::deinit()
 {
-    if(signal)
+    if (signal)
     {
         signal.disconnect();
     }
+
     display_device = nullptr;
-    upower_proxy = nullptr;
-    connection = nullptr;
+    upower_proxy   = nullptr;
+    connection     = nullptr;
 }
 
 bool WayfireLockerBatteryPlugin::setup_dbus()
@@ -217,11 +218,12 @@ void WayfireLockerBatteryPlugin::on_properties_changed(
 
 void WayfireLockerBatteryPlugin::update_details()
 {
-    if (display_device==nullptr)
+    if (display_device == nullptr)
     {
-        std::cout << "No battery proxy!" <<std::endl;
+        std::cout << "No battery proxy!" << std::endl;
         return;
     }
+
     Glib::Variant<guint32> type;
     display_device->get_cached_property(type, TYPE);
 
@@ -278,6 +280,6 @@ void WayfireLockerBatteryPlugin::show()
     }
 }
 
-WayfireLockerBatteryPlugin::WayfireLockerBatteryPlugin():
+WayfireLockerBatteryPlugin::WayfireLockerBatteryPlugin() :
     WayfireLockerPlugin("locker/battery")
-{ }
+{}

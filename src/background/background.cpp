@@ -32,7 +32,7 @@ void WayfireBackground::setup_window()
     gtk_layer_set_keyboard_mode(gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
 
     gtk_layer_set_exclusive_zone(gobj(), -1);
-    
+
     set_child(*gl_area);
     present();
 }
@@ -46,13 +46,12 @@ WayfireBackground::WayfireBackground(WayfireOutput *output)
         this->inhibited = true;
         zwf_output_v2_inhibit_output(output->output);
     }
+
     setup_window();
 }
 
 WayfireBackground::~WayfireBackground()
-{
-}
-
+{}
 
 int main(int argc, char **argv)
 {
@@ -60,13 +59,13 @@ int main(int argc, char **argv)
     return 0;
 }
 
-
 void WayfireBackgroundApp::create(int argc, char **argv)
 {
     if (instance)
     {
         throw std::logic_error("Running WayfireBackgroundApp twice!");
     }
+
     instance = std::unique_ptr<WayfireShellApp>(new WayfireBackgroundApp{});
     instance->init_app();
     g_unix_signal_add(SIGUSR1, sigusr1_handler, (void*)instance.get());
@@ -87,18 +86,18 @@ void WayfireBackgroundApp::prep_cache()
     if (xdg_runtime_dir)
     {
         cache_file = std::string(xdg_runtime_dir) + "/wf-background.cache";
-        std::cout << "Using cache file "<< this->cache_file << std::endl;
-    } else 
+        std::cout << "Using cache file " << this->cache_file << std::endl;
+    } else
     {
         std::cout << "Not writing to cache file " << std::endl;
     }
 }
+
 void WayfireBackgroundApp::handle_new_output(WayfireOutput *output)
 {
     backgrounds[output] = std::unique_ptr<WayfireBackground>(
         new WayfireBackground(output));
 }
-
 
 void WayfireBackgroundApp::handle_output_removed(WayfireOutput *output)
 {
@@ -113,13 +112,14 @@ std::string WayfireBackgroundApp::get_application_name()
 std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string path)
 {
     wordexp_t exp;
-    std::cout << "Looking in "<< path << std::endl;
+    std::cout << "Looking in " << path << std::endl;
     /* Expand path */
     if (wordexp(path.c_str(), &exp, 0))
     {
         std::cout << "Error getting list of images" << std::endl;
         exit(0);
     }
+
     if (!exp.we_wordc)
     {
         std::cout << "Error getting list of images" << std::endl;
@@ -132,6 +132,7 @@ std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string p
         std::cout << "Error getting list of images" << std::endl;
         exit(0);
     }
+
     std::vector<std::string> images;
     /* Iterate over all files in the directory */
     dirent *file;
@@ -162,13 +163,14 @@ std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string p
 
     wordfree(&exp);
 
-    bool background_randomize = WfOption<bool> {"background/randomize"};
+    bool background_randomize = WfOption<bool>{"background/randomize"};
     if (background_randomize && images.size())
     {
         std::random_device random_device;
         std::mt19937 random_gen(random_device());
         std::shuffle(images.begin(), images.end(), random_gen);
     }
+
     return images;
 }
 
@@ -176,22 +178,25 @@ void WayfireBackgroundApp::change_background()
 {
     std::string background_path = WfOption<std::string>{"background/image"};
     auto list = get_background_list(background_path);
-    auto idx = find(list.begin(), list.end(), current_background) - list.begin();
+    auto idx  = find(list.begin(), list.end(), current_background) - list.begin();
     for (auto var : list)
     {
         std::cout << var << std::endl;
     }
-    std::cout << current_background <<  "  " << idx << std::endl;
+
+    std::cout << current_background << "  " << idx << std::endl;
     idx = (idx + 1) % list.size();
-    //gl_area->show_image(list[idx]);
-    for (auto &it : backgrounds)
+    // gl_area->show_image(list[idx]);
+    for (auto & it : backgrounds)
     {
         it.second->gl_area->show_image(list[idx]);
     }
+
     write_cache(list[idx]);
     reset_cycle_timeout();
     current_background = list[idx];
 }
+
 gboolean WayfireBackgroundApp::sigusr1_handler(void *instance)
 {
     ((WayfireBackgroundApp*)instance)->change_background();
@@ -200,8 +205,8 @@ gboolean WayfireBackgroundApp::sigusr1_handler(void *instance)
 
 void WayfireBackgroundApp::write_cache(std::string path)
 {
-    std::cout << "Writing path to cache "<<path << std::endl;
-    if(cache_file.length() > 1)
+    std::cout << "Writing path to cache " << path << std::endl;
+    if (cache_file.length() > 1)
     {
         std::ofstream out(cache_file);
         out << path;
@@ -211,11 +216,12 @@ void WayfireBackgroundApp::write_cache(std::string path)
 
 void WayfireBackgroundApp::reset_cycle_timeout()
 {
-    int background_cycle =1000 * WfOption<int>{"background/cycle_timeout"};
+    int background_cycle = 1000 * WfOption<int>{"background/cycle_timeout"};
     change_bg_conn.disconnect();
     change_bg_conn = Glib::signal_timeout().connect(
-        [this] () {
-            change_background();
-            return G_SOURCE_REMOVE;
-        }, background_cycle);
+        [this] ()
+    {
+        change_background();
+        return G_SOURCE_REMOVE;
+    }, background_cycle);
 }

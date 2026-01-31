@@ -30,7 +30,6 @@ class WayfireLockerMPRISWidget : public WayfireLockerTimedRevealer
     void cancontrol(bool value);
     std::vector<sigc::connection> signals;
 
-
   public:
     Gtk::Label label;
     Gtk::Button next, prev, playpause, kill;
@@ -40,7 +39,6 @@ class WayfireLockerMPRISWidget : public WayfireLockerTimedRevealer
 
     WayfireLockerMPRISWidget(std::string name, Glib::RefPtr<Gio::DBus::Proxy> proxy);
     ~WayfireLockerMPRISWidget();
-
 };
 
 class WayfireLockerMPRISCollective : public WayfireLockerTimedRevealer
@@ -52,17 +50,19 @@ class WayfireLockerMPRISCollective : public WayfireLockerTimedRevealer
   public:
     void add_child(std::string name, Glib::RefPtr<Gio::DBus::Proxy> proxy);
     void rem_child(std::string name);
-    WayfireLockerMPRISCollective():
-      WayfireLockerTimedRevealer("locker/mpris_always")
+    WayfireLockerMPRISCollective() :
+        WayfireLockerTimedRevealer("locker/mpris_always")
     {
         /* At next chance, force visibility */
-        Glib::signal_idle().connect([this] () {
-          set_reveal_child(true);
-          return G_SOURCE_REMOVE;
+        Glib::signal_idle().connect([this] ()
+        {
+            set_reveal_child(true);
+            return G_SOURCE_REMOVE;
         });
         set_child(box);
         box.set_orientation(Gtk::Orientation::VERTICAL);
     }
+
     void activity() override;
 };
 
@@ -73,6 +73,7 @@ class WayfireLockerMPRISPlugin : public WayfireLockerPlugin
     std::map<std::string, Glib::RefPtr<Gio::DBus::Proxy>> clients;
     std::map<int, Glib::RefPtr<WayfireLockerMPRISCollective>> widgets;
     sigc::connection signal;
+
   public:
     WayfireLockerMPRISPlugin();
     void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;

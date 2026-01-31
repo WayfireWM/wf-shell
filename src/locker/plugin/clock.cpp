@@ -17,7 +17,7 @@ void WayfireLockerClockPlugin::update_labels(std::string text)
     label_contents = text;
 }
 
-WayfireLockerClockPluginWidget::WayfireLockerClockPluginWidget(std::string contents):
+WayfireLockerClockPluginWidget::WayfireLockerClockPluginWidget(std::string contents) :
     WayfireLockerTimedRevealer("locker/clock_always")
 {
     set_child(label);
@@ -60,8 +60,8 @@ void WayfireLockerClockPlugin::update_time()
     this->update_labels(text.substr(i));
 }
 
-WayfireLockerClockPlugin::WayfireLockerClockPlugin():
-  WayfireLockerPlugin("locker/clock")
+WayfireLockerClockPlugin::WayfireLockerClockPlugin() :
+    WayfireLockerPlugin("locker/clock")
 {}
 
 void WayfireLockerClockPlugin::init()

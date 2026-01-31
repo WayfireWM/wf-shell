@@ -30,7 +30,8 @@ void WayfireLockerWeatherPlugin::update_icons(std::string path)
     icon_path = path;
 }
 
-WayfireLockerWeatherPluginWidget::WayfireLockerWeatherPluginWidget(std::string contents, std::string icon_path):
+WayfireLockerWeatherPluginWidget::WayfireLockerWeatherPluginWidget(std::string contents,
+    std::string icon_path) :
     WayfireLockerTimedRevealer("locker/weather_always")
 {
     set_child(box);
@@ -53,6 +54,7 @@ void WayfireLockerWeatherPlugin::add_output(int id, std::shared_ptr<WayfireLocke
     {
         weather_widget->hide();
     }
+
     grid->attach(*weather_widget, position);
 }
 
@@ -106,8 +108,8 @@ void WayfireLockerWeatherPlugin::update_weather()
     show();
 }
 
-WayfireLockerWeatherPlugin::WayfireLockerWeatherPlugin():
-  WayfireLockerPlugin("locker/weather")
+WayfireLockerWeatherPlugin::WayfireLockerWeatherPlugin() :
+    WayfireLockerPlugin("locker/weather")
 {}
 
 void WayfireLockerWeatherPlugin::init()

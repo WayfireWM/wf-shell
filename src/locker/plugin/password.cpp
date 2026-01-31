@@ -37,7 +37,7 @@ void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLock
 {
     widgets.emplace(id, new WayfireLockerPasswordPluginWidget(label_contents));
     auto widget = widgets[id];
-    
+
     /* Set entry callback for return */
     widget->entry.signal_activate().connect([this, widget] ()
     {
@@ -51,7 +51,7 @@ void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLock
     grid->attach(*widget, position);
 }
 
-WayfireLockerPasswordPluginWidget::WayfireLockerPasswordPluginWidget(std::string label_contents):
+WayfireLockerPasswordPluginWidget::WayfireLockerPasswordPluginWidget(std::string label_contents) :
     WayfireLockerTimedRevealer("locker/password_always")
 {
     set_child(box);
@@ -71,9 +71,9 @@ void WayfireLockerPasswordPlugin::remove_output(int id, std::shared_ptr<WayfireL
     widgets.erase(id);
 }
 
-WayfireLockerPasswordPlugin::WayfireLockerPasswordPlugin():
+WayfireLockerPasswordPlugin::WayfireLockerPasswordPlugin() :
     WayfireLockerPlugin("locker/password")
-{ }
+{}
 
 /* PAM password C code... */
 int pam_conversation(int num_mesg, const struct pam_message **mesg, struct pam_response **resp,

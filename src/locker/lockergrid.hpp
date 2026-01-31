@@ -17,19 +17,21 @@ class WayfireLockerGrid : public Gtk::CenterBox
     {
         for (int count = 0; count < 9; count++)
         {
-            for (auto child = box[count].get_first_child(); child!=nullptr; child = child->get_next_sibling())
+            for (auto child = box[count].get_first_child();
+                 child != nullptr;
+                 child = child->get_next_sibling())
             {
-                auto cast_child = (WayfireLockerTimedRevealer*) child;
+                auto cast_child = (WayfireLockerTimedRevealer*)child;
                 cast_child->activity();
             }
         }
     }
-    
+
     void remove(WayfireLockerTimedRevealer & widget)
     {
         for (int count = 0; count < 9; count++)
         {
-            auto list = box[count].get_children();
+            auto list    = box[count].get_children();
             int children = std::count(list.begin(), list.end(), &widget);
             if (children == 1)
             {
@@ -37,6 +39,7 @@ class WayfireLockerGrid : public Gtk::CenterBox
             }
         }
     }
+
     /* Config string to box from grid */
     void attach(WayfireLockerTimedRevealer & widget, std::string pos_string)
     {
@@ -79,7 +82,8 @@ class WayfireLockerGrid : public Gtk::CenterBox
         {
             throw std::exception();
         }
-        if(col==0) 
+
+        if (col == 0)
         {
             widget.set_halign(Gtk::Align::START);
         } else if (col == 1)
@@ -89,7 +93,8 @@ class WayfireLockerGrid : public Gtk::CenterBox
         {
             widget.set_halign(Gtk::Align::END);
         }
-        if(row==0) 
+
+        if (row == 0)
         {
             widget.set_valign(Gtk::Align::START);
         } else if (row == 1)
@@ -99,7 +104,6 @@ class WayfireLockerGrid : public Gtk::CenterBox
         {
             widget.set_valign(Gtk::Align::END);
         }
-
 
         box[col + (row * 3)].append(widget);
     }

@@ -16,12 +16,14 @@ WayfireLockerAppLockscreen::WayfireLockerAppLockscreen(std::string background_pa
     grid->set_expand(true);
 
     /* Prepare background */
-    Glib::signal_idle().connect([this,background_path] () {
+    Glib::signal_idle().connect([this, background_path] ()
+    {
         background.show_image(background_path);
         return G_SOURCE_REMOVE;
     });
 
-    auto wf_background_cb = [this] () {
+    auto wf_background_cb = [this] ()
+    {
         if ((bool)wf_background)
         {
             background.show();
@@ -49,16 +51,18 @@ WayfireLockerAppLockscreen::WayfireLockerAppLockscreen(std::string background_pa
         // Avoid first motion event and repeated with same location
         int ix = x;
         int iy = y;
-        if (last_x < 0 && last_y < 0)
+        if ((last_x < 0) && (last_y < 0))
         {
             last_x = ix;
             last_y = iy;
             return;
         }
-        if (ix == last_x && iy == last_y)
+
+        if ((ix == last_x) && (iy == last_y))
         {
             return;
         }
+
         last_x = ix;
         last_y = iy;
         window_activity();
@@ -68,14 +72,13 @@ WayfireLockerAppLockscreen::WayfireLockerAppLockscreen(std::string background_pa
     auto typing_gesture = Gtk::EventControllerKey::create();
     typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
     signals.push_back(typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
-                                                      Gdk::ModifierType state)
+                                                                        Gdk::ModifierType state)
     {
         window_activity();
         return false;
     }, false));
     add_controller(typing_gesture);
 }
-
 
 void WayfireLockerAppLockscreen::window_activity()
 {
@@ -84,6 +87,7 @@ void WayfireLockerAppLockscreen::window_activity()
     // Alert all widgets in window, to reveal themselves
     grid->window_activity();
 }
+
 void WayfireLockerAppLockscreen::disconnect()
 {
     for (auto signal : signals)

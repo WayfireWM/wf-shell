@@ -8,11 +8,11 @@
 #include "timedrevealer.hpp"
 #include "instant.hpp"
 
-WayfireLockerInstantPlugin::WayfireLockerInstantPlugin():
+WayfireLockerInstantPlugin::WayfireLockerInstantPlugin() :
     WayfireLockerPlugin("locker/instant_unlock")
-{ }
+{}
 
-WayfireLockerInstantPluginWidget::WayfireLockerInstantPluginWidget():
+WayfireLockerInstantPluginWidget::WayfireLockerInstantPluginWidget() :
     WayfireLockerTimedRevealer("locker/instant_unlock_always")
 {
     set_child(button);

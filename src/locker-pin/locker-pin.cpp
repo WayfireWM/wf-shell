@@ -7,8 +7,9 @@
 #include <iomanip>
 
 #include "locker-pin.hpp"
-    
-WayfirePinChangeApp::WayfirePinChangeApp() : Gtk::Application("org.wayfire.locker-pin", Gio::Application::Flags::NONE)
+
+WayfirePinChangeApp::WayfirePinChangeApp() : Gtk::Application("org.wayfire.locker-pin",
+        Gio::Application::Flags::NONE)
 {
     signal_activate().connect(sigc::mem_fun(*this, &WayfirePinChangeApp::activate));
     char *config_home = getenv("XDG_CONFIG_HOME");
@@ -17,14 +18,14 @@ WayfirePinChangeApp::WayfirePinChangeApp() : Gtk::Application("org.wayfire.locke
         hash_file = std::string(getenv("HOME")) + "/.config/wf-locker.hash";
     } else
     {
-        hash_file = std::string(std::string(config_home)+"/wf-locker.hash");
+        hash_file = std::string(std::string(config_home) + "/wf-locker.hash");
     }
 
     std::ifstream f(hash_file);
     if (!f.is_open())
     {
         std::cerr << "No PIN hash set" << std::endl;
-        hash="";
+        hash = "";
         return;
     }
 
@@ -32,14 +33,14 @@ WayfirePinChangeApp::WayfirePinChangeApp() : Gtk::Application("org.wayfire.locke
     if (!getline(f, s))
     {
         std::cerr << "No PIN hash set" << std::endl;
-        hash="";
+        hash = "";
         return;
     }
 
     if (s.length() != 128)
     {
         std::cerr << "Invalid PIN hash" << std::endl;
-        hash="";
+        hash = "";
         return;
     }
 
@@ -51,50 +52,52 @@ void WayfirePinChangeApp::activate()
     add_window(window);
     window.set_child(grid);
     grid.attach(label, 0, 0, 3, 1);
-    
-    for (int val = 0; val < 10; val ++)
+
+    for (int val = 0; val < 10; val++)
     {
         std::string val_string = std::to_string(val);
         numbers[val].set_label(val_string);
         numbers[val].signal_clicked().connect(
-            [this, val_string] () {
-                pin_key(val_string);
-            }
-        );
+            [this, val_string] ()
+        {
+            pin_key(val_string);
+        });
     }
+
     cancel.set_label("❌");
     submit.set_label("✔️");
     cancel.signal_clicked().connect(
-        [this](){
-            pin_cancel();
-        }
-    );
+        [this] ()
+    {
+        pin_cancel();
+    });
     submit.signal_clicked().connect(
-        [this] () {
-            pin_submit();
-        }
-    );
+        [this] ()
+    {
+        pin_submit();
+    });
 
     grid.attach(numbers[0], 1, 4);
     grid.attach(numbers[1], 0, 1);
     grid.attach(numbers[2], 1, 1);
     grid.attach(numbers[3], 2, 1);
-    grid.attach(numbers[4],0, 2);
+    grid.attach(numbers[4], 0, 2);
     grid.attach(numbers[5], 1, 2);
     grid.attach(numbers[6], 2, 2);
     grid.attach(numbers[7], 0, 3);
     grid.attach(numbers[8], 1, 3);
     grid.attach(numbers[9], 2, 3);
-    grid.attach(submit, 2,4);
+    grid.attach(submit, 2, 4);
     grid.attach(cancel, 0, 4);
 
-    if (hash.length()>1)
+    if (hash.length() > 1)
     {
         stage = Stage::PREVIOUS;
     } else
     {
         stage = Stage::FIRST;
     }
+
     set_label();
     grid.set_halign(Gtk::Align::CENTER);
     grid.set_valign(Gtk::Align::CENTER);
@@ -107,13 +110,13 @@ void WayfirePinChangeApp::set_label()
 
     if (stage == Stage::PREVIOUS)
     {
-        label.set_label("Enter current PIN\n"+asterisks);
+        label.set_label("Enter current PIN\n" + asterisks);
     } else if (stage == Stage::FIRST)
     {
-        label.set_label("Enter new PIN\n"+asterisks);
+        label.set_label("Enter new PIN\n" + asterisks);
     } else if (stage == Stage::CONFIRM)
     {
-        label.set_label("Confirm new PIN\n"+asterisks);
+        label.set_label("Confirm new PIN\n" + asterisks);
     }
 }
 
@@ -135,24 +138,26 @@ void WayfirePinChangeApp::pin_submit()
     {
         return;
     }
+
     if (stage == Stage::PREVIOUS)
     {
         std::string tmphash = sha512(pin);
         if (tmphash == hash)
         {
             stage = Stage::FIRST;
-            pin = "";
+            pin   = "";
             set_label();
             return;
         }
+
         pin = "";
         set_label();
         return;
     } else if (stage == Stage::FIRST)
     {
         confirm = sha512(pin);
-        pin = "";
-        stage = Stage::CONFIRM;
+        pin     = "";
+        stage   = Stage::CONFIRM;
         set_label();
         return;
     } else if (stage == Stage::CONFIRM)
@@ -165,9 +170,10 @@ void WayfirePinChangeApp::pin_submit()
             out.close();
             exit(0);
         }
-        confirm="";
-        pin="";
-        stage = Stage::FIRST;
+
+        confirm = "";
+        pin     = "";
+        stage   = Stage::FIRST;
         set_label();
         return;
     }
@@ -200,4 +206,3 @@ int main(int argc, char **argv)
     app->run();
     exit(0);
 }
-

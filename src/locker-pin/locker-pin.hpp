@@ -3,21 +3,22 @@
 
 enum Stage
 {
-  PREVIOUS,
-  FIRST,
-  CONFIRM,
+    PREVIOUS,
+    FIRST,
+    CONFIRM,
 };
 
-class WayfirePinChangeApp  : public Gtk::Application
+class WayfirePinChangeApp : public Gtk::Application
 {
     std::string hash_file;
     Gtk::Window window;
-    Gtk::Grid   grid;
+    Gtk::Grid grid;
     Gtk::Button numbers[10], cancel, submit;
-    Gtk::Label  label;
+    Gtk::Label label;
 
-    std::string hash="", pin="", confirm="";
+    std::string hash = "", pin = "", confirm = "";
     Stage stage;
+
   public:
     WayfirePinChangeApp();
     void activate();
@@ -27,5 +28,4 @@ class WayfirePinChangeApp  : public Gtk::Application
     void pin_submit();
 
     std::string sha512(const std::string input);
-
 };

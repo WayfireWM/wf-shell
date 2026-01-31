@@ -5,7 +5,7 @@
 #include "timedrevealer.hpp"
 #include "user.hpp"
 
-WayfireLockerUserPlugin::WayfireLockerUserPlugin():
+WayfireLockerUserPlugin::WayfireLockerUserPlugin() :
     WayfireLockerPlugin("locker/user")
 {}
 
@@ -35,7 +35,7 @@ void WayfireLockerUserPlugin::init()
         struct stat sb;
         if ((stat(home_path_file.c_str(), &sb) == 0) && !(sb.st_mode & S_IFDIR))
         {
-            std::cout << "Chosen image "<<home_path_file << std::endl;
+            std::cout << "Chosen image " << home_path_file << std::endl;
             image_path = home_path_file;
             return;
         }
@@ -46,10 +46,10 @@ void WayfireLockerUserPlugin::init()
 
 void WayfireLockerUserPlugin::deinit()
 {
-    image_path="";
+    image_path = "";
 }
 
-WayfireLockerUserPluginWidget::WayfireLockerUserPluginWidget(std::string image_path):
+WayfireLockerUserPluginWidget::WayfireLockerUserPluginWidget(std::string image_path) :
     WayfireLockerTimedRevealer("locker/user_always")
 {
     set_child(box);
@@ -69,6 +69,7 @@ WayfireLockerUserPluginWidget::WayfireLockerUserPluginWidget(std::string image_p
     {
         image.set(image_path);
     }
+
     box.append(image);
     box.append(label);
 }

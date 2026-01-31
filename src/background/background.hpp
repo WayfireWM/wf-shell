@@ -15,9 +15,9 @@ class WayfireBackground : public Gtk::Window
 {
   private:
     void setup_window();
-    WayfireOutput* output;
+    WayfireOutput *output;
     WfOption<bool> inhibit_start{"background/blank"};
-    bool inhibited=false;
+    bool inhibited = false;
 
   public:
     WayfireBackground(WayfireOutput *output);
@@ -42,9 +42,8 @@ class WayfireBackgroundApp : public WayfireShellApp
     std::string get_application_name() override;
     Gio::Application::Flags get_extra_application_flags() override
     {
-        return Gio::Application::Flags::NON_UNIQUE; 
+        return Gio::Application::Flags::NON_UNIQUE;
     }
-
 
     std::vector<std::string> get_background_list(std::string path);
     void change_background();

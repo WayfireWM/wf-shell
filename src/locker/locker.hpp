@@ -27,12 +27,12 @@ class WayfireLockerApp : public WayfireShellApp
     GtkSessionLockInstance *lock;
     std::map<std::string, Plugin> plugins = {};
 
-    bool m_is_debug        = false;
-    bool m_is_locked       = false;
-    bool instant_lock      = false;
-    int window_id_count    = 0;
-    int bad_auth_count     = 0;
-    bool lockout           = false;
+    bool m_is_debug     = false;
+    bool m_is_locked    = false;
+    bool instant_lock   = false;
+    int window_id_count = 0;
+    int bad_auth_count  = 0;
+    bool lockout = false;
     std::string cache_file = "";
     std::string background_path = "";
 
@@ -42,6 +42,7 @@ class WayfireLockerApp : public WayfireShellApp
 
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
     sigc::connection lockout_signal, prewake_signal;
+
   public:
     using WayfireShellApp::WayfireShellApp;
     static void create(int argc, char **argv);
@@ -49,6 +50,7 @@ class WayfireLockerApp : public WayfireShellApp
     {
         return (WayfireLockerApp&)WayfireShellApp::get();
     }
+
     Gio::Application::Flags get_extra_application_flags() override;
     std::string get_application_name() override;
     void command_line() override;
