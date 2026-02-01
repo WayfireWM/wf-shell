@@ -222,7 +222,7 @@ WfWpControlDevice::~WfWpControlDevice()
 
 void WfWpControlDevice::init()
 {
-    default_btn.add_css_class("default_button");
+    default_btn.add_css_class("default-button");
     default_btn.add_css_class("widget-icon");
     default_btn.add_css_class("wireplumber");
     default_btn.add_css_class("flat");
