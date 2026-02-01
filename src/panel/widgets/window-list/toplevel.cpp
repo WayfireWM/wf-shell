@@ -60,9 +60,9 @@ class WayfireToplevel::impl
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
             &toplevel_handle_v1_impl, this);
 
-        button.get_style_context()->add_class("window-button");
-        button.get_style_context()->add_class("flat");
-        button.get_style_context()->remove_class("activated");
+        button.add_css_class("window-button");
+        button.add_css_class("flat");
+        button.remove_css_class("activated");
         button_contents.append(image);
         button_contents.append(label);
         button_contents.set_halign(Gtk::Align::START);
@@ -448,31 +448,31 @@ class WayfireToplevel::impl
     {
         if (state & WF_TOPLEVEL_STATE_ACTIVATED)
         {
-            button.get_style_context()->add_class("activated");
-            button.get_style_context()->remove_class("flat");
+            button.add_css_class("activated");
+            button.remove_css_class("flat");
         } else
         {
-            button.get_style_context()->add_class("flat");
-            button.get_style_context()->remove_class("activated");
+            button.add_css_class("flat");
+            button.remove_css_class("activated");
         }
 
         if (state & WF_TOPLEVEL_STATE_MINIMIZED)
         {
-            button.get_style_context()->add_class("minimized");
+            button.add_css_class("minimized");
             minimize_action->set_state(Glib::wrap(g_variant_new_boolean(true)));
         } else
         {
-            button.get_style_context()->remove_class("minimized");
+            button.remove_css_class("minimized");
             minimize_action->set_state(Glib::wrap(g_variant_new_boolean(false)));
         }
 
         if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
         {
-            button.get_style_context()->add_class("maximized");
+            button.add_css_class("maximized");
             maximize_action->set_state(Glib::wrap(g_variant_new_boolean(true)));
         } else
         {
-            button.get_style_context()->remove_class("maximized");
+            button.remove_css_class("maximized");
             maximize_action->set_state(Glib::wrap(g_variant_new_boolean(false)));
         }
     }

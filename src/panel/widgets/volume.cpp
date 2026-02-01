@@ -179,7 +179,7 @@ void WayfireVolume::init(Gtk::Box *container)
     popover.set_autohide(false);
     popover.set_child(volume_scale);
     // popover->set_modal(false);
-    popover.get_style_context()->add_class("volume-popover");
+    popover.add_css_class("volume-popover");
     auto scroll_gesture2 = Gtk::EventControllerScroll::create();
     signals.push_back(scroll_gesture2->signal_scroll().connect([=] (double dx, double dy)
     {

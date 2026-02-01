@@ -37,11 +37,11 @@ class WfDock::impl
         gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
         gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
         out_box.append(box);
-        out_box.get_style_context()->add_class("out-box");
-        box.get_style_context()->add_class("box");
+        out_box.add_css_class("out-box");
+        box.add_css_class("box");
         window->set_child(out_box);
 
-        window->get_style_context()->add_class("wf-dock");
+        window->add_css_class("wf-dock");
 
         out_box.set_halign(Gtk::Align::CENTER);
 

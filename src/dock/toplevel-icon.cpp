@@ -44,8 +44,8 @@ class WfToplevelIcon::impl
 
         button.set_child(image);
         button.set_tooltip_text("none");
-        button.get_style_context()->add_class("flat");
-        button.get_style_context()->add_class("toplevel-icon");
+        button.add_css_class("flat");
+        button.add_css_class("toplevel-icon");
 
         button.signal_clicked().connect(
             sigc::mem_fun(*this, &WfToplevelIcon::impl::on_clicked));
@@ -136,7 +136,7 @@ class WfToplevelIcon::impl
 
     void close()
     {
-        button.get_style_context()->add_class("closing");
+        button.add_css_class("closing");
         closing = true;
     }
 

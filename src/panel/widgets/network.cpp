@@ -254,13 +254,13 @@ void WayfireNetworkInfo::update_status()
     status.set_text(description);
     button.set_tooltip_text(description);
 
-    status.get_style_context()->remove_class("excellent");
-    status.get_style_context()->remove_class("good");
-    status.get_style_context()->remove_class("weak");
-    status.get_style_context()->remove_class("none");
+    status.remove_css_class("excellent");
+    status.remove_css_class("good");
+    status.remove_css_class("weak");
+    status.remove_css_class("none");
     if (status_color_opt)
     {
-        status.get_style_context()->add_class(info->get_strength_str());
+        status.add_css_class(info->get_strength_str());
     }
 }
 
@@ -390,7 +390,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
 
     container->append(button);
     button.set_child(button_content);
-    button.get_style_context()->add_class("flat");
+    button.add_css_class("flat");
 
     signals.push_back(button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireNetworkInfo::on_click)));
@@ -403,7 +403,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     icon.set_valign(Gtk::Align::CENTER);
     signals.push_back(icon.property_scale_factor().signal_changed().connect(
         sigc::mem_fun(*this, &WayfireNetworkInfo::update_icon)));
-    icon.get_style_context()->add_class("network-icon");
+    icon.add_css_class("network-icon");
 
     update_active_connection();
     handle_config_reload();

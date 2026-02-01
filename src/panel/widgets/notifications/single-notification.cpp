@@ -55,23 +55,23 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
         app_icon.set_from_icon_name(notification.app_icon);
     }
 
-    get_style_context()->add_class("notification");
+    add_css_class("notification");
 
-    app_icon.get_style_context()->add_class("app-icon");
+    app_icon.add_css_class("app-icon");
 
-    top_bar.get_style_context()->add_class("top-bar");
+    top_bar.add_css_class("top-bar");
     top_bar.append(app_icon);
 
     app_name.set_label(notification.app_name);
     app_name.set_halign(Gtk::Align::START);
     app_name.set_ellipsize(Pango::EllipsizeMode::END);
-    app_name.get_style_context()->add_class("app-name");
+    app_name.add_css_class("app-name");
     top_bar.append(app_name);
 
 
     time_label.set_sensitive(false);
     time_label.set_label(format_recv_time(notification.additional_info.recv_time));
-    time_label.get_style_context()->add_class("time");
+    time_label.add_css_class("time");
     signals.push_back(Glib::signal_timeout().connect(
         [=]
     {
@@ -84,8 +84,8 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
 
     close_image.set_from_icon_name("window-close");
     close_button.set_child(close_image);
-    close_button.get_style_context()->add_class("flat");
-    close_button.get_style_context()->add_class("close");
+    close_button.add_css_class("flat");
+    close_button.add_css_class("close");
     signals.push_back(close_button.signal_clicked().connect(
         [=] { Daemon::Instance()->closeNotification(notification.id, Daemon::CloseReason::Dismissed); }));
     top_bar.set_spacing(5);
@@ -108,7 +108,7 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
         }
     }
 
-    content.get_style_context()->add_class("notification-contents");
+    content.add_css_class("notification-contents");
     content.append(image);
 
     text.set_halign(Gtk::Align::START);
@@ -127,7 +127,7 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
 
     child.append(content);
 
-    actions.get_style_context()->add_class("actions");
+    actions.add_css_class("actions");
 
     if (!notification.actions.empty())
     {

@@ -217,17 +217,22 @@ void WayfireWpMixer::init(Gtk::Box *container)
     // sets up the "widget part"
 
     button = std::make_unique<WayfireMenuButton>("panel");
-    button->get_style_context()->add_class("widget-icon");
-    button->get_style_context()->add_class("wireplumber");
-    button->get_style_context()->add_class("flat");
-    button->get_children()[0]->get_style_context()->add_class("flat");
+    button->add_css_class("widget-icon");
+    button->add_css_class("wireplumber");
+    button->add_css_class("flat");
+    button->get_children()[0]->add_css_class("flat");
     button->set_child(main_image);
     button->show();
+    sinks_box.add_css_class("outputs");
+    sources_box.add_css_class("inputs");
+    streams_box.add_css_class("streams");
+    out_in_wall.add_css_class("out-in");
+    in_streams_wall.add_css_class("in_streams");
 
     popover = button->get_popover();
     popover->set_child(master_box);
     popover->set_autohide(false);
-    popover->get_style_context()->add_class("wireplumber-popover");
+    popover->add_css_class("wireplumber-popover");
 
     // scroll to change volume of the object targetted by the quick_target widget
     auto scroll_gesture = Gtk::EventControllerScroll::create();
