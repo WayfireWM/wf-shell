@@ -46,10 +46,9 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
     }
 
     button.set_child(m_icon);
-    auto style = button.get_style_context();
-    style->add_class("widget-icon");
-    style->add_class("flat");
-    style->add_class("launcher");
+    button.add_css_class("widget-icon");
+    button.add_css_class("flat");
+    button.add_css_class("launcher");
 
     btn_sig = button.signal_clicked().connect([=] () { launch(); });
 

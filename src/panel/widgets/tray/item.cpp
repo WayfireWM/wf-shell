@@ -82,10 +82,9 @@ void StatusNotifierItem::init_widget()
     update_icon();
     setup_tooltip();
     init_menu();
-    auto style = get_style_context();
-    style->add_class("widget-icon");
-    style->add_class("tray-button");
-    style->add_class("flat");
+    add_css_class("widget-icon");
+    add_css_class("tray-button");
+    add_css_class("flat");
     gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(gobj()));
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();

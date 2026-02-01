@@ -146,10 +146,9 @@ void WayfireVolume::init(Gtk::Box *container)
             popover.popdown();
         }
     }));
-    auto style = button.get_style_context();
-    style->add_class("widget-icon");
-    style->add_class("volume");
-    style->add_class("flat");
+    button.add_css_class("widget-icon");
+    button.add_css_class("volume");
+    button.add_css_class("flat");
 
     gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(button.gobj()));
 

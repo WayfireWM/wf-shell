@@ -886,9 +886,8 @@ void WayfireMenu::init(Gtk::Box *container)
 
     button = std::make_unique<WayfireMenuButton>("panel");
     button->set_child(main_image);
-    auto style = button->get_style_context();
-    style->add_class("menu-button");
-    style->add_class("flat");
+    button->add_css_class("menu-button");
+    button->add_css_class("flat");
     button->get_popover()->add_css_class("menu-popover");
     button->get_children()[0]->add_css_class("flat");
     signals.push_back(button->get_popover()->signal_show().connect(
