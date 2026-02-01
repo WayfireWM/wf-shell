@@ -146,6 +146,7 @@ void WfWpControl::update_icon()
         volume_icon.set_from_icon_name(volume_icon_for(0)); // mute
         return;
     }
+
     remove_css_class("muted");
     volume_icon.set_from_icon_name(volume_icon_for(get_scale_target_value()));
 }
@@ -256,6 +257,7 @@ void WfWpControlDevice::set_def_status_no_callbk(bool state)
     {
         remove_css_class("default");
     }
+
     def_conn.block(true);
     default_btn.set_active(state);
     def_conn.block(false);
