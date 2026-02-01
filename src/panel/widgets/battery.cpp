@@ -216,9 +216,9 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
     }
 
     button_box.append(icon);
-    icon.get_style_context()->add_class("widget-icon");
-    button.get_style_context()->add_class("battery");
-    button.get_style_context()->add_class("flat");
+    icon.add_css_class("widget-icon");
+    button.add_css_class("battery");
+    button.add_css_class("flat");
 
     status_opt.set_callback([=] () { update_details(); });
 

@@ -44,8 +44,8 @@ class WfToplevelIcon::impl
 
         button.set_child(image);
         button.set_tooltip_text("none");
-        button.get_style_context()->add_class("flat");
-        button.get_style_context()->add_class("toplevel-icon");
+        button.add_css_class("flat");
+        button.add_css_class("toplevel-icon");
 
         button.signal_clicked().connect(
             sigc::mem_fun(*this, &WfToplevelIcon::impl::on_clicked));
@@ -136,7 +136,7 @@ class WfToplevelIcon::impl
 
     void close()
     {
-        button.get_style_context()->add_class("closing");
+        button.add_css_class("closing");
         closing = true;
     }
 
@@ -151,29 +151,28 @@ class WfToplevelIcon::impl
         bool is_activated = this->state & WF_TOPLEVEL_STATE_ACTIVATED;
         bool is_min = state & WF_TOPLEVEL_STATE_MINIMIZED;
         bool is_max = state & WF_TOPLEVEL_STATE_MAXIMIZED;
-        auto style  = this->button.get_style_context();
         if (is_activated)
         {
-            style->add_class("activated");
+            button.add_css_class("activated");
         } else
         {
-            style->remove_class("activated");
+            button.remove_css_class("activated");
         }
 
         if (is_min)
         {
-            style->add_class("minimized");
+            button.add_css_class("minimized");
         } else
         {
-            style->remove_class("minimized");
+            button.remove_css_class("minimized");
         }
 
         if (is_max)
         {
-            style->add_class("maximized");
+            button.add_css_class("maximized");
         } else
         {
-            style->remove_class("maximized");
+            button.remove_css_class("maximized");
         }
     }
 

@@ -10,9 +10,9 @@
 void WayfireNotificationCenter::init(Gtk::Box *container)
 {
     button = std::make_unique<WayfireMenuButton>("panel");
-    icon.get_style_context()->add_class("widget-icon");
-    button->get_style_context()->add_class("notification-center");
-    button->get_children()[0]->get_style_context()->add_class("flat");
+    icon.add_css_class("widget-icon");
+    button->add_css_class("notification-center");
+    button->get_children()[0]->add_css_class("flat");
 
     updateIcon();
     button->set_child(icon);
@@ -20,7 +20,7 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
 
     auto *popover = button->get_popover();
     popover->set_size_request(WIDTH, HEIGHT);
-    popover->get_style_context()->add_class("notification-popover");
+    popover->add_css_class("notification-popover");
 
     box.set_valign(Gtk::Align::START);
     box.set_orientation(Gtk::Orientation::VERTICAL);

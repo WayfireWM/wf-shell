@@ -16,9 +16,9 @@
 
 void WayfireLanguage::init(Gtk::Box *container)
 {
-    button.get_style_context()->add_class("language");
-    button.get_style_context()->add_class("flat");
-    button.get_style_context()->remove_class("activated");
+    button.add_css_class("language");
+    button.add_css_class("flat");
+    button.remove_css_class("activated");
     btn_sig = button.signal_clicked().connect(sigc::mem_fun(*this, &WayfireLanguage::next_layout));
     button.show();
 

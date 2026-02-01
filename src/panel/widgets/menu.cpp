@@ -42,8 +42,8 @@ WfMenuCategoryButton::WfMenuCategoryButton(WayfireMenu *_menu, std::string _cate
     m_box.set_homogeneous(false);
 
     this->set_child(m_box);
-    this->get_style_context()->add_class("flat");
-    this->get_style_context()->add_class("app-category");
+    this->add_css_class("flat");
+    this->add_css_class("app-category");
 
     sig_click = this->signal_clicked().connect(
         sigc::mem_fun(*this, &WfMenuCategoryButton::on_click));
@@ -80,9 +80,9 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     m_padding_box.append(m_button);
     m_label.set_ellipsize(Pango::EllipsizeMode::END);
     m_label.set_max_width_chars(5);
-    m_button.get_style_context()->add_class("flat");
-    m_extra_actions_button.get_style_context()->add_class("flat");
-    m_extra_actions_button.get_style_context()->add_class("app-button-extras");
+    m_button.add_css_class("flat");
+    m_extra_actions_button.add_css_class("flat");
+    m_extra_actions_button.add_css_class("app-button-extras");
     m_extra_actions_button.set_halign(Gtk::Align::END);
     m_extra_actions_button.set_direction(Gtk::ArrowType::RIGHT);
     m_extra_actions_button.set_has_frame(false);
@@ -121,7 +121,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     }
 
     set_child(m_padding_box);
-    get_style_context()->add_class("app-button");
+    add_css_class("app-button");
     set_has_tooltip();
     signals.push_back(signal_query_tooltip().connect([=] (int x, int y, bool key_mode,
                                                           const std::shared_ptr<Gtk::Tooltip>& tooltip) ->
@@ -548,7 +548,7 @@ void WayfireMenu::setup_popover_layout()
     flowbox.set_homogeneous(true);
     flowbox.set_sort_func(sigc::mem_fun(*this, &WayfireMenu::on_sort));
     flowbox.set_filter_func(sigc::mem_fun(*this, &WayfireMenu::on_filter));
-    flowbox.get_style_context()->add_class("app-list");
+    flowbox.add_css_class("app-list");
     flowbox.set_size_request(int(menu_min_content_width), int(menu_min_content_height));
 
     flowbox_container.append(flowbox);
@@ -560,19 +560,19 @@ void WayfireMenu::setup_popover_layout()
     app_scrolled_window.set_min_content_width(int(menu_min_content_width));
     app_scrolled_window.set_min_content_height(int(menu_min_content_height));
     app_scrolled_window.set_child(flowbox_container);
-    app_scrolled_window.get_style_context()->add_class("app-list-scroll");
+    app_scrolled_window.add_css_class("app-list-scroll");
     app_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
 
-    category_box.get_style_context()->add_class("category-list");
+    category_box.add_css_class("category-list");
     category_box.set_orientation(Gtk::Orientation::VERTICAL);
 
     category_scrolled_window.set_min_content_width(int(menu_min_category_width));
     category_scrolled_window.set_min_content_height(int(menu_min_content_height));
     category_scrolled_window.set_child(category_box);
-    category_scrolled_window.get_style_context()->add_class("categtory-list-scroll");
+    category_scrolled_window.add_css_class("categtory-list-scroll");
     category_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
 
-    search_entry.get_style_context()->add_class("app-search");
+    search_entry.add_css_class("app-search");
 
     auto typing_gesture = Gtk::EventControllerKey::create();
     typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
@@ -784,7 +784,7 @@ WayfireLogoutUI::WayfireLogoutUI()
     box.set_hexpand(true);
     box.set_vexpand(true);
     ui.set_child(box);
-    ui.get_style_context()->add_class("logout");
+    ui.add_css_class("logout");
     auto display = ui.get_display();
     auto css_provider = Gtk::CssProvider::create();
     css_provider->load_from_data("window.logout { background-color: rgba(0, 0, 0, 0.5); }");
@@ -870,8 +870,8 @@ void WayfireMenu::init(Gtk::Box *container)
     category_list["Hidden"] = std::make_unique<WfMenuCategory>("Other Desktops",
         "user-desktop");
 
-    main_image.get_style_context()->add_class("widget-icon");
-    main_image.get_style_context()->add_class("menu-icon");
+    main_image.add_css_class("widget-icon");
+    main_image.add_css_class("menu-icon");
 
     signals.push_back(output->toggle_menu_signal().connect(sigc::mem_fun(*this, &WayfireMenu::toggle_menu)));
 
@@ -886,11 +886,10 @@ void WayfireMenu::init(Gtk::Box *container)
 
     button = std::make_unique<WayfireMenuButton>("panel");
     button->set_child(main_image);
-    auto style = button->get_style_context();
-    style->add_class("menu-button");
-    style->add_class("flat");
-    button->get_popover()->get_style_context()->add_class("menu-popover");
-    button->get_children()[0]->get_style_context()->add_class("flat");
+    button->add_css_class("menu-button");
+    button->add_css_class("flat");
+    button->get_popover()->add_css_class("menu-popover");
+    button->get_children()[0]->add_css_class("flat");
     signals.push_back(button->get_popover()->signal_show().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown)));
 
@@ -914,7 +913,7 @@ void WayfireMenu::init(Gtk::Box *container)
 
     logout_image.set_icon_size(Gtk::IconSize::LARGE);
     logout_image.set_from_icon_name("system-shutdown");
-    logout_button.get_style_context()->add_class("flat");
+    logout_button.add_css_class("flat");
     signals.push_back(logout_button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_logout_click)));
     logout_button.set_margin_end(35);

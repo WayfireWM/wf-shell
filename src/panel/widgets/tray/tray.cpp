@@ -2,7 +2,7 @@
 
 void WayfireStatusNotifier::init(Gtk::Box *container)
 {
-    icons_box.get_style_context()->add_class("tray");
+    icons_box.add_css_class("tray");
     icons_box.set_spacing(5);
     container->append(icons_box);
 }
