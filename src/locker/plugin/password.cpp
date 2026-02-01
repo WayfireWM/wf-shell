@@ -1,6 +1,8 @@
 #include <iostream>
 #include <memory>
 #include <glibmm.h>
+#include "gdkmm/enums.h"
+#include "glib.h"
 #include "gtkmm/entry.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/label.h"
@@ -49,12 +51,17 @@ void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLock
     }, true);
     /* Add to window */
     grid->attach(*widget, position);
+
+    widget->signal_realize().connect([=] () {
+        widget->entry.grab_focus();
+    });
 }
 
 WayfireLockerPasswordPluginWidget::WayfireLockerPasswordPluginWidget(std::string label_contents) :
     WayfireLockerTimedRevealer("locker/password_always")
 {
     set_child(box);
+    box.add_css_class("password");
     box.append(entry);
     box.append(label);
     box.set_orientation(Gtk::Orientation::VERTICAL);

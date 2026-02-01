@@ -145,6 +145,12 @@
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
 }
+
+.wf-locker .password{
+    padding: 10px;
+    border-radius: 10px;
+    background: #0004;
+}
 .wf-locker .fingerprint-overlay-image {
     -gtk-icon-size: 64px;
 }
