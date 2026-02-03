@@ -24,13 +24,16 @@ AccessPointWidget::AccessPointWidget(std::string path_in, std::shared_ptr<Access
             label.set_label(ap->get_ssid());
             image.set_from_icon_name(ap->get_icon_name());
         };
-    signal = ap_in->signal_altered().connect(update_ap);
+    signals.push_back(ap_in->signal_altered().connect(update_ap));
     update_ap();
 }
 
 AccessPointWidget::~AccessPointWidget()
 {
-    signal.disconnect();
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
 }
 
 VPNControlWidget::VPNControlWidget(std::shared_ptr<VpnConfig> config):
@@ -40,6 +43,14 @@ VPNControlWidget::VPNControlWidget(std::shared_ptr<VpnConfig> config):
     append(label);
     label.set_label(config->name);
     image.set_from_icon_name("network-vpn-symbolic");
+}
+
+VPNControlWidget::~VPNControlWidget()
+{
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
 }
 
 DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network):
@@ -68,17 +79,17 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network):
             add_access_point(it.second);
         }
 
-        wifi->signal_add_access_point().connect(
+        signals.push_back(wifi->signal_add_access_point().connect(
             [this] (std::shared_ptr<AccessPoint> ap) {
                 add_access_point(ap);
             }
-        );
+        ));
 
-        wifi->signal_remove_access_point().connect(
+        signals.push_back(wifi->signal_remove_access_point().connect(
             [this] (std::shared_ptr<AccessPoint> ap) {
                 remove_access_point(ap->get_path());
             }
-        );
+        ));
 
         auto wifi_cb = 
             [this, wifi] () {
@@ -92,7 +103,7 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network):
                     topbox.show();
                 }
             };
-        network->signal_network_altered().connect(wifi_cb);
+        signals.push_back(network->signal_network_altered().connect(wifi_cb));
         wifi_cb();
     } else if (wired)
     {
@@ -114,11 +125,11 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network):
     
     /* Click toggles connection on/off */
     auto click = Gtk::GestureClick::create();
-    click->signal_released().connect(
+    signals.push_back(click->signal_released().connect(
         [network] (int, double, double) {
             network->toggle();
         }
-    );
+    ));
     label.add_controller(click);
 
     /* Set label and image based on friendly info */
@@ -133,7 +144,7 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network):
                 label.remove_css_class("active");
             }
         };
-    network->signal_network_altered().connect(network_change_cb);
+    signals.push_back(network->signal_network_altered().connect(network_change_cb));
     network_change_cb();
 
 }
@@ -143,8 +154,8 @@ void DeviceControlWidget::remove_access_point(std::string path){
     if (widget)
     {
         revealer_box.remove(*widget);
-        access_points.erase(path);
     }
+    access_points.erase(path);
 }
 
 void DeviceControlWidget::add_access_point(std::shared_ptr<AccessPoint> ap)
@@ -158,16 +169,21 @@ void DeviceControlWidget::add_access_point(std::shared_ptr<AccessPoint> ap)
     {
         return;
     }
-    access_points.emplace(path, new AccessPointWidget(path,  ap));
+    auto success = access_points.emplace(path, new AccessPointWidget(path,  ap));
+    if (!success.second){
+        std::cerr << "Unable to insert Access Point "<< path<< success.first->first <<  std::endl;
+        exit(1);
+    }
     auto widget = access_points[path];
     auto click = Gtk::GestureClick::create();
     
-    click->signal_released().connect(
+    auto sig = click->signal_released().connect(
         [this, path] (int, double, double) {
             selected_access_point(path);
         }
     );
     widget->add_controller(click);
+    widget->signals.push_back(sig);
     revealer_box.append(*access_points[path]);
 }
 
@@ -191,26 +207,39 @@ void DeviceControlWidget::selected_access_point(std::string path)
     }
 }
 
+DeviceControlWidget::~DeviceControlWidget()
+{
+    access_points.clear();
+    network = nullptr;
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
+}
+
 NetworkControlWidget::NetworkControlWidget()
 {
+    append(network_manager_failed);
+    /* Default state is no NM found */
+    network_manager_failed.set_label("Network Manager is not running");
+    top.hide();
     add_css_class("network-control-center");
     set_orientation(Gtk::Orientation::VERTICAL);
     network_manager = NetworkManager::getInstance();
 
-    network_manager->signal_device_added().connect(
+    signals.push_back(network_manager->signal_nm_start().connect(
+        sigc::mem_fun(*this, &NetworkControlWidget::nm_start)
+    ));
+    signals.push_back(network_manager->signal_nm_stop().connect(
+        sigc::mem_fun(*this, &NetworkControlWidget::nm_stop)
+    ));
+    signals.push_back(network_manager->signal_device_added().connect(
         sigc::mem_fun(*this, &NetworkControlWidget::add_device)
-    );
-
-    network_manager->signal_device_removed().connect(
+    ));
+    signals.push_back(network_manager->signal_device_removed().connect(
         sigc::mem_fun(*this, &NetworkControlWidget::remove_device)
-    );
+    ));
 
-    /* Fill already existing devices */
-
-    for (auto &device : network_manager->get_all_devices())
-    {
-        add_device(device.second);
-    }
     top.append(global_networking);
     top.append(wifi_networking);
     top.append(mobile_networking);
@@ -228,79 +257,64 @@ NetworkControlWidget::NetworkControlWidget()
     wifi_networking.set_label("Wifi");
     mobile_networking.set_label("Mobile");
 
+    /* Connect to global widget cb */
     signal_network = global_networking.signal_toggled().connect(
         [this] () {
             network_manager->networking_global_set(global_networking.get_active());
         }
     );
-
     signal_wifi = wifi_networking.signal_toggled().connect(
         [this] () {
             network_manager->wifi_global_set(wifi_networking.get_active());
         }
     );
-
     signal_mobile = mobile_networking.signal_toggled().connect(
         [this] () {
             network_manager->mobile_global_set(mobile_networking.get_active());
         }
     );
-
-    /* Global killswitches from NM proper */
-    auto global_cb = 
-        [this] () {
-            auto [wifi_soft, wifi_hard] = network_manager->wifi_global_enabled();
-            auto [mobile_soft, mobile_hard] = network_manager->mobile_global_enabled();
-            auto global = network_manager->networking_global_enabled();
-            if (!wifi_hard)
-            {
-                wifi_networking.set_label("Wifi ✈");
-                signal_wifi.block(true);
-                wifi_networking.set_active(false);
-                signal_wifi.unblock();
-            } else if(!wifi_soft)
-            {
-                wifi_networking.set_label("Wifi");
-                signal_wifi.block(true);
-                wifi_networking.set_active(false);
-                signal_wifi.unblock();
-            } else {
-                wifi_networking.set_label("Wifi");
-                signal_wifi.block(true);
-                wifi_networking.set_active(true);
-                signal_wifi.unblock();
-            }
-            if(!mobile_hard)
-            {
-                mobile_networking.set_label("Mobile ✈");
-                signal_mobile.block(true);
-                mobile_networking.set_active(false);
-                signal_mobile.unblock();
-            } else if(!mobile_soft)
-            {
-                mobile_networking.set_label("Mobile");
-                signal_mobile.block(true);
-                mobile_networking.set_active(false);
-                signal_mobile.unblock();
-            } else {
-                mobile_networking.set_label("Mobile");
-                signal_mobile.block(true);
-                mobile_networking.set_active(true);
-                signal_mobile.unblock();
-            }
-            signal_network.block(true);
-            global_networking.set_active(global);
-            signal_network.unblock();
-        };
+    /* Connect changes to global state in NM */
+    signals.push_back(network_manager->signal_global_toggle().connect(
+        sigc::mem_fun(*this, &NetworkControlWidget::update_globals)));
     
-    network_manager->signal_global_toggle().connect(global_cb);
-    global_cb();
+}
 
-    for (auto &it : network_manager->get_all_vpns())
+void NetworkControlWidget::update_globals()
+{
+    auto [wifi_soft, wifi_hard] = network_manager->wifi_global_enabled();
+    auto [mobile_soft, mobile_hard] = network_manager->mobile_global_enabled();
+    auto global = network_manager->networking_global_enabled();
+    signal_wifi.block(true);
+    signal_mobile.block(true);
+    signal_network.block(true);
+    if (!wifi_hard)
     {
-        add_vpn(it.second);
+        wifi_networking.set_label("Wifi ✈");
+        wifi_networking.set_active(false);
+    } else if(!wifi_soft)
+    {
+        wifi_networking.set_label("Wifi");
+        wifi_networking.set_active(false);
+    } else {
+        wifi_networking.set_label("Wifi");
+        wifi_networking.set_active(true);
     }
-    
+    if(!mobile_hard)
+    {
+        mobile_networking.set_label("Mobile ✈");
+        mobile_networking.set_active(false);
+    } else if(!mobile_soft)
+    {
+        mobile_networking.set_label("Mobile");
+        mobile_networking.set_active(false);
+    } else {
+        mobile_networking.set_label("Mobile");
+        mobile_networking.set_active(true);
+    }
+    global_networking.set_active(global);
+    signal_wifi.unblock();
+    signal_mobile.unblock();
+    signal_network.unblock();
 }
 
 void NetworkControlWidget::add_vpn(std::shared_ptr<VpnConfig> config)
@@ -309,7 +323,7 @@ void NetworkControlWidget::add_vpn(std::shared_ptr<VpnConfig> config)
     vpn_widgets.emplace(config->path, widget);
 
     auto click = Gtk::GestureClick::create();
-    click->signal_released().connect(
+    auto sig = click->signal_released().connect(
         [this, config] (int, double, double) {
             auto primary = network_manager->get_primary_network();
             if (primary->has_vpn)
@@ -321,6 +335,7 @@ void NetworkControlWidget::add_vpn(std::shared_ptr<VpnConfig> config)
         }
     );
     widget->add_controller(click);
+    widget->signals.push_back(sig);
     vpn_box.append(*widget);
 }
 
@@ -356,17 +371,63 @@ void NetworkControlWidget::add_device(std::shared_ptr<Network> network)
     } else {
         std::cout << "Unknown network type : " << widget->type << std::endl;
     }
-    
 }
 
 void NetworkControlWidget::remove_device(std::shared_ptr<Network> network)
 {
     auto widget = widgets[network->get_path()];
-    /* TODO Remove warnings by checking? */
-    wifi_box.remove(*widget);
-    mobile_box.remove(*widget);
-    wire_box.remove(*widget);
-    vpn_box.remove(*widget);
-    bt_box.remove(*widget);
+    if (widget->type == "wifi")
+    {
+        wifi_box.remove(*widget);
+    } else if (widget->type == "mobile")
+    {
+        mobile_box.remove(*widget);
+    } else if (widget->type == "wired")
+    {
+        wire_box.remove(*widget);
+    } else if (widget->type == "bt")
+    {
+        bt_box.remove(*widget);
+    } else {
+        std::cout << "Unknown network type : " << widget->type << std::endl;
+    }
     widgets.erase(network->get_path());
+}
+
+void NetworkControlWidget::nm_start()
+{
+    network_manager_failed.hide();
+    top.show();
+    /* Fill already existing devices */
+    for (auto &device : network_manager->get_all_devices())
+    {
+        add_device(device.second);
+    }
+    for (auto &it : network_manager->get_all_vpns())
+    {
+        add_vpn(it.second);
+    }
+    update_globals();
+}
+void NetworkControlWidget::nm_stop()
+{
+    network_manager_failed.show();
+    top.hide();
+    widgets.clear();
+    for (auto &it : vpn_widgets)
+    {
+        vpn_box.remove(*it.second);
+    }
+    vpn_widgets.clear();
+}
+
+NetworkControlWidget::~NetworkControlWidget()
+{
+    signal_network.disconnect();
+    signal_mobile.disconnect();
+    signal_wifi.disconnect();
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
 }

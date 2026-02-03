@@ -9,6 +9,7 @@
 
 #include "network.hpp"
 #include "connection.hpp"
+#include "network/null.hpp"
 #include "vpn.hpp"
 
 using type_signal_network = sigc::signal<void (std::shared_ptr<Network>)>;
@@ -21,19 +22,19 @@ class NetworkManager
   private:
     type_signal_network default_changed, device_added, device_removed;
     type_signal_device_list_changed device_list_changed;
-    type_signal_simple global_change;
+    type_signal_simple global_change, nm_start, nm_stop;
     type_signal_path vpn_added, vpn_removed;
     
 
     Glib::RefPtr<Gio::DBus::Connection> connection;
-    Glib::RefPtr<Gio::DBus::Proxy> nm_proxy, settings_proxy;
+    Glib::RefPtr<Gio::DBus::Proxy> nm_proxy, settings_proxy, manager_proxy;
 
-    std::vector<sigc::connection> signals;
+    std::vector<sigc::connection> nm_signals, dbus_signals;
     sigc::connection debounce, primary_signal;
 
     std::string primary_connection = "";
 
-    std::shared_ptr<Connection> primary_connection_obj;
+    std::shared_ptr<Connection> primary_connection_obj = std::make_shared<Connection>();
 
     std::map<std::string, std::shared_ptr<Network>> all_devices;
     std::map<std::string, std::shared_ptr<VpnConfig>> all_vpns;
@@ -44,7 +45,8 @@ class NetworkManager
     void add_network(std::string path);
     void check_add_vpn(std::string path);
     void changed_primary(std::string path);
-
+    void connect_nm();
+    void lost_nm();
 
   public:
     /* Emitted when the default connection or it's properties change */
@@ -59,6 +61,8 @@ class NetworkManager
     type_signal_simple signal_global_toggle() { return global_change; }
     type_signal_path signal_vpn_added() { return vpn_added; }
     type_signal_path signal_vpn_removed() { return vpn_removed; }
+    type_signal_simple signal_nm_start() { return nm_start; }
+    type_signal_simple signal_nm_stop() { return nm_stop; }
     std::shared_ptr<Gio::DBus::Proxy> get_nm_proxy() { return nm_proxy; }
     /* A list of current networks. */
 

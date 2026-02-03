@@ -18,7 +18,7 @@ Network::Network(std::string path, std::shared_ptr<Gio::DBus::Proxy> in_proxy):
     interface = val.get();
     }
     /* Any change of state */
-    device_proxy->signal_signal().connect(
+    signals.push_back(device_proxy->signal_signal().connect(
     [this] (const Glib::ustring& sender, const Glib::ustring& signal, const Glib::VariantContainerBase& container) {
         if (signal == "StateChanged")
         {
@@ -30,9 +30,9 @@ Network::Network(std::string path, std::shared_ptr<Gio::DBus::Proxy> in_proxy):
                 network_altered.emit();
             }
         }
-    });
+    }));
 
-    device_proxy->signal_properties_changed().connect(
+    signals.push_back(device_proxy->signal_properties_changed().connect(
         [this] (const Gio::DBus::Proxy::MapChangedProperties& properties, const std::vector<Glib::ustring>& invalidated) {
             for (auto &it : properties)
             {
@@ -42,12 +42,15 @@ Network::Network(std::string path, std::shared_ptr<Gio::DBus::Proxy> in_proxy):
                 }
             }
         }
-    );
+    ));
 }
 
 Network::~Network()
 {
-
+    for(auto signal : signals)
+    {
+        signal.disconnect();
+    }
 }
 
 std::string Network::get_friendly_name()

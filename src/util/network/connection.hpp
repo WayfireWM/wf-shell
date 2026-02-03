@@ -12,6 +12,12 @@ class Connection : public Network {
     std::vector<sigc::connection> signals;
     std::shared_ptr<Gio::DBus::Proxy> connection_proxy, vpn_proxy;
     std::vector<std::shared_ptr<Network>> devices;
+
+    Connection():
+        Network("/", nullptr), connection_proxy(nullptr), devices({})
+    {
+
+    }
     Connection(std::string path, std::shared_ptr<Gio::DBus::Proxy> connection_proxy, std::vector<std::shared_ptr<Network>> devices):
         Network(path, nullptr), connection_proxy(connection_proxy), devices(devices)
     {

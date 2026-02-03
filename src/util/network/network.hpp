@@ -1,4 +1,5 @@
 #pragma once
+#include "sigc++/connection.h"
 #include <memory>
 #include <string>
 #include <giomm.h>
@@ -24,6 +25,7 @@ class Network {
   protected:
     type_signal_network_altered network_altered;
     std::string network_path;
+    std::vector<sigc::connection> signals;
   public:
     type_signal_network_altered signal_network_altered();
     std::shared_ptr<Gio::DBus::Proxy> device_proxy;

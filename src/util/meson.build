@@ -14,6 +14,7 @@ util = static_library(
         'network/network-widget.cpp',
         'network/wifi-ap.cpp',
         'network/network.cpp',
+        'network/modem.cpp',
     ],
     dependencies: [wf_protos, gtklayershell, wayland_client, gtkmm, wfconfig, libinotify, json],
 )

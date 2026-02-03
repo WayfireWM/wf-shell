@@ -18,7 +18,7 @@ AccessPoint::AccessPoint(std::string path, std::shared_ptr<Gio::DBus::Proxy> acc
     auto ssid_bytes = ssid_start.get();
     ssid = std::string(ssid_bytes.begin(), ssid_bytes.end());
 
-    access_point_proxy->signal_properties_changed().connect(
+    signals.push_back(access_point_proxy->signal_properties_changed().connect(
         [this] (const Gio::DBus::Proxy::MapChangedProperties& properties, const std::vector<Glib::ustring>& invalidated) {
             for (auto &it : properties)
             {
@@ -35,7 +35,7 @@ AccessPoint::AccessPoint(std::string path, std::shared_ptr<Gio::DBus::Proxy> acc
                 }
             }
         }
-    );
+    ));
 
 }
 
@@ -77,4 +77,12 @@ std::string AccessPoint::get_icon_name()
 type_signal_network_altered AccessPoint::signal_altered()
 {
     return access_point_altered;
+}
+
+AccessPoint::~AccessPoint()
+{
+    for(auto signal : signals)
+    {
+        signal.disconnect();
+    }
 }

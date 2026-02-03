@@ -45,14 +45,11 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     signals.push_back(network_manager->signal_default_changed().connect(
         sigc::mem_fun(*this,&WayfireNetworkInfo::set_connection)
     ));
+    set_connection(network_manager->get_primary_network());
 }
 
 void WayfireNetworkInfo::set_connection(std::shared_ptr<Network> network)
 {
-    if (network == nullptr)
-    {
-        return;
-    }
     status.remove_css_class("none");
     status.remove_css_class("weak");
     status.remove_css_class("bad");

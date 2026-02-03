@@ -26,8 +26,7 @@ void WifiNetwork::add_access_point(std::string path)
         "org.freedesktop.NetworkManager",
         path,
         "org.freedesktop.NetworkManager.AccessPoint");
-    auto new_ap = std::make_shared<AccessPoint>(path, ap_proxy);
-    all_access_points[path] = new_ap;
+    all_access_points.emplace(path, std::make_shared<AccessPoint>(path, ap_proxy));
 }
 
 void WifiNetwork::remove_access_point(std::string path)
@@ -38,7 +37,7 @@ void WifiNetwork::remove_access_point(std::string path)
 WifiNetwork::WifiNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy, std::shared_ptr<Gio::DBus::Proxy> wifi_proxy):
     Network(path, device_proxy), wifi_proxy(wifi_proxy)
 {
-    wifi_proxy->signal_signal().connect(
+    signals.push_back(wifi_proxy->signal_signal().connect(
         [this] (const Glib::ustring& source, const Glib::ustring& signal , const Glib::VariantContainerBase& value) {
             if (signal == "AccessPointAdded")
             {
@@ -52,9 +51,9 @@ WifiNetwork::WifiNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> dev
                 all_access_points.erase(val);
             }
         }
-    );
+    ));
 
-    wifi_proxy->signal_properties_changed().connect(
+    signals.push_back(wifi_proxy->signal_properties_changed().connect(
         [this] (const Gio::DBus::Proxy::MapChangedProperties& properties, const std::vector<Glib::ustring>& invalidated) {
             for (auto &it : properties)
             {
@@ -79,7 +78,7 @@ WifiNetwork::WifiNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> dev
                 }
             }
         }
-    );
+    ));
     /* Initial values */
     Glib::Variant<std::vector<std::string>> base;
     wifi_proxy->get_cached_property(base, "AccessPoints");
@@ -91,11 +90,11 @@ WifiNetwork::WifiNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> dev
     auto access_point = get_current_access_point();
     if (access_point)
     {
-        access_point_signal = access_point->signal_altered().connect(
+        signals.push_back(access_point_signal = access_point->signal_altered().connect(
             [this]() {
                 network_altered.emit();
             }
-        );
+        ));
     }
 }
 
@@ -150,3 +149,15 @@ std::string WifiNetwork::get_current_access_point_path()
     return ap_name.get();
 }
 
+WifiNetwork::~WifiNetwork()
+{
+    all_access_points.clear();
+    if(access_point_signal)
+    {
+        access_point_signal.disconnect();
+    }
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
+}
