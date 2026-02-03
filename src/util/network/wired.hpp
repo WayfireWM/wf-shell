@@ -1,6 +1,6 @@
 #pragma once
-#include "network.hpp"
 #include <string>
+#include "network.hpp"
 
 class WiredNetwork : public Network {
   public:

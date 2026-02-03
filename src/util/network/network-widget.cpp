@@ -1,16 +1,17 @@
-#include "network-widget.hpp"
-#include "gtkmm/enums.h"
-#include "gtkmm/gestureclick.h"
-#include "network/bluetooth.hpp"
-#include "network/manager.hpp"
-#include "network/modem.hpp"
-#include "network/network.hpp"
-#include "network/vpn.hpp"
-#include "network/wifi-ap.hpp"
-#include "network/wifi.hpp"
-#include "network/wired.hpp"
-#include "sigc++/functors/mem_fun.h"
+#include <sigc++/functors/mem_fun.h>
 #include <memory>
+#include <gtkmm.h>
+
+#include "bluetooth.hpp"
+#include "manager.hpp"
+#include "modem.hpp"
+#include "network.hpp"
+#include "vpn.hpp"
+#include "wifi-ap.hpp"
+#include "wifi.hpp"
+#include "wired.hpp"
+#include "network-widget.hpp"
+
 
 AccessPointWidget::AccessPointWidget(std::string path_in, std::shared_ptr<AccessPoint> ap_in):
   ap(ap_in),path(path_in)

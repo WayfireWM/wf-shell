@@ -1,9 +1,9 @@
-#include "wifi.hpp"
-#include "glibmm.h"
-#include "glibmm/variant.h"
-#include "network/manager.hpp"
-#include "network/wifi-ap.hpp"
+#include <glibmm.h>
 #include <memory>
+
+#include "manager.hpp"
+#include "wifi-ap.hpp"
+#include "wifi.hpp"
 
 type_signal_access_point WifiNetwork::signal_add_access_point()
 {

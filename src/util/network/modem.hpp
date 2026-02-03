@@ -1,9 +1,11 @@
 #pragma once
-#include "giomm/dbusproxy.h"
-#include "glibmm/variant.h"
-#include "network.hpp"
 #include <memory>
+#include <iostream>
 #include <string>
+#include <giomm.h>
+#include <glibmm/variant.h>
+
+#include "network.hpp"
 
 #define CAP_5G 16
 #define CAP_4G 8

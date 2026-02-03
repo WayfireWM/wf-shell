@@ -1,11 +1,7 @@
 #pragma once
-#include "giomm.h"
-#include "giomm/dbusproxy.h"
-#include "glibmm/variant.h"
-#include "network.hpp"
-#include "sigc++/connection.h"
+#include <giomm.h>
 #include <memory>
-#include <iostream>
+
 
 using type_signal_access_point_altered = sigc::signal<void (void)>;
 class AccessPoint {

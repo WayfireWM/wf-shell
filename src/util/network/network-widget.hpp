@@ -1,11 +1,12 @@
 #pragma once
-#include <gtkmm.h>
 #include <memory>
-#include "gtkmm.h"
-#include "network/vpn.hpp"
-#include "sigc++/connection.h"
+#include <sigc++/connection.h>
+#include <gtkmm.h>
+
 #include "manager.hpp"
-#include "wifi.hpp"
+#include "wifi-ap.hpp"
+#include "vpn.hpp"
+
 
 class AccessPointWidget : public Gtk::Box
 {

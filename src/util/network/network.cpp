@@ -1,5 +1,6 @@
 #include "network.hpp"
 #include "manager.hpp"
+
 type_signal_network_altered Network::signal_network_altered() { return network_altered; }
 
 Network::Network(std::string path, std::shared_ptr<Gio::DBus::Proxy> in_proxy):

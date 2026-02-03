@@ -1,11 +1,11 @@
 #pragma once
-#include "giomm.h"
-#include "giomm/dbusproxy.h"
-#include "glibmm/variant.h"
-#include "network.hpp"
-#include "sigc++/connection.h"
 #include <memory>
 #include <iostream>
+#include <giomm.h>
+#include <glibmm.h>
+#include <sigc++/connection.h>
+
+#include "network.hpp"
 #include "wifi-ap.hpp"
 
 

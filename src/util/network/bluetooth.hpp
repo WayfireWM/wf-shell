@@ -3,7 +3,6 @@
 #include <memory>
 #include <giomm.h>
 
-#include "giomm/dbusproxy.h"
 #include "network.hpp"
 class BluetoothNetwork : public Network 
 {

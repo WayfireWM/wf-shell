@@ -1,5 +1,6 @@
 #include "wifi-ap.hpp"
-#include "network/network.hpp"
+#include "network.hpp"
+
 std::string AccessPoint::get_path()
 {
     return ap_path;
@@ -70,7 +71,7 @@ std::string AccessPoint::strength_string()
 
 std::string AccessPoint::get_icon_name()
 {
-    return "network-wireless-signal-"+strength_string();
+    return "network-wireless-signal-"+strength_string()+"-symbolic";
 }
 
 type_signal_network_altered AccessPoint::signal_altered()

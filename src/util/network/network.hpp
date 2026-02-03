@@ -1,11 +1,9 @@
 #pragma once
-#include "glibmm/ustring.h"
-#include "glibmm/variant.h"
 #include <memory>
 #include <string>
 #include <giomm.h>
-#include <iostream>
-#include <tuple>
+#include <glibmm.h>
+
 #define NM_DEVICE_STATE_UNKNOWN 0
 #define NM_DEVICE_STATE_UNMANAGED 10
 #define NM_DEVICE_STATE_UNAVAILABLE 20

@@ -1,8 +1,10 @@
 #pragma once
-#include "giomm/dbusproxy.h"
-#include "network.hpp"
-#include "sigc++/connection.h"
 #include <memory>
+#include <sigc++/connection.h>
+#include <giomm/dbusproxy.h>
+
+#include "network.hpp"
+
 /* Information about an active connection */
 class Connection : public Network {
   public:

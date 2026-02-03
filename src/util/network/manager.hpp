@@ -1,15 +1,14 @@
 #pragma once
 #include <memory>
 #include <sigc++/signal.h>
+#include <sigc++/connection.h>
 #include <vector>
 #include <map>
 #include <giomm.h>
 #include <glibmm.h>
-#include "giomm/dbusconnection.h"
-#include "giomm/dbusproxy.h"
+
 #include "network.hpp"
 #include "connection.hpp"
-#include "sigc++/connection.h"
 #include "vpn.hpp"
 
 using type_signal_network = sigc::signal<void (std::shared_ptr<Network>)>;

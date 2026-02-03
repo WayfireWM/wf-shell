@@ -1,8 +1,6 @@
 #pragma once
-#include "giomm/dbusproxy.h"
-#include "glibmm/variant.h"
-#include "network.hpp"
-#include <memory>
+#include <giomm/dbusproxy.h>
+#include <glibmm/variant.h>
 
 class VpnConfig {
   private:

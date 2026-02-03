@@ -2,18 +2,12 @@
 #include <glibmm.h>
 #include <iostream>
 #include <memory>
-#include <cassert>
 
 #include "manager.hpp"
-#include "giomm/dbusproxy.h"
-#include "glib.h"
-#include "glibmm/main.h"
-#include "glibmm/ustring.h"
-#include "glibmm/variant.h"
-#include "network/bluetooth.hpp"
-#include "network/connection.hpp"
-#include "network/network.hpp"
-#include "network/vpn.hpp"
+#include "bluetooth.hpp"
+#include "connection.hpp"
+#include "network.hpp"
+#include "vpn.hpp"
 #include "wifi.hpp"
 #include "modem.hpp"
 #include "wired.hpp"
