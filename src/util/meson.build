@@ -8,6 +8,12 @@ util = static_library(
         'css-config.cpp',
         'wf-ipc.cpp',
         'animated-scale.cpp',
+        'network/manager.cpp',
+        'network/wifi.cpp',
+        'network/wired.cpp',
+        'network/network-widget.cpp',
+        'network/wifi-ap.cpp',
+        'network/network.cpp',
     ],
     dependencies: [wf_protos, gtklayershell, wayland_client, gtkmm, wfconfig, libinotify, json],
 )
