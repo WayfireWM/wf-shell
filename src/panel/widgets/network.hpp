@@ -27,7 +27,6 @@ class WayfireNetworkInfo : public WayfireWidget
     WfOption<std::string> click_command_opt{"panel/network_onclick_command"};
     
     NetworkControlWidget control;
-  Gtk::Window window_undo_me;
   public:
     WayfireNetworkInfo();
     ~WayfireNetworkInfo();

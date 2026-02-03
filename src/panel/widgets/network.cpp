@@ -33,7 +33,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     button->set_child(button_content);
     button->add_css_class("flat");
 
-    //button->get_popover()->set_child(control);
+    button->get_popover()->set_child(control);
 
     button_content.set_valign(Gtk::Align::CENTER);
     button_content.append(icon);
@@ -41,8 +41,6 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     button_content.set_spacing(6);
 
     icon.set_valign(Gtk::Align::CENTER);
-    window_undo_me.set_child(control);
-    window_undo_me.present();
 
     signals.push_back(network_manager->signal_default_changed().connect(
         sigc::mem_fun(*this,&WayfireNetworkInfo::set_connection)
