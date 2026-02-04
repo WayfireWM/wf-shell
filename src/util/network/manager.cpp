@@ -227,7 +227,7 @@ void NetworkManager::check_add_vpn(std::string path)
         } else
         {
             std::cerr << "INVALID TYPES " << conname.get_type_string() << " " << contype.get_type_string() <<
-            std::endl;
+                std::endl;
         }
     }
 }
