@@ -48,6 +48,10 @@ NetworkManager::NetworkManager()
             {
                 connect_nm();
             }
+            if (t == MM_DBUS_NAME)
+            {
+                mm_start.emit();
+            }
         }
 
         /* https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.NameOwnerChanged.html */
