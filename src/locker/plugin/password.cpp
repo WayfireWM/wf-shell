@@ -52,7 +52,8 @@ void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLock
     /* Add to window */
     grid->attach(*widget, position);
 
-    widget->signal_realize().connect([=] () {
+    widget->signal_realize().connect([=] ()
+    {
         widget->entry.grab_focus();
     });
 }
