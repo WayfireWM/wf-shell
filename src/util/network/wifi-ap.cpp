@@ -4,8 +4,8 @@
 std::string AccessPoint::get_path()
 {
     return ap_path;
-
 }
+
 AccessPoint::AccessPoint(std::string path, std::shared_ptr<Gio::DBus::Proxy> access_point_proxy) :
     ap_path(path), access_point_proxy(access_point_proxy)
 {
@@ -19,27 +19,29 @@ AccessPoint::AccessPoint(std::string path, std::shared_ptr<Gio::DBus::Proxy> acc
     ssid = std::string(ssid_bytes.begin(), ssid_bytes.end());
 
     signals.push_back(access_point_proxy->signal_properties_changed().connect(
-        [this] (const Gio::DBus::Proxy::MapChangedProperties& properties, const std::vector<Glib::ustring>& invalidated) {
-            for (auto &it : properties)
+        [this] (const Gio::DBus::Proxy::MapChangedProperties& properties,
+                const std::vector<Glib::ustring>& invalidated)
+    {
+        for (auto & it : properties)
+        {
+            if (it.first == "Strength")
             {
-                if (it.first == "Strength")
-                {
-                    auto value = Glib::VariantBase::cast_dynamic<Glib::Variant<unsigned char>>(it.second).get();
-                    strength = value;
-                    access_point_altered.emit();
-                } else if (it.first == "Ssid")
-                {
-                    auto value = Glib::VariantBase::cast_dynamic<Glib::Variant<std::vector<unsigned char>>>(it.second).get();
-                    ssid = std::string(value.begin(), value.end());
-                    access_point_altered.emit();
-                }
+                auto value = Glib::VariantBase::cast_dynamic<Glib::Variant<unsigned char>>(it.second).get();
+                strength   = value;
+                access_point_altered.emit();
+            } else if (it.first == "Ssid")
+            {
+                auto value =
+                    Glib::VariantBase::cast_dynamic<Glib::Variant<std::vector<unsigned char>>>(it.second).get();
+                ssid = std::string(value.begin(), value.end());
+                access_point_altered.emit();
             }
         }
-    ));
-
+    }));
 }
 
-std::string AccessPoint::get_ssid(){
+std::string AccessPoint::get_ssid()
+{
     return ssid;
 }
 
@@ -66,12 +68,11 @@ std::string AccessPoint::strength_string()
     }
 
     return "none";
-
 }
 
 std::string AccessPoint::get_icon_name()
 {
-    return "network-wireless-signal-"+strength_string()+"-symbolic";
+    return "network-wireless-signal-" + strength_string() + "-symbolic";
 }
 
 type_signal_network_altered AccessPoint::signal_altered()
@@ -81,7 +82,7 @@ type_signal_network_altered AccessPoint::signal_altered()
 
 AccessPoint::~AccessPoint()
 {
-    for(auto signal : signals)
+    for (auto signal : signals)
     {
         signal.disconnect();
     }

@@ -21,15 +21,17 @@
 
 using type_signal_network_altered = sigc::signal<void (void)>;
 
-class Network {
+class Network
+{
   protected:
     type_signal_network_altered network_altered;
     std::string network_path;
     std::vector<sigc::connection> signals;
+
   public:
     type_signal_network_altered signal_network_altered();
     std::shared_ptr<Gio::DBus::Proxy> device_proxy;
-    std::string interface="";
+    std::string interface = "";
     int last_state = 0;
     virtual std::string get_name() = 0;
     virtual std::string get_color_name() = 0;
@@ -39,12 +41,16 @@ class Network {
     virtual std::string get_interface();
     bool show_spinner();
     virtual std::string get_icon_name() = 0;
-    std::string get_icon_symbolic() { return get_icon_name() + "-symbolic"; };
+    std::string get_icon_symbolic()
+    {
+        return get_icon_name() + "-symbolic";
+    }
+
     std::string get_path();
     void disconnect();
     void connect(std::string path_extra);
     void toggle();
     bool is_active();
     Network(const Network &) = delete;
-    Network &operator = (const Network &) = delete;
+    Network& operator =(const Network&) = delete;
 };

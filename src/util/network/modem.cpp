@@ -1,5 +1,6 @@
 #include "modem.hpp"
-ModemNetwork::ModemNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy, std::shared_ptr<Gio::DBus::Proxy> modem_proxy):
+ModemNetwork::ModemNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy,
+    std::shared_ptr<Gio::DBus::Proxy> modem_proxy) :
     Network(path, device_proxy), modem_proxy(modem_proxy)
 {
     Glib::Variant<std::string> device_data;
@@ -14,25 +15,25 @@ void ModemNetwork::find_mm_proxy(std::string dev_id)
         "org.freedesktop.ModemManager1",
         "/org/freedesktop/ModemManager1",
         "org.freedesktop.DBus.ObjectManager");
-    
-    auto ret1 = mm_om_proxy->call_sync("GetManagedObjects").get_child();
-    auto ret = Glib::VariantBase::cast_dynamic<Glib::Variant<std::map<std::string, std::map<std::string, std::map<std::string, Glib::VariantBase>>>>>(ret1);
 
-    for (auto &it : ret.get())
+    auto ret1 = mm_om_proxy->call_sync("GetManagedObjects").get_child();
+    auto ret  = Glib::VariantBase::cast_dynamic<Glib::Variant<std::map<std::string, std::map<std::string,
+        std::map<std::string, Glib::VariantBase>>>>>(ret1);
+
+    for (auto & it : ret.get())
     {
         std::string modem_path = it.first;
-        for (auto &next : it.second)
+        for (auto & next : it.second)
         {
             if (next.first == "org.freedesktop.ModemManager1.Modem")
             {
-                for (auto &why : next.second)
+                for (auto & why : next.second)
                 {
                     if (why.first == "DeviceIdentifier")
                     {
                         auto devid = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(why.second);
                         if (devid.get() == dev_id)
                         {
-
                             mm_proxy = Gio::DBus::Proxy::create_sync(device_proxy->get_connection(),
                                 "org.freedesktop.ModemManager1",
                                 modem_path,
@@ -43,26 +44,29 @@ void ModemNetwork::find_mm_proxy(std::string dev_id)
             }
         }
     }
+
     if (mm_proxy)
     {
         signals.push_back(mm_proxy->signal_properties_changed().connect(
-            [this] (const Gio::DBus::Proxy::MapChangedProperties& properties, const std::vector<Glib::ustring>& invalidated)  {
-            for (auto &it : properties)
+            [this] (const Gio::DBus::Proxy::MapChangedProperties& properties,
+                    const std::vector<Glib::ustring>& invalidated)
+        {
+            for (auto & it : properties)
             {
                 if (it.first == "SignalQuality")
                 {
                     auto container = Glib::VariantBase::cast_dynamic<Glib::VariantContainerBase>(it.second);
                     Glib::Variant<unsigned int> signal_data;
-                    container.get_child(signal_data,0);
+                    container.get_child(signal_data, 0);
                     // "(ub)" => percent 0-100, 'is recent'
                     strength = signal_data.get();
-
                 }
+
                 if (it.first == "CurrentModes")
                 {
                     auto container = Glib::VariantBase::cast_dynamic<Glib::VariantContainerBase>(it.second);
                     Glib::Variant<unsigned int> mode_data;
-                    container.get_child(mode_data,1);
+                    container.get_child(mode_data, 1);
                     caps = mode_data.get();
                 }
             }
@@ -71,12 +75,11 @@ void ModemNetwork::find_mm_proxy(std::string dev_id)
     {
         std::cerr << "Could not get extra modem details" << std::endl;
     }
-
 }
 
 ModemNetwork::~ModemNetwork()
 {
-    for(auto signal : signals)
+    for (auto signal : signals)
     {
         signal.disconnect();
     }
@@ -113,6 +116,7 @@ std::string ModemNetwork::get_name()
     {
         return "Misconfigured Mobile";
     }
+
     /* TODO Get Carrier from MM */
     return "Mobile";
 }
@@ -135,6 +139,7 @@ std::string ModemNetwork::get_signal_band()
     {
         return "20";
     }
+
     return "0";
 }
 
@@ -156,6 +161,7 @@ std::string ModemNetwork::get_connection_type_string()
     {
         return "edge";
     }
+
     return "edge";
 }
 
@@ -165,11 +171,13 @@ std::string ModemNetwork::get_icon_name()
     {
         return "network-mobile-off";
     }
+
     if (!is_active())
     {
         return "network-mobile-off";
     }
-    return "network-mobile-"+get_signal_band()+"-"+get_connection_type_string();
+
+    return "network-mobile-" + get_signal_band() + "-" + get_connection_type_string();
 }
 
 std::string ModemNetwork::get_color_name()

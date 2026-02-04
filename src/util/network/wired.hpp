@@ -2,7 +2,8 @@
 #include <string>
 #include "network.hpp"
 
-class WiredNetwork : public Network {
+class WiredNetwork : public Network
+{
   public:
     WiredNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> proxy);
     std::string get_name() override;

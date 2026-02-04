@@ -6,9 +6,7 @@
 #include <memory>
 
 WayfireNetworkInfo::WayfireNetworkInfo()
-{
-
-}
+{}
 
 void WayfireNetworkInfo::init(Gtk::Box *container)
 {
@@ -32,8 +30,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     icon.set_valign(Gtk::Align::CENTER);
 
     signals.push_back(network_manager->signal_default_changed().connect(
-        sigc::mem_fun(*this,&WayfireNetworkInfo::set_connection)
-    ));
+        sigc::mem_fun(*this, &WayfireNetworkInfo::set_connection)));
     set_connection(network_manager->get_primary_network());
 }
 
@@ -44,7 +41,7 @@ void WayfireNetworkInfo::set_connection(std::shared_ptr<Network> network)
     status.remove_css_class("bad");
     status.remove_css_class("ok");
     status.remove_css_class("excellent");
-    
+
     status.set_label(network->get_name());
     icon.set_from_icon_name(network->get_icon_symbolic());
     auto color = network->get_color_name();

@@ -5,13 +5,15 @@
 
 
 using type_signal_access_point_altered = sigc::signal<void (void)>;
-class AccessPoint {
+class AccessPoint
+{
   private:
     std::string ap_path;
     type_signal_access_point_altered access_point_altered;
     unsigned char strength;
-    std::string ssid="";
+    std::string ssid = "";
     std::vector<sigc::connection> signals;
+
   public:
     std::string get_path();
     std::shared_ptr<Gio::DBus::Proxy> access_point_proxy;

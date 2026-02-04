@@ -15,6 +15,7 @@ class AccessPointWidget : public Gtk::Box
     Gtk::Label label;
     std::shared_ptr<AccessPoint> ap;
     std::string path;
+
   public:
     std::vector<sigc::connection> signals;
     AccessPointWidget(std::string path, std::shared_ptr<AccessPoint> ap);
@@ -31,6 +32,7 @@ class DeviceControlWidget : public Gtk::Box
     Gtk::Revealer revealer;
     Gtk::Box revealer_box, topbox;
     std::vector<sigc::connection> signals;
+
   public:
     DeviceControlWidget(std::shared_ptr<Network> network);
     ~DeviceControlWidget();
@@ -38,7 +40,6 @@ class DeviceControlWidget : public Gtk::Box
     void remove_access_point(std::string path);
     void selected_access_point(std::string path);
     std::string type;
-
 };
 
 class VPNControlWidget : public Gtk::Box
@@ -47,6 +48,7 @@ class VPNControlWidget : public Gtk::Box
     std::shared_ptr<VpnConfig> config;
     Gtk::Image image;
     Gtk::Label label;
+
   public:
     std::vector<sigc::connection> signals;
 
@@ -56,13 +58,14 @@ class VPNControlWidget : public Gtk::Box
 
 class NetworkControlWidget : public Gtk::Box
 {
-  Gtk::Label network_manager_failed;
-  Gtk::Box wire_box, wifi_box, mobile_box, vpn_box, bt_box, top;
-  Gtk::CheckButton global_networking, wifi_networking, mobile_networking;
-  std::map <std::string, std::shared_ptr<DeviceControlWidget>> widgets;
-  std::map <std::string, std::shared_ptr<VPNControlWidget>> vpn_widgets;
-  sigc::connection signal_network, signal_wifi, signal_mobile;
-  std::vector<sigc::connection> signals;
+    Gtk::Label network_manager_failed;
+    Gtk::Box wire_box, wifi_box, mobile_box, vpn_box, bt_box, top;
+    Gtk::CheckButton global_networking, wifi_networking, mobile_networking;
+    std::map<std::string, std::shared_ptr<DeviceControlWidget>> widgets;
+    std::map<std::string, std::shared_ptr<VPNControlWidget>> vpn_widgets;
+    sigc::connection signal_network, signal_wifi, signal_mobile;
+    std::vector<sigc::connection> signals;
+
   public:
     NetworkControlWidget();
     ~NetworkControlWidget();

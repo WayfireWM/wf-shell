@@ -10,15 +10,19 @@
 
 using type_signal_access_point = sigc::signal<void (std::shared_ptr<AccessPoint>)>;
 
-class WifiNetwork : public Network {
+class WifiNetwork : public Network
+{
   private:
     sigc::connection access_point_signal;
     std::map<std::string, std::shared_ptr<AccessPoint>> all_access_points;
     type_signal_access_point add_ap, remove_ap;
+
   protected:
     std::shared_ptr<Gio::DBus::Proxy> wifi_proxy;
+
   public:
-    WifiNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy, std::shared_ptr<Gio::DBus::Proxy> wifi_proxy);
+    WifiNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy,
+        std::shared_ptr<Gio::DBus::Proxy> wifi_proxy);
     ~WifiNetwork();
 
     type_signal_access_point signal_add_access_point();

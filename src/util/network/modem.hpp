@@ -14,13 +14,15 @@
 #define CAP_2G 2
 #define CAP_CS 1
 
-class ModemNetwork : public Network {
+class ModemNetwork : public Network
+{
   public:
-    unsigned char strength=0;
+    unsigned char strength = 0;
     int caps = 8;
     std::shared_ptr<Gio::DBus::Proxy> modem_proxy;
     std::shared_ptr<Gio::DBus::Proxy> mm_proxy;
-    ModemNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy, std::shared_ptr<Gio::DBus::Proxy> modem_proxy);
+    ModemNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy,
+        std::shared_ptr<Gio::DBus::Proxy> modem_proxy);
     void find_mm_proxy(std::string dev_id);
     ~ModemNetwork();
     std::string strength_string();

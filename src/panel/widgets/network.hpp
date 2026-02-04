@@ -25,8 +25,9 @@ class WayfireNetworkInfo : public WayfireWidget
     WfOption<bool> status_color_opt{"panel/network_status_use_color"};
     WfOption<std::string> status_font_opt{"panel/network_status_font"};
     WfOption<std::string> click_command_opt{"panel/network_onclick_command"};
-    
+
     NetworkControlWidget control;
+
   public:
     WayfireNetworkInfo();
     ~WayfireNetworkInfo();

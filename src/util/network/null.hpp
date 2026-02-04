@@ -1,12 +1,11 @@
 #pragma once
 #include "network.hpp"
 
-class NullNetwork : public Network {
+class NullNetwork : public Network
+{
   public:
-    NullNetwork():Network("/", nullptr)
-    {
-
-    }
+    NullNetwork() : Network("/", nullptr)
+    {}
 
     std::string get_name() override
     {

@@ -6,10 +6,11 @@
 
 type_signal_access_point WifiNetwork::signal_add_access_point()
 {
-     return add_ap;
+    return add_ap;
 }
+
 type_signal_access_point WifiNetwork::signal_remove_access_point()
-{ 
+{
     return remove_ap;
 }
 
@@ -20,8 +21,7 @@ std::map<std::string, std::shared_ptr<AccessPoint>> WifiNetwork::get_access_poin
 
 void WifiNetwork::add_access_point(std::string path)
 {
-
-    auto ap_proxy =Gio::DBus::Proxy::create_sync(wifi_proxy->get_connection(),
+    auto ap_proxy = Gio::DBus::Proxy::create_sync(wifi_proxy->get_connection(),
         "org.freedesktop.NetworkManager",
         path,
         "org.freedesktop.NetworkManager.AccessPoint");
@@ -33,55 +33,59 @@ void WifiNetwork::remove_access_point(std::string path)
     all_access_points.erase(path);
 }
 
-WifiNetwork::WifiNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy, std::shared_ptr<Gio::DBus::Proxy> wifi_proxy):
+WifiNetwork::WifiNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy,
+    std::shared_ptr<Gio::DBus::Proxy> wifi_proxy) :
     Network(path, device_proxy), wifi_proxy(wifi_proxy)
 {
     signals.push_back(wifi_proxy->signal_signal().connect(
-        [this] (const Glib::ustring& source, const Glib::ustring& signal , const Glib::VariantContainerBase& value) {
-            if (signal == "AccessPointAdded")
-            {
-                auto val = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(value.get_child()).get();
-                add_access_point(val);
-                add_ap.emit(all_access_points[val]);
-            } else if (signal == "AccessPointRemoved")
-            {
-                auto val = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(value.get_child()).get();
-                remove_ap.emit(all_access_points[val]);
-                all_access_points.erase(val);
-            }
+        [this] (const Glib::ustring& source, const Glib::ustring& signal,
+                const Glib::VariantContainerBase& value)
+    {
+        if (signal == "AccessPointAdded")
+        {
+            auto val = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(value.get_child()).get();
+            add_access_point(val);
+            add_ap.emit(all_access_points[val]);
+        } else if (signal == "AccessPointRemoved")
+        {
+            auto val = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(value.get_child()).get();
+            remove_ap.emit(all_access_points[val]);
+            all_access_points.erase(val);
         }
-    ));
+    }));
 
     signals.push_back(wifi_proxy->signal_properties_changed().connect(
-        [this] (const Gio::DBus::Proxy::MapChangedProperties& properties, const std::vector<Glib::ustring>& invalidated) {
-            for (auto &it : properties)
+        [this] (const Gio::DBus::Proxy::MapChangedProperties& properties,
+                const std::vector<Glib::ustring>& invalidated)
+    {
+        for (auto & it : properties)
+        {
+            if (it.first == "ActiveAccessPoint")
             {
-                if (it.first == "ActiveAccessPoint")
+                if (access_point_signal)
                 {
-                    if (access_point_signal)
-                    {
-                        access_point_signal.disconnect();
-                    }
-                    auto access_point = get_current_access_point();
-                    if (access_point)
-                    {
-                        /* Bubble signal upwards */
-                        access_point_signal = access_point->signal_altered().connect(
-                            [this] () {
-                                network_altered.emit();
-                            }
-                        );
-                    }
-                    network_altered.emit();
-                    
+                    access_point_signal.disconnect();
                 }
+
+                auto access_point = get_current_access_point();
+                if (access_point)
+                {
+                    /* Bubble signal upwards */
+                    access_point_signal = access_point->signal_altered().connect(
+                        [this] ()
+                    {
+                        network_altered.emit();
+                    });
+                }
+
+                network_altered.emit();
             }
         }
-    ));
+    }));
     /* Initial values */
     Glib::Variant<std::vector<std::string>> base;
     wifi_proxy->get_cached_property(base, "AccessPoints");
-    for (auto &it : base.get())
+    for (auto & it : base.get())
     {
         add_access_point(it);
     }
@@ -90,10 +94,10 @@ WifiNetwork::WifiNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> dev
     if (access_point)
     {
         signals.push_back(access_point_signal = access_point->signal_altered().connect(
-            [this]() {
-                network_altered.emit();
-            }
-        ));
+            [this] ()
+        {
+            network_altered.emit();
+        }));
     }
 }
 
@@ -104,6 +108,7 @@ std::string WifiNetwork::get_name()
     {
         return network->get_ssid();
     }
+
     return "Wifi...";
 }
 
@@ -118,11 +123,14 @@ std::string WifiNetwork::get_icon_name()
     {
         return "network-wireless-disconnected";
     }
+
     auto ap = get_current_access_point();
-    if (!ap){
+    if (!ap)
+    {
         return "network-wireless-disconnected";
     }
-    return "network-wireless-signal-"+ap->strength_string();
+
+    return "network-wireless-signal-" + ap->strength_string();
 }
 
 std::string WifiNetwork::get_friendly_name()
@@ -132,6 +140,7 @@ std::string WifiNetwork::get_friendly_name()
     {
         return ap->get_ssid();
     }
+
     return "Not connected";
 }
 
@@ -151,10 +160,11 @@ std::string WifiNetwork::get_current_access_point_path()
 WifiNetwork::~WifiNetwork()
 {
     all_access_points.clear();
-    if(access_point_signal)
+    if (access_point_signal)
     {
         access_point_signal.disconnect();
     }
+
     for (auto signal : signals)
     {
         signal.disconnect();
