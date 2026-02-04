@@ -74,4 +74,6 @@ class NetworkControlWidget : public Gtk::Box
     void remove_vpn(std::string path);
     void nm_start();
     void nm_stop();
+    void mm_start();
+    void mm_stop();
 };

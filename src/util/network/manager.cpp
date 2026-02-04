@@ -13,6 +13,7 @@
 #include "wired.hpp"
 #include "null.hpp"
 #define NM_DBUS_NAME "org.freedesktop.NetworkManager"
+#define MM_DBUS_NAME "org.freedesktop.ModemManager1"
 #define ACTIVE_CONNECTION "PrimaryConnection"
 #define STRENGTH "Strength"
 
@@ -69,6 +70,23 @@ NetworkManager::NetworkManager()
                     } else if (to.get() == "")
                     {
                         lost_nm();
+                    }
+                } else if (name.get() == MM_DBUS_NAME)
+                {
+                    if (from.get() == "")
+                    {
+                        mm_start.emit();
+                    } else if (to.get() == "")
+                    {
+                        for_each(all_devices.cbegin(), all_devices.cend(), 
+                            [this] (std::map<std::string, std::shared_ptr<Network>>::const_reference it){
+                                if(std::dynamic_pointer_cast<ModemNetwork>(it.second) != nullptr)
+                                {
+                                    device_removed.emit(it.second);
+                                    all_devices.erase(it.first);
+                                }
+                        });
+                        mm_stop.emit();
                     }
                 }
             }

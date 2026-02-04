@@ -1,7 +1,6 @@
 #include <glibmm.h>
 #include <memory>
 
-#include "manager.hpp"
 #include "wifi-ap.hpp"
 #include "wifi.hpp"
 

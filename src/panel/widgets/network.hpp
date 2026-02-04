@@ -31,6 +31,5 @@ class WayfireNetworkInfo : public WayfireWidget
     WayfireNetworkInfo();
     ~WayfireNetworkInfo();
     void init(Gtk::Box *container);
-    void on_click();
     void set_connection(std::shared_ptr<Network> network);
 };

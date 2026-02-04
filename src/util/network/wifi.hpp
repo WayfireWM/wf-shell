@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <iostream>
 #include <giomm.h>
 #include <glibmm.h>
 #include <sigc++/connection.h>

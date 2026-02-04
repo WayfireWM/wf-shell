@@ -233,6 +233,12 @@ NetworkControlWidget::NetworkControlWidget()
     signals.push_back(network_manager->signal_nm_stop().connect(
         sigc::mem_fun(*this, &NetworkControlWidget::nm_stop)
     ));
+    signals.push_back(network_manager->signal_mm_start().connect(
+        sigc::mem_fun(*this, &NetworkControlWidget::mm_start)
+    ));
+    signals.push_back(network_manager->signal_mm_stop().connect(
+        sigc::mem_fun(*this, &NetworkControlWidget::mm_stop)
+    ));
     signals.push_back(network_manager->signal_device_added().connect(
         sigc::mem_fun(*this, &NetworkControlWidget::add_device)
     ));
@@ -256,6 +262,7 @@ NetworkControlWidget::NetworkControlWidget()
     global_networking.set_label("Networking");
     wifi_networking.set_label("Wifi");
     mobile_networking.set_label("Mobile");
+    mobile_networking.hide();
 
     /* Connect to global widget cb */
     signal_network = global_networking.signal_toggled().connect(
@@ -419,6 +426,16 @@ void NetworkControlWidget::nm_stop()
         vpn_box.remove(*it.second);
     }
     vpn_widgets.clear();
+}
+
+void NetworkControlWidget::mm_start()
+{
+    mobile_networking.show();
+}
+
+void NetworkControlWidget::mm_stop()
+{
+    mobile_networking.hide();
 }
 
 NetworkControlWidget::~NetworkControlWidget()

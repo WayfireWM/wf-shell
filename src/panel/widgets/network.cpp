@@ -1,24 +1,13 @@
 #include "network.hpp"
-#include "glib.h"
-#include "glibmm/main.h"
 #include "network/network.hpp"
 #include <glibmm/spawn.h>
 #include <cassert>
-#include <iostream>
 #include <gtk-utils.hpp>
 #include <memory>
 
 WayfireNetworkInfo::WayfireNetworkInfo()
 {
 
-}
-
-void WayfireNetworkInfo::on_click()
-{
-    if ((std::string)click_command_opt != "default")
-    {
-        Glib::spawn_command_line_async((std::string)click_command_opt);
-    }
 }
 
 void WayfireNetworkInfo::init(Gtk::Box *container)

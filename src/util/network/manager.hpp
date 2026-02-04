@@ -9,7 +9,6 @@
 
 #include "network.hpp"
 #include "connection.hpp"
-#include "network/null.hpp"
 #include "vpn.hpp"
 
 using type_signal_network = sigc::signal<void (std::shared_ptr<Network>)>;
@@ -22,7 +21,7 @@ class NetworkManager
   private:
     type_signal_network default_changed, device_added, device_removed;
     type_signal_device_list_changed device_list_changed;
-    type_signal_simple global_change, nm_start, nm_stop;
+    type_signal_simple global_change, nm_start, nm_stop, mm_start, mm_stop;
     type_signal_path vpn_added, vpn_removed;
     
 
@@ -47,7 +46,6 @@ class NetworkManager
     void changed_primary(std::string path);
     void connect_nm();
     void lost_nm();
-
   public:
     /* Emitted when the default connection or it's properties change */
     type_signal_network signal_default_changed() { return default_changed; }
@@ -63,6 +61,8 @@ class NetworkManager
     type_signal_path signal_vpn_removed() { return vpn_removed; }
     type_signal_simple signal_nm_start() { return nm_start; }
     type_signal_simple signal_nm_stop() { return nm_stop; }
+    type_signal_simple signal_mm_start() { return mm_start; }
+    type_signal_simple signal_mm_stop() { return mm_stop; }
     std::shared_ptr<Gio::DBus::Proxy> get_nm_proxy() { return nm_proxy; }
     /* A list of current networks. */
 
