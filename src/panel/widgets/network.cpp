@@ -1,4 +1,7 @@
 #include "network.hpp"
+#include "gtkmm/gesture.h"
+#include "gtkmm/gestureclick.h"
+#include "gtkmm/gesturelongpress.h"
 #include "network/network.hpp"
 #include <glibmm/spawn.h>
 #include <cassert>
@@ -40,6 +43,30 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
         }
     });
 
+    auto click = Gtk::GestureClick::create();
+    click->set_button(3);
+    signals.push_back(click->signal_released().connect(
+        [this] (int, double, double)
+    {
+        on_click();
+    }));
+    signals.push_back(click->signal_pressed().connect(
+        [click] (int, double, double)
+    {
+        click->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
+
+    auto touch = Gtk::GestureLongPress::create();
+    touch->set_touch_only(true);
+    signals.push_back(touch->signal_pressed().connect(
+        [this] (double, double)
+    {
+        on_click();
+    }));
+
+    button->add_controller(touch);
+    button->add_controller(click);
+
     signals.push_back(network_manager->signal_default_changed().connect(
         sigc::mem_fun(*this, &WayfireNetworkInfo::set_connection)));
     set_connection(network_manager->get_primary_network());
@@ -64,6 +91,18 @@ void WayfireNetworkInfo::set_connection(std::shared_ptr<Network> network)
 
     status.set_label(network->get_name());
     icon.set_from_icon_name(network->get_icon_symbolic());
+}
+
+void WayfireNetworkInfo::on_click()
+{
+    if ((std::string)click_command_opt != "default")
+    {
+        Glib::spawn_command_line_async((std::string)click_command_opt);
+    } else
+    {
+        std::string command = "env XDG_CURRENT_DESKTOP=GNOME gnome-control-center";
+        Glib::spawn_command_line_async(command);
+    }
 }
 
 WayfireNetworkInfo::~WayfireNetworkInfo()
