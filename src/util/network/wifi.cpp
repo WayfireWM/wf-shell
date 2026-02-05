@@ -1,8 +1,9 @@
 #include <glibmm.h>
 #include <memory>
-
+#include <iostream>
 #include "wifi-ap.hpp"
 #include "wifi.hpp"
+#include "manager.hpp"
 
 type_signal_access_point WifiNetwork::signal_add_access_point()
 {
@@ -26,6 +27,16 @@ void WifiNetwork::add_access_point(std::string path)
         path,
         "org.freedesktop.NetworkManager.AccessPoint");
     all_access_points.emplace(path, std::make_shared<AccessPoint>(path, ap_proxy));
+    auto ap = all_access_points[path];
+
+    auto setting = NetworkManager::getInstance()->get_setting_for_ssid(ap->get_ssid());
+    if (setting)
+    {
+        ap->set_has_saved_password(true);
+    } else
+    {
+        ap->set_has_saved_password(false);
+    }
 }
 
 void WifiNetwork::remove_access_point(std::string path)
@@ -112,9 +123,17 @@ std::string WifiNetwork::get_name()
     return "Wifi...";
 }
 
-std::string WifiNetwork::get_color_name()
+std::vector<std::string> WifiNetwork::get_css_classes()
 {
-    return "";
+    std::vector<std::string> list = {"wifi"};
+    auto ap = get_current_access_point();
+    if (ap)
+    {
+        auto aplist = ap->get_css_classes();
+        list.insert(list.end(), aplist.begin(), aplist.end());
+    }
+
+    return list;
 }
 
 std::string WifiNetwork::get_icon_name()
@@ -169,4 +188,9 @@ WifiNetwork::~WifiNetwork()
     {
         signal.disconnect();
     }
+}
+
+std::string WifiNetwork::get_secure_variant()
+{
+    return "-secure";
 }

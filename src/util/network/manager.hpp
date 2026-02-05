@@ -6,10 +6,12 @@
 #include <map>
 #include <giomm.h>
 #include <glibmm.h>
+#include <gtkmm.h>
 
 #include "network.hpp"
 #include "connection.hpp"
 #include "vpn.hpp"
+#include "settings.hpp"
 
 using type_signal_network = sigc::signal<void (std::shared_ptr<Network>)>;
 using type_signal_device_list_changed = sigc::signal<void (std::map<std::string, std::shared_ptr<Network>>)>;
@@ -37,6 +39,7 @@ class NetworkManager
 
     std::map<std::string, std::shared_ptr<Network>> all_devices;
     std::map<std::string, std::shared_ptr<VpnConfig>> all_vpns;
+    std::map<std::string, std::shared_ptr<NetworkSettings>> all_settings;
 
     void on_nm_properties_changed(const Gio::DBus::Proxy::MapChangedProperties& properties,
         const std::vector<Glib::ustring>& invalidated);
@@ -47,6 +50,16 @@ class NetworkManager
     void changed_primary(std::string path);
     void connect_nm();
     void lost_nm();
+
+    void setting_added(std::string path);
+    void setting_removed(std::string path);
+
+    Gtk::Window popup_window;
+    Gtk::Box popup_box;
+    Gtk::Label popup_label;
+    Gtk::Entry popup_entry;
+
+    std::string popup_cache_p2 = "", popup_cache_p3 = "";
 
   public:
     /* Emitted when the default connection or it's properties change */
@@ -151,7 +164,12 @@ class NetworkManager
     std::tuple<bool, bool> mobile_global_enabled();
     bool networking_global_enabled();
 
+    std::shared_ptr<VpnConfig> get_vpn(std::string path);
+
     void wifi_global_set(bool value);
     void mobile_global_set(bool value);
     void networking_global_set(bool value);
+    void submit_password();
+
+    std::shared_ptr<NetworkSettings> get_setting_for_ssid(std::string ssid);
 };

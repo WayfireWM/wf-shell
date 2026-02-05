@@ -15,8 +15,18 @@ util = static_library(
         'network/wifi-ap.cpp',
         'network/network.cpp',
         'network/modem.cpp',
+        'network/settings.cpp',
+        'network/connection.cpp',
     ],
-    dependencies: [wf_protos, gtklayershell, wayland_client, gtkmm, wfconfig, libinotify, json],
+    dependencies: [
+        wf_protos,
+        gtklayershell,
+        wayland_client,
+        gtkmm,
+        wfconfig,
+        libinotify,
+        json,
+    ],
 )
 
 util_includes = include_directories('.')

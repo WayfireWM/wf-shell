@@ -34,7 +34,7 @@ class Network
     std::string interface = "";
     int last_state = 0;
     virtual std::string get_name() = 0;
-    virtual std::string get_color_name() = 0;
+    virtual std::vector<std::string> get_css_classes() = 0;
     Network(std::string path, std::shared_ptr<Gio::DBus::Proxy> in_proxy);
     ~Network();
     virtual std::string get_friendly_name();
@@ -44,6 +44,11 @@ class Network
     std::string get_icon_symbolic()
     {
         return get_icon_name() + "-symbolic";
+    }
+
+    virtual std::string get_secure_variant()
+    {
+        return "";
     }
 
     std::string get_path();

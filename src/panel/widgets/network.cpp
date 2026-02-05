@@ -36,19 +36,23 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
 
 void WayfireNetworkInfo::set_connection(std::shared_ptr<Network> network)
 {
-    status.remove_css_class("none");
-    status.remove_css_class("weak");
-    status.remove_css_class("bad");
-    status.remove_css_class("ok");
-    status.remove_css_class("excellent");
+    for (auto clas : button_content.get_css_classes())
+    {
+        if ((clas == "flat") || (clas == "network") || (clas == "widget-icon"))
+        {
+            continue;
+        }
+
+        button_content.remove_css_class(clas);
+    }
+
+    for (auto clas : network->get_css_classes())
+    {
+        button_content.add_css_class(clas);
+    }
 
     status.set_label(network->get_name());
     icon.set_from_icon_name(network->get_icon_symbolic());
-    auto color = network->get_color_name();
-    if (color != "")
-    {
-        status.add_css_class(color);
-    }
 }
 
 WayfireNetworkInfo::~WayfireNetworkInfo()

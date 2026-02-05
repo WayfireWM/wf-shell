@@ -17,8 +17,8 @@ class NullNetwork : public Network
         return "network-offline";
     }
 
-    std::string get_color_name() override
+    std::vector<std::string> get_css_classes() override
     {
-        return "none";
+        return {"none"};
     }
 };

@@ -1,8 +1,11 @@
 #include <sigc++/functors/mem_fun.h>
 #include <memory>
 #include <gtkmm.h>
+#include <string>
 
 #include "bluetooth.hpp"
+#include "gtk/gtk.h"
+#include "gtkmm/enums.h"
 #include "manager.hpp"
 #include "modem.hpp"
 #include "network.hpp"
@@ -17,14 +20,44 @@ AccessPointWidget::AccessPointWidget(std::string path_in, std::shared_ptr<Access
     ap(ap_in), path(path_in)
 {
     add_css_class("access-point");
-    append(image);
+    append(overlay);
     append(label);
+    append(band);
+
+    set_hexpand(true);
+    label.set_hexpand(true);
+    label.set_justify(Gtk::Justification::LEFT);
+    label.set_halign(Gtk::Align::START);
+
+    overlay.set_child(wifi);
+    overlay.add_overlay(security);
 
     auto update_ap = [this] ()
     {
         label.set_label(ap->get_ssid());
-        image.set_from_icon_name(ap->get_icon_name());
+        wifi.set_from_icon_name(ap->get_icon_name());
+        security.set_from_icon_name(ap->get_security_icon_name());
+        band.set_label(ap->get_band_name());
+        auto classes = get_css_classes();
+        for (auto css_class : classes)
+        {
+            remove_css_class(css_class);
+        }
+
+        for (auto css_class : ap->get_css_classes())
+        {
+            add_css_class(css_class);
+        }
     };
+
+    band.set_halign(Gtk::Align::END);
+    band.add_css_class("band");
+    band.set_justify(Gtk::Justification::RIGHT);
+    security.set_halign(Gtk::Align::END);
+    security.set_valign(Gtk::Align::END);
+    security.add_css_class("security");
+
+
     signals.push_back(ap_in->signal_altered().connect(update_ap));
     update_ap();
 }
@@ -35,6 +68,11 @@ AccessPointWidget::~AccessPointWidget()
     {
         signal.disconnect();
     }
+}
+
+std::shared_ptr<AccessPoint> AccessPointWidget::get_ap()
+{
+    return ap;
 }
 
 VPNControlWidget::VPNControlWidget(std::shared_ptr<VpnConfig> config) :
@@ -73,22 +111,26 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
     if (wifi)
     {
         type = "wifi";
-        /* TODO Sort*/
         for (auto & it : wifi->get_access_points())
         {
             add_access_point(it.second);
         }
 
+        sort_access_points();
+
+
         signals.push_back(wifi->signal_add_access_point().connect(
             [this] (std::shared_ptr<AccessPoint> ap)
         {
             add_access_point(ap);
+            sort_access_points();
         }));
 
         signals.push_back(wifi->signal_remove_access_point().connect(
             [this] (std::shared_ptr<AccessPoint> ap)
         {
             remove_access_point(ap->get_path());
+            sort_access_points();
         }));
 
         auto wifi_cb =
@@ -96,6 +138,7 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
         {
             if (wifi->get_current_access_point_path() == "/")
             {
+                sort_access_points();
                 revealer.set_reveal_child(true);
                 topbox.hide();
             } else
@@ -131,7 +174,7 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
     {
         network->toggle();
     }));
-    label.add_controller(click);
+    topbox.add_controller(click);
 
     /* Set label and image based on friendly info */
     auto network_change_cb = [this, network] ()
@@ -144,6 +187,17 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
         } else
         {
             label.remove_css_class("active");
+        }
+
+        auto classes = get_css_classes();
+        for (auto css_class : classes)
+        {
+            remove_css_class(css_class);
+        }
+
+        for (auto css_class : network->get_css_classes())
+        {
+            add_css_class(css_class);
         }
     };
     signals.push_back(network->signal_network_altered().connect(network_change_cb));
@@ -159,6 +213,8 @@ void DeviceControlWidget::remove_access_point(std::string path)
     }
 
     access_points.erase(path);
+
+    sort_access_points();
 }
 
 void DeviceControlWidget::add_access_point(std::shared_ptr<AccessPoint> ap)
@@ -192,6 +248,8 @@ void DeviceControlWidget::add_access_point(std::shared_ptr<AccessPoint> ap)
     widget->add_controller(click);
     widget->signals.push_back(sig);
     revealer_box.append(*access_points[path]);
+
+    sort_access_points();
 }
 
 void DeviceControlWidget::selected_access_point(std::string path)
@@ -223,6 +281,47 @@ DeviceControlWidget::~DeviceControlWidget()
     for (auto signal : signals)
     {
         signal.disconnect();
+    }
+}
+
+bool sort_compare(std::pair<std::string, std::shared_ptr<AccessPointWidget>> a,
+    std::pair<std::string,
+        std::shared_ptr<AccessPointWidget>> b)
+{
+    auto a_ap = a.second->get_ap();
+    auto b_ap = b.second->get_ap();
+
+    /*if (!a_ap->has_saved_password && b_ap->has_saved_password)
+     *  {
+     *   return true;
+     *  }*/
+
+    return a_ap->get_strength() > b_ap->get_strength();
+}
+
+void DeviceControlWidget::sort_access_points()
+{
+    std::vector<std::pair<std::string, std::shared_ptr<AccessPointWidget>>> sorting;
+    for (auto & it : access_points)
+    {
+        sorting.push_back(it);
+    }
+
+    sort(sorting.begin(), sorting.end(), sort_compare);
+
+    std::shared_ptr<AccessPointWidget> prev = nullptr;
+    for (auto & it : sorting)
+    {
+        if (!prev)
+        {
+            /* Work around not being allowed to pass NULL in gtkmm */
+            gtk_box_reorder_child_after((GtkBox*)revealer_box.gobj(), (GtkWidget*)it.second->gobj(), NULL);
+        } else
+        {
+            revealer_box.reorder_child_after(*it.second, *prev);
+        }
+
+        prev = it.second;
     }
 }
 

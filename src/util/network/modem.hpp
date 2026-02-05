@@ -19,6 +19,7 @@ class ModemNetwork : public Network
   public:
     unsigned char strength = 0;
     int caps = 8;
+    std::shared_ptr<Gio::DBus::Proxy> modem_3gpp_proxy;
     std::shared_ptr<Gio::DBus::Proxy> modem_proxy;
     std::shared_ptr<Gio::DBus::Proxy> mm_proxy;
     ModemNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy,
@@ -26,10 +27,11 @@ class ModemNetwork : public Network
     void find_mm_proxy(std::string dev_id);
     ~ModemNetwork();
     std::string strength_string();
-    std::string get_name();
+    std::string get_name() override;
     std::string get_signal_band();
     std::string get_connection_type_string();
-    std::string get_icon_name();
-    std::string get_color_name();
-    std::string get_friendly_name();
+    std::string get_icon_name() override;
+    std::string get_friendly_name() override;
+    std::string get_secure_variant() override;
+    std::vector<std::string> get_css_classes() override;
 };

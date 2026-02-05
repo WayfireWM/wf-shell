@@ -1,4 +1,5 @@
 #include "wired.hpp"
+#include <vector>
 WiredNetwork::WiredNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> proxy) :
     Network(path, proxy)
 {}
@@ -18,12 +19,17 @@ std::string WiredNetwork::get_icon_name()
     return "network-wired-offline";
 }
 
-std::string WiredNetwork::get_color_name()
+std::vector<std::string> WiredNetwork::get_css_classes()
 {
-    return "excellent";
+    return {"ethernet", "good"};
 }
 
 std::string WiredNetwork::get_friendly_name()
 {
     return "Ethernet";
+}
+
+std::string WiredNetwork::get_secure_variant()
+{
+    return "-secure";
 }

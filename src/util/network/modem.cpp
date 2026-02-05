@@ -1,4 +1,7 @@
 #include "modem.hpp"
+#include "giomm/dbusproxy.h"
+#include "glibmm/variant.h"
+#include <vector>
 ModemNetwork::ModemNetwork(std::string path, std::shared_ptr<Gio::DBus::Proxy> device_proxy,
     std::shared_ptr<Gio::DBus::Proxy> modem_proxy) :
     Network(path, device_proxy), modem_proxy(modem_proxy)
@@ -37,7 +40,12 @@ void ModemNetwork::find_mm_proxy(std::string dev_id)
                             mm_proxy = Gio::DBus::Proxy::create_sync(device_proxy->get_connection(),
                                 "org.freedesktop.ModemManager1",
                                 modem_path,
-                                "org.freedeskop.ModemManager1.Modem");
+                                "org.freedesktop.ModemManager1.Modem");
+
+                            modem_3gpp_proxy = Gio::DBus::Proxy::create_sync(device_proxy->get_connection(),
+                                "org.freedesktop.ModemManager1",
+                                modem_path,
+                                "org.freedesktop.ModemManager1.Modem.Modem3gpp");
                         }
                     }
                 }
@@ -47,6 +55,15 @@ void ModemNetwork::find_mm_proxy(std::string dev_id)
 
     if (mm_proxy)
     {
+        /* Get initial values */
+
+        Glib::VariantBase signal_pair;
+        mm_proxy->get_cached_property(signal_pair, "SignalQuality");
+
+        auto [a, b] =
+            Glib::VariantBase::cast_dynamic<Glib::Variant<std::tuple<unsigned int, bool>>>(signal_pair).get();
+        strength = a;
+
         signals.push_back(mm_proxy->signal_properties_changed().connect(
             [this] (const Gio::DBus::Proxy::MapChangedProperties& properties,
                     const std::vector<Glib::ustring>& invalidated)
@@ -117,7 +134,13 @@ std::string ModemNetwork::get_name()
         return "Misconfigured Mobile";
     }
 
-    /* TODO Get Carrier from MM */
+    if (modem_3gpp_proxy)
+    {
+        Glib::Variant<std::string> carrier;
+        modem_3gpp_proxy->get_cached_property(carrier, "OperatorName");
+        return carrier.get();
+    }
+
     return "Mobile";
 }
 
@@ -180,9 +203,14 @@ std::string ModemNetwork::get_icon_name()
     return "network-mobile-" + get_signal_band() + "-" + get_connection_type_string();
 }
 
-std::string ModemNetwork::get_color_name()
+std::string ModemNetwork::get_secure_variant()
 {
-    return strength_string();
+    return "-locked";
+}
+
+std::vector<std::string> ModemNetwork::get_css_classes()
+{
+    return {"modem", get_connection_type_string(), strength_string(), "carrier-" + get_name()};
 }
 
 std::string ModemNetwork::get_friendly_name()

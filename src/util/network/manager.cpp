@@ -2,11 +2,15 @@
 #include <glibmm.h>
 #include <iostream>
 #include <memory>
+#include <string>
 
 #include "manager.hpp"
 #include "bluetooth.hpp"
 #include "connection.hpp"
+#include "gtkmm/enums.h"
 #include "network.hpp"
+#include "network/settings.hpp"
+#include "sigc++/functors/mem_fun.h"
 #include "vpn.hpp"
 #include "wifi.hpp"
 #include "modem.hpp"
@@ -30,6 +34,13 @@
 
 NetworkManager::NetworkManager()
 {
+    popup_window.set_child(popup_box);
+    popup_box.append(popup_label);
+    popup_box.append(popup_entry);
+    popup_box.set_orientation(Gtk::Orientation::VERTICAL);
+    popup_entry.set_visibility(false);
+    popup_entry.signal_activate().connect(
+        sigc::mem_fun(*this, &NetworkManager::submit_password));
     Gio::DBus::Proxy::create_for_bus(Gio::DBus::BusType::SYSTEM,
         "org.freedesktop.DBus",
         "/org/freedesktop/DBus",
@@ -100,6 +111,61 @@ NetworkManager::NetworkManager()
     });
 }
 
+void NetworkManager::setting_added(std::string path)
+{
+    auto proxy = Gio::DBus::Proxy::create_sync(
+        connection,
+        NM_DBUS_NAME,
+        path,
+        "org.freedesktop.NetworkManager.Settings.Connection");
+
+    all_settings.emplace(path,
+        new NetworkSettings(path, proxy));
+    auto setting = all_settings[path];
+
+    if (setting->get_ssid() != "")
+    {
+        for (auto & device : all_devices)
+        {
+            auto wifi = std::dynamic_pointer_cast<WifiNetwork>(device.second);
+            if (wifi)
+            {
+                for (auto & ap : wifi->all_access_points)
+                {
+                    if (ap.second && (ap.second->get_ssid() == setting->get_ssid()))
+                    {
+                        ap.second->set_has_saved_password(true);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void NetworkManager::setting_removed(std::string path)
+{
+    auto setting = all_settings[path];
+    if (setting)
+    {
+        for (auto & device : all_devices)
+        {
+            auto wifi = std::dynamic_pointer_cast<WifiNetwork>(device.second);
+            if (wifi)
+            {
+                for (auto & ap : wifi->all_access_points)
+                {
+                    if (ap.second->get_ssid() == setting->get_ssid())
+                    {
+                        ap.second->set_has_saved_password(false);
+                    }
+                }
+            }
+        }
+    }
+
+    all_settings.erase(path);
+}
+
 void NetworkManager::lost_nm()
 {
     if (primary_signal)
@@ -155,6 +221,7 @@ void NetworkManager::connect_nm()
         Glib::VariantBase::cast_dynamic<Glib::Variant<std::vector<std::string>>>(ret1);
     for (auto & it : ret.get())
     {
+        setting_added(it);
         check_add_vpn(it);
         vpn_added.emit(it);
     }
@@ -167,12 +234,14 @@ void NetworkManager::connect_nm()
         {
             auto var =
                 Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(container.get_child()).get();
+            all_settings.erase(var);
             all_vpns.erase(var);
             vpn_removed.emit(var);
         } else if (signal == "NewConnection")
         {
             auto var =
                 Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(container.get_child()).get();
+            setting_added(var);
             check_add_vpn(var);
             vpn_added.emit(var);
         }
@@ -404,10 +473,21 @@ void NetworkManager::activate_connection(std::string p1, std::string p2, std::st
         manager->call_sync("ActivateConnection", paths);
     } catch (...)
     {
-        /*
-         * Most likely no password
-         * TODO
-         */
+        /* It's most likely a WIFI AP with no password set. Let's ask */
+        std::cout << p2 << std::endl;
+        if (p2.find("/Devices/") != std::string::npos)
+        {
+            auto device = std::dynamic_pointer_cast<WifiNetwork>(all_devices[p2]);
+            if (device)
+            {
+                popup_cache_p2 = p2;
+                popup_cache_p3 = p3;
+                auto ap = device->get_access_points()[p3];
+                popup_label.set_label("Preshared Key required for Access Point '" + ap->get_ssid() + "'");
+                popup_window.present();
+                popup_window.get_focus();
+            }
+        }
     }
 }
 
@@ -497,6 +577,125 @@ void NetworkManager::mobile_global_set(bool value)
         Glib::Variant<Glib::VariantBase>::create(Glib::Variant<bool>::create(value))
     });
     another_proxy->call_sync("Set", params);
+}
+
+std::shared_ptr<NetworkSettings> NetworkManager::get_setting_for_ssid(std::string ssid)
+{
+    if (ssid == "")
+    {
+        return nullptr;
+    }
+
+    for (auto setting : all_settings)
+    {
+        if (setting.second->get_ssid() == ssid)
+        {
+            return setting.second;
+        }
+    }
+
+    return nullptr;
+}
+
+std::shared_ptr<VpnConfig> NetworkManager::get_vpn(std::string path)
+{
+    return all_vpns[path];
+}
+
+void NetworkManager::submit_password()
+{
+    auto password = popup_entry.get_text();
+    if (password.length() == 0)
+    {
+        return;
+    }
+
+    popup_entry.set_text("");
+    auto wifi = std::dynamic_pointer_cast<WifiNetwork>(all_devices[popup_cache_p2]);
+    if (!wifi)
+    {
+        return;
+    }
+
+    auto ap = wifi->get_access_points()[popup_cache_p3];
+    if (!ap)
+    {
+        return;
+    }
+
+    auto ssid = ap->get_ssid();
+    if (ssid.length() == 0)
+    {
+        return;
+    }
+
+    popup_window.hide();
+
+    // --- Build settings using glibmm (correct types) ---
+
+    // SSID as byte array 'ay'
+    std::vector<guint8> ssid_bytes(ssid.begin(), ssid.end());
+    auto ssid_variant = Glib::Variant<std::vector<guint8>>::create(ssid_bytes);
+
+    // UUID
+    gchar *uuid_c = g_uuid_string_random();
+    Glib::ustring uuid(uuid_c);
+    g_free(uuid_c);
+
+    // ----- connection (a{sv})
+    std::map<Glib::ustring, Glib::VariantBase> connection_map;
+    connection_map["type"] =
+        Glib::Variant<Glib::ustring>::create("802-11-wireless");
+    connection_map["id"]   = Glib::Variant<Glib::ustring>::create(ssid);
+    connection_map["uuid"] = Glib::Variant<Glib::ustring>::create(uuid);
+
+    // ----- 802-11-wireless (a{sv})
+    std::map<Glib::ustring, Glib::VariantBase> wifi_map;
+    wifi_map["ssid"] = ssid_variant;
+    wifi_map["mode"] = Glib::Variant<Glib::ustring>::create("infrastructure");
+
+    // ----- 802-11-wireless-security (a{sv})
+    std::map<Glib::ustring, Glib::VariantBase> sec_map;
+    bool use_security = !password.empty();
+    if (use_security)
+    {
+        sec_map["key-mgmt"] = Glib::Variant<Glib::ustring>::create("wpa-psk");
+        sec_map["psk"] = Glib::Variant<Glib::ustring>::create(password);
+    }
+
+    // ------------------------
+    // TOP-LEVEL SETTINGS (a{sa{sv}})
+    // ------------------------
+    std::map<Glib::ustring, std::map<Glib::ustring, Glib::VariantBase>>
+    settings_map;
+
+    settings_map["connection"] = connection_map;
+    settings_map["802-11-wireless"] = wifi_map;
+    if (use_security)
+    {
+        settings_map["802-11-wireless-security"] = sec_map;
+    }
+
+    auto settings = Glib::Variant<
+        std::map<Glib::ustring, std::map<Glib::ustring, Glib::VariantBase>>>::
+        create(settings_map);
+    // ------------------------
+    // Object paths (o)
+    // ------------------------
+    auto device_path =
+        Glib::Variant<Glib::DBusObjectPathString>::create(popup_cache_p2);
+    // Access point path is "/" → NM autoselects AP matching SSID
+    auto ap_path = Glib::Variant<Glib::DBusObjectPathString>::create("/");
+    // ------------------------
+    // FINAL TUPLE (a{sa{sv}}, o, o)
+    // ------------------------
+    std::vector<Glib::VariantBase> args_vec = {settings, device_path, ap_path};
+    auto args = Glib::VariantContainerBase::create_tuple(args_vec);
+
+    // ------------------------
+    // CALL NetworkManager
+    // ------------------------
+    nm_proxy->call_sync("AddAndActivateConnection", args);
 }
 
 void NetworkManager::networking_global_set(bool value)

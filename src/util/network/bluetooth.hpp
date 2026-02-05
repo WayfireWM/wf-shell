@@ -28,9 +28,9 @@ class BluetoothNetwork : public Network
         return "network-bluetooth-inactive";
     }
 
-    std::string get_color_name() override
+    std::vector<std::string> get_css_classes() override
     {
-        return "";
+        return {};
     }
 
     std::string get_friendly_name() override

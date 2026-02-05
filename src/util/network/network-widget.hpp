@@ -3,6 +3,7 @@
 #include <sigc++/connection.h>
 #include <gtkmm.h>
 
+#include "gtkmm/overlay.h"
 #include "manager.hpp"
 #include "wifi-ap.hpp"
 #include "vpn.hpp"
@@ -11,8 +12,9 @@
 class AccessPointWidget : public Gtk::Box
 {
   private:
-    Gtk::Image image;
-    Gtk::Label label;
+    Gtk::Overlay overlay;
+    Gtk::Image wifi, security;
+    Gtk::Label label, band;
     std::shared_ptr<AccessPoint> ap;
     std::string path;
 
@@ -20,6 +22,7 @@ class AccessPointWidget : public Gtk::Box
     std::vector<sigc::connection> signals;
     AccessPointWidget(std::string path, std::shared_ptr<AccessPoint> ap);
     ~AccessPointWidget();
+    std::shared_ptr<AccessPoint> get_ap();
 };
 
 class DeviceControlWidget : public Gtk::Box
@@ -39,6 +42,7 @@ class DeviceControlWidget : public Gtk::Box
     void add_access_point(std::shared_ptr<AccessPoint> ap);
     void remove_access_point(std::string path);
     void selected_access_point(std::string path);
+    void sort_access_points();
     std::string type;
 };
 

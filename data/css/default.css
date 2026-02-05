@@ -72,23 +72,28 @@
     border-radius: 3px; 
     color: #41A6B5;
 }
-.excellent {
+.excellent>label
+{
     color: #00ff00;
 }
 
-.good {
+.good>label
+{
     color: #88ff00;
 }
 
-.ok {
+.ok>label
+{
     color: #ffff00;
 }
 
-.weak {
+.weak>label
+{
     color: #ff8800;
 }
 
-.none {
+.none>label
+{
     color: #ff0000;
 }
 
@@ -144,6 +149,31 @@
     animation-timing-function: linear;
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
+}
+
+
+.network-control-center image.access-point {
+    -gtk-icon-size:40px;
+}
+
+.network-control-center .access-point.secure .security {
+    -gtk-icon-size:20px;
+    color:red;
+}
+
+.network-control-center .access-point.secure.has-password .security {
+    color:green;
+}
+
+.network-control-center .access-point.has-password{
+  font-weight: bold;
+  background: #8f83;
+}
+
+
+.network-control-center .access-point .band {
+    font-size: 1em;
+    font-weight: bolder;
 }
 
 @keyframes embiggen {
