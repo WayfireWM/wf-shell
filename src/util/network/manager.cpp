@@ -352,7 +352,7 @@ void NetworkManager::add_network(std::string path)
         auto bluetooth_proxy = Gio::DBus::Proxy::create_sync(connection,
             NM_DBUS_NAME,
             path,
-            "org.freedesktop.NetworkManager.Devices.Bluetooth");
+            "org.freedesktop.NetworkManager.Device.Bluetooth");
         all_devices.emplace(path, new BluetoothNetwork(path, device_proxy, bluetooth_proxy));
         device_added.emit(all_devices[path]);
     } else if (connection_type == ETHERNET_TYPE)

@@ -15,7 +15,14 @@ class BluetoothNetwork : public Network
 
     std::string get_name() override
     {
-        return "";
+        if (bluetooth_proxy)
+        {
+            Glib::Variant<std::string> name;
+            bluetooth_proxy->get_cached_property(name, "Name");
+            return name.get();
+        }
+
+        return "Bluetooth";
     }
 
     std::string get_icon_name() override
@@ -30,7 +37,7 @@ class BluetoothNetwork : public Network
 
     std::vector<std::string> get_css_classes() override
     {
-        return {};
+        return {"bluetooth"};
     }
 
     std::string get_friendly_name() override
