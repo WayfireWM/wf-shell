@@ -96,6 +96,10 @@
 {
     color: #ff0000;
 }
+.bluetooth>label
+{
+    color: #8888ff;
+}
 
 .wf-dock,
 .wf-dock .out-box {
