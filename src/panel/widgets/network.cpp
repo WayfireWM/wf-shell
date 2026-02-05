@@ -29,6 +29,17 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
 
     icon.set_valign(Gtk::Align::CENTER);
 
+    no_label.set_callback([this] ()
+    {
+        if (no_label)
+        {
+            status.hide();
+        } else
+        {
+            status.show();
+        }
+    });
+
     signals.push_back(network_manager->signal_default_changed().connect(
         sigc::mem_fun(*this, &WayfireNetworkInfo::set_connection)));
     set_connection(network_manager->get_primary_network());
