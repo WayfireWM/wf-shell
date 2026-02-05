@@ -5,6 +5,7 @@
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 #include <wf-option-wrap.hpp>
 
+#include "network/manager.hpp"
 #include "wf-shell-app.hpp"
 
 class WfDock
