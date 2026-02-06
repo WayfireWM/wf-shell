@@ -35,6 +35,7 @@ class WayfireLockerApp : public WayfireShellApp
     bool lockout = false;
     std::string cache_file = "";
     std::string background_path = "";
+    pid_t p_pid;
 
     int inotify_bg_file;
     Glib::RefPtr<BackgroundImage> background_file;
@@ -45,7 +46,7 @@ class WayfireLockerApp : public WayfireShellApp
 
   public:
     using WayfireShellApp::WayfireShellApp;
-    static void create(int argc, char **argv);
+    static void create(int argc, char **argv, pid_t p_pid);
     static WayfireLockerApp& get()
     {
         return (WayfireLockerApp&)WayfireShellApp::get();
@@ -85,6 +86,12 @@ class WayfireLockerApp : public WayfireShellApp
     void recieved_bad_auth();
     bool is_locked_out();
     void reload_background();
+
+    /* Send a signal to parent process
+     *  SIGHUP = We are successfully locked. exit(0)
+     *  SIGTERM = An error occured, and we did not lock. exit(2)
+     */
+    void kill_parent(int sig);
 
     std::map<int, std::shared_ptr<WayfireLockerAppLockscreen>> window_list;
 };

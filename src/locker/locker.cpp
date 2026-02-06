@@ -1,3 +1,4 @@
+#include <csignal>
 #include <iostream>
 #include <fstream>
 #include <giomm/application.h>
@@ -90,14 +91,20 @@ void WayfireLockerApp::on_activate()
             {
                 prewake_signal = Glib::signal_timeout().connect([this] ()
                 {
+                    kill_parent(SIGHUP);
+
                     can_early_wake = false;
                     return G_SOURCE_REMOVE;
                 }, WfOption<int>{"locker/prewake"});
+            } else
+            {
+                kill_parent(SIGHUP);
             }
 
             perform_lock();
         }
 
+        kill_parent(SIGHUP);
         /* Called again but already screen locked. No worries */
         return;
     }
@@ -347,7 +354,7 @@ void WayfireLockerApp::perform_unlock(std::string reason)
     });
 }
 
-void WayfireLockerApp::create(int argc, char **argv)
+void WayfireLockerApp::create(int argc, char **argv, pid_t p_pid)
 {
     if (instance)
     {
@@ -355,6 +362,7 @@ void WayfireLockerApp::create(int argc, char **argv)
     }
 
     instance = std::unique_ptr<WayfireShellApp>(new WayfireLockerApp{});
+    (dynamic_cast<WayfireLockerApp&>(*instance)).p_pid = p_pid;
     instance->init_app();
     instance->run(argc, argv);
 }
@@ -377,13 +385,38 @@ void WayfireLockerApp::set_is_locked(bool locked)
 /* Starting point */
 int main(int argc, char **argv)
 {
-    if (!gtk_session_lock_is_supported())
+    pid_t c_pid, p_pid = getpid();
+    c_pid = fork();
+    if (c_pid == -1)
     {
-        std::cerr << "This session does not support locking" << std::endl;
-        exit(0);
+        std::cerr << "Unable to fork, exiting" << std::endl;
+        return 1;
+    } else if (c_pid > 0)
+    {
+        signal(SIGHUP, [] (int)
+        {
+            exit(0); /* Fully locked, return control */
+        });
+        signal(SIGKILL, [] (int)
+        {
+            exit(2); /* Lock failed or canceled */
+        });
+        /* This is before we have config, so random guess */
+        sleep(60);
+        std::cout << "Timed out" << std::endl;
+        exit(1); /* Lock timed out */
+    } else
+    {
+        if (!gtk_session_lock_is_supported())
+        {
+            std::cerr << "This session does not support locking" << std::endl;
+            kill(p_pid, SIGTERM);
+            exit(2);
+        }
+
+        WayfireLockerApp::create(argc, argv, p_pid);
     }
 
-    WayfireLockerApp::create(argc, argv);
     return 0;
 }
 
@@ -467,6 +500,7 @@ void WayfireLockerApp::user_activity()
 {
     if (can_early_wake)
     {
+        kill_parent(SIGTERM);
         can_early_wake = false;
         perform_unlock("Early Activity");
     }
@@ -531,4 +565,13 @@ void WayfireLockerApp::reload_background()
     inotify_add_watch(inotify_bg_file,
         cache_file.c_str(),
         IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
+}
+
+void WayfireLockerApp::kill_parent(int signal)
+{
+    if (p_pid)
+    {
+        kill(p_pid, signal); /* We are fully locked */
+        p_pid = 0;
+    }
 }
