@@ -85,6 +85,8 @@ class WfDock::impl
                     network_image->add_css_class(clas);
                 }
 
+                network_image->set_tooltip_text(network->get_name());
+
                 network_image->add_css_class("network");
                 network_image->add_css_class("flat");
             });
