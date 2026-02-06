@@ -1,8 +1,6 @@
 #include <iostream>
 #include <memory>
 #include <glibmm.h>
-#include "gdkmm/enums.h"
-#include "glib.h"
 #include "gtkmm/entry.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/label.h"
@@ -16,6 +14,18 @@
 #include "timedrevealer.hpp"
 #include "password.hpp"
 
+WayfireLockerPasswordPluginWidget::~WayfireLockerPasswordPluginWidget()
+{
+    if (entry_updated)
+    {
+        entry_updated.disconnect();
+    }
+
+    if (entry_submitted)
+    {
+        entry_submitted.disconnect();
+    }
+}
 
 void WayfireLockerPasswordPlugin::update_labels(std::string text)
 {
@@ -38,10 +48,26 @@ void WayfireLockerPasswordPlugin::blank_passwords()
 void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerPasswordPluginWidget(label_contents));
+
+    /* Share string to every other entry */
     auto widget = widgets[id];
+    widget->entry_updated = widget->entry.signal_changed().connect(
+        [this, widget] ()
+    {
+        int start, end;
+        widget->entry.get_selection_bounds(start, end);
+        auto password = widget->entry.get_text();
+        for (auto & pair : widgets)
+        {
+            pair.second->entry_updated.block(true);
+            pair.second->entry.set_text(password);
+            pair.second->entry.set_position(start);
+            pair.second->entry_updated.unblock();
+        }
+    }, true);
 
     /* Set entry callback for return */
-    widget->entry.signal_activate().connect([this, widget] ()
+    widget->entry_submitted = widget->entry.signal_activate().connect([this, widget] ()
     {
         auto password = widget->entry.get_text();
         if (password.length() > 0)
