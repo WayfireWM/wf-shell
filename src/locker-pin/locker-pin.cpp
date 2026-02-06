@@ -128,6 +128,11 @@ void WayfirePinChangeApp::pin_cancel()
 
 void WayfirePinChangeApp::pin_key(std::string key)
 {
+    if (pin.length() >= 20)
+    {
+        return;
+    }
+
     pin = pin + key;
     set_label();
 }
