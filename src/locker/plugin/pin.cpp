@@ -161,6 +161,11 @@ void WayfireLockerPinPlugin::remove_output(int id, std::shared_ptr<WayfireLocker
 
 void WayfireLockerPinPlugin::add_digit(std::string digit)
 {
+    if (pin.length() >= 20)
+    {
+        return;
+    }
+
     pin = pin + digit;
     update_labels();
 
