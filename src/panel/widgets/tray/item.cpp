@@ -2,6 +2,8 @@
 
 #include <gtk-utils.hpp>
 
+#include <glibmm/markup.h>
+
 #include <gtkmm/icontheme.h>
 #include <gtkmm/tooltip.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -167,10 +169,11 @@ void StatusNotifierItem::setup_tooltip()
             get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
 
         auto tooltip_label_text = !tooltip_text.empty() && !tooltip_title.empty() ?
-            "<b>" + tooltip_title + "</b>: " + tooltip_text :
-            !tooltip_title.empty() ? tooltip_title :
-            !tooltip_text.empty() ? tooltip_text :
-            get_item_property<Glib::ustring>("Title");
+            "<b>" + Glib::Markup::escape_text(tooltip_title) + "</b>: " +
+            Glib::Markup::escape_text(tooltip_text) :
+            !tooltip_title.empty() ? Glib::Markup::escape_text(tooltip_title) :
+            !tooltip_text.empty() ? Glib::Markup::escape_text(tooltip_text) :
+            Glib::Markup::escape_text(get_item_property<Glib::ustring>("Title"));
 
         const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
         bool icon_shown   = false;
