@@ -45,5 +45,9 @@
 		<_long>Keep all window icons for up to 2 seconds to allow CSS animations.</_long>
 		<default>true</default>
 	</option>
+	<option name="show_network_status" type="bool">
+		<_short>Show network status</_short>
+		<default>false</default>
+	</option>
 	</plugin>
 </wf-shell>

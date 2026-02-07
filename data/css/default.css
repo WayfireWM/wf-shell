@@ -72,28 +72,37 @@
     border-radius: 3px; 
     color: #41A6B5;
 }
-.excellent {
+.excellent>label
+{
     color: #00ff00;
 }
 
-.good {
+.good>label
+{
     color: #88ff00;
 }
 
-.ok {
+.ok>label
+{
     color: #ffff00;
 }
 
-.weak {
+.weak>label
+{
     color: #ff8800;
 }
 
-.none {
+.none>label
+{
     color: #ff0000;
+}
+.bluetooth>label
+{
+    color: #8888ff;
 }
 
 .wf-dock,
-.wf-dock .out-box {
+.wf-dock>.out-box {
     background: transparent;
 }
 
@@ -104,18 +113,18 @@
     border-radius: 1em;
 }
 
-.wf-dock button {
+.wf-dock button.toplevel-icon {
     background: transparent;
     padding-left: 0rem;
     padding-right: 0rem;
 }
 
-.wf-dock button.activated {
+.wf-dock .box button.activated {
     border-bottom: 3px solid white;
     margin-bottom: 5px;
 }
 
-.wf-dock image {
+.wf-dock .box image {
     background: transparent;
     padding-left: 0rem;
     padding-right: 0rem;
@@ -123,7 +132,7 @@
     -gtk-icon-transform: scale(0.7);
 }
 
-.wf-dock image:hover {
+.wf-dock .box image:hover {
     background: transparent;
     padding-left: 0rem;
     padding-right: 0rem;
@@ -131,19 +140,51 @@
     -gtk-icon-transform: scale(1.0);
 }
 
-.wf-dock image {
+.wf-dock .box image.toplevel-icon {
     animation-name: embiggen;
     animation-duration: 1000ms;
     animation-timing-function: linear;
     animation-iteration-count: 1;
 }
 
-.wf-dock .closing image {
+.wf-dock .box .closing image.toplevel-icon {
     animation-name: kromulent;
     animation-duration: 1000ms;
     animation-timing-function: linear;
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
+}
+
+.wf-dock .network .image-button{
+    -gtk-icon-size:64px;
+}
+
+.wf-dock .network-control-center {
+    -gtk-icon-size: 48px;
+}
+
+.network-control-center image.access-point {
+    -gtk-icon-size: 40px;
+}
+
+.network-control-center .access-point.secure .security {
+    -gtk-icon-size:20px;
+    color:red;
+}
+
+.network-control-center .access-point.secure.has-password .security {
+    color:green;
+}
+
+.network-control-center .access-point.has-password{
+  font-weight: bold;
+  background: #8f83;
+}
+
+
+.network-control-center .access-point .band {
+    font-size: 1em;
+    font-weight: bolder;
 }
 
 @keyframes embiggen {
