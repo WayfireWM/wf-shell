@@ -32,7 +32,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
 
     icon.set_valign(Gtk::Align::CENTER);
 
-    no_label.set_callback([this] ()
+    auto show_hide_label = [this] ()
     {
         if (no_label)
         {
@@ -41,7 +41,9 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
         {
             status.show();
         }
-    });
+    };
+    no_label.set_callback(show_hide_label);
+    show_hide_label();
 
     auto click = Gtk::GestureClick::create();
     click->set_button(3);
