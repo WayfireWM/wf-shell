@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gtkmm/box.h>
+#include <memory>
 #include <wayland-client.h>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 #include <wf-option-wrap.hpp>

@@ -11,7 +11,6 @@
 
 #include "dock.hpp"
 #include "../util/gtk-utils.hpp"
-#include "gtkmm/menubutton.h"
 #include "network/manager.hpp"
 #include "network/network-widget.hpp"
 #include "network/network.hpp"
@@ -27,6 +26,7 @@ class WfDock::impl
     Gtk::Box box;
     std::unique_ptr<WayfireMenuButton> network_image;
     std::unique_ptr<NetworkControlWidget> network_control;
+    std::shared_ptr<NetworkManager> network_manager;
 
     WfOption<std::string> css_path{"dock/css_path"};
     WfOption<int> dock_height{"dock/dock_height"};
@@ -67,11 +67,12 @@ class WfDock::impl
 
         if (network)
         {
+            network_manager = NetworkManager::getInstance();
             add_child(*network_image);
             network_control = std::make_unique<NetworkControlWidget>();
             network_image->get_popover()->set_child(*network_control);
             network_image->set_has_frame(false);
-            NetworkManager::getInstance()->signal_default_changed().connect(
+            network_manager->signal_default_changed().connect(
                 [this] (std::shared_ptr<Network> network)
             {
                 network_image->set_icon_name(network->get_icon_name());

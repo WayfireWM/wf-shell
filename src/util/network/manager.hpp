@@ -30,7 +30,8 @@ class NetworkManager
     Glib::RefPtr<Gio::DBus::Connection> connection;
     Glib::RefPtr<Gio::DBus::Proxy> nm_proxy, settings_proxy, manager_proxy;
 
-    std::vector<sigc::connection> nm_signals, dbus_signals;
+    /* Connections that must be severed after NM Dbus is lost, and this NM is deconstructed*/
+    std::vector<sigc::connection> nm_dbus_signals, our_signals;
     sigc::connection debounce, primary_signal;
 
     std::string primary_connection = "";
@@ -60,6 +61,7 @@ class NetworkManager
     Gtk::Entry popup_entry;
 
     std::string popup_cache_p2 = "", popup_cache_p3 = "";
+    inline static std::weak_ptr<NetworkManager> instance;
 
   public:
     /* Emitted when the default connection or it's properties change */
@@ -139,16 +141,21 @@ class NetworkManager
         return all_devices;
     }
 
-    /* TODO Consider allowing this to lose last reference */
     static std::shared_ptr<NetworkManager> getInstance()
     {
-        static std::shared_ptr<NetworkManager> instance;
-        if (!instance)
+        if (instance.expired())
         {
-            instance = std::make_shared<NetworkManager>();
+            auto instance_now = std::make_shared<NetworkManager>();
+            instance = instance_now;
+            return instance_now;
         }
 
-        return instance;
+        return instance.lock();
+    }
+
+    static std::shared_ptr<NetworkManager> getInstanceIfExists()
+    {
+        return instance.lock();
     }
 
     NetworkManager();

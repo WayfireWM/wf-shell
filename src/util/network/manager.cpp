@@ -39,8 +39,8 @@ NetworkManager::NetworkManager()
     popup_box.append(popup_entry);
     popup_box.set_orientation(Gtk::Orientation::VERTICAL);
     popup_entry.set_visibility(false);
-    popup_entry.signal_activate().connect(
-        sigc::mem_fun(*this, &NetworkManager::submit_password));
+    our_signals.push_back(popup_entry.signal_activate().connect(
+        sigc::mem_fun(*this, &NetworkManager::submit_password)));
     Gio::DBus::Proxy::create_for_bus(Gio::DBus::BusType::SYSTEM,
         "org.freedesktop.DBus",
         "/org/freedesktop/DBus",
@@ -67,7 +67,7 @@ NetworkManager::NetworkManager()
         }
 
         /* https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.NameOwnerChanged.html */
-        dbus_signals.push_back(manager_proxy->signal_signal().connect(
+        our_signals.push_back(manager_proxy->signal_signal().connect(
             [this] (const Glib::ustring & sender_name,
                     const Glib::ustring & signal_name,
                     const Glib::VariantContainerBase & params)
@@ -186,7 +186,7 @@ void NetworkManager::lost_nm()
     all_vpns.clear();
     primary_connection     = "/";
     primary_connection_obj = std::make_shared<Connection>();
-    for (auto signal : nm_signals)
+    for (auto signal : nm_dbus_signals)
     {
         signal.disconnect();
     }
@@ -226,7 +226,7 @@ void NetworkManager::connect_nm()
         vpn_added.emit(it);
     }
 
-    nm_signals.push_back(settings_proxy->signal_signal().connect(
+    nm_dbus_signals.push_back(settings_proxy->signal_signal().connect(
         [this] (const Glib::ustring& sender, const Glib::ustring& signal,
                 const Glib::VariantContainerBase& container)
     {
@@ -257,10 +257,10 @@ void NetworkManager::connect_nm()
         return;
     }
 
-    nm_signals.push_back(nm_proxy->signal_properties_changed().connect(
+    nm_dbus_signals.push_back(nm_proxy->signal_properties_changed().connect(
         sigc::mem_fun(*this, &NetworkManager::on_nm_properties_changed)));
 
-    nm_signals.push_back(nm_proxy->signal_signal().connect(
+    nm_dbus_signals.push_back(nm_proxy->signal_signal().connect(
         sigc::mem_fun(*this, &NetworkManager::on_nm_signal)));
 
     /* Fill Initial List*/
@@ -311,7 +311,7 @@ void NetworkManager::get_all_devices_cb(std::shared_ptr<Gio::AsyncResult> async)
     }
 
     /* Now get the current connection */
-    nm_signals.push_back(Glib::signal_idle().connect([this] ()
+    nm_dbus_signals.push_back(Glib::signal_idle().connect([this] ()
     {
         Glib::Variant<std::string> path_read;
         nm_proxy->get_cached_property(path_read, "PrimaryConnection");
@@ -461,7 +461,6 @@ std::shared_ptr<Connection> NetworkManager::get_primary_network()
 
 void NetworkManager::activate_connection(std::string p1, std::string p2, std::string p3)
 {
-    auto manager = NetworkManager::getInstance()->get_nm_proxy();
     Glib::VariantStringBase path1, path2, path3;
     Glib::VariantStringBase::create_object_path(path1, p1);
     Glib::VariantStringBase::create_object_path(path2, p2);
@@ -470,7 +469,7 @@ void NetworkManager::activate_connection(std::string p1, std::string p2, std::st
     // auto data = Glib::VariantContainerBase::create_tuple(paths);
 
     try {
-        manager->call_sync("ActivateConnection", paths);
+        nm_proxy->call_sync("ActivateConnection", paths);
     } catch (...)
     {
         /* It's most likely a WIFI AP with no password set. Let's ask */
@@ -708,7 +707,7 @@ NetworkManager::~NetworkManager()
 {
     lost_nm();
     /* Signals that outlast each NetworkManager start/stop but need to clear on widget reload */
-    for (auto signal : dbus_signals)
+    for (auto signal : our_signals)
     {
         signal.disconnect();
     }
