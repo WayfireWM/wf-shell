@@ -87,6 +87,7 @@ void WayfireLockerApp::on_activate()
     {
         if (!m_is_locked)
         {
+            /* Relock logic, currently unused */
             if (can_early_wake)
             {
                 prewake_signal = Glib::signal_timeout().connect([this] ()
@@ -113,6 +114,7 @@ void WayfireLockerApp::on_activate()
     WayfireShellApp::on_activate();
     prewake_signal = Glib::signal_timeout().connect([this] ()
     {
+        kill_parent(ExitType::LOCKED);
         can_early_wake = false;
         return G_SOURCE_REMOVE;
     }, WfOption<int>{"locker/prewake"});
@@ -396,17 +398,20 @@ int main(int argc, char **argv)
     {
         signal(ExitType::LOCKED, [] (int)
         {
+            std::cout << "Locked :: exit(0)" << std::endl;
             exit(0); /* Fully locked, return control */
         });
         signal(ExitType::USER_UNLOCKED, [] (int)
         {
+            std::cout << "Unlocked :: exit(2)" << std::endl;
             exit(2); /* User fully authenticated or interupted before lock */
         });
         signal(ExitType::ERROR_NOT_LOCKED, [] (int)
         {
+            std::cout << "Error :: exit(1)" << std::endl;
             exit(1);
         });
-        sleep(10);
+        sleep(12);
         std::cout << "Timed out" << std::endl;
         exit(1); /* Lock timed out */
     } else
