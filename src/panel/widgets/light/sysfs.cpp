@@ -154,6 +154,16 @@ SysfsSurveillor::SysfsSurveillor(){
     inotify_thread = std::thread(&SysfsSurveillor::handle_inotify_events, this);
 }
 
+SysfsSurveillor::~SysfsSurveillor(){
+    // clean up inotify
+    close(fd);
+    fd = -1;
+
+    // remove controls from every widget
+    for (auto& widget : widgets)
+        strip_widget(widget);
+}
+
 void SysfsSurveillor::handle_inotify_events(){
     // according to the inotify man page, aligning as such ensures
     // proper function and avoids performance loss for "some systems"
@@ -164,11 +174,12 @@ void SysfsSurveillor::handle_inotify_events(){
     for (;;){
         // read, which will block until the next inotify event
         size = read(fd, buf, sizeof(buf));
-        if (size == -1 && errno != EAGAIN){
-            std::cerr << "Light widget: error reading inotify event.\n";
+        if (size == -1){
+            if (errno != EAGAIN)
+                std::cerr << "Light widget: error reading inotify event.\n";
+            else
+                break;
         }
-        if (size <= 0)
-            break;
 
         for (char *ptr = buf ; ptr < buf + size ; ptr += sizeof(struct inotify_event) + event->len){
             event = (const struct inotify_event*) ptr;
