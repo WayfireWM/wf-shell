@@ -406,8 +406,7 @@ int main(int argc, char **argv)
         {
             exit(1);
         });
-        /* This is before we have config, so random guess */
-        sleep(60);
+        sleep(10);
         std::cout << "Timed out" << std::endl;
         exit(1); /* Lock timed out */
     } else
