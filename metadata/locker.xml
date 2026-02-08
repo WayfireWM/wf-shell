@@ -74,6 +74,7 @@
 		<_long>If the user moves mouse or presses a key within this many milliseconds of lock, instantly unlock</_long>
 		<default>1000</default>
 		<min>0</min>
+		<max>9000</max>
 	</option>
 	<option name="lockout_attempts" type="int">
 		<_short>Lock after failed attempts</_short>
