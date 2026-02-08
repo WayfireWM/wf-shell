@@ -5,6 +5,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
 
+#include "giomm/application.h"
 #include "css-config.hpp"
 #include "wf-shell-app.hpp"
 
@@ -27,6 +28,8 @@ class WayfirePanelApp : public WayfireShellApp
   public:
     WayfirePanel *panel_for_wl_output(wl_output *output);
     static WayfirePanelApp& get();
+    std::string get_application_name() override;
+    Gio::Application::Flags get_extra_application_flags() override;
 
     /* Starts the program. get() is valid afterward the first (and the only)
      * call to create() */

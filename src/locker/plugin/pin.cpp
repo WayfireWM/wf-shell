@@ -1,0 +1,242 @@
+#include <iomanip>
+#include <sstream>
+#include <fstream>
+#include <string>
+#include <iostream>
+#include <memory>
+#include <gtkmm/grid.h>
+#include <gtkmm/box.h>
+#include <openssl/crypto.h>
+#include <openssl/sha.h>
+#include <openssl/evp.h>
+
+
+#include "plugin.hpp"
+#include "locker.hpp"
+#include "lockergrid.hpp"
+#include "timedrevealer.hpp"
+#include "pin.hpp"
+
+
+/*
+ *  To set the PIN Hash required to enable this plugin, try running
+ *  `echo -n "1234" | sha512sum | head -c 128 > ~/.config/wf-locker.hash`
+ *
+ *  Replace the numbers inside the echo quote. There must be one or more digits,
+ *  and any non-digit will render it impossible to unlock.
+ */
+
+WayfireLockerPinPluginWidget::WayfireLockerPinPluginWidget() :
+    WayfireLockerTimedRevealer("locker/pin_always")
+{
+    for (int count = 0; count < 10; count++)
+    {
+        std::string number = std::to_string(count);
+        numbers[count].add_css_class("pinpad-number");
+        numbers[count].add_css_class("pinpad-button");
+        numbers[count].set_label(number);
+        numbers[count].signal_clicked().connect(
+            [number] ()
+        {
+            auto plugin = WayfireLockerApp::get().get_plugin("pin");
+            auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
+            plugin_cast->add_digit(number);
+        });
+    }
+
+    bcan.set_label("❌");
+    bcan.add_css_class("pinpad-cancel");
+    bcan.add_css_class("pinpad-button");
+    bcan.signal_clicked().connect(
+        [] ()
+    {
+        auto plugin = WayfireLockerApp::get().get_plugin("pin");
+        auto plugin_cast = std::dynamic_pointer_cast<WayfireLockerPinPlugin>(plugin);
+        plugin_cast->reset_pin();
+    });
+    label.add_css_class("pinpad-current");
+}
+
+WayfireLockerPinPluginWidget::~WayfireLockerPinPluginWidget()
+{}
+
+void WayfireLockerPinPluginWidget::init(std::string label_text)
+{
+    set_child(grid);
+    grid.add_css_class("pinpad");
+    grid.attach(label, 0, 0, 3);
+    grid.attach(numbers[1], 0, 1);
+    grid.attach(numbers[2], 1, 1);
+    grid.attach(numbers[3], 2, 1);
+    grid.attach(numbers[4], 0, 2);
+    grid.attach(numbers[5], 1, 2);
+    grid.attach(numbers[6], 2, 2);
+    grid.attach(numbers[7], 0, 3);
+    grid.attach(numbers[8], 1, 3);
+    grid.attach(numbers[9], 2, 3);
+    grid.attach(numbers[0], 1, 4);
+    grid.attach(bcan, 0, 4);
+    grid.set_vexpand(true);
+    grid.set_column_homogeneous(true);
+    grid.set_row_homogeneous(true);
+    label.set_text(label_text);
+}
+
+WayfireLockerPinPlugin::WayfireLockerPinPlugin() :
+    WayfireLockerPlugin("locker/pin")
+{
+    /* TODO Watch for file changes and update in-memory hash */
+    if (!enable)
+    {
+        return;
+    }
+
+    std::string config_dir;
+
+    char *config_home = getenv("XDG_CONFIG_HOME");
+    if (config_home == NULL)
+    {
+        config_dir = std::string(getenv("HOME")) + "/.config";
+    } else
+    {
+        config_dir = std::string(config_home);
+    }
+
+    std::ifstream f(config_dir + "/wf-locker.hash");
+    if (!f.is_open())
+    {
+        std::cerr << "No PIN hash set" << std::endl;
+        disabled = true;
+        return;
+    }
+
+    std::string s;
+    if (!getline(f, s))
+    {
+        std::cerr << "No PIN hash set" << std::endl;
+        disabled = true;
+        return;
+    }
+
+    if (s.length() != 128)
+    {
+        std::cerr << "Invalid PIN hash" << std::endl;
+        disabled = true;
+        return;
+    }
+
+    pinhash = s;
+}
+
+void WayfireLockerPinPlugin::init()
+{}
+
+void WayfireLockerPinPlugin::deinit()
+{}
+
+void WayfireLockerPinPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+{
+    if (disabled)
+    {
+        return;
+    }
+
+    pinpads.emplace(id, new WayfireLockerPinPluginWidget());
+    auto pinpad = pinpads[id];
+    std::string asterisks(pin.length(), '*');
+    pinpad->init(asterisks);
+    grid->attach(*pinpad, position);
+}
+
+void WayfireLockerPinPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+{
+    if (disabled)
+    {
+        return;
+    }
+
+    grid->remove(*pinpads[id]);
+    pinpads.erase(id);
+}
+
+void WayfireLockerPinPlugin::add_digit(std::string digit)
+{
+    if (pin.length() >= 20)
+    {
+        return;
+    }
+
+    pin = pin + digit;
+    update_labels();
+
+    submit_pin();
+}
+
+void WayfireLockerPinPlugin::reset_pin()
+{
+    if (pin.length() > 0)
+    {
+        WayfireLockerApp::get().recieved_bad_auth();
+    }
+
+    pin = "";
+    update_labels();
+}
+
+void WayfireLockerPinPlugin::update_labels()
+{
+    std::string asterisks(pin.length(), '*');
+    for (auto& it : pinpads)
+    {
+        it.second->label.set_label(asterisks);
+    }
+}
+
+void WayfireLockerPinPlugin::submit_pin()
+{
+    auto hash = sha512(pin);
+    if (hash == pinhash)
+    {
+        WayfireLockerApp::get().perform_unlock("PIN Authenticated");
+    }
+
+    update_labels();
+}
+
+std::string WayfireLockerPinPlugin::sha512(const std::string input)
+{
+    unsigned char hash[EVP_MAX_MD_SIZE];
+    unsigned int hash_length = 0;
+    EVP_MD_CTX *mdctx = EVP_MD_CTX_create();
+    EVP_DigestInit(mdctx, EVP_sha512());
+    EVP_DigestUpdate(mdctx, input.c_str(), input.size());
+    EVP_DigestFinal(mdctx, hash, &hash_length);
+    EVP_MD_CTX_free(mdctx);
+
+    std::stringstream ss;
+
+    for (int i = 0; i < SHA512_DIGEST_LENGTH; i++)
+    {
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
+    }
+
+    return ss.str();
+}
+
+void WayfireLockerPinPluginWidget::lockout_changed(bool lockout)
+{
+    for (int i = 0; i < 10; i++)
+    {
+        numbers[i].set_sensitive(!lockout);
+    }
+
+    bcan.set_sensitive(!lockout);
+}
+
+void WayfireLockerPinPlugin::lockout_changed(bool lockout)
+{
+    for (auto & it : pinpads)
+    {
+        it.second->lockout_changed(lockout);
+    }
+}

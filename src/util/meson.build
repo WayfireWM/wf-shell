@@ -8,6 +8,7 @@ util = static_library(
         'css-config.cpp',
         'wf-ipc.cpp',
         'animated-scale.cpp',
+        'background-gl.cpp',
     ],
     dependencies: [wf_protos, gtklayershell, wayland_client, gtkmm, wfconfig, libinotify, json],
 )
