@@ -1,4 +1,5 @@
 #pragma once
+#include <csignal>
 #include <memory>
 #include <gtkmm/cssprovider.h>
 #include <gtk4-session-lock.h>
@@ -15,6 +16,12 @@ void on_session_lock_failed_c(GtkSessionLockInstance *lock, void *data);
 void on_session_unlocked_c(GtkSessionLockInstance *lock, void *data);
 void on_monitor_present_c(GtkSessionLockInstance *lock, GdkMonitor *monitor, void *data);
 
+enum ExitType
+{
+    USER_UNLOCKED    = SIGUSR1,
+    LOCKED           = SIGHUP,
+    ERROR_NOT_LOCKED = SIGTERM,
+};
 
 class WayfireLockerApp : public WayfireShellApp
 {
@@ -91,7 +98,7 @@ class WayfireLockerApp : public WayfireShellApp
      *  SIGHUP = We are successfully locked. exit(0)
      *  SIGTERM = An error occured, and we did not lock. exit(2)
      */
-    void kill_parent(int sig);
+    void kill_parent(ExitType);
 
     std::map<int, std::shared_ptr<WayfireLockerAppLockscreen>> window_list;
 };
