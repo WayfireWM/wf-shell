@@ -1,8 +1,7 @@
+#include <ddcutil_types.h>
 #include <iostream>
-extern "C"{
-	#include <ddcutil_c_api.h>
-	#include <ddcutil_status_codes.h>
-}
+#include <ddcutil_c_api.h>
+#include <ddcutil_status_codes.h>
 
 #include "light.hpp"
 
@@ -72,6 +71,12 @@ class WfLightDdcaControl : public WfLightControl
 };
 
 DdcaSurveillor::DdcaSurveillor(){
+	// watch for new valid monitors
+
+	auto status = ddca_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_ALL);
+
+	status = ddca_register_display_status_callback(on_new_display);
+
 	ddca_enable_verify(true);
 	DDCA_Display_Info_List *display_list = NULL;
 	ddca_get_display_info_list2(false, &display_list);
@@ -79,6 +84,16 @@ DdcaSurveillor::DdcaSurveillor(){
 	for (int i = 0 ; i < display_list->ct ; i++){
 		displays_info.push_back(&display_list->info[i]);
 	}
+}
+
+DdcaSurveillor::~DdcaSurveillor(){
+	ddca_stop_watch_displays(true);
+}
+
+void DdcaSurveillor::on_new_display(DDCA_Display_Status_Event event){
+	std::cout << "new display\n";
+	// 	ddca_redetect_displays();
+	// 	ddca_get_display_refs(false, );
 }
 
 void DdcaSurveillor::catch_up_widget(WayfireLight *widget){
