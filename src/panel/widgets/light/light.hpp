@@ -109,6 +109,8 @@ class SysfsSurveillor : public LightManager {
     std::thread inotify_thread;
 
   public:
+    ~SysfsSurveillor();
+
     static SysfsSurveillor& get();
 };
 
@@ -118,12 +120,15 @@ class DdcaSurveillor : public LightManager {
     DdcaSurveillor();
     void catch_up_widget(WayfireLight *widget);
     void strip_widget(WayfireLight *widget);
+    static void on_new_display(DDCA_Display_Status_Event event);
 
     static inline std::unique_ptr<DdcaSurveillor> instance;
 
     std::vector<DDCA_Display_Info*> displays_info;
 
   public:
+    ~DdcaSurveillor();
+
     static DdcaSurveillor& get();
 };
 #endif
