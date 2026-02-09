@@ -112,14 +112,21 @@ void WayfireLockerApp::on_activate()
 
     /* Set a timer for early-wake unlock */
     WayfireShellApp::on_activate();
-    prewake_signal = Glib::signal_timeout().connect([this] ()
+
+    if (can_early_wake)
+    {
+        prewake_signal = Glib::signal_timeout().connect([this] ()
+        {
+            kill_parent(ExitType::LOCKED);
+            can_early_wake = false;
+            return G_SOURCE_REMOVE;
+        }, WfOption<int>{"locker/prewake"});
+        /* TODO Hot config for this? */
+        // exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
+    } else
     {
         kill_parent(ExitType::LOCKED);
-        can_early_wake = false;
-        return G_SOURCE_REMOVE;
-    }, WfOption<int>{"locker/prewake"});
-    /* TODO Hot config for this? */
-    // exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
+    }
 
     auto debug = Glib::getenv("WF_LOCKER_DEBUG");
     if (debug == "1")
