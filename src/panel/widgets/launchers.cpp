@@ -155,6 +155,11 @@ void WayfireLaunchers::init(Gtk::Box *container)
     handle_config_reload();
 }
 
+void WayfireLaunchers::update_layout()
+{
+    box.set_spacing(spacing);
+}
+
 void WayfireLaunchers::handle_config_reload()
 {
     for (auto child : box.get_children())
@@ -167,4 +172,6 @@ void WayfireLaunchers::handle_config_reload()
     {
         box.append(l->button);
     }
+
+    update_layout();
 }
