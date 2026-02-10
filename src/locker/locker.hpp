@@ -7,6 +7,7 @@
 
 #include "glibmm/refptr.h"
 #include "lockscreen.hpp"
+#include "sigc++/connection.h"
 #include "wf-shell-app.hpp"
 #include "plugin.hpp"
 
@@ -50,6 +51,7 @@ class WayfireLockerApp : public WayfireShellApp
 
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
     sigc::connection lockout_signal, prewake_signal;
+    std::vector<sigc::connection> windows_signals;
 
   public:
     using WayfireShellApp::WayfireShellApp;

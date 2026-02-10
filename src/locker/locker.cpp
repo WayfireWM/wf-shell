@@ -276,7 +276,16 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
         }
     }
 
-    window->signal_close_request().connect([this, id] ()
+    windows_signals.push_back(window->signal_realize().connect(
+        [this] ()
+    {
+        if (!can_early_wake)
+        {
+            kill_parent(ExitType::LOCKED);
+        }
+    }, true));
+
+    windows_signals.push_back(window->signal_close_request().connect([this, id] ()
     {
         for (auto& it : plugins)
         {
@@ -298,7 +307,7 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
         }
 
         return false;
-    }, false);
+    }, false));
     if (is_debug())
     {
         init_plugins();
@@ -312,9 +321,6 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     if (can_early_wake)
     {
         window->add_css_class("fade-in");
-    } else
-    {
-        kill_parent(ExitType::LOCKED);
     }
 }
 
@@ -347,6 +353,11 @@ void WayfireLockerApp::perform_unlock(std::string reason)
         for (auto & it : window_list)
         {
             it.second->disconnect();
+        }
+
+        for (auto signal : windows_signals)
+        {
+            signal.disconnect();
         }
 
         if (lockout_signal)
