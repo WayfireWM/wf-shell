@@ -18,6 +18,7 @@
 #include "background-gl.hpp"
 #include "css-config.hpp"
 #include "glib.h"
+#include "glibmm/main.h"
 #include "lockscreen.hpp"
 #include "plugin/battery.hpp"
 #include "plugin/clock.hpp"
@@ -281,7 +282,10 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     {
         if (!can_early_wake)
         {
-            kill_parent(ExitType::LOCKED);
+            windows_signals.push_back(Glib::signal_timeout().connect([this] ()
+            {
+                kill_parent(ExitType::LOCKED);
+            }, 100));
         }
     }, true));
 
