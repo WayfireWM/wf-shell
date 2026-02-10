@@ -375,6 +375,8 @@ void WayfireLockerApp::create(int argc, char **argv, pid_t p_pid)
     (dynamic_cast<WayfireLockerApp&>(*instance)).p_pid = p_pid;
     instance->init_app();
     instance->run(argc, argv);
+    /* In case exit has happened before parent quits */
+    (dynamic_cast<WayfireLockerApp&>(*instance)).kill_parent(ExitType::ERROR_NOT_LOCKED);
 }
 
 bool WayfireLockerApp::is_locked()
