@@ -285,6 +285,7 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
             windows_signals.push_back(Glib::signal_timeout().connect([this] ()
             {
                 kill_parent(ExitType::LOCKED);
+                return G_SOURCE_REMOVE;
             }, 100));
         }
     }, true));
