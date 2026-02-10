@@ -97,15 +97,14 @@ void WayfireLockerApp::on_activate()
                     can_early_wake = false;
                     return G_SOURCE_REMOVE;
                 }, WfOption<int>{"locker/prewake"});
-            } else
-            {
-                kill_parent(ExitType::LOCKED);
             }
 
             perform_lock();
+        } else
+        {
+            kill_parent(ExitType::LOCKED);
         }
 
-        kill_parent(ExitType::LOCKED);
         /* Called again but already screen locked. No worries */
         return;
     }
@@ -123,9 +122,6 @@ void WayfireLockerApp::on_activate()
         }, WfOption<int>{"locker/prewake"});
         /* TODO Hot config for this? */
         // exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
-    } else
-    {
-        kill_parent(ExitType::LOCKED);
     }
 
     auto debug = Glib::getenv("WF_LOCKER_DEBUG");
@@ -316,6 +312,9 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     if (can_early_wake)
     {
         window->add_css_class("fade-in");
+    } else
+    {
+        kill_parent(ExitType::LOCKED);
     }
 }
 
