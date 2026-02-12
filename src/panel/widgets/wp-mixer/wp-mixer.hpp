@@ -28,6 +28,8 @@ class WayfireWpMixer : public WayfireWidget
 
     Gtk::Image main_image;
 
+    WfOption<int> spacing{"panel/wp_spacing"};
+    WfOption<bool> stack_categories{"panel/wp_stack_categories"};
     WfOption<double> timeout{"panel/wp_popup_timeout"};
 
     void on_volume_value_changed();

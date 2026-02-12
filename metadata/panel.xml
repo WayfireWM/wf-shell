@@ -315,6 +315,11 @@
 		<_long>Displays the mute and set default icon on the left</_long>
 		<default>false</default>
 	</option>
+	<option name="wp_stack_categories" type="bool">
+		<_short>Stack categories</_short>
+		<_long>Displays the outputs, inputs and streams stacked on top of each other instead of side by side</_long>
+		<default>false</default>
+	</option>
 	<option name="wp_spacing" type="int">
 		<_short>Spacing between controls</_short>
 		<default>8</default>
