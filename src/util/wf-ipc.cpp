@@ -1,63 +1,70 @@
-#include <cstdint>
-#include <cstdlib>
-#include <fcntl.h>
-#include <functional>
-#include <giomm/enums.h>
-#include <glibmm/iochannel.h>
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <string_view>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
 #include <poll.h>
-#include <vector>
-#include <wayfire/nonstd/json.hpp>
+
+#include <sigc++/functors/mem_fun.h>
+#include <iostream>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
+#include <optional>
+#include <string_view>
+
 #include <wayfire/util/log.hpp>
 
 #include "wf-ipc.hpp"
-#include "giomm/cancellable.h"
-#include "giomm/error.h"
-#include "giomm/socketclient.h"
-#include "giomm/unixsocketaddress.h"
-#include "glibconfig.h"
-#include "glibmm/error.h"
-#include "glibmm/iochannel.h"
-#include "glibmm/main.h"
-#include "sigc++/functors/mem_fun.h"
 
 WayfireIPC::WayfireIPC()
 {
-    connect();
+    if (connect())
+    {
+        sig_connection = Glib::signal_io().connect(
+            sigc::mem_fun(*this, &WayfireIPC::receive),
+            connection->get_socket()->get_fd(),
+            Glib::IOCondition::IO_IN);
 
-    sig_connection = Glib::signal_io().connect(
-        sigc::mem_fun(*this, &WayfireIPC::receive),
-        connection->get_socket()->get_fd(),
-        Glib::IOCondition::IO_IN);
+        connected = true;
+    } else
+    {
+        std::cerr << "Failed to connect to WAYFIRE_SOCKET. Is wayfire ipc plugin enabled?" << std::endl;
+    }
 }
 
 WayfireIPC::~WayfireIPC()
 {
-    disconnect();
+    if (connected)
+    {
+        disconnect();
+    }
 }
 
-void WayfireIPC::connect()
+bool WayfireIPC::connect()
 {
     const char *socket_path = getenv("WAYFIRE_SOCKET");
-    if (socket_path == nullptr)
+    if (!socket_path || std::string(socket_path).empty())
     {
-        throw std::runtime_error("Wayfire socket not found");
+        std::cerr << "Wayfire socket not found" << std::endl;
+        return false;
     }
 
-    auto client  = Gio::SocketClient::create();
-    auto address = Gio::UnixSocketAddress::create(socket_path);
-    connection = client->connect(address);
-    connection->get_socket()->set_blocking(false);
-    output = connection->get_output_stream();
-    input  = connection->get_input_stream();
-    cancel = Gio::Cancellable::create();
+    try {
+        auto client  = Gio::SocketClient::create();
+        auto address = Gio::UnixSocketAddress::create(socket_path);
+        connection = client->connect(address);
+        connection->get_socket()->set_blocking(false);
+        output = connection->get_output_stream();
+        input  = connection->get_input_stream();
+        cancel = Gio::Cancellable::create();
+
+        return true;
+    } catch (const Glib::Error& ex)
+    {
+        std::cerr << "Error connecting to WAYFIRE_SOCKET at path \"" << socket_path << "\": " << ex.what();
+        return false;
+    }
+
+    return false;
 }
 
 void WayfireIPC::disconnect()
