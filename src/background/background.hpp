@@ -24,6 +24,7 @@ class WayfireBackground : public Gtk::Window
 
     ~WayfireBackground();
     Glib::RefPtr<BackgroundGLArea> gl_area;
+    void uninhibit();
 };
 
 class WayfireBackgroundApp : public WayfireShellApp
