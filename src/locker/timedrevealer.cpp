@@ -99,7 +99,7 @@ void WayfireLockerTimedRevealer::activity()
         return;
     }
 
-    Glib::signal_timeout().connect(
+    signal = Glib::signal_timeout().connect(
         [this] ()
     {
         set_reveal_child(false);
