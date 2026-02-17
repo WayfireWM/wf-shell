@@ -34,7 +34,6 @@ class IPCClient
     IPCClient(int id, std::shared_ptr<WayfireIPC> ipc) : id(id), ipc(ipc)
     {}
     ~IPCClient();
-    int get_id();
     void handle_response(wf::json_t response);
     void send(const std::string& message);
     void send(const std::string& message, response_handler cb);
