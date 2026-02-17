@@ -30,7 +30,7 @@ void WfWpControl::init()
     button.set_child(volume_icon);
     button.add_css_class("mute-toggle");
     button.add_css_class("widget-icon");
-    button.add_css_class("wireplumber");
+    button.add_css_class("wireplumber-popup");
     button.add_css_class("flat");
 
     scale.set_range(0.0, 1.0);
@@ -224,7 +224,7 @@ void WfWpControlDevice::init()
 {
     default_btn.add_css_class("default-button");
     default_btn.add_css_class("widget-icon");
-    default_btn.add_css_class("wireplumber");
+    default_btn.add_css_class("wireplumber-popup");
     default_btn.add_css_class("flat");
 
     is_def_icon.set_from_icon_name("emblem-default");
