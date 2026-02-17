@@ -1,11 +1,8 @@
 #pragma once
 
-#include <giomm/cancellable.h>
-#include <giomm/outputstream.h>
-#include <giomm/socketconnection.h>
-#include <glibmm/iochannel.h>
-#include <glibmm/refptr.h>
-#include <wayfire/nonstd/json.hpp>
+#include <glibmm.h>
+#include <giomm.h>
+
 #include <sigc++/connection.h>
 #include <functional>
 #include <memory>
@@ -14,6 +11,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include <wayfire/nonstd/json.hpp>
 
 class IIPCSubscriber
 {
@@ -26,6 +25,7 @@ using response_handler = std::function<void (wf::json_t)>;
 class WayfireIPC;
 class IPCClient
 {
+  private:
     int id;
     std::shared_ptr<WayfireIPC> ipc;
     std::queue<response_handler> response_handlers;
@@ -44,6 +44,7 @@ class IPCClient
 
 class WayfireIPC : public std::enable_shared_from_this<WayfireIPC>
 {
+  private:
     std::queue<int> response_handlers;
     std::set<IIPCSubscriber*> subscribers;
     std::unordered_map<std::string, std::set<IIPCSubscriber*>> subscriptions;
@@ -57,7 +58,7 @@ class WayfireIPC : public std::enable_shared_from_this<WayfireIPC>
     std::queue<std::string> write_queue;
     bool writing = false;
 
-    void connect();
+    bool connect();
     void disconnect();
     void send_message(const std::string& message);
     bool send_queue(Glib::IOCondition cond);
@@ -75,6 +76,7 @@ class WayfireIPC : public std::enable_shared_from_this<WayfireIPC>
     void client_destroyed(int id);
 
     static std::shared_ptr<WayfireIPC> get_instance();
+    bool connected = false;
     WayfireIPC();
     ~WayfireIPC();
 };

@@ -200,7 +200,15 @@ class WayfirePanel::impl
 
         if (name == "language")
         {
-            return Widget(new WayfireLanguage());
+            if (WayfireIPC::get_instance()->connected)
+            {
+                return Widget(new WayfireLanguage());
+            } else
+            {
+                std::cerr << "Wayfire IPC not connected, which is required to load language widget." <<
+                    std::endl;
+                return nullptr;
+            }
         }
 
         if (auto pixel = widget_with_value(name, "spacing"))
