@@ -72,6 +72,28 @@
     border-radius: 3px; 
     color: #41A6B5;
 }
+
+.wf-panel .workspace-switcher {
+    background-color: #222222FF;
+    padding-right: 1px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.wf-panel .workspace-switcher .active {
+    background-color: #337755FF;
+    margin-left: 1px;
+}
+
+.wf-panel .workspace-switcher .inactive {
+    background-color: #0077AAFF;
+    margin-left: 1px;
+}
+
+.wf-panel .workspace-switcher .workspace .view {
+    background-color: #0000AA77;
+    border: 1px solid #222
+}
 .excellent {
     color: #00ff00;
 }

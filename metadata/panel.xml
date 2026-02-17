@@ -467,5 +467,12 @@ Set to -1 to only run it by clicking the button.
 		<min>1</min>
 	</option>
 	</group>
+	<group>
+	<_short>Workspace Switcher</_short>
+	<option name="workspace_switcher_target_height" type="double">
+		<_short>Target height for workspace switcher widget in pixels</_short>
+		<default>20</default>
+	</option>
+	</group>
 	</plugin>
 </wf-shell>
