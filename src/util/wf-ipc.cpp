@@ -1,6 +1,5 @@
 #include <cstdint>
 #include <cstdlib>
-#include <cstring>
 #include <fcntl.h>
 #include <functional>
 #include <giomm/enums.h>
@@ -82,7 +81,7 @@ void WayfireIPC::send(const std::string& message, int response_handler)
 
 void WayfireIPC::send_message(const std::string& message)
 {
-    if (output->has_pending())
+    if (output->has_pending() || writing)
     {
         write_queue.push(message);
         write_next();
@@ -135,6 +134,7 @@ void WayfireIPC::write_stream(const std::string& message)
                 }
             } catch (const Glib::Error& e)
             {
+                this->writing = false;
                 if (e.code() == G_IO_ERROR_CANCELLED)
                 {
                     // Intended behavior
