@@ -131,9 +131,6 @@ char buf[INOT_BUF_SIZE];
 static void do_reload_css(WayfireShellApp *app)
 {
     app->on_css_reload();
-    inotify_add_watch(app->inotify_css_fd,
-        app->get_css_config_dir().c_str(),
-        IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
 }
 
 /* Reload file and add next inotify watch */
@@ -142,7 +139,6 @@ static void do_reload_config(WayfireShellApp *app)
     wf::config::load_configuration_options_from_file(
         app->config, app->get_config_file());
     app->on_config_reload();
-    inotify_add_watch(app->inotify_fd, app->get_config_file().c_str(), IN_MODIFY);
 }
 
 /* Handle inotify event */
@@ -215,6 +211,12 @@ void WayfireShellApp::on_activate()
     inotify_css_fd = inotify_init();
     do_reload_css(this);
 
+    inotify_add_watch(inotify_fd,
+        get_config_file().c_str(),
+        IN_CLOSE_WRITE);
+    inotify_add_watch(inotify_css_fd,
+        get_css_config_dir().c_str(),
+        IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
     Glib::signal_io().connect(
         sigc::bind<0>(&handle_inotify_event, this),
         inotify_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
