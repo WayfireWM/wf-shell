@@ -369,6 +369,11 @@
 		<default>0</default>
 		<min>0</min>
 	</option>
+	<option name="wp_popup_icon_size" type="int">
+		<_short>Size of the icons in the popups</_short>
+		<default>0</default>
+		<min>0</min>
+	</option>
 	</group>
 	<group>
 	<_short>Notifications</_short>
