@@ -24,22 +24,24 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
         if (std::string(workspace_switcher_mode) == "classic")
         {
             switcher_box.append(box);
-		} else // "popover"
-		{
+        } else // "popover"
+        {
             switcher_box.append(grid);
         }
+
         get_wsets();
     });
     workspace_switcher_mode.set_callback(mode_cb);
     workspace_switcher_render_views.set_callback([=] ()
     {
-		get_wsets();
+        get_wsets();
     });
 
     grid.add_css_class("workspace-switcher");
     auto click_gesture = Gtk::GestureClick::create();
     click_gesture->set_button(0);
-    click_gesture->signal_released().connect(sigc::mem_fun(*this, &WayfireWorkspaceSwitcher::on_grid_clicked));
+    click_gesture->signal_released().connect(sigc::mem_fun(*this,
+        &WayfireWorkspaceSwitcher::on_grid_clicked));
     grid.add_controller(click_gesture);
 
     container->append(switcher_box);
@@ -60,8 +62,8 @@ void WayfireWorkspaceSwitcher::get_wsets()
         if (std::string(workspace_switcher_mode) == "classic")
         {
             process_workspaces(data);
-	    } else // "popover"
-	    {
+        } else // "popover"
+        {
             popover_process_workspaces(data);
         }
     });
@@ -81,10 +83,12 @@ void WayfireWorkspaceSwitcher::clear_box()
     {
         box.remove(*child);
     }
+
     for (auto child : grid.get_children())
     {
         grid.remove(*child);
     }
+
     for (auto child : popover_grid.get_children())
     {
         popover_grid.remove(*child);
@@ -309,7 +313,7 @@ void WayfireWorkspaceSwitcher::render_workspace(wf::json_t workspace, int j, int
     ws->add_controller(click_gesture);
     ws->add_controller(scroll_controller);
     box.append(*ws);
-    if (workspace_switcher_render_views && j == this->grid_width - 1)
+    if (workspace_switcher_render_views && (j == this->grid_width - 1))
     {
         ipc_client->send("{\"method\":\"window-rules/list-views\"}", [=] (wf::json_t data)
         {
@@ -395,7 +399,8 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                 popover->set_parent(grid);
                 popover->set_child(overlay);
                 overlay.set_child(popover_grid);
-                overlay.signal_get_child_position().connect(sigc::mem_fun(*this, &WayfireWorkspaceSwitcher::on_popover_get_child_position), false);
+                overlay.signal_get_child_position().connect(sigc::mem_fun(*this,
+                    &WayfireWorkspaceSwitcher::on_popover_get_child_position), false);
                 for (int j = 0; j < this->grid_height; j++)
                 {
                     for (int k = 0; k < this->grid_width; k++)
@@ -403,12 +408,12 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                         auto ws = Gtk::make_managed<WayfireWorkspaceBox>(this);
                         ws->output_id = output_data["id"].as_int();
                         ws->set_can_target(false);
-                        auto ws_width = this->get_scaled_width() / this->grid_width;
+                        auto ws_width  = this->get_scaled_width() / this->grid_width;
                         auto ws_height = this->workspace_switcher_target_height / this->grid_height;
                         ws->set_size_request(ws_width, ws_height);
                         ws->add_css_class("workspace");
-                        if (workspace_data[i]["workspace"]["x"].as_int() == k &&
-                            workspace_data[i]["workspace"]["y"].as_int() == j)
+                        if ((workspace_data[i]["workspace"]["x"].as_int() == k) &&
+                            (workspace_data[i]["workspace"]["y"].as_int() == j))
                         {
                             ws->add_css_class("active");
                             this->current_ws_x = k;
@@ -417,16 +422,18 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                         {
                             ws->add_css_class("inactive");
                         }
+
                         ws->x_index = k;
                         ws->y_index = j;
                         grid.attach(*ws, ws->x_index, ws->y_index, 1, 1);
 
                         ws = Gtk::make_managed<WayfireWorkspaceBox>(this);
                         ws->output_id = output_data["id"].as_int();
-                        ws->set_size_request(this->get_scaled_width(), this->workspace_switcher_target_height);
+                        ws->set_size_request(
+                            this->get_scaled_width(), this->workspace_switcher_target_height);
                         ws->add_css_class("workspace");
-                        if (workspace_data[i]["workspace"]["x"].as_int() == k &&
-                            workspace_data[i]["workspace"]["y"].as_int() == j)
+                        if ((workspace_data[i]["workspace"]["x"].as_int() == k) &&
+                            (workspace_data[i]["workspace"]["y"].as_int() == j))
                         {
                             ws->add_css_class("active");
                             this->current_ws_x = k;
@@ -435,23 +442,28 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                         {
                             ws->add_css_class("inactive");
                         }
+
                         ws->x_index = k;
                         ws->y_index = j;
                         auto popover_click_gesture = Gtk::GestureClick::create();
                         popover_click_gesture->set_button(0);
-                        popover_click_gesture->signal_released().connect(sigc::mem_fun(*ws, &WayfireWorkspaceBox::on_popover_grid_clicked));
+                        popover_click_gesture->signal_released().connect(sigc::mem_fun(*ws,
+                            &WayfireWorkspaceBox::on_popover_grid_clicked));
                         ws->add_controller(popover_click_gesture);
                         popover_grid.attach(*ws, ws->x_index, ws->y_index, 1, 1);
-                        if (workspace_switcher_render_views && j == this->grid_height - 1 && k == this->grid_width - 1)
+                        if (workspace_switcher_render_views && (j == this->grid_height - 1) &&
+                            (k == this->grid_width - 1))
                         {
                             ipc_client->send("{\"method\":\"window-rules/list-views\"}", [=] (wf::json_t data)
                             {
                                 if (data.serialize().find("error") != std::string::npos)
                                 {
                                     std::cerr << data.serialize() << std::endl;
-                                    std::cerr << "Error getting views list for workspace-switcher widget!" << std::endl;
+                                    std::cerr << "Error getting views list for workspace-switcher widget!" <<
+                                    std::endl;
                                     return;
                                 }
+
                                 popover_render_views(data);
                             });
                         }
@@ -550,11 +562,11 @@ void WayfireWorkspaceSwitcher::popover_add_view(wf::json_t view_data)
         double width  = this->get_scaled_width();
         double height = workspace_switcher_target_height;
 
-        //v->ws = ws;
-        v->x  = x * (width / float(this->output_width));
-        v->y  = y * (height / float(this->output_height));
-        v->w  = (w / float(this->output_width)) * width;
-        v->h  = (h / float(this->output_height)) * height;
+        // v->ws = ws;
+        v->x = x * (width / float(this->output_width));
+        v->y = y * (height / float(this->output_height));
+        v->w = (w / float(this->output_width)) * width;
+        v->h = (h / float(this->output_height)) * height;
         std::pair<int, int> workspace;
         workspace  = popover_get_workspace(v);
         v->x_index = workspace.first;
@@ -627,8 +639,8 @@ void WayfireWorkspaceSwitcher::on_event(wf::json_t data)
     if (std::string(workspace_switcher_mode) == "classic")
     {
         switcher_on_event(data);
-	} else // "popover"
-	{
+    } else // "popover"
+    {
         popover_on_event(data);
     }
 }
