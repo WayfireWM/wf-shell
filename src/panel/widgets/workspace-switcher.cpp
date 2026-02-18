@@ -37,7 +37,7 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
         get_wsets();
     });
 
-    grid.add_css_class("workspace-switcher");
+    switcher_box.add_css_class("workspace-switcher");
     auto click_gesture = Gtk::GestureClick::create();
     click_gesture->set_button(0);
     click_gesture->signal_released().connect(sigc::mem_fun(*this,
@@ -399,6 +399,7 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                 popover->set_parent(grid);
                 popover->set_child(overlay);
                 overlay.set_child(popover_grid);
+                overlay.add_css_class("workspace");
                 overlay.signal_get_child_position().connect(sigc::mem_fun(*this,
                     &WayfireWorkspaceSwitcher::on_popover_get_child_position), false);
                 for (int j = 0; j < this->grid_height; j++)
