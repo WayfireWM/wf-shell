@@ -750,6 +750,10 @@ void WayfireWorkspaceSwitcher::popover_on_event(wf::json_t data)
 
         for (auto widget : overlay.get_children())
         {
+            if (widget->gobj() == GTK_WIDGET(popover_grid.gobj()))
+            {
+                continue;
+            }
             WayfireWorkspaceWindow *w = (WayfireWorkspaceWindow*)widget;
             if (w->id == data["view"]["id"].as_int())
             {
