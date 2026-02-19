@@ -2,7 +2,6 @@ widget_sources = [
   'widgets/battery.cpp',
   'widgets/menu.cpp',
   'widgets/clock.cpp',
-  'widgets/weather.cpp',
   'widgets/command-output.cpp',
   'widgets/language.cpp',
   'widgets/launchers.cpp',
@@ -56,6 +55,14 @@ if wireplumber.found()
   deps += wireplumber
 else
   message('Wireplumber not found, mixer widget will not be available.')
+endif
+
+if get_option('weather') == true
+  widget_sources += [
+    'widgets/weather.cpp',
+  ]
+else
+  message('Weather disabled, weather widgets and owf service not included.')
 endif
 
 executable(
