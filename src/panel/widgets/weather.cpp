@@ -22,7 +22,7 @@ bool WayfireWeather::update_weather()
 {
     std::string weather_data_dir;
 
-    weather_data_dir = std::string(getenv("HOME")) + "/.local/share/weather/data";
+    weather_data_dir = std::string(getenv("HOME")) + "/.local/share/owf/data";
 
     std::string file_path = weather_data_dir + "/data.json";
 
