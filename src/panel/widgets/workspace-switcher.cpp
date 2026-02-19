@@ -1,6 +1,9 @@
 #include <iostream>
 #include <gtkmm.h>
 #include <glibmm.h>
+
+#include <wf-option-wrap.hpp>
+
 #include "workspace-switcher.hpp"
 
 void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
@@ -19,14 +22,25 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     ipc_client->subscribe(this, {"view-geometry-changed"});
     ipc_client->subscribe(this, {"output-layout-changed"});
     ipc_client->subscribe(this, {"wset-workspace-changed"});
-    workspace_switcher_target_height.set_callback([=] ()
+
+    auto set_height = [=] ()
     {
+        double val = workspace_switcher_target_height_opt.value();
+        if (val == 0.0)
+        {
+            val = (double)WfOption<int>{"panel/minimal_height"}.value();
+        }
+
+        workspace_switcher_target_height = val;
         get_wsets();
-    });
+    };
+    workspace_switcher_target_height_opt.set_callback(set_height);
+    set_height();
+
     auto mode_cb = ([=] ()
     {
         clear_switcher_box();
-        if (std::string(workspace_switcher_mode) == "classic")
+        if (workspace_switcher_mode.value() == "classic")
         {
             switcher_box.append(box);
         } else // "popover"

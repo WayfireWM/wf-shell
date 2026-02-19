@@ -63,7 +63,8 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
     int current_ws_x, current_ws_y;
     std::vector<WayfireWorkspaceWindow*> windows;
     WfOption<std::string> workspace_switcher_mode{"panel/workspace_switcher_mode"};
-    WfOption<double> workspace_switcher_target_height{"panel/workspace_switcher_target_height"};
+    WfOption<double> workspace_switcher_target_height_opt{"panel/workspace_switcher_target_height"};
+    double workspace_switcher_target_height;
     WfOption<bool> workspace_switcher_render_views{"panel/workspace_switcher_render_views"};
 };
 

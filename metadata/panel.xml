@@ -483,7 +483,7 @@ Set to -1 to only run it by clicking the button.
 	</option>
 	<option name="workspace_switcher_target_height" type="double">
 		<_short>Target height for workspace switcher widget in pixels</_short>
-		<default>20</default>
+		<default>0</default>
 	</option>
 	<option name="workspace_switcher_render_views" type="bool">
 		<_short>Render rectangles for each window</_short>
