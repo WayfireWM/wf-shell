@@ -75,23 +75,36 @@
 
 .wf-panel .workspace-switcher {
     background-color: #222222FF;
-    padding-right: 1px;
-    padding-top: 1px;
+    padding-top: 0px;
     padding-bottom: 1px;
+    padding-right: 1px;
+    padding-left: 0px;
 }
 
-.wf-panel .workspace-switcher .active {
-    background-color: #337755FF;
+.wf-panel .workspace-switcher .workspace.active {
+    background-color: #005577FF;
+    margin-top: 1px;
     margin-left: 1px;
 }
 
-.wf-panel .workspace-switcher .inactive {
+.wf-panel .workspace-switcher .workspace.inactive {
     background-color: #0077AAFF;
+    margin-top: 1px;
     margin-left: 1px;
 }
 
 .wf-panel .workspace-switcher .workspace .view {
     background-color: #0000AA77;
+    border: 1px solid #222
+}
+
+.wf-panel .workspace-switcher .workspace .view.active {
+    background-color: #FF00AA77;
+    border: 1px solid #222
+}
+
+.wf-panel .workspace-switcher .workspace .view.inactive {
+    background-color: #00FFAA77;
     border: 1px solid #222
 }
 .excellent {
