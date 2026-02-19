@@ -23,6 +23,7 @@
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
 #include "widgets/separator.hpp"
+#include "widgets/workspace-switcher.hpp"
 #ifdef HAVE_PULSE
     #include "widgets/volume.hpp"
 #endif
@@ -206,6 +207,20 @@ class WayfirePanel::impl
             } else
             {
                 std::cerr << "Wayfire IPC not connected, which is required to load language widget." <<
+                    std::endl;
+                return nullptr;
+            }
+        }
+
+        if (name == "workspace-switcher")
+        {
+            if (WayfireIPC::get_instance()->connected)
+            {
+                return Widget(new WayfireWorkspaceSwitcher(output));
+            } else
+            {
+                std::cerr <<
+                    "Wayfire IPC not connected, which is required to load workspace-switcher widget." <<
                     std::endl;
                 return nullptr;
             }
