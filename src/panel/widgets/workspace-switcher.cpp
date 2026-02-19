@@ -355,11 +355,11 @@ void WayfireWorkspaceSwitcher::process_workspaces(wf::json_t workspace_data)
                 return;
             }
 
-            auto output_id     = output_data["id"].as_int();
-            auto output_width  = output_data["geometry"]["width"].as_int();
-            auto output_height = output_data["geometry"]["height"].as_int();
             if (this->output_name == output_data["name"].as_string())
             {
+                auto output_id     = output_data["id"].as_int();
+                auto output_width  = output_data["geometry"]["width"].as_int();
+                auto output_height = output_data["geometry"]["height"].as_int();
                 for (auto w : windows)
                 {
                     if (w->active)
@@ -402,10 +402,10 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                 return;
             }
 
-            this->output_width  = output_data["geometry"]["width"].as_int();
-            this->output_height = output_data["geometry"]["height"].as_int();
             if (this->output_name == output_data["name"].as_string())
             {
+                this->output_width  = output_data["geometry"]["width"].as_int();
+                this->output_height = output_data["geometry"]["height"].as_int();
                 for (auto w : windows)
                 {
                     if (w->active)
