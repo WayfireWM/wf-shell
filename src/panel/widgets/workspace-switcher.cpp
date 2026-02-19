@@ -9,6 +9,7 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     box.add_css_class("flat");
 
     ipc_client->subscribe(this, {"view-mapped"});
+    ipc_client->subscribe(this, {"view-focused"});
     ipc_client->subscribe(this, {"view-unmapped"});
     ipc_client->subscribe(this, {"view-set-output"});
     ipc_client->subscribe(this, {"view-geometry-changed"});
@@ -461,7 +462,7 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                                 {
                                     std::cerr << data.serialize() << std::endl;
                                     std::cerr << "Error getting views list for workspace-switcher widget!" <<
-                                    std::endl;
+                                        std::endl;
                                     return;
                                 }
 
@@ -490,6 +491,14 @@ void WayfireWorkspaceSwitcher::add_view(wf::json_t view_data)
     auto v = Gtk::make_managed<WayfireWorkspaceWindow>();
     v->add_css_class("view");
     v->add_css_class(view_data["app-id"].as_string());
+    if (view_data["activated"].as_bool())
+    {
+        v->add_css_class("active");
+    } else
+    {
+        v->add_css_class("inactive");
+    }
+
     v->id = view_data["id"].as_int();
     v->output_id = view_data["output-id"].as_int();
     auto x = view_data["geometry"]["x"].as_int();
@@ -546,6 +555,14 @@ void WayfireWorkspaceSwitcher::popover_add_view(wf::json_t view_data)
     auto v = Gtk::make_managed<WayfireWorkspaceWindow>();
     v->add_css_class("view");
     v->add_css_class(view_data["app-id"].as_string());
+    if (view_data["activated"].as_bool())
+    {
+        v->add_css_class("active");
+    } else
+    {
+        v->add_css_class("inactive");
+    }
+
     v->id = view_data["id"].as_int();
     v->output_id = view_data["output-id"].as_int();
     auto x = view_data["geometry"]["x"].as_int();
@@ -669,6 +686,29 @@ void WayfireWorkspaceSwitcher::switcher_on_event(wf::json_t data)
     } else if (data["event"].as_string() == "view-mapped")
     {
         add_view(data["view"]);
+    } else if ((data["event"].as_string() == "view-focused") && data["view"].is_object())
+    {
+        if (data["view"]["type"].as_string() != "toplevel")
+        {
+            return;
+        }
+
+        for (auto child : box.get_children())
+        {
+            for (auto widget : child->get_children())
+            {
+                WayfireWorkspaceWindow *w = (WayfireWorkspaceWindow*)widget;
+                if (w->id == data["view"]["id"].as_int())
+                {
+                    w->remove_css_class("inactive");
+                    w->add_css_class("active");
+                } else
+                {
+                    w->remove_css_class("active");
+                    w->add_css_class("inactive");
+                }
+            }
+        }
     } else if (data["event"].as_string() == "view-unmapped")
     {
         remove_view(data["view"]);
@@ -701,6 +741,26 @@ void WayfireWorkspaceSwitcher::popover_on_event(wf::json_t data)
     } else if (data["event"].as_string() == "view-mapped")
     {
         popover_add_view(data["view"]);
+    } else if ((data["event"].as_string() == "view-focused") && data["view"].is_object())
+    {
+        if (data["view"]["type"].as_string() != "toplevel")
+        {
+            return;
+        }
+
+        for (auto widget : overlay.get_children())
+        {
+            WayfireWorkspaceWindow *w = (WayfireWorkspaceWindow*)widget;
+            if (w->id == data["view"]["id"].as_int())
+            {
+                w->remove_css_class("inactive");
+                w->add_css_class("active");
+            } else
+            {
+                w->remove_css_class("active");
+                w->add_css_class("inactive");
+            }
+        }
     } else if (data["event"].as_string() == "view-unmapped")
     {
         popover_remove_view(data["view"]);
