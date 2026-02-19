@@ -11,8 +11,8 @@ class WayfireVolume : public WayfireWidget
 {
     Gtk::Image main_image;
     WayfireAnimatedScale volume_scale;
-    Gtk::Button button;
-    Gtk::Popover popover;
+    std::unique_ptr<WayfireMenuButton> button;
+    Gtk::Popover *popover;
 
     WfOption<double> timeout{"panel/volume_display_timeout"};
     WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
