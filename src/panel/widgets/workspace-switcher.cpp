@@ -8,6 +8,10 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     box.add_css_class("workspace-switcher");
     box.add_css_class("flat");
 
+    button = std::make_unique<WayfireMenuButton>("panel");
+    button->get_children()[0]->add_css_class("flat");
+    button->get_children()[0]->add_css_class("workspace-switcher");
+
     ipc_client->subscribe(this, {"view-mapped"});
     ipc_client->subscribe(this, {"view-focused"});
     ipc_client->subscribe(this, {"view-unmapped"});
@@ -27,7 +31,8 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
             switcher_box.append(box);
         } else // "popover"
         {
-            switcher_box.append(grid);
+            button->set_child(grid);
+            switcher_box.append(*button);
         }
 
         get_wsets();
@@ -39,11 +44,6 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     });
 
     switcher_box.add_css_class("workspace-switcher");
-    auto click_gesture = Gtk::GestureClick::create();
-    click_gesture->set_button(0);
-    click_gesture->signal_released().connect(sigc::mem_fun(*this,
-        &WayfireWorkspaceSwitcher::on_grid_clicked));
-    grid.add_controller(click_gesture);
 
     container->append(switcher_box);
     mode_cb();
@@ -177,11 +177,6 @@ void WayfireWorkspaceBox::on_popover_grid_clicked(int count, double x, double y)
             ws->remove_css_class("active");
         }
     }
-}
-
-void WayfireWorkspaceSwitcher::on_grid_clicked(int count, double x, double y)
-{
-    this->popover->popup();
 }
 
 void WayfireWorkspaceBox::on_workspace_clicked(int count, double x, double y)
@@ -416,9 +411,8 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                 }
 
                 clear_box();
-                popover = Gtk::make_managed<Gtk::Popover>();
-                popover->set_parent(grid);
-                popover->set_child(overlay);
+                button->m_popover.set_parent(grid);
+                button->m_popover.set_child(overlay);
                 overlay.set_child(popover_grid);
                 overlay.add_css_class("workspace");
                 overlay.signal_get_child_position().connect(sigc::mem_fun(*this,

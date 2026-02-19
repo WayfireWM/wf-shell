@@ -3,6 +3,7 @@
 #include <gtkmm.h>
 
 #include "../widget.hpp"
+#include "wf-popover.hpp"
 #include "wf-ipc.hpp"
 
 class WayfireWorkspaceBox;
@@ -46,10 +47,10 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
     Gtk::Box box;
     Gtk::Grid grid;
     Gtk::Box switcher_box;
-    Gtk::Popover *popover;
     Gtk::Grid popover_grid;
     Gtk::Overlay overlay;
     double get_scaled_width();
+    std::unique_ptr<WayfireMenuButton> button;
     int output_width, output_height;
     void init(Gtk::Box *container) override;
     WayfireWorkspaceSwitcher(WayfireOutput *output);
@@ -61,7 +62,6 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
     std::pair<int, int> popover_get_workspace(WayfireWorkspaceWindow *w);
     int current_ws_x, current_ws_y;
     std::vector<WayfireWorkspaceWindow*> windows;
-    void on_grid_clicked(int count, double x, double y);
     WfOption<std::string> workspace_switcher_mode{"panel/workspace_switcher_mode"};
     WfOption<double> workspace_switcher_target_height{"panel/workspace_switcher_target_height"};
     WfOption<bool> workspace_switcher_render_views{"panel/workspace_switcher_render_views"};
