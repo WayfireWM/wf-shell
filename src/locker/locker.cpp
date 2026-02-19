@@ -152,7 +152,7 @@ void WayfireLockerApp::on_activate()
     new CssFromConfigInt("locker/fingerprint_icon_size", ".wf-locker .fingerprint-icon {-gtk-icon-size:",
         "px;}");
     new CssFromConfigDouble("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ",
-        "s; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0;} to {opacity:1;}}");
+        "s; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0; background: #0000;} to {opacity:1;}}");
     new CssFromConfigFont("locker/network_font", ".wf-locker .network {", "}");
     new CssFromConfigInt("locker/network_icon_size", ".wf-locker .network {-gtk-icon-size:", "px;}");
 
