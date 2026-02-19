@@ -31,6 +31,11 @@ if get_option('wayland-logout') == true
 	wayland_logout = subproject('wayland-logout')
 endif
 
+if get_option('weather') == true
+	subproject('owf')
+	add_project_arguments('-DHAVE_WEATHER=1', language: 'cpp')
+endif
+
 if libpulse.found()
 	libgvc = libgvc.get_variable('libgvc_dep')
 	add_project_arguments('-DHAVE_PULSE=1', language: 'cpp')
