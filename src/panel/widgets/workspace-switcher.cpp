@@ -23,7 +23,7 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     ipc_client->subscribe(this, {"output-layout-changed"});
     ipc_client->subscribe(this, {"wset-workspace-changed"});
 
-    workspace_switcher_target_height_opt.set_callback([=](){set_height();});
+    workspace_switcher_target_height_opt.set_callback([=] () {set_height();});
 
     auto mode_cb = ([=] ()
     {
@@ -33,10 +33,10 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
             overlay.unparent();
         }
 
-        if (std::string(workspace_switcher_mode) == "classic")
+        if (workspace_switcher_mode.value() == "row")
         {
             switcher_box.append(box);
-        } else if (std::string(workspace_switcher_mode) == "grid")
+        } else if (workspace_switcher_mode.value() == "grid")
         {
             switcher_box.append(overlay);
         } else // "grid_popover"
@@ -47,7 +47,6 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
         }
 
         get_wsets();
-
     });
     workspace_switcher_mode.set_callback(mode_cb);
 
@@ -64,13 +63,13 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
 
 void WayfireWorkspaceSwitcher::set_height()
 {
-    double val = workspace_switcher_target_height_opt;
+    double val = workspace_switcher_target_height_opt.value();
     if (val == 0.0)
     {
-        val = (double)WfOption<int>{"panel/minimal_height"};
+        val = (double)WfOption<int>{"panel/minimal_height"}.value();
     }
 
-    if (std::string(workspace_switcher_mode) == "grid")
+    if (workspace_switcher_mode.value() == "grid")
     {
         val = val / grid_height;
     }
@@ -89,13 +88,14 @@ void WayfireWorkspaceSwitcher::get_wsets()
             return;
         }
 
-        if (std::string(workspace_switcher_mode) == "classic")
+        if (workspace_switcher_mode.value() == "row")
         {
             process_workspaces(data);
         } else // "grid"/"grid_popover"
         {
-            popover_process_workspaces(data);
+            grid_process_workspaces(data);
         }
+
         set_height();
     });
 }
@@ -139,7 +139,7 @@ std::pair<int, int> WayfireWorkspaceSwitcher::get_workspace(WayfireWorkspaceBox 
     return workspace;
 }
 
-std::pair<int, int> WayfireWorkspaceSwitcher::popover_get_workspace(WayfireWorkspaceWindow *w)
+std::pair<int, int> WayfireWorkspaceSwitcher::grid_get_workspace(WayfireWorkspaceWindow *w)
 {
     std::pair<int, int> workspace;
     double scaled_output_width  = this->get_scaled_width();
@@ -163,7 +163,7 @@ bool WayfireWorkspaceSwitcher::on_get_child_position(Gtk::Widget *widget, Gdk::R
     return false;
 }
 
-bool WayfireWorkspaceSwitcher::on_popover_get_child_position(Gtk::Widget *widget, Gdk::Rectangle& allocation)
+bool WayfireWorkspaceSwitcher::on_grid_get_child_position(Gtk::Widget *widget, Gdk::Rectangle& allocation)
 {
     if (auto w = static_cast<WayfireWorkspaceWindow*>(widget))
     {
@@ -177,7 +177,7 @@ bool WayfireWorkspaceSwitcher::on_popover_get_child_position(Gtk::Widget *widget
     return false;
 }
 
-void WayfireWorkspaceBox::on_popover_grid_clicked(int count, double x, double y)
+void WayfireWorkspaceBox::on_switch_grid_clicked(int count, double x, double y)
 {
     wf::json_t workspace_switch_request;
     workspace_switch_request["method"] = "vswitch/set-workspace";
@@ -341,7 +341,7 @@ void WayfireWorkspaceSwitcher::render_workspace(wf::json_t workspace, int j, int
     ws->add_controller(click_gesture);
     ws->add_controller(scroll_controller);
     box.append(*ws);
-    if (workspace_switcher_render_views && (j == this->grid_width - 1))
+    if (workspace_switcher_render_views.value() && (j == this->grid_width - 1))
     {
         ipc_client->send("{\"method\":\"window-rules/list-views\"}", [=] (wf::json_t data)
         {
@@ -404,7 +404,7 @@ void WayfireWorkspaceSwitcher::process_workspaces(wf::json_t workspace_data)
     }
 }
 
-void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_data)
+void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data)
 {
     size_t i = 0;
 
@@ -446,7 +446,7 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                 overlay.set_child(switch_grid);
                 overlay.add_css_class("workspace");
                 overlay.signal_get_child_position().connect(sigc::mem_fun(*this,
-                    &WayfireWorkspaceSwitcher::on_popover_get_child_position), false);
+                    &WayfireWorkspaceSwitcher::on_grid_get_child_position), false);
                 for (int j = 0; j < this->grid_height; j++)
                 {
                     for (int k = 0; k < this->grid_width; k++)
@@ -494,10 +494,10 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                         auto popover_click_gesture = Gtk::GestureClick::create();
                         popover_click_gesture->set_button(0);
                         popover_click_gesture->signal_released().connect(sigc::mem_fun(*ws,
-                            &WayfireWorkspaceBox::on_popover_grid_clicked));
+                            &WayfireWorkspaceBox::on_switch_grid_clicked));
                         ws->add_controller(popover_click_gesture);
                         switch_grid.attach(*ws, ws->x_index, ws->y_index, 1, 1);
-                        if (workspace_switcher_render_views && (j == this->grid_height - 1) &&
+                        if (workspace_switcher_render_views.value() && (j == this->grid_height - 1) &&
                             (k == this->grid_width - 1))
                         {
                             ipc_client->send("{\"method\":\"window-rules/list-views\"}", [=] (wf::json_t data)
@@ -510,7 +510,7 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                                     return;
                                 }
 
-                                popover_render_views(data);
+                                grid_render_views(data);
                             });
                         }
                     }
@@ -588,7 +588,7 @@ void WayfireWorkspaceSwitcher::add_view(wf::json_t view_data)
     }
 }
 
-void WayfireWorkspaceSwitcher::popover_add_view(wf::json_t view_data)
+void WayfireWorkspaceSwitcher::grid_add_view(wf::json_t view_data)
 {
     if (view_data["type"].as_string() != "toplevel")
     {
@@ -636,7 +636,7 @@ void WayfireWorkspaceSwitcher::popover_add_view(wf::json_t view_data)
         v->w = (w / float(this->output_width)) * width;
         v->h = (h / float(this->output_height)) * height;
         std::pair<int, int> workspace;
-        workspace  = popover_get_workspace(v);
+        workspace  = grid_get_workspace(v);
         v->x_index = workspace.first;
         v->y_index = workspace.second;
         WayfireWorkspaceBox *ws = (WayfireWorkspaceBox*)&overlay;
@@ -671,7 +671,7 @@ void WayfireWorkspaceSwitcher::remove_view(wf::json_t view_data)
     }
 }
 
-void WayfireWorkspaceSwitcher::popover_remove_view(wf::json_t view_data)
+void WayfireWorkspaceSwitcher::grid_remove_view(wf::json_t view_data)
 {
     for (auto w : this->windows)
     {
@@ -709,11 +709,11 @@ void WayfireWorkspaceSwitcher::render_views(wf::json_t views_data)
     }
 }
 
-void WayfireWorkspaceSwitcher::popover_render_views(wf::json_t views_data)
+void WayfireWorkspaceSwitcher::grid_render_views(wf::json_t views_data)
 {
     for (size_t i = 0; i < views_data.size(); i++)
     {
-        popover_add_view(views_data[i]);
+        grid_add_view(views_data[i]);
     }
 
     for (auto w : windows)
@@ -736,12 +736,12 @@ void WayfireWorkspaceSwitcher::popover_render_views(wf::json_t views_data)
 
 void WayfireWorkspaceSwitcher::on_event(wf::json_t data)
 {
-    if (std::string(workspace_switcher_mode) == "classic")
+    if (workspace_switcher_mode.value() == "row")
     {
         switcher_on_event(data);
     } else // "grid"/"grid_popover"
     {
-        popover_on_event(data);
+        grid_on_event(data);
     }
 }
 
@@ -820,7 +820,7 @@ void WayfireWorkspaceSwitcher::switcher_on_event(wf::json_t data)
     }
 }
 
-void WayfireWorkspaceSwitcher::popover_on_event(wf::json_t data)
+void WayfireWorkspaceSwitcher::grid_on_event(wf::json_t data)
 {
     if (data["event"].as_string() == "view-geometry-changed")
     {
@@ -835,10 +835,10 @@ void WayfireWorkspaceSwitcher::popover_on_event(wf::json_t data)
             }
         }
 
-        popover_add_view(data["view"]);
+        grid_add_view(data["view"]);
     } else if (data["event"].as_string() == "view-mapped")
     {
-        popover_add_view(data["view"]);
+        grid_add_view(data["view"]);
     } else if ((data["event"].as_string() == "view-focused") && data["view"].is_object())
     {
         if (data["view"]["type"].as_string() != "toplevel")
@@ -887,10 +887,10 @@ void WayfireWorkspaceSwitcher::popover_on_event(wf::json_t data)
         }
     } else if (data["event"].as_string() == "view-unmapped")
     {
-        popover_remove_view(data["view"]);
+        grid_remove_view(data["view"]);
     } else if (data["event"].as_string() == "view-set-output")
     {
-        popover_add_view(data["view"]);
+        grid_add_view(data["view"]);
     } else if ((data["event"].as_string() == "output-layout-changed") ||
                (data["event"].as_string() == "wset-workspace-changed"))
     {

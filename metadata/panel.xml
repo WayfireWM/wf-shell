@@ -472,16 +472,16 @@ Set to -1 to only run it by clicking the button.
 	<option name="workspace_switcher_mode" type="string">
 		<_short>Workspace switcher widget mode</_short>
 		<desc>
-			<value>classic</value>
-			<_name>Classic</_name>
+			<value>row</value>
+			<_name>Current row</_name>
 		</desc>
 		<desc>
 			<value>grid</value>
-			<_name>Grid</_name>
+			<_name>Whole grid (small)</_name>
 		</desc>
 		<desc>
-			<value>popover</value>
-			<_name>Popover</_name>
+			<value>grid_popover</value>
+			<_name>Whole grid (popover)</_name>
 		</desc>
 		<default>row</default>
 	</option>
