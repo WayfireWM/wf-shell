@@ -94,6 +94,8 @@ void WayfireWorkspaceSwitcher::clear_box()
     {
         popover_grid.remove(*child);
     }
+
+    windows.clear();
 }
 
 std::pair<int, int> WayfireWorkspaceSwitcher::get_workspace(WayfireWorkspaceBox *ws,
@@ -358,6 +360,15 @@ void WayfireWorkspaceSwitcher::process_workspaces(wf::json_t workspace_data)
             auto output_height = output_data["geometry"]["height"].as_int();
             if (this->output_name == output_data["name"].as_string())
             {
+                for (auto w : windows)
+                {
+                    if (w->active)
+                    {
+                        this->active_view_id = w->id;
+                        break;
+                    }
+                }
+
                 clear_box();
                 for (int j = 0; j < this->grid_width; j++)
                 {
@@ -395,6 +406,15 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
             this->output_height = output_data["geometry"]["height"].as_int();
             if (this->output_name == output_data["name"].as_string())
             {
+                for (auto w : windows)
+                {
+                    if (w->active)
+                    {
+                        this->active_view_id = w->id;
+                        break;
+                    }
+                }
+
                 clear_box();
                 popover = Gtk::make_managed<Gtk::Popover>();
                 popover->set_parent(grid);
@@ -491,15 +511,18 @@ void WayfireWorkspaceSwitcher::add_view(wf::json_t view_data)
     auto v = Gtk::make_managed<WayfireWorkspaceWindow>();
     v->add_css_class("view");
     v->add_css_class(view_data["app-id"].as_string());
-    if (view_data["activated"].as_bool())
+    v->id = view_data["id"].as_int();
+    if (view_data["activated"].as_bool() || (v->id == this->active_view_id))
     {
         v->add_css_class("active");
+        v->active = true;
+        this->active_view_id = v->id;
     } else
     {
         v->add_css_class("inactive");
+        v->active = false;
     }
 
-    v->id = view_data["id"].as_int();
     v->output_id = view_data["output-id"].as_int();
     auto x = view_data["geometry"]["x"].as_int();
     auto y = view_data["geometry"]["y"].as_int();
@@ -520,21 +543,22 @@ void WayfireWorkspaceSwitcher::add_view(wf::json_t view_data)
         double width  = ws->get_scaled_width();
         double height = workspace_switcher_target_height;
 
-        v->ws = ws;
-        v->x  = x * (width / float(ws->output_width));
-        v->y  = y * (height / float(ws->output_height));
-        v->w  = (w / float(ws->output_width)) * width;
-        v->h  = (h / float(ws->output_height)) * height;
+        v->x = x * (width / float(ws->output_width));
+        v->y = y * (height / float(ws->output_height));
+        v->w = (w / float(ws->output_width)) * width;
+        v->h = (h / float(ws->output_height)) * height;
         std::pair<int, int> workspace;
         workspace  = get_workspace(ws, v);
         v->x_index = workspace.first;
         v->y_index = workspace.second;
         if ((v->x_index == ws->x_index) && (v->y_index == ws->y_index))
         {
+            v->ws = ws;
             v->set_can_target(false);
             // add to workspace box
             ws->add_overlay(*v);
             windows.push_back(v);
+
             return;
         }
     }
@@ -555,15 +579,18 @@ void WayfireWorkspaceSwitcher::popover_add_view(wf::json_t view_data)
     auto v = Gtk::make_managed<WayfireWorkspaceWindow>();
     v->add_css_class("view");
     v->add_css_class(view_data["app-id"].as_string());
-    if (view_data["activated"].as_bool())
+    v->id = view_data["id"].as_int();
+    if (view_data["activated"].as_bool() || (v->id == this->active_view_id))
     {
         v->add_css_class("active");
+        v->active = true;
+        this->active_view_id = v->id;
     } else
     {
         v->add_css_class("inactive");
+        v->active = false;
     }
 
-    v->id = view_data["id"].as_int();
     v->output_id = view_data["output-id"].as_int();
     auto x = view_data["geometry"]["x"].as_int();
     auto y = view_data["geometry"]["y"].as_int();
@@ -580,7 +607,6 @@ void WayfireWorkspaceSwitcher::popover_add_view(wf::json_t view_data)
         double width  = this->get_scaled_width();
         double height = workspace_switcher_target_height;
 
-        // v->ws = ws;
         v->x = x * (width / float(this->output_width));
         v->y = y * (height / float(this->output_height));
         v->w = (w / float(this->output_width)) * width;
@@ -589,10 +615,13 @@ void WayfireWorkspaceSwitcher::popover_add_view(wf::json_t view_data)
         workspace  = popover_get_workspace(v);
         v->x_index = workspace.first;
         v->y_index = workspace.second;
+        WayfireWorkspaceBox *ws = (WayfireWorkspaceBox*)&overlay;
+        v->ws = ws;
         v->set_can_target(false);
         // add to workspace box
         overlay.add_overlay(*v);
         windows.push_back(v);
+
         return;
     }
 }
@@ -642,6 +671,18 @@ void WayfireWorkspaceSwitcher::render_views(wf::json_t views_data)
     {
         add_view(views_data[i]);
     }
+
+    for (auto w : windows)
+    {
+        if (w->active)
+        {
+            w->reference();
+            w->ws->remove_overlay(*w);
+            w->ws->add_overlay(*w);
+            w->unreference();
+            w->add_css_class("active");
+        }
+    }
 }
 
 void WayfireWorkspaceSwitcher::popover_render_views(wf::json_t views_data)
@@ -649,6 +690,23 @@ void WayfireWorkspaceSwitcher::popover_render_views(wf::json_t views_data)
     for (size_t i = 0; i < views_data.size(); i++)
     {
         popover_add_view(views_data[i]);
+    }
+
+    for (auto w : windows)
+    {
+        if (w->gobj() == GTK_WIDGET(popover_grid.gobj()))
+        {
+            continue;
+        }
+
+        if (w->active)
+        {
+            w->reference();
+            w->ws->remove_overlay(*w);
+            w->ws->add_overlay(*w);
+            w->unreference();
+            w->add_css_class("active");
+        }
     }
 }
 
@@ -702,11 +760,27 @@ void WayfireWorkspaceSwitcher::switcher_on_event(wf::json_t data)
                 {
                     w->remove_css_class("inactive");
                     w->add_css_class("active");
+                    w->active = true;
+                    this->active_view_id = w->id;
                 } else
                 {
                     w->remove_css_class("active");
                     w->add_css_class("inactive");
+                    w->active = false;
                 }
+            }
+        }
+
+        for (auto w : windows)
+        {
+            if (w->active)
+            {
+                w->reference();
+                w->ws->remove_overlay(*w);
+                w->ws->add_overlay(*w);
+                w->unreference();
+                w->add_css_class("active");
+                this->active_view_id = w->id;
             }
         }
     } else if (data["event"].as_string() == "view-unmapped")
@@ -754,15 +828,37 @@ void WayfireWorkspaceSwitcher::popover_on_event(wf::json_t data)
             {
                 continue;
             }
+
             WayfireWorkspaceWindow *w = (WayfireWorkspaceWindow*)widget;
             if (w->id == data["view"]["id"].as_int())
             {
                 w->remove_css_class("inactive");
                 w->add_css_class("active");
+                w->active = true;
+                this->active_view_id = w->id;
             } else
             {
                 w->remove_css_class("active");
                 w->add_css_class("inactive");
+                w->active = false;
+            }
+        }
+
+        for (auto w : windows)
+        {
+            if (w->gobj() == GTK_WIDGET(popover_grid.gobj()))
+            {
+                continue;
+            }
+
+            if (w->active)
+            {
+                w->reference();
+                w->ws->remove_overlay(*w);
+                w->ws->add_overlay(*w);
+                w->unreference();
+                w->add_css_class("active");
+                this->active_view_id = w->id;
             }
         }
     } else if (data["event"].as_string() == "view-unmapped")

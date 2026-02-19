@@ -12,6 +12,7 @@ class WayfireWorkspaceWindow : public Gtk::Widget
     int x = 0, y = 0, w = 10, h = 10;
     int x_index, y_index;
     int id, output_id;
+    bool active;
     WayfireWorkspaceBox *ws;
     WayfireWorkspaceWindow()
     {}
@@ -54,6 +55,7 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
     WayfireWorkspaceSwitcher(WayfireOutput *output);
     ~WayfireWorkspaceSwitcher();
     int grid_width, grid_height;
+    int active_view_id;
     std::shared_ptr<IPCClient> ipc_client;
     std::pair<int, int> get_workspace(WayfireWorkspaceBox *ws, WayfireWorkspaceWindow *w);
     std::pair<int, int> popover_get_workspace(WayfireWorkspaceWindow *w);
