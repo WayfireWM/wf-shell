@@ -22,6 +22,7 @@ epoxy = dependency('epoxy')
 gtklayershell = dependency('gtk4-layer-shell-0', fallback: ['gtk4-layer-shell'])
 libpulse = dependency('libpulse', required: get_option('pulse'))
 wireplumber = dependency('wireplumber-0.5', required: get_option('wireplumber'))
+ddcutil = dependency('ddcutil', required: get_option('ddcutil'))
 dbusmenu_gtk = dependency('dbusmenu-glib-0.4')
 libgvc = subproject('gvc', default_options: ['static=true'], required: get_option('pulse'))
 xkbregistry = dependency('xkbregistry')
@@ -43,6 +44,10 @@ endif
 
 if wireplumber.found()
 	add_project_arguments('-DHAVE_WIREPLUMBER=1', language: 'cpp')
+endif
+
+if ddcutil.found()
+	add_project_arguments('-DHAVE_DDCUTIL=1', language: 'cpp')
 endif
 
 needs_libinotify = ['freebsd', 'dragonfly'].contains(host_machine.system())

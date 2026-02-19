@@ -20,6 +20,8 @@ widget_sources = [
   'widgets/tray/item.cpp',
   'widgets/tray/host.cpp',
   'widgets/tray/dbusmenu.cpp',
+  'widgets/light/light.cpp',
+  'widgets/light/sysfs.cpp',
 ]
 
 deps = [
@@ -54,6 +56,13 @@ if wireplumber.found()
   deps += wireplumber
 else
   message('Wireplumber not found, mixer widget will not be available.')
+endif
+
+if ddcutil.found()
+  widget_sources += 'widgets/light/ddcutil.cpp'
+  deps += ddcutil
+else
+  message('Libddcutil not found, light widget will not support external monitors.')
 endif
 
 executable(

@@ -29,6 +29,7 @@
 #ifdef HAVE_WIREPLUMBER
     #include "widgets/wp-mixer/wp-mixer.hpp"
 #endif
+#include "widgets/light/light.hpp"
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
 #include "widgets/tray/tray.hpp"
@@ -175,6 +176,15 @@ class WayfirePanel::impl
 #else
             std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
+#endif
+        }
+
+        if (name == "light")
+        {
+            return Widget(new WayfireLight(output));
+#ifndef HAVE_DDCUTIL
+            std::cout << "Built without DDC/CI support, light widget "
+                         " doesn’t support external monitors." << std::endl;
 #endif
         }
 
@@ -389,7 +399,8 @@ void WayfirePanelApp::on_activate()
         {"panel/volume_icon_size", ".volume"},
         {"panel/wp_icon_size", ".wireplumber"},
         {"panel/notifications_icon_size", ".notification-center "},
-        {"panel/tray_icon_size", ".tray-button"}
+        {"panel/tray_icon_size", ".tray-button"},
+        {"panel/light_icon_size", ".light"}
     };
     for (auto pair : icon_sizes_args)
     {
