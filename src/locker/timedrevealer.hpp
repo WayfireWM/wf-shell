@@ -12,9 +12,9 @@ class WayfireLockerTimedRevealer : public Gtk::Revealer
     WayfireLockerTimedRevealer(std::string always_option);
     ~WayfireLockerTimedRevealer();
     WfOption<bool> always_show;
-    WfOption<int> hide_timeout{"locker/hide_time"};
+    WfOption<double> hide_timeout{"locker/hide_time"};
     WfOption<int> hide_animation{"locker/hide_anim"};
-    WfOption<int> hide_animation_duration{"locker/hide_anim_dur"};
+    WfOption<double> hide_animation_duration{"locker/hide_anim_dur"};
 
     virtual void activity(); /* Allow plugins to have their own logic if more intricate */
 };

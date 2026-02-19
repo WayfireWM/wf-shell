@@ -68,7 +68,7 @@ WayfireLockerTimedRevealer::WayfireLockerTimedRevealer(std::string always_option
 
     auto hide_duration_callback = [this] ()
     {
-        set_transition_duration(hide_animation_duration);
+        set_transition_duration(hide_animation_duration * 1000);
         return G_SOURCE_REMOVE;
     };
 
@@ -105,5 +105,5 @@ void WayfireLockerTimedRevealer::activity()
         set_reveal_child(false);
         return G_SOURCE_REMOVE;
     },
-        hide_timeout);
+        hide_timeout * 1000);
 }

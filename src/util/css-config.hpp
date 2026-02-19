@@ -14,6 +14,14 @@ class CssFromConfig
     void remove_provider();
 };
 
+class CssFromConfigDouble : public CssFromConfig
+{
+    WfOption<double> option_value;
+
+  public:
+    CssFromConfigDouble(std::string config_opt, std::string css_before, std::string css_after);
+};
+
 class CssFromConfigBool : public CssFromConfig
 {
     WfOption<bool> option_value;

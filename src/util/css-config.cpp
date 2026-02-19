@@ -15,14 +15,32 @@ void CssFromConfig::remove_provider()
     Gtk::StyleContext::remove_provider_for_display(Gdk::Display::get_default(), provider);
 }
 
+CssFromConfigDouble::CssFromConfigDouble(std::string option_name, std::string before, std::string after) :
+    option_value{option_name}
+{
+    provider = Gtk::CssProvider::create();
+    auto cb = [=]
+    {
+        std::stringstream ss;
+        ss << before << std::to_string(option_value.value()) << after;
+        std::cout << ss.str() << std::endl;
+        provider->load_from_string(ss.str());
+    };
+    option_value.set_callback(cb);
+    cb();
+    add_provider();
+}
+
 CssFromConfigBool::CssFromConfigBool(std::string option_name, std::string css_true, std::string css_false) :
     option_value{option_name}
 {
     provider = Gtk::CssProvider::create();
-    option_value.set_callback([=]
+    auto cb = [=]
     {
         provider->load_from_string(option_value ? css_true : css_false);
-    });
+    };
+    option_value.set_callback(cb);
+    cb();
 
     add_provider();
 }
