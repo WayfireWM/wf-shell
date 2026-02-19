@@ -15,7 +15,7 @@ class WayfireLockerAppLockscreen : public Gtk::Window
     BackgroundGLArea background;
     std::shared_ptr<WayfireLockerGrid> grid;
     sigc::connection timeout;
-    WfOption<int> hide_timeout{"locker/hide_time"};
+    WfOption<double> hide_timeout{"locker/hide_time"};
     WfOption<bool> wf_background{"locker/background_image"};
     std::vector<sigc::connection> signals;
     int last_x = -1, last_y = -1;

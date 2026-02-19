@@ -13,10 +13,10 @@
 		<_short>Background Color</_short>
 		<default>gtk_headerbar</default>
 	</option>
-	<option name="hide_time" type="int">
+	<option name="hide_time" type="double">
 		<_short>Hide contents when inactive</_short>
-		<_long>When no user input is detected, hide the unlock controls. 0 means never. Time is in milliseconds</_long>
-		<default>5000</default>
+		<_long>When no user input is detected, hide the unlock controls. 0.0 means never. Time is in seconds</_long>
+		<default>5.0</default>
 		<min>0</min>
 	</option>
 	<option name="hide_anim" type="int">
@@ -63,18 +63,18 @@
 			<_name>Swing Up</_name>
 		</desc>
 	</option>
-	<option name="hide_anim_dur" type="int">
+	<option name="hide_anim_dur" type="double">
 		<_short>Hide contents duration</_short>
-		<_long>Number of milliseconds to animate hide/show of inactive windows</_long>
-		<default>400</default>
-		<min>0</min>
+		<_long>Seconds to animate hide/show of inactive windows</_long>
+		<default>0.400</default>
+		<min>0.0</min>
 	</option>
-	<option name="prewake" type="int">
+	<option name="prewake" type="double">
 		<_short>Early instant unlock</_short>
 		<_long>If the user moves mouse or presses a key within this many milliseconds of lock, instantly unlock</_long>
-		<default>1000</default>
+		<default>1.0</default>
 		<min>0</min>
-		<max>9000</max>
+		<max>9.0</max>
 	</option>
 	<option name="lockout_attempts" type="int">
 		<_short>Lock after failed attempts</_short>

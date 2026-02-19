@@ -97,7 +97,7 @@ void WayfireLockerApp::on_activate()
 
                     can_early_wake = false;
                     return G_SOURCE_REMOVE;
-                }, WfOption<int>{"locker/prewake"});
+                }, WfOption<double>{"locker/prewake"} *1000);
             }
 
             perform_lock();
@@ -120,7 +120,7 @@ void WayfireLockerApp::on_activate()
             kill_parent(ExitType::LOCKED);
             can_early_wake = false;
             return G_SOURCE_REMOVE;
-        }, WfOption<int>{"locker/prewake"});
+        }, WfOption<double>{"locker/prewake"} *1000);
         /* TODO Hot config for this? */
         // exit_on_unlock = WfOption<bool>{"locker/exit_on_unlock"};
     }
@@ -151,8 +151,8 @@ void WayfireLockerApp::on_activate()
     new CssFromConfigInt("locker/battery_icon_size", ".wf-locker .battery-image {-gtk-icon-size:", "px;}");
     new CssFromConfigInt("locker/fingerprint_icon_size", ".wf-locker .fingerprint-icon {-gtk-icon-size:",
         "px;}");
-    new CssFromConfigInt("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ",
-        "ms; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0;} to {opacity:1;}}");
+    new CssFromConfigDouble("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ",
+        "s; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0;} to {opacity:1;}}");
     new CssFromConfigFont("locker/network_font", ".wf-locker .network {", "}");
     new CssFromConfigInt("locker/network_icon_size", ".wf-locker .network {-gtk-icon-size:", "px;}");
 
