@@ -24,6 +24,7 @@ class WayfireWorkspaceWindow : public Gtk::Widget
 class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
 {
     std::string output_name;
+    void set_height();
     void on_event(wf::json_t data) override;
     void switcher_on_event(wf::json_t data);
     void popover_on_event(wf::json_t data);
@@ -45,9 +46,9 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
 
   public:
     Gtk::Box box;
-    Gtk::Grid grid;
+    Gtk::Grid mini_grid;
     Gtk::Box switcher_box;
-    Gtk::Grid popover_grid;
+    Gtk::Grid switch_grid;
     Gtk::Overlay overlay;
     double get_scaled_width();
     std::unique_ptr<WayfireMenuButton> button;

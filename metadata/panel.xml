@@ -476,10 +476,14 @@ Set to -1 to only run it by clicking the button.
 			<_name>Classic</_name>
 		</desc>
 		<desc>
+			<value>grid</value>
+			<_name>Grid</_name>
+		</desc>
+		<desc>
 			<value>popover</value>
 			<_name>Popover</_name>
 		</desc>
-		<default>classic</default>
+		<default>row</default>
 	</option>
 	<option name="workspace_switcher_target_height" type="double">
 		<_short>Target height for workspace switcher widget in pixels</_short>

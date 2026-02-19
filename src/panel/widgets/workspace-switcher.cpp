@@ -23,35 +23,34 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     ipc_client->subscribe(this, {"output-layout-changed"});
     ipc_client->subscribe(this, {"wset-workspace-changed"});
 
-    auto set_height = [=] ()
-    {
-        double val = workspace_switcher_target_height_opt.value();
-        if (val == 0.0)
-        {
-            val = (double)WfOption<int>{"panel/minimal_height"}.value();
-        }
-
-        workspace_switcher_target_height = val;
-        get_wsets();
-    };
-    workspace_switcher_target_height_opt.set_callback(set_height);
-    set_height();
+    workspace_switcher_target_height_opt.set_callback([=](){set_height();});
 
     auto mode_cb = ([=] ()
     {
         clear_switcher_box();
-        if (workspace_switcher_mode.value() == "classic")
+        if (overlay.get_parent())
+        {
+            overlay.unparent();
+        }
+
+        if (std::string(workspace_switcher_mode) == "classic")
         {
             switcher_box.append(box);
-        } else // "popover"
+        } else if (std::string(workspace_switcher_mode) == "grid")
         {
-            button->set_child(grid);
+            switcher_box.append(overlay);
+        } else // "grid_popover"
+        {
+            button->get_popover()->set_child(overlay);
+            button->set_child(mini_grid);
             switcher_box.append(*button);
         }
 
         get_wsets();
+
     });
     workspace_switcher_mode.set_callback(mode_cb);
+
     workspace_switcher_render_views.set_callback([=] ()
     {
         get_wsets();
@@ -61,6 +60,22 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
 
     container->append(switcher_box);
     mode_cb();
+}
+
+void WayfireWorkspaceSwitcher::set_height()
+{
+    double val = workspace_switcher_target_height_opt;
+    if (val == 0.0)
+    {
+        val = (double)WfOption<int>{"panel/minimal_height"};
+    }
+
+    if (std::string(workspace_switcher_mode) == "grid")
+    {
+        val = val / grid_height;
+    }
+
+    workspace_switcher_target_height = val;
 }
 
 void WayfireWorkspaceSwitcher::get_wsets()
@@ -77,10 +92,11 @@ void WayfireWorkspaceSwitcher::get_wsets()
         if (std::string(workspace_switcher_mode) == "classic")
         {
             process_workspaces(data);
-        } else // "popover"
+        } else // "grid"/"grid_popover"
         {
             popover_process_workspaces(data);
         }
+        set_height();
     });
 }
 
@@ -99,14 +115,14 @@ void WayfireWorkspaceSwitcher::clear_box()
         box.remove(*child);
     }
 
-    for (auto child : grid.get_children())
+    for (auto child : mini_grid.get_children())
     {
-        grid.remove(*child);
+        mini_grid.remove(*child);
     }
 
-    for (auto child : popover_grid.get_children())
+    for (auto child : switch_grid.get_children())
     {
-        popover_grid.remove(*child);
+        switch_grid.remove(*child);
     }
 
     windows.clear();
@@ -178,7 +194,7 @@ void WayfireWorkspaceBox::on_popover_grid_clicked(int count, double x, double y)
             std::cerr << "Error switching workspaces. Is vswitch plugin enabled?" << std::endl;
         }
     });
-    for (auto widget : this->switcher->grid.get_children())
+    for (auto widget : this->switcher->mini_grid.get_children())
     {
         WayfireWorkspaceBox *ws = (WayfireWorkspaceBox*)widget;
         if ((ws->x_index == this->x_index) && (ws->y_index == this->y_index))
@@ -425,9 +441,9 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                 }
 
                 clear_box();
-                button->m_popover.set_parent(grid);
+                button->m_popover.set_parent(mini_grid);
                 button->m_popover.set_child(overlay);
-                overlay.set_child(popover_grid);
+                overlay.set_child(switch_grid);
                 overlay.add_css_class("workspace");
                 overlay.signal_get_child_position().connect(sigc::mem_fun(*this,
                     &WayfireWorkspaceSwitcher::on_popover_get_child_position), false);
@@ -455,7 +471,7 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
 
                         ws->x_index = k;
                         ws->y_index = j;
-                        grid.attach(*ws, ws->x_index, ws->y_index, 1, 1);
+                        mini_grid.attach(*ws, ws->x_index, ws->y_index, 1, 1);
 
                         ws = Gtk::make_managed<WayfireWorkspaceBox>(this);
                         ws->output_id = output_data["id"].as_int();
@@ -480,7 +496,7 @@ void WayfireWorkspaceSwitcher::popover_process_workspaces(wf::json_t workspace_d
                         popover_click_gesture->signal_released().connect(sigc::mem_fun(*ws,
                             &WayfireWorkspaceBox::on_popover_grid_clicked));
                         ws->add_controller(popover_click_gesture);
-                        popover_grid.attach(*ws, ws->x_index, ws->y_index, 1, 1);
+                        switch_grid.attach(*ws, ws->x_index, ws->y_index, 1, 1);
                         if (workspace_switcher_render_views && (j == this->grid_height - 1) &&
                             (k == this->grid_width - 1))
                         {
@@ -702,7 +718,7 @@ void WayfireWorkspaceSwitcher::popover_render_views(wf::json_t views_data)
 
     for (auto w : windows)
     {
-        if (w->gobj() == GTK_WIDGET(popover_grid.gobj()))
+        if (w->gobj() == GTK_WIDGET(switch_grid.gobj()))
         {
             continue;
         }
@@ -723,7 +739,7 @@ void WayfireWorkspaceSwitcher::on_event(wf::json_t data)
     if (std::string(workspace_switcher_mode) == "classic")
     {
         switcher_on_event(data);
-    } else // "popover"
+    } else // "grid"/"grid_popover"
     {
         popover_on_event(data);
     }
@@ -832,7 +848,7 @@ void WayfireWorkspaceSwitcher::popover_on_event(wf::json_t data)
 
         for (auto widget : overlay.get_children())
         {
-            if (widget->gobj() == GTK_WIDGET(popover_grid.gobj()))
+            if (widget->gobj() == GTK_WIDGET(switch_grid.gobj()))
             {
                 continue;
             }
@@ -854,7 +870,7 @@ void WayfireWorkspaceSwitcher::popover_on_event(wf::json_t data)
 
         for (auto w : windows)
         {
-            if (w->gobj() == GTK_WIDGET(popover_grid.gobj()))
+            if (w->gobj() == GTK_WIDGET(switch_grid.gobj()))
             {
                 continue;
             }
