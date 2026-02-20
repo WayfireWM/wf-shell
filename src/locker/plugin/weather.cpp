@@ -64,19 +64,28 @@ void WayfireLockerWeatherPlugin::remove_output(int id, std::shared_ptr<WayfireLo
     weather_widgets.erase(id);
 }
 
+bool WayfireWeather::handle_inotify_event(Glib::IOCondition cond)
+{
+	if (cond == Glib::IOCondition::IO_HUP)
+	{
+        return false;
+    }
+
+	char buf[1024 * sizeof(inotify_event)];
+    read(inotify_fd, buf, sizeof(buf));
+
+    update_weather();
+
+    return true;
+}
+
 void WayfireLockerWeatherPlugin::update_weather()
 {
-    std::string weather_data_dir;
-
-    weather_data_dir = std::string(getenv("HOME")) + "/.local/share/owf/data";
-
-    std::string file_path = weather_data_dir + "/data.json";
-
-    std::ifstream input_file(file_path);
+    std::ifstream input_file(weather_data_path);
 
     if (!input_file)
     {
-        std::cerr << "Error reading json file " << file_path << std::endl;
+        std::cerr << "Error reading json file " << weather_data_path << std::endl;
         hide();
         return;
     }
@@ -90,14 +99,14 @@ void WayfireLockerWeatherPlugin::update_weather()
 
     if (err.has_value())
     {
-        std::cerr << "Error parsing json data " << file_path << ": " << *err << std::endl;
+        std::cerr << "Error parsing json data " << weather_data_path << ": " << *err << std::endl;
         hide();
         return;
     }
 
     if (!json_data.has_member("temp") || !json_data.has_member("icon"))
     {
-        std::cerr << "Unexpected weather json data in " << file_path << std::endl;
+        std::cerr << "Unexpected weather json data in " << weather_data_path << std::endl;
         hide();
         return;
     }
@@ -114,18 +123,25 @@ WayfireLockerWeatherPlugin::WayfireLockerWeatherPlugin() :
 
 void WayfireLockerWeatherPlugin::init()
 {
+    weather_data_path = std::string(getenv("HOME")) + "/.local/share/owf/data/data.json";
+
+    inotify_fd = inotify_init();
+
+    inotify_add_watch(inotify_fd,
+        weather_data_path.c_str(),
+        IN_CLOSE_WRITE);
+
+    inotify_connection = Glib::signal_io().connect(
+        sigc::mem_fun(*this, &WayfireWeather::handle_inotify_event),
+        inotify_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
+
     update_weather();
-    timeout = Glib::signal_timeout().connect_seconds(
-        [this] ()
-    {
-        this->update_weather();
-        return G_SOURCE_CONTINUE;
-    }, 600);
 }
 
 void WayfireLockerWeatherPlugin::deinit()
 {
-    timeout.disconnect();
+    inotify_connection.disconnect();
+    close(inotify_fd);
 }
 
 void WayfireLockerWeatherPlugin::hide()

@@ -27,10 +27,14 @@ class WayfireLockerWeatherPlugin : public WayfireLockerPlugin
     void init() override;
     void deinit() override;
 
-    sigc::connection timeout;
+
+    int inotify_fd;
+    sigc::connection inotify_connection;
+    std::string weather_data_path;
+    bool handle_inotify_event(Glib::IOCondition cond);
+    void update_weather();
     void update_labels(std::string text);
     void update_icons(std::string path);
-    void update_weather();
 
     void hide();
     void show();
