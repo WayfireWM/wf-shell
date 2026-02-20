@@ -107,17 +107,17 @@
 
 .wf-panel .workspace-switcher .workspace .view {
     background-color: #0000AA77;
-    border: 1px solid #222
+    border: 1px solid #222;
 }
 
 .wf-panel .workspace-switcher .workspace .view.active {
     background-color: #FF00AA77;
-    border: 1px solid #222
+    border: 1px solid #222;
 }
 
 .wf-panel .workspace-switcher .workspace .view.inactive {
     background-color: #00FFAA77;
-    border: 1px solid #222
+    border: 1px solid #222;
 }
 .excellent {
     color: #00ff00;
