@@ -7,6 +7,6 @@ WayfireSpacing::WayfireSpacing(int pixels)
 
 void WayfireSpacing::init(Gtk::Box *container)
 {
-    box.get_style_context()->add_class("spacing");
+    box.add_css_class("spacing");
     container->append(box);
 }

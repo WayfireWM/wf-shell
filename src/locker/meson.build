@@ -1,6 +1,5 @@
 widget_sources = [
     'plugin/clock.cpp',
-    'plugin/weather.cpp',
     'plugin/battery.cpp',
     'plugin/password.cpp',
     'plugin/instant.cpp',
@@ -27,6 +26,12 @@ deps = [
 if libpulse.found()
   widget_sources += 'plugin/volume.cpp'
   deps += [libpulse, libgvc]
+endif
+
+if get_option('weather') == true
+  widget_sources += [
+    'plugin/weather.cpp',
+  ]
 endif
 
 executable(

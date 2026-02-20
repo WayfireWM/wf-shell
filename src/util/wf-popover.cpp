@@ -4,7 +4,7 @@
 WayfireMenuButton::WayfireMenuButton(const std::string& section) :
     panel_position{section + "/position"}
 {
-    get_style_context()->add_class("flat");
+    add_css_class("flat");
     // m_popover.set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);
 
     auto cb = [=] ()

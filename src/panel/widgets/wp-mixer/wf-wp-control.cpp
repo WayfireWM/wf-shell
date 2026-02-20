@@ -28,9 +28,10 @@ void WfWpControl::init()
     // build layout
 
     button.set_child(volume_icon);
-    button.get_style_context()->add_class("widget-icon");
-    button.get_style_context()->add_class("wireplumber");
-    button.get_style_context()->add_class("flat");
+    button.add_css_class("mute-toggle");
+    button.add_css_class("widget-icon");
+    button.add_css_class("wireplumber");
+    button.add_css_class("flat");
 
     scale.set_range(0.0, 1.0);
     scale.set_size_request(slider_length, 0);
@@ -141,10 +142,12 @@ void WfWpControl::update_icon()
 {
     if (button.get_active())
     {
+        add_css_class("muted");
         volume_icon.set_from_icon_name(volume_icon_for(0)); // mute
         return;
     }
 
+    remove_css_class("muted");
     volume_icon.set_from_icon_name(volume_icon_for(get_scale_target_value()));
 }
 
@@ -219,9 +222,10 @@ WfWpControlDevice::~WfWpControlDevice()
 
 void WfWpControlDevice::init()
 {
-    default_btn.get_style_context()->add_class("widget-icon");
-    default_btn.get_style_context()->add_class("wireplumber");
-    default_btn.get_style_context()->add_class("flat");
+    default_btn.add_css_class("default-button");
+    default_btn.add_css_class("widget-icon");
+    default_btn.add_css_class("wireplumber");
+    default_btn.add_css_class("flat");
 
     is_def_icon.set_from_icon_name("emblem-default");
     default_btn.set_child(is_def_icon);
@@ -246,6 +250,14 @@ void WfWpControlDevice::init()
 
 void WfWpControlDevice::set_def_status_no_callbk(bool state)
 {
+    if (state)
+    {
+        add_css_class("default");
+    } else
+    {
+        remove_css_class("default");
+    }
+
     def_conn.block(true);
     default_btn.set_active(state);
     def_conn.block(false);

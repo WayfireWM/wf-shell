@@ -63,7 +63,7 @@ void WayfireWindowList::init(Gtk::Box *container)
         return;
     }
 
-    scrolled_window.get_style_context()->add_class("window-list");
+    scrolled_window.add_css_class("window-list");
 
     wl_registry_destroy(registry);
     zwlr_foreign_toplevel_manager_v1_add_listener(manager,

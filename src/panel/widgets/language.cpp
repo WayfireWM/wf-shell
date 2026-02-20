@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstddef>
 #include <cstdint>
 
@@ -16,15 +17,22 @@
 
 void WayfireLanguage::init(Gtk::Box *container)
 {
-    button.get_style_context()->add_class("language");
-    button.get_style_context()->add_class("flat");
-    button.get_style_context()->remove_class("activated");
+    button.add_css_class("language");
+    button.add_css_class("flat");
+    button.remove_css_class("activated");
     btn_sig = button.signal_clicked().connect(sigc::mem_fun(*this, &WayfireLanguage::next_layout));
     button.show();
 
     ipc_client->subscribe(this, {"keyboard-modifier-state-changed"});
     ipc_client->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (wf::json_t data)
     {
+        if (data.serialize().find(
+            "error") != std::string::npos)
+        {
+            std::cerr << "Error getting keyboard state for language widget. Is wayfire ipc-rules plugin enabled?" << std::endl;
+            return;
+        }
+
         set_available(data["possible-layouts"]);
         set_current(data["layout-index"]);
     });

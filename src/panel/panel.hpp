@@ -7,6 +7,7 @@
 
 #include "giomm/application.h"
 #include "css-config.hpp"
+#include "giomm/application.h"
 #include "wf-shell-app.hpp"
 
 class WayfirePanel

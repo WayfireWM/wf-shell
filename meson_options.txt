@@ -16,3 +16,9 @@ option(
     value: true,
     description: 'Install wayland-logout',
 )
+option(
+    'weather',
+    type: 'boolean',
+    value: false,
+    description: 'Install weather widgets and open-weather-fetch systemd service',
+)

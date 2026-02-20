@@ -60,13 +60,14 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
         css_provider = Gtk::CssProvider::create();
         css_provider->load_from_string(".command-icon-" + name + "{-gtk-icon-size:" + std::to_string(
             icon_size) + "px;}");
-        icon.get_style_context()->add_class("command-icon-" + name);
+        icon.add_css_class("command-icon-" + name);
         icon.get_style_context()->add_provider(css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
     }
 
-    icon.get_style_context()->add_class("widget-icon");
-    get_style_context()->add_class("command-output");
-    get_style_context()->add_class("icon-" + icon_position);
+    add_css_class("flat");
+    icon.add_css_class("widget-icon");
+    add_css_class("command-output");
+    add_css_class("icon-" + icon_position);
 
     main_label.set_ellipsize(Pango::EllipsizeMode::END);
     main_label.set_max_width_chars(max_chars_opt);
@@ -163,7 +164,7 @@ void WfCommandOutputButtons::CommandOutput::update_tooltip()
 
 void WfCommandOutputButtons::init(Gtk::Box *container)
 {
-    box.get_style_context()->add_class("command-output-box");
+    box.add_css_class("command-output-box");
     container->append(box);
     update_buttons();
     commands_list_opt.set_callback([=] { update_buttons(); });
