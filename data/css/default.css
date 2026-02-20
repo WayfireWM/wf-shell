@@ -41,6 +41,18 @@
     padding-left: 0px;
 }
 
+.wf-panel .weather image {
+    -gtk-icon-size: 25px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-bottom: 4px;
+}
+
+.wf-panel .weather label {
+    font-weight: bold;
+    font-size: 20px;
+}
+
 .wf-panel .network label {
     padding-left: 6px;
 }

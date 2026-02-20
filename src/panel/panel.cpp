@@ -19,6 +19,9 @@
 #include "widgets/language.hpp"
 #include "widgets/menu.hpp"
 #include "widgets/clock.hpp"
+#ifdef HAVE_WEATHER
+    #include "widgets/weather.hpp"
+#endif
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
@@ -149,6 +152,13 @@ class WayfirePanel::impl
             return Widget(new WayfireClock());
         }
 
+#ifdef HAVE_WEATHER
+        if (name == "weather")
+        {
+            return Widget(new WayfireWeather());
+        }
+
+#endif
         if (name == "network")
         {
             return Widget(new WayfireNetworkInfo());
@@ -418,6 +428,7 @@ void WayfirePanelApp::on_activate()
 
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");
+    new CssFromConfigFont("panel/weather_font", ".weather {", "}");
 }
 
 void WayfirePanelApp::handle_new_output(WayfireOutput *output)
