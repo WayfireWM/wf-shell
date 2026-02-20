@@ -9,7 +9,7 @@ jobs:
     steps:
       - run: echo 'http://dl-cdn.alpinelinux.org/alpine/v3.22/community' > /etc/apk/repositories
       - run: echo 'http://dl-cdn.alpinelinux.org/alpine/v3.22/main' >> /etc/apk/repositories
-      - run: apk --no-cache add git g++ binutils pkgconf meson ninja musl-dev gtkmm4-dev vala gobject-introspection gobject-introspection-dev pulseaudio-dev wireplumber-dev libdbusmenu-glib-dev alsa-lib-dev yyjson-dev linux-pam-dev util-linux-login openssl-dev
+      - run: apk --no-cache add git g++ binutils pkgconf meson ninja musl-dev gtkmm4-dev vala gobject-introspection gobject-introspection-dev pulseaudio-dev pipewire-dev wireplumber-dev libdbusmenu-glib-dev alsa-lib-dev yyjson-dev linux-pam-dev util-linux-login openssl-dev
       - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
       - run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/main' >> /etc/apk/repositories
       - run: apk --no-cache add wayland-protocols wayfire-dev gtk4-layer-shell-dev gtk4-layer-shell
