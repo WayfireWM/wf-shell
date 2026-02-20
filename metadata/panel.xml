@@ -479,18 +479,22 @@ Set to -1 to only run it by clicking the button.
 	<option name="workspace_switcher_mode" type="string">
 		<_short>Workspace switcher widget mode</_short>
 		<desc>
-			<value>classic</value>
-			<_name>Classic</_name>
+			<value>row</value>
+			<_name>Current row</_name>
 		</desc>
 		<desc>
-			<value>popover</value>
-			<_name>Popover</_name>
+			<value>grid</value>
+			<_name>Whole grid (small)</_name>
 		</desc>
-		<default>classic</default>
+		<desc>
+			<value>grid_popover</value>
+			<_name>Whole grid (popover)</_name>
+		</desc>
+		<default>row</default>
 	</option>
 	<option name="workspace_switcher_target_height" type="double">
 		<_short>Target height for workspace switcher widget in pixels</_short>
-		<default>20</default>
+		<default>0</default>
 	</option>
 	<option name="workspace_switcher_render_views" type="bool">
 		<_short>Render rectangles for each window</_short>
