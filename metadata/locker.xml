@@ -11,7 +11,7 @@
 	</option>
 	<option name="background_color" type="string">
 		<_short>Background Color</_short>
-		<default>gtk_headerbar</default>
+		<default>#0000</default>
 	</option>
 	<option name="hide_time" type="double">
 		<_short>Hide contents when inactive</_short>
