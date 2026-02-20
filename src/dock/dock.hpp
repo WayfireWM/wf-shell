@@ -7,6 +7,7 @@
 #include <wf-option-wrap.hpp>
 
 #include "network/manager.hpp"
+#include "giomm/application.h"
 #include "wf-shell-app.hpp"
 
 class WfDock
@@ -39,6 +40,8 @@ class WfDockApp : public WayfireShellApp
      * call to run() */
     static void create(int argc, char **argv);
     virtual ~WfDockApp();
+    std::string get_application_name() override;
+    Gio::Application::Flags get_extra_application_flags() override;
 
     void on_activate() override;
     void handle_new_output(WayfireOutput *output) override;

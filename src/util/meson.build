@@ -26,6 +26,7 @@ util = static_library(
         wfconfig,
         libinotify,
         json,
+        'background-gl.cpp',
     ],
 )
 

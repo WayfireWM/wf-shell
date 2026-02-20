@@ -24,6 +24,7 @@
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
 #include "widgets/separator.hpp"
+#include "widgets/workspace-switcher.hpp"
 #ifdef HAVE_PULSE
     #include "widgets/volume.hpp"
 #endif
@@ -201,7 +202,29 @@ class WayfirePanel::impl
 
         if (name == "language")
         {
-            return Widget(new WayfireLanguage());
+            if (WayfireIPC::get_instance()->connected)
+            {
+                return Widget(new WayfireLanguage());
+            } else
+            {
+                std::cerr << "Wayfire IPC not connected, which is required to load language widget." <<
+                    std::endl;
+                return nullptr;
+            }
+        }
+
+        if (name == "workspace-switcher")
+        {
+            if (WayfireIPC::get_instance()->connected)
+            {
+                return Widget(new WayfireWorkspaceSwitcher(output));
+            } else
+            {
+                std::cerr <<
+                    "Wayfire IPC not connected, which is required to load workspace-switcher widget." <<
+                    std::endl;
+                return nullptr;
+            }
         }
 
         if (auto pixel = widget_with_value(name, "spacing"))
@@ -441,7 +464,18 @@ void WayfirePanelApp::create(int argc, char **argv)
     }
 
     instance = std::unique_ptr<WayfireShellApp>(new WayfirePanelApp{});
+    instance->init_app();
     instance->run(argc, argv);
+}
+
+std::string WayfirePanelApp::get_application_name()
+{
+    return "org.wayfire.panel";
+}
+
+Gio::Application::Flags WayfirePanelApp::get_extra_application_flags()
+{
+    return Gio::Application::Flags::NON_UNIQUE;
 }
 
 WayfirePanelApp::~WayfirePanelApp() = default;

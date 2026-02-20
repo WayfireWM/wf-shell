@@ -64,6 +64,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
         icon.get_style_context()->add_provider(css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
     }
 
+    add_css_class("flat");
     icon.add_css_class("widget-icon");
     add_css_class("command-output");
     add_css_class("icon-" + icon_position);

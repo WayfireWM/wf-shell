@@ -1,8 +1,8 @@
 #include <css-config.hpp>
-#include <wf-option-wrap.hpp>
 #include <sstream>
 #include <iostream>
 #include <regex>
+#include <string>
 
 void CssFromConfig::add_provider()
 {
@@ -15,14 +15,32 @@ void CssFromConfig::remove_provider()
     Gtk::StyleContext::remove_provider_for_display(Gdk::Display::get_default(), provider);
 }
 
+CssFromConfigDouble::CssFromConfigDouble(std::string option_name, std::string before, std::string after) :
+    option_value{option_name}
+{
+    provider = Gtk::CssProvider::create();
+    auto cb = [=]
+    {
+        std::stringstream ss;
+        ss << before << std::to_string(option_value.value()) << after;
+        std::cout << ss.str() << std::endl;
+        provider->load_from_string(ss.str());
+    };
+    option_value.set_callback(cb);
+    cb();
+    add_provider();
+}
+
 CssFromConfigBool::CssFromConfigBool(std::string option_name, std::string css_true, std::string css_false) :
     option_value{option_name}
 {
     provider = Gtk::CssProvider::create();
-    option_value.set_callback([=]
+    auto cb = [=]
     {
         provider->load_from_string(option_value ? css_true : css_false);
-    });
+    };
+    option_value.set_callback(cb);
+    cb();
 
     add_provider();
 }
@@ -33,13 +51,15 @@ CssFromConfigInt::CssFromConfigInt(std::string option_name, std::string css_befo
     provider = Gtk::CssProvider::create();
     option_value.set_callback([=]
     {
+        int value = option_value;
         // TODO When we go up to c++20 use std::format
         std::stringstream ss;
-        ss << css_before << option_value << css_after;
+        ss << css_before << std::to_string(value) << css_after;
         provider->load_from_string(ss.str());
     });
+    int value = option_value;
     std::stringstream ss;
-    ss << css_before << option_value << css_after;
+    ss << css_before << std::to_string(value) << css_after;
     provider->load_from_string(ss.str());
 
     add_provider();

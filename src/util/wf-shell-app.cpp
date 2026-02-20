@@ -131,9 +131,6 @@ char buf[INOT_BUF_SIZE];
 static void do_reload_css(WayfireShellApp *app)
 {
     app->on_css_reload();
-    inotify_add_watch(app->inotify_css_fd,
-        app->get_css_config_dir().c_str(),
-        IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
 }
 
 /* Reload file and add next inotify watch */
@@ -142,7 +139,6 @@ static void do_reload_config(WayfireShellApp *app)
     wf::config::load_configuration_options_from_file(
         app->config, app->get_config_file());
     app->on_config_reload();
-    inotify_add_watch(app->inotify_fd, app->get_config_file().c_str(), IN_MODIFY);
 }
 
 /* Handle inotify event */
@@ -187,6 +183,12 @@ static struct wl_registry_listener registry_listener =
 
 void WayfireShellApp::on_activate()
 {
+    if (activated)
+    {
+        return;
+    }
+
+    activated = true;
     app->hold();
 
     // load wf-shell if available
@@ -215,6 +217,12 @@ void WayfireShellApp::on_activate()
     inotify_css_fd = inotify_init();
     do_reload_css(this);
 
+    inotify_add_watch(inotify_fd,
+        get_config_file().c_str(),
+        IN_CLOSE_WRITE);
+    inotify_add_watch(inotify_css_fd,
+        get_css_config_dir().c_str(),
+        IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
     Glib::signal_io().connect(
         sigc::bind<0>(&handle_inotify_event, this),
         inotify_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
@@ -222,17 +230,20 @@ void WayfireShellApp::on_activate()
         sigc::bind<0>(&handle_css_inotify_event, this),
         inotify_css_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
 
-    // Hook up monitor tracking
-    auto display  = Gdk::Display::get_default();
-    auto monitors = display->get_monitors();
-    monitors->signal_items_changed().connect(sigc::mem_fun(*this, &WayfireShellApp::output_list_updated));
-
-    // initial monitors
-    int num_monitors = monitors->get_n_items();
-    for (int i = 0; i < num_monitors; i++)
+    if (!alternative_monitors)
     {
-        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
-        add_output(obj);
+        // Hook up monitor tracking
+        auto display  = Gdk::Display::get_default();
+        auto monitors = display->get_monitors();
+        monitors->signal_items_changed().connect(sigc::mem_fun(*this, &WayfireShellApp::output_list_updated));
+
+        // initial monitors
+        int num_monitors = monitors->get_n_items();
+        for (int i = 0; i < num_monitors; i++)
+        {
+            auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+            add_output(obj);
+        }
     }
 }
 
@@ -281,10 +292,19 @@ void WayfireShellApp::rem_output(GMonitor monitor)
     }
 }
 
+Gio::Application::Flags WayfireShellApp::get_extra_application_flags()
+{
+    return Gio::Application::Flags::NONE;
+}
+
 WayfireShellApp::WayfireShellApp()
+{}
+
+void WayfireShellApp::init_app()
 {
     std::cout << "setting up" << std::endl;
-    app = Gtk::Application::create("", Gio::Application::Flags::HANDLES_COMMAND_LINE);
+    app = Gtk::Application::create(
+        this->get_application_name(), Gio::Application::Flags::NONE | this->get_extra_application_flags());
     app->signal_activate().connect(
         sigc::mem_fun(*this, &WayfireShellApp::on_activate));
     app->add_main_option_entry(
@@ -293,7 +313,7 @@ WayfireShellApp::WayfireShellApp()
     app->add_main_option_entry(
         sigc::mem_fun(*this, &WayfireShellApp::parse_cssfile),
         "css", 's', "css style directory to use", "directory");
-
+    this->command_line();
     // Activate app after parsing command line
     app->signal_command_line().connect_notify([=] (auto&)
     {
