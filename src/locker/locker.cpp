@@ -22,7 +22,9 @@
 #include "lockscreen.hpp"
 #include "plugin/battery.hpp"
 #include "plugin/clock.hpp"
-#include "plugin/weather.hpp"
+#ifdef HAVE_WEATHER
+    #include "plugin/weather.hpp"
+#endif
 #include "plugin/instant.hpp"
 #include "plugin/password.hpp"
 #include "plugin/pin.hpp"
@@ -158,7 +160,9 @@ void WayfireLockerApp::on_activate()
 
     /* Init plugins */
     plugins.emplace("clock", Plugin(new WayfireLockerClockPlugin()));
+#ifdef HAVE_WEATHER
     plugins.emplace("weather", Plugin(new WayfireLockerWeatherPlugin()));
+#endif
     plugins.emplace("battery", Plugin(new WayfireLockerBatteryPlugin()));
     plugins.emplace("password", Plugin(new WayfireLockerPasswordPlugin()));
     plugins.emplace("instant", (Plugin(new WayfireLockerInstantPlugin())));
