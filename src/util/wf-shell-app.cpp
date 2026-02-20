@@ -183,6 +183,12 @@ static struct wl_registry_listener registry_listener =
 
 void WayfireShellApp::on_activate()
 {
+    if (activated)
+    {
+        return;
+    }
+
+    activated = true;
     app->hold();
 
     // load wf-shell if available
@@ -224,17 +230,20 @@ void WayfireShellApp::on_activate()
         sigc::bind<0>(&handle_css_inotify_event, this),
         inotify_css_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
 
-    // Hook up monitor tracking
-    auto display  = Gdk::Display::get_default();
-    auto monitors = display->get_monitors();
-    monitors->signal_items_changed().connect(sigc::mem_fun(*this, &WayfireShellApp::output_list_updated));
-
-    // initial monitors
-    int num_monitors = monitors->get_n_items();
-    for (int i = 0; i < num_monitors; i++)
+    if (!alternative_monitors)
     {
-        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
-        add_output(obj);
+        // Hook up monitor tracking
+        auto display  = Gdk::Display::get_default();
+        auto monitors = display->get_monitors();
+        monitors->signal_items_changed().connect(sigc::mem_fun(*this, &WayfireShellApp::output_list_updated));
+
+        // initial monitors
+        int num_monitors = monitors->get_n_items();
+        for (int i = 0; i < num_monitors; i++)
+        {
+            auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+            add_output(obj);
+        }
     }
 }
 
@@ -283,10 +292,19 @@ void WayfireShellApp::rem_output(GMonitor monitor)
     }
 }
 
+Gio::Application::Flags WayfireShellApp::get_extra_application_flags()
+{
+    return Gio::Application::Flags::NONE;
+}
+
 WayfireShellApp::WayfireShellApp()
+{}
+
+void WayfireShellApp::init_app()
 {
     std::cout << "setting up" << std::endl;
-    app = Gtk::Application::create("", Gio::Application::Flags::HANDLES_COMMAND_LINE);
+    app = Gtk::Application::create(
+        this->get_application_name(), Gio::Application::Flags::NONE | this->get_extra_application_flags());
     app->signal_activate().connect(
         sigc::mem_fun(*this, &WayfireShellApp::on_activate));
     app->add_main_option_entry(
@@ -295,7 +313,7 @@ WayfireShellApp::WayfireShellApp()
     app->add_main_option_entry(
         sigc::mem_fun(*this, &WayfireShellApp::parse_cssfile),
         "css", 's', "css style directory to use", "directory");
-
+    this->command_line();
     // Activate app after parsing command line
     app->signal_command_line().connect_notify([=] (auto&)
     {

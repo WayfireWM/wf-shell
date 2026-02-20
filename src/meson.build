@@ -2,6 +2,8 @@ subdir('util')
 subdir('panel')
 subdir('background')
 subdir('dock')
+subdir('locker')
+subdir('locker-pin')
 
 pkgconfig = import('pkgconfig')
 pkgconfig.generate(

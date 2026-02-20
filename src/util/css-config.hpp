@@ -3,7 +3,7 @@
 #include <string>
 #include <glibmm.h>
 #include <gtkmm.h>
-#include <wf-option-wrap.hpp>
+#include "wf-option-wrap.hpp"
 
 class CssFromConfig
 {
@@ -12,6 +12,14 @@ class CssFromConfig
 
     void add_provider();
     void remove_provider();
+};
+
+class CssFromConfigDouble : public CssFromConfig
+{
+    WfOption<double> option_value;
+
+  public:
+    CssFromConfigDouble(std::string config_opt, std::string css_before, std::string css_after);
 };
 
 class CssFromConfigBool : public CssFromConfig

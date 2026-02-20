@@ -1,4 +1,5 @@
 #include "dock.hpp"
+#include "giomm/application.h"
 #include "toplevel.hpp"
 #include "toplevel-icon.hpp"
 #include <iostream>
@@ -148,7 +149,18 @@ void WfDockApp::create(int argc, char **argv)
     }
 
     instance = std::unique_ptr<WfDockApp>{new WfDockApp()};
+    instance->init_app();
     instance->run(argc, argv);
+}
+
+std::string WfDockApp::get_application_name()
+{
+    return "org.wayfire.dock";
+}
+
+Gio::Application::Flags WfDockApp::get_extra_application_flags()
+{
+    return Gio::Application::Flags::NON_UNIQUE;
 }
 
 WfDockApp::WfDockApp() : WayfireShellApp(), priv(new WfDockApp::impl())

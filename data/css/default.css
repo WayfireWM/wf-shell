@@ -181,6 +181,39 @@
     animation-fill-mode: forwards;
 }
 
+.wf-locker .password{
+    padding: 10px;
+    border-radius: 10px;
+    background: #0004;
+}
+.wf-locker .fingerprint-overlay-image {
+    -gtk-icon-size: 64px;
+}
+.wf-locker .fingerprint-overlay-image.good {
+    color: #0f0;
+}
+.wf-locker .fingerprint-overlay-image.bad {
+    color: #f00;
+}
+.wf-locker .fingerprint-overlay-image.info {
+    color: #88f;
+}
+.wf-locker .mpris image.albumart {
+    -gtk-icon-size:96px;
+}
+.wf-locker .user image{
+    -gtk-icon-size:96px;
+}
+.wf-locker image.weather {
+    -gtk-icon-size:80px;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-bottom: 25px;
+}
+.wf-locker label.weather {
+    padding-left: 25px;
+}
+
 @keyframes embiggen {
     to {
         -gtk-icon-size: 64px;
