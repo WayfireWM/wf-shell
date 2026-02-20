@@ -30,12 +30,12 @@ void WayfireWeather::init(Gtk::Box *container)
 
 bool WayfireWeather::handle_inotify_event(Glib::IOCondition cond)
 {
-	if (cond == Glib::IOCondition::IO_HUP)
-	{
+    if (cond == Glib::IOCondition::IO_HUP)
+    {
         return false;
     }
 
-	char buf[1024 * sizeof(inotify_event)];
+    char buf[1024 * sizeof(inotify_event)];
     read(inotify_fd, buf, sizeof(buf));
 
     update_weather();
@@ -45,7 +45,6 @@ bool WayfireWeather::handle_inotify_event(Glib::IOCondition cond)
 
 void WayfireWeather::update_weather()
 {
-
     std::ifstream input_file(weather_data_path);
 
     if (!input_file)
