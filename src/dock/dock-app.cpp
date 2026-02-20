@@ -45,6 +45,14 @@ class WfDockApp::impl
     zwlr_foreign_toplevel_manager_v1 *toplevel_manager = NULL;
 };
 
+void WfDockApp::on_config_reload()
+{
+    for (auto& d : priv->docks)
+    {
+        d.second->handle_config_reload();
+    }
+}
+
 void WfDockApp::on_activate()
 {
     WayfireShellApp::on_activate();

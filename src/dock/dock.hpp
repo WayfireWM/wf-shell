@@ -14,6 +14,7 @@ class WfDock
     WfDock(WayfireOutput *output);
     ~WfDock();
 
+    void handle_config_reload();
     void add_child(Gtk::Widget& widget);
     void rem_child(Gtk::Widget& widget);
 
@@ -34,13 +35,13 @@ class WfDockApp : public WayfireShellApp
 
     static WfDockApp& get();
 
-    /* Starts the program. get() is valid afterward the first (and the only)
-     * call to run() */
+    /* Starts the program. get() is valid afterward the first (and the only) call to run() */
     static void create(int argc, char **argv);
     virtual ~WfDockApp();
     std::string get_application_name() override;
     Gio::Application::Flags get_extra_application_flags() override;
 
+    void on_config_reload() override;
     void on_activate() override;
     void handle_new_output(WayfireOutput *output) override;
     void handle_output_removed(WayfireOutput *output) override;

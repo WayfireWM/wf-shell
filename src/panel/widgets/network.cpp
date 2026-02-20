@@ -398,9 +398,9 @@ bool WayfireNetworkInfo::setup_dbus()
 
 void WayfireNetworkInfo::on_click()
 {
-    if ((std::string)click_command_opt != "default")
+    if (click_command_opt.value() != "default")
     {
-        Glib::spawn_command_line_async((std::string)click_command_opt);
+        Glib::spawn_command_line_async(click_command_opt.value());
     } else
     {
         info->spawn_control_center(nm_proxy);
@@ -440,8 +440,23 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     handle_config_reload();
 }
 
+void WayfireNetworkInfo::update_layout()
+{
+    WfOption<std::string> panel_position{"panel/position"};
+
+    if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
+    {
+        button_content.set_orientation(Gtk::Orientation::VERTICAL);
+    } else
+    {
+        button_content.set_orientation(Gtk::Orientation::HORIZONTAL);
+    }
+}
+
 void WayfireNetworkInfo::handle_config_reload()
 {
+    update_layout();
+
     if (status_opt.value() == NETWORK_STATUS_ICON)
     {
         if (status.get_parent())
