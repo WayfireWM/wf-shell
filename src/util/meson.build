@@ -17,6 +17,7 @@ util = static_library(
         'network/modem.cpp',
         'network/settings.cpp',
         'network/connection.cpp',
+        'background-gl.cpp',
     ],
     dependencies: [
         wf_protos,
@@ -26,7 +27,6 @@ util = static_library(
         wfconfig,
         libinotify,
         json,
-        'background-gl.cpp',
     ],
 )
 
