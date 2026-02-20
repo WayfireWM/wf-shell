@@ -362,7 +362,7 @@
 			<value>bottom-right</value>
 			<_name>Bottom Right</_name>
 		</desc>
-		<default>top-center</default>
+		<default>bottom-right</default>
 	</option>
 	<option name="clock_always" type="bool">
 	    <_short>Always show</_short>
