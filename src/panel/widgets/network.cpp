@@ -92,6 +92,7 @@ void WayfireNetworkInfo::set_connection(std::shared_ptr<Network> network)
     }
 
     status.set_label(network->get_name());
+    button->set_tooltip_text(network->get_name());
     icon.set_from_icon_name(network->get_icon_symbolic());
 }
 
