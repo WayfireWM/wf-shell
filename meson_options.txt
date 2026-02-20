@@ -5,10 +5,10 @@ option(
     description: 'Build pulseaudio volume widget',
 )
 option(
-    'wireplumber',
+    'pipewire',
     type: 'feature',
     value: 'auto',
-    description: 'Build wireplumber and mixer widget',
+    description: 'Build wireplumber mixer widget',
 )
 option(
     'wayland-logout',

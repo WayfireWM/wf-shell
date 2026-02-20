@@ -51,9 +51,9 @@ if wireplumber.found()
     'widgets/wp-mixer/wp-common.cpp',
     'widgets/volume-level.cpp',
   ]
-  deps += wireplumber
+  deps += [pipewire, wireplumber]
 else
-  message('Wireplumber not found, mixer widget will not be available.')
+  message('Pipewire/Wireplumber not found, mixer widget will not be available.')
 endif
 
 executable(
