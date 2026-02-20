@@ -64,14 +64,14 @@ void WayfireLockerWeatherPlugin::remove_output(int id, std::shared_ptr<WayfireLo
     weather_widgets.erase(id);
 }
 
-bool WayfireWeather::handle_inotify_event(Glib::IOCondition cond)
+bool WayfireLockerWeatherPlugin::handle_inotify_event(Glib::IOCondition cond)
 {
-	if (cond == Glib::IOCondition::IO_HUP)
-	{
+    if (cond == Glib::IOCondition::IO_HUP)
+    {
         return false;
     }
 
-	char buf[1024 * sizeof(inotify_event)];
+    char buf[1024 * sizeof(inotify_event)];
     read(inotify_fd, buf, sizeof(buf));
 
     update_weather();
@@ -132,7 +132,7 @@ void WayfireLockerWeatherPlugin::init()
         IN_CLOSE_WRITE);
 
     inotify_connection = Glib::signal_io().connect(
-        sigc::mem_fun(*this, &WayfireWeather::handle_inotify_event),
+        sigc::mem_fun(*this, &WayfireLockerWeatherPlugin::handle_inotify_event),
         inotify_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
 
     update_weather();
