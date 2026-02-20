@@ -5,6 +5,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
 
+#include "giomm/application.h"
 #include "css-config.hpp"
 #include "giomm/application.h"
 #include "wf-shell-app.hpp"
