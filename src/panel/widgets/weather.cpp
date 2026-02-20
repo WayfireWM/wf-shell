@@ -1,3 +1,4 @@
+#include <sys/inotify.h>
 #include <iostream>
 #include <fstream>
 #include <glibmm.h>
@@ -12,51 +13,68 @@ void WayfireWeather::init(Gtk::Box *container)
     box.append(icon);
     container->append(box);
 
-    update_weather();
+    weather_data_path = std::string(getenv("HOME")) + "/.local/share/owf/data/data.json";
 
-    timeout = Glib::signal_timeout().connect_seconds(
-        sigc::mem_fun(*this, &WayfireWeather::update_weather), 600);
+    inotify_fd = inotify_init();
+
+    inotify_add_watch(inotify_fd,
+        weather_data_path.c_str(),
+        IN_CLOSE_WRITE);
+
+    inotify_connection = Glib::signal_io().connect(
+        sigc::mem_fun(*this, &WayfireWeather::handle_inotify_event),
+        inotify_fd, Glib::IOCondition::IO_IN | Glib::IOCondition::IO_HUP);
+
+    update_weather();
 }
 
-bool WayfireWeather::update_weather()
+bool WayfireWeather::handle_inotify_event(Glib::IOCondition cond)
 {
-    std::string weather_data_dir;
-
-    weather_data_dir = std::string(getenv("HOME")) + "/.local/share/owf/data";
-
-    std::string file_path = weather_data_dir + "/data.json";
-
-    std::ifstream input_file(file_path);
-
-    if (!input_file)
-    {
-        std::cerr << "Error reading json file " << file_path << std::endl;
+	if (cond == Glib::IOCondition::IO_HUP)
+	{
         return false;
     }
 
-    std::stringstream buf;
-    buf << input_file.rdbuf();
+	char buf[1024 * sizeof(inotify_event)];
+    read(inotify_fd, buf, sizeof(buf));
+
+    update_weather();
+
+    return true;
+}
+
+void WayfireWeather::update_weather()
+{
+
+    std::ifstream input_file(weather_data_path);
+
+    if (!input_file)
+    {
+        std::cerr << "Error reading json file " << weather_data_path << std::endl;
+        return;
+    }
+
+    std::stringstream buffer;
+    buffer << input_file.rdbuf();
 
     wf::json_t json_data;
 
-    auto err = wf::json_t::parse_string(buf.str(), json_data);
+    auto err = wf::json_t::parse_string(buffer.str(), json_data);
 
     if (err.has_value())
     {
-        std::cerr << "Error parsing json data " << file_path << ": " << *err << std::endl;
-        return false;
+        std::cerr << "Error parsing json data " << weather_data_path << ": " << *err << std::endl;
+        return;
     }
 
     if (!json_data.has_member("temp") || !json_data.has_member("icon"))
     {
-        std::cerr << "Unexpected weather json data in " << file_path << std::endl;
-        return false;
+        std::cerr << "Unexpected weather json data in " << weather_data_path << std::endl;
+        return;
     }
 
     update_label(json_data["temp"]);
     update_icon(json_data["icon"]);
-
-    return true;
 }
 
 void WayfireWeather::update_label(std::string temperature)
@@ -71,5 +89,6 @@ void WayfireWeather::update_icon(std::string path)
 
 WayfireWeather::~WayfireWeather()
 {
-    timeout.disconnect();
+    inotify_connection.disconnect();
+    close(inotify_fd);
 }

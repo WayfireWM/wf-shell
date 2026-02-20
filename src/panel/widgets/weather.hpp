@@ -11,11 +11,14 @@ class WayfireWeather : public WayfireWidget
     Gtk::Image icon;
     Gtk::Box box;
 
-    sigc::connection timeout;
+    int inotify_fd;
+    sigc::connection inotify_connection;
+    std::string weather_data_path;
 
   public:
     void init(Gtk::Box *container) override;
-    bool update_weather();
+    bool handle_inotify_event(Glib::IOCondition cond);
+    void update_weather();
     void update_label(std::string);
     void update_icon(std::string);
     ~WayfireWeather();
