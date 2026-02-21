@@ -58,22 +58,19 @@ class WfMenuMenuItem : public Gtk::FlowBoxChild
 
   private:
     WayfireMenu *menu;
-    Gtk::Box m_left_pad, m_right_pad;
-    Gtk::Box m_padding_box;
-    Gtk::Box m_button_box;
-    Gtk::Button m_button;
-    Gtk::Box m_list_box;
-    Gtk::Image m_image;
-    Gtk::Label m_label;
+    Gtk::Box box;
+    Gtk::Image image;
+    Gtk::Label label;
+    Gtk::Overlay overlay; // only for the grid mode, not list
     Glib::RefPtr<Gio::Menu> m_menu;
-    Glib::RefPtr<Gio::SimpleActionGroup> m_actions;
-    Gtk::MenuButton m_extra_actions_button;
+    Glib::RefPtr<Gio::SimpleActionGroup> actions;
+    Gtk::MenuButton extra_actions_button;
     std::vector<sigc::connection> signals;
 
-    bool m_has_actions = false;
-    uint32_t m_search_value = 0;
+    bool has_actions = false;
+    uint32_t search_value = 0;
 
-    AppInfo m_app_info;
+    AppInfo app_info;
 };
 
 class WayfireLogoutUIButton

@@ -526,6 +526,7 @@ void WayfirePanelApp::on_activate()
     {
         {"panel/minimal_height", ""},
         {"panel/menu_icon_size", ".menu-icon"},
+        {"panel/menu_item_icon_size", ".menu-item-icon "},
         {"panel/launchers_size", ".launcher"},
         {"panel/battery_icon_size", ".battery image"},
         {"panel/network_icon_size", ".network"},
