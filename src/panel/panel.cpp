@@ -411,6 +411,8 @@ class WayfirePanelApp::impl
 {
   public:
     std::map<WayfireOutput*, std::unique_ptr<WayfirePanel>> panels;
+    std::map<std::string, WayfireOutput*> outputs;
+    WfOption<std::string> *panel_outputs;
 };
 
 void WayfirePanelApp::on_config_reload()
@@ -424,6 +426,91 @@ void WayfirePanelApp::on_config_reload()
 void WayfirePanelApp::on_activate()
 {
     WayfireShellApp::on_activate();
+
+    priv->panel_outputs->set_callback([=] ()
+    {
+        /* First case: Add a panel for each output that does not have one,
+         * because an '*' character was found in the panel_outputs string */
+        if (std::string(*priv->panel_outputs).find("*") != std::string::npos)
+        {
+            for (auto& o : priv->outputs)
+            {
+                bool panel_exists = false;
+                for (auto& p : priv->panels)
+                {
+                    if (p.first->monitor->get_connector() == o.first)
+                    {
+                        panel_exists = true;
+                        break;
+                    }
+                }
+
+                if (!panel_exists)
+                {
+                    std::cout << "Adding panel for output: " << o.first << std::endl;
+                    priv->panels[o.second] = std::unique_ptr<WayfirePanel>(
+                        new WayfirePanel(o.second));
+
+                    priv->panels[o.second]->handle_config_reload();
+                    priv->panels[o.second]->set_panel_app(this);
+                    priv->panels[o.second]->init_widgets();
+                }
+            }
+
+            return;
+        }
+
+        /* Second case: Add a panel for each output in the panel_outputs string,
+         * removing panels that are not found in the string */
+        for (auto& o : priv->outputs)
+        {
+            bool panel_exists = false;
+            for (auto& p : priv->panels)
+            {
+                if (p.first->monitor->get_connector() == o.first)
+                {
+                    panel_exists = true;
+                    break;
+                }
+            }
+
+            if (std::string(*priv->panel_outputs).find(o.first) != std::string::npos)
+            {
+                if (!panel_exists)
+                {
+                    std::cout << "Adding panel for output: " << o.first << std::endl;
+                    priv->panels[o.second] = std::unique_ptr<WayfirePanel>(
+                        new WayfirePanel(o.second));
+
+                    priv->panels[o.second]->handle_config_reload();
+                    priv->panels[o.second]->set_panel_app(this);
+                    priv->panels[o.second]->init_widgets();
+                }
+            } else
+            {
+                std::cout << "Removing panel from output: " << o.first << std::endl;
+                priv->panels.erase(o.second);
+            }
+        }
+    });
+
+    if (priv->panels.empty())
+    {
+        std::cout << std::endl <<
+            "WARNING: wf-panel outputs option did not match any outputs, " \
+            "so none were created. Set the [panel] outputs option to * " \
+            "wildcard character in wf-shell configuariton file to match " \
+            "all outputs, or set one or more of the following detected outputs:" <<
+            std::endl << std::endl;
+
+        for (auto& o : priv->outputs)
+        {
+            std::cout << o.first << std::endl;
+        }
+
+        std::cout << std::endl << "Currently the [panel] outputs option is set to: " <<
+            std::string(*priv->panel_outputs) << std::endl;
+    }
 
     const static std::vector<std::pair<std::string, std::string>> icon_sizes_args =
     {
@@ -466,8 +553,15 @@ std::shared_ptr<WayfireIPC> WayfirePanelApp::get_ipc_server_instance()
 
 void WayfirePanelApp::handle_new_output(WayfireOutput *output)
 {
-    priv->panels[output] = std::unique_ptr<WayfirePanel>(
-        new WayfirePanel(output));
+    priv->panel_outputs = new WfOption<std::string>{"panel/outputs"};
+    priv->outputs[output->monitor->get_connector()] = output;
+    if ((std::string(*priv->panel_outputs).find("*") != std::string::npos) ||
+        (std::string(*priv->panel_outputs).find(output->monitor->get_connector()) != std::string::npos))
+    {
+        std::cout << "Adding panel for output: " << output->monitor->get_connector() << std::endl;
+        priv->panels[output] = std::unique_ptr<WayfirePanel>(
+            new WayfirePanel(output));
+    }
 }
 
 WayfirePanel*WayfirePanelApp::panel_for_wl_output(wl_output *output)
@@ -486,6 +580,7 @@ WayfirePanel*WayfirePanelApp::panel_for_wl_output(wl_output *output)
 void WayfirePanelApp::handle_output_removed(WayfireOutput *output)
 {
     priv->panels.erase(output);
+    priv->outputs.erase(output->monitor->get_connector());
 }
 
 WayfirePanelApp& WayfirePanelApp::get()
