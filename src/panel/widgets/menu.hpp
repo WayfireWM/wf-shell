@@ -6,6 +6,8 @@
 #include <set>
 
 #include "../widget.hpp"
+#include "gtkmm/enums.h"
+#include "gtkmm/orientable.h"
 #include "wf-popover.hpp"
 
 class WayfireMenu;
@@ -43,15 +45,15 @@ class WfMenuCategoryButton : public Gtk::Button
     void on_click();
 };
 
-class WfMenuMenuItem : public Gtk::FlowBoxChild
+class WfMenuItem : public Gtk::FlowBoxChild
 {
   public:
-    WfMenuMenuItem(WayfireMenu *menu, AppInfo app);
-    ~WfMenuMenuItem();
+    WfMenuItem(WayfireMenu *menu, AppInfo app);
+    ~WfMenuItem();
 
     uint32_t matches(Glib::ustring text);
     uint32_t fuzzy_match(Glib::ustring text);
-    bool operator <(const WfMenuMenuItem& other);
+    bool operator <(const WfMenuItem& other);
     void set_search_value(uint32_t value);
     uint32_t get_search_value();
     void on_click();
@@ -61,9 +63,9 @@ class WfMenuMenuItem : public Gtk::FlowBoxChild
     Gtk::Box box;
     Gtk::Image image;
     Gtk::Label label;
-    Gtk::Overlay overlay; // only for the grid mode, not list
     Glib::RefPtr<Gio::Menu> m_menu;
     Glib::RefPtr<Gio::SimpleActionGroup> actions;
+    Gtk::Button button;
     Gtk::MenuButton extra_actions_button;
     std::vector<sigc::connection> signals;
 
