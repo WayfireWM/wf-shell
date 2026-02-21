@@ -40,10 +40,11 @@ layer = top
 # Possible values are only "top" and "bottom"
 position = top
 
-# set the background color.
+# set the background color
 background_color = gtk_headerbar # match the color of a GtkHeaderbar
-#background_color = \#555f # Hex color (4 or 8 Bytes), for example \#ffff or \#ffffffff for white
-#background_color = 0.033 0.041 0.047 0.9 # RGBA color, 1.0 0.0 0.0 0.5 for semi-transparent red
+#background_color = rgba(10, 50, 100, 0.7) #cool blue; 70% opacity (30% transparent)
+#background_color = \#00FF0066  #bright green; 40% opacity (60% transparent)
+background_color = rgba(0, 0, 0, 0.6)  #black; 60% opacity
 
 
 # Configuration for the launchers widget
