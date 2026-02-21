@@ -112,13 +112,13 @@ std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string p
     /* Expand path */
     if (wordexp(path.c_str(), &exp, 0))
     {
-        std::cout << "Error getting list of images" << std::endl;
+        perror("Error getting list of images: wordexp");
         exit(0);
     }
 
     if (!exp.we_wordc)
     {
-        std::cout << "Error getting list of images" << std::endl;
+        perror("Error getting list of images: !exp.we_wordc");
         exit(0);
     }
 
@@ -137,7 +137,7 @@ std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string p
     auto dir = opendir(exp.we_wordv[0]);
     if (!dir)
     {
-        std::cout << "Error getting list of images" << std::endl;
+        perror("Error getting list of images: !dir");
         exit(0);
     }
 
