@@ -673,8 +673,9 @@ void WayfireMenu::update_popover_layout()
         flowbox.set_max_children_per_line(1);
     } else
     {
-        flowbox.set_max_children_per_line(9999);
+        flowbox.set_max_children_per_line(0);
     }
+
 
     if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {
@@ -902,6 +903,7 @@ void WayfireMenu::init(Gtk::Box *container)
 
     // configuration reloading callbacks
     menu_icon.set_callback([=] () { update_icon(); });
+    flowbox_spacing.set_callback([=] () { flowbox.set_column_spacing(flowbox_spacing.value()); flowbox.set_column_spacing(flowbox_spacing.value());});
     menu_min_category_width.set_callback([=] () { update_category_width(); });
     menu_min_content_height.set_callback([=] () { update_content_height(); });
     menu_min_content_width.set_callback([=] () { update_content_width(); });
