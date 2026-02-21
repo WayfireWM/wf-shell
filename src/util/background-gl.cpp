@@ -260,7 +260,7 @@ void BackgroundGLArea::show_image(std::shared_ptr<BackgroundImage> next_image)
     width  = to_image->source->get_width();
     height = to_image->source->get_height();
     glBindTexture(GL_TEXTURE_2D, to_image->tex_id);
-    auto format = to_image->source->get_has_alpha() ? GL_RGBA : GL_RGB;
+    auto format = (to_image->source->get_n_channels() == 3) ? GL_RGB : GL_RGBA;
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE,
         to_image->source->get_pixels());
     glBindTexture(GL_TEXTURE_2D, 0);
