@@ -20,6 +20,9 @@
 #include "widgets/language.hpp"
 #include "widgets/menu.hpp"
 #include "widgets/clock.hpp"
+#ifdef HAVE_WEATHER
+    #include "widgets/weather.hpp"
+#endif
 #include "widgets/launchers.hpp"
 #include "widgets/network.hpp"
 #include "widgets/spacing.hpp"
@@ -90,7 +93,6 @@ class WayfirePanel::impl
         gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
 
         window->present();
-        init_widgets();
         init_layout();
     }
 
@@ -150,6 +152,13 @@ class WayfirePanel::impl
             return Widget(new WayfireClock());
         }
 
+#ifdef HAVE_WEATHER
+        if (name == "weather")
+        {
+            return Widget(new WayfireWeather());
+        }
+
+#endif
         if (name == "network")
         {
             return Widget(new WayfireNetworkInfo());
@@ -202,7 +211,7 @@ class WayfirePanel::impl
 
         if (name == "language")
         {
-            if (WayfireIPC::get_instance()->connected)
+            if (get_ipc_server_instance()->connected)
             {
                 return Widget(new WayfireLanguage());
             } else
@@ -215,7 +224,7 @@ class WayfirePanel::impl
 
         if (name == "workspace-switcher")
         {
-            if (WayfireIPC::get_instance()->connected)
+            if (get_ipc_server_instance()->connected)
             {
                 return Widget(new WayfireWorkspaceSwitcher(output));
             } else
@@ -298,32 +307,6 @@ class WayfirePanel::impl
     WfOption<std::string> left_widgets_opt{"panel/widgets_left"};
     WfOption<std::string> right_widgets_opt{"panel/widgets_right"};
     WfOption<std::string> center_widgets_opt{"panel/widgets_center"};
-    void init_widgets()
-    {
-        left_widgets_opt.set_callback([=] ()
-        {
-            reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
-        });
-        right_widgets_opt.set_callback([=] ()
-        {
-            reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
-        });
-        center_widgets_opt.set_callback([=] ()
-        {
-            reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
-            if (center_box.get_children().empty())
-            {
-                content_box.unset_center_widget();
-            } else
-            {
-                content_box.set_center_widget(center_box);
-            }
-        });
-
-        reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
-        reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
-        reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
-    }
 
   public:
     impl(WayfireOutput *output) : output(output)
@@ -358,6 +341,44 @@ class WayfirePanel::impl
             w->handle_config_reload();
         }
     }
+
+    WayfirePanelApp *panel_app;
+    void set_panel_app(WayfirePanelApp *panel_app)
+    {
+        this->panel_app = panel_app;
+    }
+
+    void init_widgets()
+    {
+        left_widgets_opt.set_callback([=] ()
+        {
+            reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
+        });
+        right_widgets_opt.set_callback([=] ()
+        {
+            reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
+        });
+        center_widgets_opt.set_callback([=] ()
+        {
+            reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+            if (center_box.get_children().empty())
+            {
+                content_box.unset_center_widget();
+            } else
+            {
+                content_box.set_center_widget(center_box);
+            }
+        });
+
+        reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
+        reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
+        reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+    }
+
+    std::shared_ptr<WayfireIPC> get_ipc_server_instance()
+    {
+        return panel_app->get_ipc_server_instance();
+    }
 };
 
 WayfirePanel::WayfirePanel(WayfireOutput *output) : pimpl(new impl(output))
@@ -375,7 +396,17 @@ Gtk::Window& WayfirePanel::get_window()
 
 void WayfirePanel::handle_config_reload()
 {
-    return pimpl->handle_config_reload();
+    pimpl->handle_config_reload();
+}
+
+void WayfirePanel::init_widgets()
+{
+    pimpl->init_widgets();
+}
+
+void WayfirePanel::set_panel_app(WayfirePanelApp *panel_app)
+{
+    pimpl->set_panel_app(panel_app);
 }
 
 class WayfirePanelApp::impl
@@ -420,6 +451,19 @@ void WayfirePanelApp::on_activate()
 
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");
+    new CssFromConfigFont("panel/weather_font", ".weather {", "}");
+
+    ipc_server = WayfireIPC::get_instance();
+    for (auto& p : priv->panels)
+    {
+        p.second->set_panel_app(this);
+        p.second->init_widgets();
+    }
+}
+
+std::shared_ptr<WayfireIPC> WayfirePanelApp::get_ipc_server_instance()
+{
+    return ipc_server;
 }
 
 void WayfirePanelApp::handle_new_output(WayfireOutput *output)

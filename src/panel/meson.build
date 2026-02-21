@@ -42,7 +42,7 @@ if libpulse.found()
   ]
   deps += [libpulse, libgvc]
 else
-  message('Pulse not found, volume widget will not be available.')
+  message('Pulseaudio not found, volume widget will not be available.')
 endif
 
 if wireplumber.found()
@@ -52,9 +52,17 @@ if wireplumber.found()
     'widgets/wp-mixer/wp-common.cpp',
     'widgets/volume-level.cpp',
   ]
-  deps += wireplumber
+  deps += [pipewire, wireplumber]
 else
-  message('Wireplumber not found, mixer widget will not be available.')
+  message('Pipewire/Wireplumber not found, mixer widget will not be available.')
+endif
+
+if get_option('weather') == true
+  widget_sources += [
+    'widgets/weather.cpp',
+  ]
+else
+  message('Weather disabled, weather widgets and owf service not included.')
 endif
 
 executable(

@@ -30,7 +30,9 @@
 #include "plugin/pin.hpp"
 #include "plugin/fingerprint.hpp"
 #include "plugin/user.hpp"
-#include "plugin/volume.hpp"
+#ifdef HAVE_PULSE
+    #include "plugin/volume.hpp"
+#endif
 #include "plugin/mpris.hpp"
 #include "plugin/network.hpp"
 #include "wf-option-wrap.hpp"
@@ -168,7 +170,9 @@ void WayfireLockerApp::on_activate()
     plugins.emplace("instant", (Plugin(new WayfireLockerInstantPlugin())));
     plugins.emplace("pin", Plugin(new WayfireLockerPinPlugin()));
     plugins.emplace("fingerprint", Plugin(new WayfireLockerFingerprintPlugin()));
+#ifdef HAVE_PULSE
     plugins.emplace("volume", Plugin(new WayfireLockerVolumePlugin()));
+#endif
     plugins.emplace("mpris", Plugin(new WayfireLockerMPRISPlugin()));
     plugins.emplace("aboutuser", Plugin(new WayfireLockerUserPlugin()));
     plugins.emplace("network", Plugin(new WayfireLockerNetworkPlugin()));

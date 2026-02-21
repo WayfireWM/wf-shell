@@ -1,14 +1,14 @@
 option(
-    'pulse',
+    'volume-widget',
     type: 'feature',
     value: 'auto',
     description: 'Build pulseaudio volume widget',
 )
 option(
-    'wireplumber',
+    'wp-mixer-widget',
     type: 'feature',
     value: 'auto',
-    description: 'Build wireplumber and mixer widget',
+    description: 'Build wireplumber mixer widget',
 )
 option(
     'wayland-logout',

@@ -14,14 +14,25 @@
 
 #include "language.hpp"
 #include "wf-ipc.hpp"
+#include "panel.hpp"
 
 void WayfireLanguage::init(Gtk::Box *container)
 {
+    ipc_client = WayfirePanelApp::get().get_ipc_server_instance()->create_client();
+
+    if (!ipc_client)
+    {
+        std::cerr << "Failed to connect to ipc. (are ipc and ipc-rules plugins loaded?)";
+        return;
+    }
+
     button.add_css_class("language");
     button.add_css_class("flat");
     button.remove_css_class("activated");
     btn_sig = button.signal_clicked().connect(sigc::mem_fun(*this, &WayfireLanguage::next_layout));
     button.show();
+
+    container->append(button);
 
     ipc_client->subscribe(this, {"keyboard-modifier-state-changed"});
     ipc_client->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (wf::json_t data)
@@ -36,8 +47,6 @@ void WayfireLanguage::init(Gtk::Box *container)
         set_available(data["possible-layouts"]);
         set_current(data["layout-index"]);
     });
-
-    container->append(button);
 }
 
 void WayfireLanguage::on_event(wf::json_t data)
@@ -123,12 +132,14 @@ void WayfireLanguage::next_layout()
 }
 
 WayfireLanguage::WayfireLanguage()
-{
-    ipc_client = WayfireIPC::get_instance()->create_client();
-}
+{}
 
 WayfireLanguage::~WayfireLanguage()
 {
-    ipc_client->unsubscribe(this);
+    if (ipc_client)
+    {
+        ipc_client->unsubscribe(this);
+    }
+
     btn_sig.disconnect();
 }

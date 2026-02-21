@@ -41,6 +41,18 @@
     padding-left: 0px;
 }
 
+.wf-panel .weather image {
+    -gtk-icon-size: 25px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-bottom: 4px;
+}
+
+.wf-panel .weather label {
+    font-weight: bold;
+    font-size: 20px;
+}
+
 .wf-panel .network label {
     padding-left: 6px;
 }
@@ -95,20 +107,19 @@
 
 .wf-panel .workspace-switcher .workspace .view {
     background-color: #0000AA77;
-    border: 1px solid #222
+    border: 1px solid #222;
 }
 
 .wf-panel .workspace-switcher .workspace .view.active {
     background-color: #FF00AA77;
-    border: 1px solid #222
+    border: 1px solid #222;
 }
 
 .wf-panel .workspace-switcher .workspace .view.inactive {
     background-color: #00FFAA77;
-    border: 1px solid #222
-} 
-.excellent>label
-{
+    border: 1px solid #222;
+}
+.excellent>label {
     color: #00ff00;
 }
 
@@ -247,19 +258,32 @@
 .wf-locker .mpris image.albumart {
     -gtk-icon-size:96px;
 }
-
-.wf-locker .user image{
-    -gtk-icon-size:96px;
+.wf-locker .user label {
+    font-size: 70px;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+.wf-locker .user image {
+    -gtk-icon-size:256px;
 }
 .wf-locker image.weather {
-    -gtk-icon-size:80px;
+    -gtk-icon-size:128px;
     padding-left: 25px;
     padding-right: 25px;
-    padding-bottom: 25px;
+    padding-bottom: 100px;
 }
 
 .wf-locker label.weather {
-    padding-left: 25px;
+    font-size: 128px;
+    font-weight: bold;
+    padding-left: 100px;
+    padding-bottom: 75px;
+}
+.wf-locker label.clock {
+    font-size: 128px;
+    font-weight: bold;
+    padding-right: 100px;
+    padding-bottom: 75px;
 }
 
 @keyframes embiggen {
