@@ -16,15 +16,12 @@ class WayfireBackground : public Gtk::Window
   private:
     void setup_window();
     WayfireOutput *output;
-    WfOption<bool> inhibit_start{"background/blank"};
-    bool inhibited = false;
 
   public:
     WayfireBackground(WayfireOutput *output);
 
     ~WayfireBackground();
     Glib::RefPtr<BackgroundGLArea> gl_area;
-    void uninhibit();
 };
 
 class WayfireBackgroundApp : public WayfireShellApp

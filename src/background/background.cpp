@@ -43,22 +43,7 @@ WayfireBackground::WayfireBackground(WayfireOutput *output)
 {
     this->output = output;
 
-    if (output->output && inhibit_start)
-    {
-        this->inhibited = true;
-        zwf_output_v2_inhibit_output(output->output);
-    }
-
     setup_window();
-}
-
-void WayfireBackground::uninhibit()
-{
-    if (inhibited && output->output)
-    {
-        zwf_output_v2_inhibit_output_done(output->output);
-        inhibited = false;
-    }
 }
 
 WayfireBackground::~WayfireBackground()
@@ -212,8 +197,6 @@ void WayfireBackgroundApp::change_background()
     for (auto & it : backgrounds)
     {
         it.second->gl_area->show_image(list[idx]);
-
-        it.second->uninhibit();
     }
 
     write_cache(list[idx]);
