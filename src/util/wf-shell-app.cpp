@@ -297,6 +297,11 @@ Gio::Application::Flags WayfireShellApp::get_extra_application_flags()
     return Gio::Application::Flags::NONE;
 }
 
+std::vector<std::unique_ptr<WayfireOutput>>*WayfireShellApp::get_wayfire_outputs()
+{
+    return &monitors;
+}
+
 WayfireShellApp::WayfireShellApp()
 {}
 

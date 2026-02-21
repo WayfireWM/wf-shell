@@ -45,6 +45,7 @@ class WayfirePanelApp : public WayfireShellApp
     void on_activate() override;
     void handle_new_output(WayfireOutput *output) override;
     void handle_output_removed(WayfireOutput *output) override;
+    bool panel_allowed_by_config(bool allowed, std::string output_name);
     void on_config_reload() override;
     void reload_css();
     std::shared_ptr<WayfireIPC> get_ipc_server_instance();
