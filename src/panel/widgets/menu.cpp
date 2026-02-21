@@ -62,8 +62,6 @@ void WfMenuCategoryButton::on_click()
 WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app) :
     Gtk::FlowBoxChild(), menu(_menu), app_info(app)
 {
-    add_css_class("app-button");
-
     image.set((const Glib::RefPtr<const Gio::Icon>&)app->get_icon());
 
     label.set_text(app->get_name());
@@ -79,7 +77,7 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     box.set_expand(false);
     box.add_css_class("flat");
     box.add_css_class("widget-icon");
-    box.add_css_class("app-button-icon");
+    box.add_css_class("app-button");
 
     set_child(box);
 
