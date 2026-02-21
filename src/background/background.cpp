@@ -169,6 +169,7 @@ std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string p
     }
 
     wordfree(&exp);
+    closedir(dir);
 
     bool background_randomize = WfOption<bool>{"background/randomize"};
     if (background_randomize && images.size())
