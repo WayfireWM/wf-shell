@@ -176,11 +176,6 @@ Gtk::Widget*WayfireWindowList::get_widget_at(int x)
     return nullptr;
 }
 
-void WayfireWindowList::add_output(WayfireOutput *output)
-{
-    std::unique_ptr<WayfireWindowList>();
-}
-
 void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager)
 {
     this->manager = manager;
