@@ -32,7 +32,6 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     wayfire_config *get_config();
 
     void init(Gtk::Box *container) override;
-    void add_output(WayfireOutput *output);
 
     /**
      * Set the widget which should always be rendered on top of the other child
