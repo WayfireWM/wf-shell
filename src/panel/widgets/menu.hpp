@@ -122,8 +122,6 @@ class WayfireMenu : public WayfireWidget
 {
     WayfireOutput *output;
 
-    std::string search_contents = "";
-
     Gtk::Box flowbox_container;
     Gtk::Box box, box_bottom, scroll_pair;
     Gtk::Box bottom_pad;
