@@ -313,6 +313,12 @@ void WayfireIPC::unsubscribe(IIPCSubscriber *subscriber)
 
 std::shared_ptr<IPCClient> WayfireIPC::create_client()
 {
+    if (!connected)
+    {
+        std::cerr << "Failed to create ipc client" << std::endl;
+        return nullptr;
+    }
+
     auto client = new IPCClient(next_client_id, shared_from_this());
     clients[next_client_id++] = client;
 

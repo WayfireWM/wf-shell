@@ -4,10 +4,19 @@
 
 #include <wf-option-wrap.hpp>
 
+#include "panel.hpp"
 #include "workspace-switcher.hpp"
 
 void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
 {
+    ipc_client = WayfirePanelApp::get().get_ipc_server_instance()->create_client();
+
+    if (!ipc_client)
+    {
+        std::cerr << "Failed to connect to ipc. (are ipc and ipc-rules plugins loaded?)";
+        return;
+    }
+
     box.add_css_class("workspace-switcher");
     box.add_css_class("flat");
 
@@ -901,13 +910,16 @@ void WayfireWorkspaceSwitcher::grid_on_event(wf::json_t data)
 WayfireWorkspaceSwitcher::WayfireWorkspaceSwitcher(WayfireOutput *output)
 {
     this->output_name = output->monitor->get_connector();
-    ipc_client = WayfireIPC::get_instance()->create_client();
     switcher_box.set_vexpand(false);
     switcher_box.set_valign(Gtk::Align::CENTER);
 }
 
 WayfireWorkspaceSwitcher::~WayfireWorkspaceSwitcher()
 {
-    ipc_client->unsubscribe(this);
+    if (ipc_client)
+    {
+        ipc_client->unsubscribe(this);
+    }
+
     clear_box();
 }
