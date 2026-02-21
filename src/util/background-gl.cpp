@@ -259,8 +259,9 @@ void BackgroundGLArea::show_image(std::shared_ptr<BackgroundImage> next_image)
     to_image->generate_adjustments(window_width, window_height);
     width  = to_image->source->get_width();
     height = to_image->source->get_height();
+    auto format = (to_image->source->get_n_channels() == 3) ? GL_RGB : GL_RGBA;
     glBindTexture(GL_TEXTURE_2D, to_image->tex_id);
-    auto format = to_image->source->get_has_alpha() ? GL_RGBA : GL_RGB;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE,
         to_image->source->get_pixels());
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -280,8 +281,8 @@ static GLuint create_texture()
 
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
