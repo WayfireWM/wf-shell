@@ -594,6 +594,12 @@ void WayfireMenu::setup_popover_layout()
 
     search_entry.add_css_class("app-search");
 
+    signals.push_back((search_entry.signal_changed().connect(
+        [this] ()
+        {
+            on_search_changed();
+        }
+    )));
     auto typing_gesture = Gtk::EventControllerKey::create();
     typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
     signals.push_back(typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
@@ -620,7 +626,6 @@ void WayfireMenu::setup_popover_layout()
             return false;
         } else if (search_entry.has_focus())
         {
-            on_search_changed();
             return false;
         } else
         {
