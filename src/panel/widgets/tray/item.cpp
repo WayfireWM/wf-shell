@@ -119,8 +119,8 @@ void StatusNotifierItem::init_widget()
         const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({0, 0});
 
         const int primary_click   = 1;
-        const int secondary_click = menu_on_middle_click ? 2 : 3;
-        const int tertiary_click  = menu_on_middle_click ? 3 : 2;
+        const int secondary_click = menu_on_middle_click.value() ? 2 : 3;
+        const int tertiary_click  = menu_on_middle_click.value() ? 3 : 2;
         if (butt == primary_click)
         {
             if (get_item_property<bool>("ItemIsMenu", true))

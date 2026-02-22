@@ -91,7 +91,7 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
     m_actions = Gio::SimpleActionGroup::create();
     m_extra_actions_button.hide();
 
-    if (menu->menu_list)
+    if (menu->menu_list.value())
     {
         m_padding_box.append(m_extra_actions_button);
         this->set_size_request(menu->menu_min_content_width, 48);
@@ -451,7 +451,7 @@ void WayfireMenu::on_search_changed()
             /* Text has been unset, show categories again */
             populate_menu_items(category);
             category_scrolled_window.show();
-            app_scrolled_window.set_min_content_width(int(menu_min_content_width));
+            app_scrolled_window.set_min_content_width(menu_min_content_width.value());
         } else
         {
             /* User is filtering, hide categories, ignore chosen category */
@@ -549,7 +549,7 @@ void WayfireMenu::setup_popover_layout()
     flowbox.set_sort_func(sigc::mem_fun(*this, &WayfireMenu::on_sort));
     flowbox.set_filter_func(sigc::mem_fun(*this, &WayfireMenu::on_filter));
     flowbox.add_css_class("app-list");
-    flowbox.set_size_request(int(menu_min_content_width), int(menu_min_content_height));
+    flowbox.set_size_request(menu_min_content_width.value(), menu_min_content_height.value());
 
     flowbox_container.append(flowbox);
 
@@ -557,8 +557,8 @@ void WayfireMenu::setup_popover_layout()
     scroll_pair.append(app_scrolled_window);
     scroll_pair.set_homogeneous(false);
 
-    app_scrolled_window.set_min_content_width(int(menu_min_content_width));
-    app_scrolled_window.set_min_content_height(int(menu_min_content_height));
+    app_scrolled_window.set_min_content_width(menu_min_content_width.value());
+    app_scrolled_window.set_min_content_height(menu_min_content_height.value());
     app_scrolled_window.set_child(flowbox_container);
     app_scrolled_window.add_css_class("app-list-scroll");
     app_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
@@ -566,8 +566,8 @@ void WayfireMenu::setup_popover_layout()
     category_box.add_css_class("category-list");
     category_box.set_orientation(Gtk::Orientation::VERTICAL);
 
-    category_scrolled_window.set_min_content_width(int(menu_min_category_width));
-    category_scrolled_window.set_min_content_height(int(menu_min_content_height));
+    category_scrolled_window.set_min_content_width(menu_min_category_width.value());
+    category_scrolled_window.set_min_content_height(menu_min_content_height.value());
     category_scrolled_window.set_child(category_box);
     category_scrolled_window.add_css_class("categtory-list-scroll");
     category_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
@@ -620,22 +620,22 @@ void WayfireMenu::setup_popover_layout()
         Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
         WfOption<std::string> panel_layer{"panel/layer"};
 
-        if ((std::string)panel_layer == "overlay")
+        if (panel_layer.value() == "overlay")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
         }
 
-        if ((std::string)panel_layer == "top")
+        if (panel_layer.value() == "top")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
         }
 
-        if ((std::string)panel_layer == "bottom")
+        if (panel_layer.value() == "bottom")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
         }
 
-        if ((std::string)panel_layer == "background")
+        if (panel_layer.value() == "background")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
         }
@@ -651,7 +651,7 @@ void WayfireMenu::update_popover_layout()
     popover_layout_box.remove(separator);
     popover_layout_box.remove(box_bottom);
 
-    if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
+    if (panel_position.value() == WF_WINDOW_POSITION_TOP)
     {
         popover_layout_box.append(search_entry);
         popover_layout_box.append(scroll_pair);
@@ -674,37 +674,37 @@ void WayfireMenu::update_popover_layout()
 void WayfireLogoutUI::on_logout_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(logout_command).c_str(), NULL);
+    g_spawn_command_line_async(logout_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_reboot_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(reboot_command).c_str(), NULL);
+    g_spawn_command_line_async(reboot_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_shutdown_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(shutdown_command).c_str(), NULL);
+    g_spawn_command_line_async(shutdown_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_suspend_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(suspend_command).c_str(), NULL);
+    g_spawn_command_line_async(suspend_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_hibernate_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(hibernate_command).c_str(), NULL);
+    g_spawn_command_line_async(hibernate_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_switchuser_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(switchuser_command).c_str(), NULL);
+    g_spawn_command_line_async(switchuser_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_cancel_click()
@@ -803,9 +803,9 @@ WayfireLogoutUI::~WayfireLogoutUI()
 void WayfireMenu::on_logout_click()
 {
     button->get_popover()->hide();
-    if (!std::string(menu_logout_command).empty())
+    if (!menu_logout_command.value().empty())
     {
-        g_spawn_command_line_async(std::string(menu_logout_command).c_str(), NULL);
+        g_spawn_command_line_async(menu_logout_command.value().c_str(), NULL);
         return;
     }
 
@@ -941,18 +941,18 @@ void WayfireMenu::init(Gtk::Box *container)
 
 void WayfireMenu::update_category_width()
 {
-    category_scrolled_window.set_min_content_width(int(menu_min_category_width));
+    category_scrolled_window.set_min_content_width(menu_min_category_width.value());
 }
 
 void WayfireMenu::update_content_height()
 {
-    category_scrolled_window.set_min_content_height(int(menu_min_content_height));
-    app_scrolled_window.set_min_content_height(int(menu_min_content_height));
+    category_scrolled_window.set_min_content_height(menu_min_content_height.value());
+    app_scrolled_window.set_min_content_height(menu_min_content_height.value());
 }
 
 void WayfireMenu::update_content_width()
 {
-    app_scrolled_window.set_min_content_width(int(menu_min_content_width));
+    app_scrolled_window.set_min_content_width(menu_min_content_width.value());
 }
 
 void WayfireMenu::toggle_menu()

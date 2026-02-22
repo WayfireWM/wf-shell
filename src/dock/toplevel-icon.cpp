@@ -90,7 +90,7 @@ class WfToplevelIcon::impl
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image,
             app_id,
-            icon_height,
+            icon_height.value(),
             button.get_scale_factor());
     }
 

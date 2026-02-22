@@ -118,7 +118,7 @@ void WfDockApp::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
 {
     priv->toplevels[handle]->close();
     WfOption<bool> use_close_animations{"dock/show_close"};
-    if (use_close_animations)
+    if (use_close_animations.value())
     {
         Glib::signal_timeout().connect([=]
         {

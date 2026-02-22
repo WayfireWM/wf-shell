@@ -385,11 +385,6 @@
 	</group>
 	<group>
 	<_short>Tray</_short>
-	<option name="tray_smooth_scrolling_threshold" type="int">
-		<_short>Smooth Scrolling Threshold</_short>
-		<default>5</default>
-		<min>1</min>
-	</option>
 	<option name="tray_icon_size" type="int">
 		<_short>Default Icon Size</_short>
 		<default>0</default>

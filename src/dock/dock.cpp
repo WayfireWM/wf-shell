@@ -45,9 +45,9 @@ class WfDock::impl
 
         out_box.set_halign(Gtk::Align::CENTER);
 
-        if ((std::string)css_path != "")
+        if (css_path.value() != "")
         {
-            auto css = load_css_from_path(css_path);
+            auto css = load_css_from_path(css_path.value());
             if (css)
             {
                 auto display = Gdk::Display::get_default();

@@ -34,7 +34,7 @@ void WfWpControl::init()
     button.add_css_class("flat");
 
     scale.set_range(0.0, 1.0);
-    scale.set_size_request(slider_length, 0);
+    scale.set_size_request(slider_length.value(), 0);
 
     const gchar *name;
     // try to find a name to display
@@ -161,7 +161,7 @@ void WfWpControl::update_icons_pos()
 {
     static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
 
-    if (icons_on_left)
+    if (icons_on_left.value())
     {
         attach(label, 1, 0);
         attach(scale, 1, 1);
@@ -206,7 +206,7 @@ void WfWpControl::handle_config_reload()
     right_conn.disconnect();
     update_icons_pos();
     update_gestures();
-    scale.set_size_request(slider_length);
+    scale.set_size_request(slider_length.value());
 }
 
 // used to make a copy to the face of the widget
@@ -268,7 +268,7 @@ void WfWpControlDevice::update_icons_pos()
     WfWpControl::update_icons_pos();
     static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
 
-    if (icons_on_left)
+    if (icons_on_left.value())
     {
         attach(default_btn, 0, 0);
     } else

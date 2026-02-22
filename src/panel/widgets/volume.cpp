@@ -26,7 +26,7 @@ void WayfireVolume::check_set_popover_timeout()
     popover_timeout.disconnect();
 
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireVolume::on_popover_timeout), 0), timeout * 1000);
+        &WayfireVolume::on_popover_timeout), 0), timeout.value() * 1000);
 }
 
 void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
@@ -113,8 +113,8 @@ void WayfireVolume::on_default_sink_changed()
     /* Update the scale attributes */
     max_norm = gvc_mixer_control_get_vol_max_norm(gvc_control);
     volume_scale.set_range(0.0, max_norm);
-    volume_scale.set_increments(max_norm * scroll_sensitivity,
-        max_norm * scroll_sensitivity * 2);
+    volume_scale.set_increments(max_norm * scroll_sensitivity.value(),
+        max_norm * scroll_sensitivity.value() * 2);
 
     /* Finally, update the displayed volume. However, do not show the popup */
     set_volume(gvc_mixer_stream_get_volume(gvc_stream), VOLUME_FLAG_NO_ACTION);
@@ -150,11 +150,11 @@ void WayfireVolume::init(Gtk::Box *container)
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
         {
             // +- number of clicks.
-            change = dy * max_norm * scroll_sensitivity;
+            change = dy * max_norm * scroll_sensitivity.value();
         } else
         {
             // Number of pixels expected to have scrolled. usually in 100s
-            change = (dy / 100.0) * max_norm * scroll_sensitivity;
+            change = (dy / 100.0) * max_norm * scroll_sensitivity.value();
         }
 
         set_volume(std::clamp(volume_scale.get_target_value() - change,
@@ -178,11 +178,11 @@ void WayfireVolume::init(Gtk::Box *container)
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
         {
             // +- number of clicks.
-            change = dy * max_norm * scroll_sensitivity;
+            change = dy * max_norm * scroll_sensitivity.value();
         } else
         {
             // Number of pixels expected to have scrolled. usually in 100s
-            change = (dy / 100.0) * max_norm * scroll_sensitivity;
+            change = (dy / 100.0) * max_norm * scroll_sensitivity.value();
         }
 
         set_volume(std::clamp(volume_scale.get_target_value() - change,

@@ -287,7 +287,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         {
             // put the quick_target in the popover and show
             widget->popover->set_child(*widget->quick_target);
-            if (widget->popup_on_change && change)
+            if (widget->popup_on_change.value() && change)
             {
                 widget->popover->popup();
             }

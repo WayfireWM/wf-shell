@@ -70,15 +70,10 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     add_css_class("icon-" + icon_position);
 
     main_label.set_ellipsize(Pango::EllipsizeMode::END);
-    main_label.set_max_width_chars(max_chars_opt);
-    max_chars_opt.set_callback([=]
-    {
-        main_label.set_max_width_chars(max_chars_opt);
-    });
-    // main_label.set_alignment(Gtk::ALIGN_CENTER);
+    main_label.set_max_width_chars(max_chars_opt.value());
     max_chars_opt.set_callback([this]
     {
-        main_label.set_max_width_chars(max_chars_opt);
+        main_label.set_max_width_chars(max_chars_opt.value());
     });
 
     box.set_orientation(
@@ -102,7 +97,6 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     }
 
     set_child(box);
-    // set_relief(Gtk::RELIEF_NONE);
 
     const auto update_output = [=] ()
     {
