@@ -243,8 +243,9 @@ void WayfireWpMixer::init(Gtk::Box *container)
             return false; // no quick_target means we have nothing to change by scrolling
         }
 
-        dy = invert_scroll.value() ? dy : dy * -1; // for the same scrolling as volume widget, which we will agree it
-                                           // is more intuitive for more people
+        dy = invert_scroll.value() ? dy : dy * -1; // for the same scrolling as volume widget, which we will
+                                                   // agree it
+        // is more intuitive for more people
         double change = 0;
         const double SCROLL_MULT = 0.2; // corrects the scrolling to have the default scroll sensitivity as 1
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)

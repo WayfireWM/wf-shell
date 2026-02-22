@@ -211,7 +211,7 @@ void WayfireShellApp::on_activate()
         xmldirs, SYSCONF_DIR "/wayfire/wf-shell-defaults.ini",
         get_config_file());
 
-    inotify_fd = inotify_init();
+    inotify_fd     = inotify_init();
     inotify_css_fd = inotify_init();
     do_reload_css(this);
 
