@@ -58,7 +58,7 @@ class WfMenuItem : public Gtk::FlowBoxChild
 
   private:
     WayfireMenu *menu;
-    Gtk::Box box;
+    Gtk::Box box, list_item;
     Gtk::Image image;
     Gtk::Label label;
     Glib::RefPtr<Gio::Menu> m_menu;

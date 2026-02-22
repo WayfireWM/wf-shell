@@ -80,15 +80,53 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
 
     set_child(box);
 
+    auto left_click_g  = Gtk::GestureClick::create();
+    auto right_click_g = Gtk::GestureClick::create();
+    auto long_press_g  = Gtk::GestureLongPress::create();
+    left_click_g->set_button(1);
+    right_click_g->set_button(3);
+    long_press_g->set_touch_only(true);
+
+    signals.push_back(left_click_g->signal_pressed().connect(
+        [=] (int c, double x, double y)
+    {
+        on_click();
+        left_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
+    signals.push_back(right_click_g->signal_pressed().connect(
+        [=] (int c, double x, double y)
+    {
+        extra_actions_button.activate();
+        right_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
+    signals.push_back(long_press_g->signal_pressed().connect(
+        [=] (double x, double y)
+    {
+        extra_actions_button.activate();
+        long_press_g->set_state(Gtk::EventSequenceState::CLAIMED);
+        left_click_g->set_state(Gtk::EventSequenceState::DENIED);
+        right_click_g->set_state(Gtk::EventSequenceState::DENIED);
+    }));
+
     if (menu->menu_list.value())
     {
+
         label.set_hexpand(true);
         label.set_halign(Gtk::Align::START);
         box.set_orientation(Gtk::Orientation::HORIZONTAL);
-        box.append(image);
-        box.append(label);
         extra_actions_button.set_halign(Gtk::Align::END);
         extra_actions_button.set_icon_name("arrow-right");
+        button.add_css_class("flat");
+
+        list_item.append(image);
+        list_item.append(label);
+        button.set_child(list_item);
+
+        list_item.add_controller(left_click_g);
+        list_item.add_controller(right_click_g);
+        list_item.add_controller(long_press_g);
+
+        box.append(button);
         box.append(extra_actions_button);
     } else
     {
@@ -103,6 +141,10 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
             extra_actions_button.set_child(image);
             box.append(extra_actions_button);
         }
+
+        box.add_controller(left_click_g);
+        box.add_controller(right_click_g);
+        box.add_controller(long_press_g);
 
         box.append(label);
     }
@@ -134,6 +176,7 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     }
 
     extra_actions_button.set_menu_model(m_menu);
+    extra_actions_button.insert_action_group("app", actions);
 
     set_has_tooltip();
     signals.push_back(signal_query_tooltip().connect([=] (int x, int y, bool key_mode,
@@ -143,38 +186,6 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
         tooltip->set_text(app->get_name());
         return true;
     }, false));
-
-    auto left_click_g  = Gtk::GestureClick::create();
-    auto right_click_g = Gtk::GestureClick::create();
-    auto long_press_g  = Gtk::GestureLongPress::create();
-    left_click_g->set_button(1);
-    right_click_g->set_button(3);
-    long_press_g->set_touch_only(true);
-
-    signals.push_back(left_click_g->signal_pressed().connect(
-        [=] (int c, double x, double y)
-    {
-        on_click();
-        left_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
-    }));
-    signals.push_back(right_click_g->signal_pressed().connect(
-        [=] (int c, double x, double y)
-    {
-        extra_actions_button.activate();
-        right_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
-    }));
-    signals.push_back(long_press_g->signal_pressed().connect(
-        [=] (double x, double y)
-    {
-        extra_actions_button.activate();
-        long_press_g->set_state(Gtk::EventSequenceState::CLAIMED);
-        left_click_g->set_state(Gtk::EventSequenceState::DENIED);
-        right_click_g->set_state(Gtk::EventSequenceState::DENIED);
-    }));
-
-    box.add_controller(left_click_g);
-    box.add_controller(right_click_g);
-    box.add_controller(long_press_g);
 }
 
 WfMenuItem::~WfMenuItem()
@@ -676,7 +687,7 @@ void WayfireMenu::update_popover_layout()
         flowbox.set_max_children_per_line(1);
     } else
     {
-        flowbox.set_max_children_per_line(0);
+        flowbox.set_max_children_per_line(-1);
     }
 
     if (panel_position.value() == WF_WINDOW_POSITION_TOP)
