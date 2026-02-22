@@ -147,7 +147,7 @@ class WayfireToplevel::impl
                 }
 
                 ignore_next_click = false;
-            } else if (butt == 2)
+            } else if (butt == 2 && middle_click_close.value())
             {
                 zwlr_foreign_toplevel_handle_v1_close(handle);
             } else if (butt == 3)
