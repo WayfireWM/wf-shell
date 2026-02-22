@@ -6,8 +6,6 @@
 #include <set>
 
 #include "../widget.hpp"
-#include "gtkmm/enums.h"
-#include "gtkmm/orientable.h"
 #include "wf-popover.hpp"
 
 class WayfireMenu;
