@@ -110,7 +110,6 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
 
     if (menu->menu_list)
     {
-
         label.set_hexpand(true);
         label.set_halign(Gtk::Align::FILL);
         label.set_halign(Gtk::Align::START);
