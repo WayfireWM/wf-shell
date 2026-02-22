@@ -158,7 +158,7 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
         left_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
     }));
     signals.push_back(right_click_g->signal_pressed().connect(
-        [=] (int c,double x, double y)
+        [=] (int c, double x, double y)
     {
         extra_actions_button.activate();
         right_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
@@ -612,10 +612,10 @@ void WayfireMenu::setup_popover_layout()
         } else if (keyval == GDK_KEY_Escape)
         {
             button->get_popover()->hide();
-        } else if (keyval == GDK_KEY_Up ||
-                   keyval == GDK_KEY_Down ||
-                   keyval == GDK_KEY_Left ||
-                   keyval == GDK_KEY_Right)
+        } else if ((keyval == GDK_KEY_Up) ||
+                   (keyval == GDK_KEY_Down) ||
+                   (keyval == GDK_KEY_Left) ||
+                   (keyval == GDK_KEY_Right))
         {
             return false;
         } else if (search_entry.has_focus())
@@ -674,7 +674,6 @@ void WayfireMenu::update_popover_layout()
     {
         flowbox.set_max_children_per_line(0);
     }
-
 
     if (panel_position.value() == WF_WINDOW_POSITION_TOP)
     {
@@ -902,7 +901,11 @@ void WayfireMenu::init(Gtk::Box *container)
 
     // configuration reloading callbacks
     menu_icon.set_callback([=] () { update_icon(); });
-    flowbox_spacing.set_callback([=] () { flowbox.set_column_spacing(flowbox_spacing.value()); flowbox.set_column_spacing(flowbox_spacing.value());});
+    flowbox_spacing.set_callback([=] ()
+    {
+        flowbox.set_column_spacing(flowbox_spacing.value());
+        flowbox.set_column_spacing(flowbox_spacing.value());
+    });
     menu_min_category_width.set_callback([=] () { update_category_width(); });
     menu_min_content_height.set_callback([=] () { update_content_height(); });
     menu_min_content_width.set_callback([=] () { update_content_width(); });
