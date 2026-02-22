@@ -66,7 +66,6 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
 
     label.set_text(app->get_name());
     label.set_ellipsize(Pango::EllipsizeMode::END);
-    label.set_max_width_chars(0);
 
     extra_actions_button.add_css_class("flat");
     extra_actions_button.add_css_class("app-button-extras");
@@ -112,7 +111,12 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     {
 
         label.set_hexpand(true);
+        label.set_halign(Gtk::Align::FILL);
         label.set_halign(Gtk::Align::START);
+        label.set_xalign(0.0);
+        list_item.set_hexpand(true);
+        box.set_hexpand(true);
+        set_hexpand(true);
         box.set_orientation(Gtk::Orientation::HORIZONTAL);
         extra_actions_button.set_halign(Gtk::Align::END);
         extra_actions_button.set_icon_name("arrow-right");
@@ -130,6 +134,7 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
         box.append(extra_actions_button);
     } else
     {
+        label.set_max_width_chars(0);
         box.set_orientation(Gtk::Orientation::VERTICAL);
         if (app->list_actions().size() == 0)
         {
