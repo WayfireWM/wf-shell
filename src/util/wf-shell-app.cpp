@@ -74,8 +74,7 @@ void WayfireShellApp::on_css_reload()
     }
 
     /* Add one user file */
-    auto custom_css_config = WfOption<std::string>{"panel/css_path"};
-    std::string custom_css = custom_css_config;
+    auto custom_css = WfOption<std::string>{"panel/css_path"}.value();
     if (custom_css != "")
     {
         add_css_file(custom_css, GTK_STYLE_PROVIDER_PRIORITY_USER);

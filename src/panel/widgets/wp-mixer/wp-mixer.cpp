@@ -18,7 +18,7 @@ void WayfireWpMixer::check_set_popover_timeout()
     popover_timeout.disconnect();
 
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireWpMixer::on_popover_timeout), 0), timeout * 1000);
+        &WayfireWpMixer::on_popover_timeout), 0), timeout.value() * 1000);
 }
 
 void WayfireWpMixer::cancel_popover_timeout()
@@ -243,18 +243,18 @@ void WayfireWpMixer::init(Gtk::Box *container)
             return false; // no quick_target means we have nothing to change by scrolling
         }
 
-        dy = invert_scroll ? dy : dy * -1; // for the same scrolling as volume widget, which we will agree it
+        dy = invert_scroll.value() ? dy : dy * -1; // for the same scrolling as volume widget, which we will agree it
                                            // is more intuitive for more people
         double change = 0;
         const double SCROLL_MULT = 0.2; // corrects the scrolling to have the default scroll sensitivity as 1
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
         {
             // +- number of clicks.
-            change = (dy * scroll_sensitivity * SCROLL_MULT) / 10;
+            change = (dy * scroll_sensitivity.value() * SCROLL_MULT) / 10;
         } else
         {
             // Number of pixels expected to have scrolled. usually in 100s
-            change = (dy * scroll_sensitivity * SCROLL_MULT) / 100;
+            change = (dy * scroll_sensitivity.value() * SCROLL_MULT) / 100;
         }
 
         guint32 id = wp_proxy_get_bound_id(WP_PROXY(quick_target->object));

@@ -205,7 +205,7 @@ void BackgroundImage::generate_adjustments(int width, int height)
 bool BackgroundGLArea::show_image(std::string path)
 {
     std::shared_ptr<BackgroundImage> image = std::make_shared<BackgroundImage>();
-    std::string fill_mode = WfOption<std::string>{"background/fill_mode"};
+    std::string fill_mode = WfOption<std::string>{"background/fill_mode"}.value();
 
     image->fill_type = fill_mode;
 

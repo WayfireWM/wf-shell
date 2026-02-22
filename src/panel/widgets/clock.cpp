@@ -37,7 +37,7 @@ void WayfireClock::on_calendar_shown()
 bool WayfireClock::update_label()
 {
     auto time = Glib::DateTime::create_now_local();
-    auto text = time.format((std::string)format);
+    auto text = time.format(format.value());
 
     /* Sometimes GLib::DateTime will add leading spaces. This results in
      * unevenly balanced padding around the text, which looks quite bad.

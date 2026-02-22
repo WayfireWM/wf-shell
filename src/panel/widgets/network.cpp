@@ -286,7 +286,7 @@ void WayfireNetworkInfo::update_status()
     status.remove_css_class("good");
     status.remove_css_class("weak");
     status.remove_css_class("none");
-    if (status_color_opt)
+    if (status_color_opt.value())
     {
         status.add_css_class(info->get_strength_str());
     }
@@ -398,9 +398,9 @@ bool WayfireNetworkInfo::setup_dbus()
 
 void WayfireNetworkInfo::on_click()
 {
-    if ((std::string)click_command_opt != "default")
+    if (click_command_opt.value() != "default")
     {
-        Glib::spawn_command_line_async((std::string)click_command_opt);
+        Glib::spawn_command_line_async(click_command_opt.value());
     } else
     {
         info->spawn_control_center(nm_proxy);

@@ -77,10 +77,10 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id, bool s
     auto & widget = notification_widgets.at(id);
     box.append(*widget);
     widget->set_reveal_child();
-    if (show_popup && !dnd_enabled || (show_critical_in_dnd && (notification.hints.urgency == 2)))
+    if (show_popup && !dnd_enabled || (show_critical_in_dnd.value() && (notification.hints.urgency == 2)))
     {
         auto *popover = button->get_popover();
-        if ((timeout > 0) && (!popover_timeout.empty() || !popover->is_visible()))
+        if ((timeout.value() > 0) && (!popover_timeout.empty() || !popover->is_visible()))
         {
             popover_timeout.disconnect();
             popover_timeout = Glib::signal_timeout().connect(
@@ -91,7 +91,7 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id, bool s
                 popover_timeout.disconnect();
                 return true;
             },
-                timeout * 1000);
+                timeout.value() * 1000);
         }
 
         button->set_keyboard_interactive(false);

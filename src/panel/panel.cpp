@@ -55,22 +55,22 @@ class WayfirePanel::impl
     WfOption<std::string> panel_layer{"panel/layer"};
     std::function<void()> set_panel_layer = [=] ()
     {
-        if ((std::string)panel_layer == "overlay")
+        if (panel_layer.value() == "overlay")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
         }
 
-        if ((std::string)panel_layer == "top")
+        if (panel_layer.value() == "top")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
         }
 
-        if ((std::string)panel_layer == "bottom")
+        if (panel_layer.value() == "bottom")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
         }
 
-        if ((std::string)panel_layer == "background")
+        if (panel_layer.value() == "background")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
         }
@@ -82,7 +82,7 @@ class WayfirePanel::impl
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
 
-        window->set_default_size(0, minimal_panel_height);
+        window->set_default_size(0, minimal_panel_height.value());
         window->add_css_class("wf-panel");
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
@@ -350,15 +350,15 @@ class WayfirePanel::impl
     {
         left_widgets_opt.set_callback([=] ()
         {
-            reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
+            reload_widgets(left_widgets_opt.value(), left_widgets, left_box);
         });
         right_widgets_opt.set_callback([=] ()
         {
-            reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
+            reload_widgets(right_widgets_opt.value(), right_widgets, right_box);
         });
         center_widgets_opt.set_callback([=] ()
         {
-            reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+            reload_widgets(center_widgets_opt.value(), center_widgets, center_box);
             if (center_box.get_children().empty())
             {
                 content_box.unset_center_widget();
@@ -368,9 +368,9 @@ class WayfirePanel::impl
             }
         });
 
-        reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
-        reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
-        reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+        reload_widgets(left_widgets_opt.value(), left_widgets, left_box);
+        reload_widgets(right_widgets_opt.value(), right_widgets, right_box);
+        reload_widgets(center_widgets_opt.value(), center_widgets, center_box);
     }
 
     std::shared_ptr<WayfireIPC> get_ipc_server_instance()

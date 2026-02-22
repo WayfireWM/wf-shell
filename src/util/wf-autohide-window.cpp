@@ -208,7 +208,7 @@ void WayfireAutohidingWindow::setup_hotspot()
     }
 
     this->last_hotspot_height = get_allocated_height();
-    this->last_edge_offset    = edge_offset;
+    this->last_edge_offset    = edge_offset.value();
 
     if (this->edge_hotspot)
     {
@@ -225,7 +225,7 @@ void WayfireAutohidingWindow::setup_hotspot()
         ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP : ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
 
     this->edge_hotspot = zwf_output_v2_create_hotspot(output->output,
-        edge, edge_offset, AUTOHIDE_SHOW_DELAY);
+        edge, edge_offset.value(), AUTOHIDE_SHOW_DELAY);
 
     this->panel_hotspot = zwf_output_v2_create_hotspot(output->output,
         edge, this->get_allocated_height(), 0); // immediate
@@ -294,7 +294,7 @@ void WayfireAutohidingWindow::update_auto_exclusive_zone()
 
 void WayfireAutohidingWindow::set_auto_exclusive_zone(bool has_zone)
 {
-    if (has_zone && (output->output && autohide_opt))
+    if (has_zone && (output->output && autohide_opt.value()))
     {
         std::cerr << "WARNING: Trying to enable auto_exclusive_zone with " <<
             "autohide enabled might look jarring; preventing it." << std::endl;
@@ -467,7 +467,7 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
 
 void WayfireAutohidingWindow::setup_autohide()
 {
-    if (!output->output && autohide_opt)
+    if (!output->output && autohide_opt.value())
     {
         std::cerr << "WARNING: Attempting to enable autohide, but the " <<
             "compositor does not support zwf_shell_manager_v2; ignoring" <<
@@ -475,18 +475,18 @@ void WayfireAutohidingWindow::setup_autohide()
             std::endl;
     }
 
-    this->set_auto_exclusive_zone(!(output->output && autohide_opt));
+    this->set_auto_exclusive_zone(!(output->output && autohide_opt.value()));
     this->update_autohide();
 }
 
 void WayfireAutohidingWindow::update_autohide()
 {
-    if ((output->output && autohide_opt) == last_autohide_value)
+    if ((output->output && autohide_opt.value()) == last_autohide_value)
     {
         return;
     }
 
-    if (output->output && autohide_opt)
+    if (output->output && autohide_opt.value())
     {
         increase_autohide();
     } else
@@ -494,6 +494,6 @@ void WayfireAutohidingWindow::update_autohide()
         decrease_autohide();
     }
 
-    last_autohide_value = output->output && autohide_opt;
+    last_autohide_value = output->output && autohide_opt.value();
     setup_auto_exclusive_zone();
 }
