@@ -41,7 +41,6 @@ layer = top
 position = top
 
 # set the background color
-background_color = gtk_headerbar # match the color of a GtkHeaderbar
 #background_color = rgba(10, 50, 100, 0.7) #cool blue; 70% opacity (30% transparent)
 #background_color = \#00FF0066  #bright green; 40% opacity (60% transparent)
 background_color = rgba(0, 0, 0, 0.6)  #black; 60% opacity
