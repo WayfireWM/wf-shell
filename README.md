@@ -46,5 +46,8 @@ A full tree of the css classes is available [here](https://github.com/WayfireWM/
 
 ## Gallery
 
+Default configuration:
 ![Default look](/gallery/default.png)
+
+Past default look:
 ![Old look](/gallery/legacy.png)
