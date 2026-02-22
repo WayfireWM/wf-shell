@@ -1,5 +1,7 @@
 # wf-shell
 
+![Default look](/gallery/default.png)
+
 wf-shell is a repository which contains various components that can be used to build a fully functional desktop based around wayfire:
 - wf-panel, with widgets with various functionalities you would expect a desktop to have on quick access
 - wf-dock, to show opened windows, navigate to them, and (un)collapse them
@@ -30,7 +32,7 @@ sudo ninja -C build install
 
 ## Configuration
 
-The wf-shell components use a common config file located (by default) in `XDG_CONFIG_HOME/.config/wf-shell.ini`,
+The wf-shell components use a common config file located (by default) at `XDG_CONFIG_HOME/wf-shell.ini` (so, most often resolves to `~/.config/wf-shell.ini`, which is a fallback),
 and the configuration is hot reloaded when the configuration file changes.
 
 An example configuration can be found in the file `wf-shell.ini.example`, alongside with comments what each option does.
@@ -45,9 +47,6 @@ Find [here](/data/css/) examples of styles that can be applied to customise the 
 A full tree of the css classes is available [here](https://github.com/WayfireWM/wf-shell/wiki/Style:-overview#widget-trees).
 
 ## Gallery
-
-Default configuration:
-![Default look](/gallery/default.png)
 
 Past default look:
 ![Old look](/gallery/legacy.png)
