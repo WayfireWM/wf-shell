@@ -40,8 +40,9 @@ The GUI [WCM](https://github.com/WayfireWM/wcm) can edit the configuration and s
 
 ## Style & Theme
 
-Style and theme can be altered with CSS. Find[ [here](/data/css/) examples of styles that can be applied to customise the looks.
+Style and theme can be altered with CSS. Find [here](/data/css/) examples of styles that can be applied to customise the looks.
 
 ## Gallery
 
-![Panel & Background demo](/screenshot.png)
+![Default look](/gallery/default.png)
+![Old look](/gallery/legacy.png)
