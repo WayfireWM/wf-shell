@@ -212,7 +212,6 @@ void WayfireShellApp::on_activate()
         get_config_file());
 
     inotify_fd = inotify_init();
-    do_reload_config(this);
     inotify_css_fd = inotify_init();
     do_reload_css(this);
 
