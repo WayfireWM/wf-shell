@@ -481,6 +481,11 @@ void WayfireAutohidingWindow::setup_autohide()
 
 void WayfireAutohidingWindow::update_autohide()
 {
+    if (!autohide_opt)
+    {
+        schedule_show(0);
+    }
+
     if ((output->output && autohide_opt) == last_autohide_value)
     {
         return;
