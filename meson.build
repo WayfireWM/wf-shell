@@ -20,7 +20,10 @@ wayland_protos = dependency('wayland-protocols')
 gtkmm = dependency('gtkmm-4.0', version: '>=4.12')
 wfconfig = dependency('wf-config', version: '>=0.7.0') #TODO fallback submodule
 epoxy = dependency('epoxy')
-gtklayershell = dependency('gtk4-layer-shell-0', fallback: ['gtk4-layer-shell'])
+gtklayershell = dependency('gtk4-layer-shell-0', version: '>=1.3.0', required: false)
+if not gtklayershell.found()
+    gtklayershell = dependency('gtk4-layer-shell', fallback: ['gtk4-layer-shell'])
+endif
 libpulse = dependency('libpulse', required: get_option('volume-widget'))
 libgvc = subproject('gvc', default_options: ['static=true'], required: get_option('volume-widget'))
 pipewire = dependency('libpipewire-0.3', required: get_option('wp-mixer-widget'))
