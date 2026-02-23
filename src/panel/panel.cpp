@@ -371,6 +371,14 @@ class WayfirePanel::impl
         reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
         reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
         reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+
+        if (center_box.get_children().empty())
+        {
+            content_box.unset_center_widget();
+        } else
+        {
+            content_box.set_center_widget(center_box);
+        }
     }
 
     std::shared_ptr<WayfireIPC> get_ipc_server_instance()
