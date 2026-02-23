@@ -339,6 +339,8 @@ WayfireLockerFingerprintPluginWidget::WayfireLockerFingerprintPluginWidget(std::
     label.set_label(label_contents);
     overlay.set_child(image_print);
     overlay.add_overlay(image_overlay);
+    overlay.set_hexpand(false);
+    overlay.set_halign(Gtk::Align::CENTER);
     image_overlay.set_halign(Gtk::Align::END);
     image_overlay.set_valign(Gtk::Align::END);
 

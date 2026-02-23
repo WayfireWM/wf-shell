@@ -64,7 +64,9 @@ void WayfireLockerApp::perform_lock()
     {
         if (!m_is_locked)
         {
-            on_monitor_present(nullptr);
+            auto display  = Gdk::Display::get_default();
+            auto monitors = display->get_monitors();
+            on_monitor_present(std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(0))->gobj());
         }
     } else
     {
@@ -144,21 +146,31 @@ void WayfireLockerApp::on_activate()
     alternative_monitors = true; /* Don't use WayfireShellApp monitor tracking, we get a different set */
     new CssFromConfigString("locker/background_color", ".wf-locker {background-color:", ";}");
     new CssFromConfigFont("locker/clock_font", ".wf-locker .clock {", "}");
-    new CssFromConfigFont("locker/weather_font", ".wf-locker .weather {", "}");
-    new CssFromConfigFont("locker/user_font", ".wf-locker .user {", "}");
+    new CssFromConfigFont("locker/weather_font", ".wf-locker label.weather {", "}");
+    new CssFromConfigFont("locker/user_font", ".wf-locker .user label {", "}");
     new CssFromConfigFont("locker/pin_pad_font", ".wf-locker .pinpad-button {", "}");
     new CssFromConfigFont("locker/pin_reply_font", ".wf-locker .pinpad-current {", "}");
     new CssFromConfigFont("locker/fingerprint_font", ".wf-locker .fingerprint-text {", "}");
     new CssFromConfigFont("locker/battery_percent_font", ".wf-locker .battery-percent {", "}");
     new CssFromConfigFont("locker/battery_description_font", ".wf-locker .battery-description {", "}");
     new CssFromConfigFont("locker/instant_unlock_font", ".wf-locker .instant-unlock {", "}");
-    new CssFromConfigInt("locker/battery_icon_size", ".wf-locker .battery-image {-gtk-icon-size:", "px;}");
-    new CssFromConfigInt("locker/fingerprint_icon_size", ".wf-locker .fingerprint-icon {-gtk-icon-size:",
-        "px;}");
+    new CssFromConfigFont("locker/network_font", ".wf-locker .network {", "}");
+    new CssFromConfigFont("locker/mpris_font", ".wf-locker .mpris label {", "}");
+
+    new CssFromConfigDouble("locker/user_icon_size", ".wf-locker .user image { -gtk-icon-size:", "em;}");
+    new CssFromConfigDouble("locker/mpris_icon_size", ".wf-locker .mpris .albumart {-gtk-icon-size:",
+        "em;}");
+    new CssFromConfigDouble("locker/weather_icon_size", ".wf-locker image.weather {-gtk-icon-size:", "em;}");
+    new CssFromConfigDouble("locker/battery_icon_size", ".wf-locker .battery-image {-gtk-icon-size:", "em;}");
+    new CssFromConfigDouble("locker/fingerprint_icon_size", ".wf-locker .fingerprint-icon {-gtk-icon-size:",
+        "em;}");
+    new CssFromConfigDouble("locker/fingerprint_overlay_icon_size",
+        ".wf-locker .fingerprint-overlay-image {-gtk-icon-size:",
+        "em;}");
     new CssFromConfigDouble("locker/prewake", ".fade-in {animation-name: slowfade;animation-duration: ",
         "s; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards;} @keyframes slowfade { from {opacity:0; background: #0000;} to {opacity:1;}}");
-    new CssFromConfigFont("locker/network_font", ".wf-locker .network {", "}");
-    new CssFromConfigInt("locker/network_icon_size", ".wf-locker .network {-gtk-icon-size:", "px;}");
+    new CssFromConfigDouble("locker/network_icon_size", ".wf-locker .network {-gtk-icon-size:", "em;}");
+    new CssFromConfigDouble("locker/volume_icon_size", ".wf-locker .volume button {-gtk-icon-size:", "em;}");
 
     /* Init plugins */
     plugins.emplace("clock", Plugin(new WayfireLockerClockPlugin()));
@@ -275,6 +287,7 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     /* Create lockscreen with a grid for contents */
     window_list.emplace(id, new WayfireLockerAppLockscreen(background_path));
     auto window = window_list[id];
+    window->add_css_class("wf-locker-" + std::string(gdk_monitor_get_connector(monitor)));
 
     for (auto& it : plugins)
     {
