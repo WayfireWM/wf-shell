@@ -442,23 +442,16 @@ bool WayfirePanelApp::panel_allowed_by_config(bool allowed, std::string output_n
 
 void WayfirePanelApp::update_panels()
 {
-    /* First case: Panel exists on the output but is not allowed by config: Remove panel */
     for (auto& o : *get_wayfire_outputs())
     {
         auto output = o.get();
         auto output_name = o->monitor->get_connector();
+
         if (panel_allowed_by_config(false, output_name))
         {
             std::cout << "Removing panel from output: " << output_name << std::endl;
             priv->panels.erase(output);
         }
-    }
-
-    /* Second case: Panel does not exist for the output but is allowed by config: Add panel */
-    for (auto& o : *get_wayfire_outputs())
-    {
-        auto output = o.get();
-        auto output_name = o->monitor->get_connector();
 
         const auto it = std::find_if(priv->panels.begin(), priv->panels.end(),
             [&output_name] (const auto& panel)
