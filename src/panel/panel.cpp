@@ -440,48 +440,68 @@ bool WayfirePanelApp::panel_allowed_by_config(bool allowed, std::string output_n
     }
 }
 
+void WayfirePanelApp::update_panels()
+{
+    /* First case: Panel exists on the output but is not allowed by config: Remove panel */
+    for (auto& o : *get_wayfire_outputs())
+    {
+        auto output = o.get();
+        auto output_name = o->monitor->get_connector();
+        if (panel_allowed_by_config(false, output_name))
+        {
+            std::cout << "Removing panel from output: " << output_name << std::endl;
+            priv->panels.erase(output);
+        }
+    }
+
+    /* Second case: Panel does not exist for the output but is allowed by config: Add panel */
+    for (auto& o : *get_wayfire_outputs())
+    {
+        auto output = o.get();
+        auto output_name = o->monitor->get_connector();
+
+        const auto it = std::find_if(priv->panels.begin(), priv->panels.end(),
+            [&output_name] (const auto& panel)
+        {
+            return panel.first->monitor->get_connector() == output_name;
+        });
+
+        if ((it == priv->panels.end()) && panel_allowed_by_config(true, output_name))
+        {
+            std::cout << "Adding panel for output: " << output_name << std::endl;
+            priv->panels[output] = std::unique_ptr<WayfirePanel>(
+                new WayfirePanel(output));
+
+            if (ipc_server)
+            {
+                priv->panels[output]->handle_config_reload();
+                priv->panels[output]->set_panel_app(this);
+                priv->panels[output]->init_widgets();
+            }
+        }
+    }
+}
+
 void WayfirePanelApp::on_activate()
 {
     WayfireShellApp::on_activate();
 
     priv->panel_outputs->set_callback([=] ()
     {
-        /* First case: Panel exists on the output but is not allowed by config: Remove panel */
-        for (auto& o : *get_wayfire_outputs())
-        {
-            auto output = o.get();
-            auto output_name = o->monitor->get_connector();
-            if (panel_allowed_by_config(false, output_name))
-            {
-                std::cout << "Removing panel from output: " << output_name << std::endl;
-                priv->panels.erase(output);
-            }
-        }
-
-        /* Second case: Panel does not exist for the output but is allowed by config: Add panel */
-        for (auto& o : *get_wayfire_outputs())
-        {
-            auto output = o.get();
-            auto output_name = o->monitor->get_connector();
-
-            const auto it = std::find_if(priv->panels.begin(), priv->panels.end(),
-                [&output_name] (const auto& panel)
-            {
-                return panel.first->monitor->get_connector() == output_name;
-            });
-
-            if ((it == priv->panels.end()) && panel_allowed_by_config(true, output_name))
-            {
-                std::cout << "Adding panel for output: " << output_name << std::endl;
-                priv->panels[output] = std::unique_ptr<WayfirePanel>(
-                    new WayfirePanel(output));
-
-                priv->panels[output]->handle_config_reload();
-                priv->panels[output]->set_panel_app(this);
-                priv->panels[output]->init_widgets();
-            }
-        }
+        update_panels();
     });
+
+    if (!ipc_server)
+    {
+        ipc_server = WayfireIPC::get_instance();
+    }
+
+    for (auto& p : priv->panels)
+    {
+        p.second->handle_config_reload();
+        p.second->set_panel_app(this);
+        p.second->init_widgets();
+    }
 
     if (priv->panels.empty())
     {
@@ -526,13 +546,6 @@ void WayfirePanelApp::on_activate()
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");
     new CssFromConfigFont("panel/weather_font", ".weather {", "}");
-
-    ipc_server = WayfireIPC::get_instance();
-    for (auto& p : priv->panels)
-    {
-        p.second->set_panel_app(this);
-        p.second->init_widgets();
-    }
 }
 
 std::shared_ptr<WayfireIPC> WayfirePanelApp::get_ipc_server_instance()
@@ -542,12 +555,7 @@ std::shared_ptr<WayfireIPC> WayfirePanelApp::get_ipc_server_instance()
 
 void WayfirePanelApp::handle_new_output(WayfireOutput *output)
 {
-    if (panel_allowed_by_config(true, output->monitor->get_connector()))
-    {
-        std::cout << "Adding panel for output: " << output->monitor->get_connector() << std::endl;
-        priv->panels[output] = std::unique_ptr<WayfirePanel>(
-            new WayfirePanel(output));
-    }
+    update_panels();
 }
 
 WayfirePanel*WayfirePanelApp::panel_for_wl_output(wl_output *output)
