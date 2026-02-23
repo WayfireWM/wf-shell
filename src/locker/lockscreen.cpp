@@ -77,6 +77,33 @@ WayfireLockerAppLockscreen::WayfireLockerAppLockscreen(std::string background_pa
         window_activity();
         return false;
     }, false));
+
+    /* Resize cb*/
+    signals.push_back(background.signal_resize().connect([this] (int width, int height)
+    {
+        int size = std::max(get_width(), get_height());
+        remove_css_class("sized-480");
+        remove_css_class("sized-720");
+        remove_css_class("sized-1080");
+        remove_css_class("sized-1440");
+        remove_css_class("sized-2160");
+        if (size <= 480)
+        {
+            add_css_class("sized-480");
+        } else if (size <= 720)
+        {
+            add_css_class("sized-720");
+        } else if (size <= 1080)
+        {
+            add_css_class("sized-1080");
+        } else if (size <= 1440)
+        {
+            add_css_class("sized-1440");
+        } else
+        {
+            add_css_class("sized-2160");
+        }
+    }));
     add_controller(typing_gesture);
 }
 

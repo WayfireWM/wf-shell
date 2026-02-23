@@ -186,11 +186,11 @@
 	</option>
 	<option name="pin_pad_font" type="string">
 		<_short>Pin Pad Font</_short>
-		<default>32pt default</default>
+		<default>2em default</default>
 	</option>
 	<option name="pin_reply_font" type="string">
 		<_short>Pin Reply Font</_short>
-		<default>20pt default</default>
+		<default>2em default</default>
 	</option>
 	<option name="pin_always" type="bool">
 	    <_short>Always show</_short>
@@ -245,11 +245,19 @@
 	</option>
 	<option name="fingerprint_font" type="string">
 		<_short>Fingerprint Reply Font</_short>
-		<default>default</default>
+		<default>2em default</default>
 	</option>
-	<option name="fingerprint_icon_size" type="int">
+	<option name="fingerprint_icon_size" type="double">
 		<_short>Fingerprint Icon Size</_short>
-		<default>128</default>
+		<default>10</default>
+		<min>0.5</min>
+		<max>20</max>
+	</option>
+	<option name="fingerprint_overlay_icon_size" type="double">
+		<_short>Fingerprint Overlay Icon Size</_short>
+		<default>7</default>
+		<min>0.5</min>
+		<max>20</max>
 	</option>
 	<option name="fingerprint_always" type="bool">
 	    <_short>Always show</_short>
@@ -307,12 +315,13 @@
 	</option>
 	<option name="network_font" type="string">
 		<_short>Clock Font</_short>
-		<default>20pt default</default>
+		<default>2em default</default>
 	</option>
-	<option name="network_icon_size" type="int">
+	<option name="network_icon_size" type="double">
 		<_short>Icon Size</_short>
-		<default>48</default>
-		<min>16</min>
+		<default>1</default>
+		<min>0.1</min>
+		<max>10.0</max>
 	</option>
 	</group>
 	<group>
@@ -362,7 +371,7 @@
 			<value>bottom-right</value>
 			<_name>Bottom Right</_name>
 		</desc>
-		<default>bottom-right</default>
+		<default>top-center</default>
 	</option>
 	<option name="clock_always" type="bool">
 	    <_short>Always show</_short>
@@ -370,7 +379,7 @@
 	</option>
 	<option name="clock_font" type="string">
 		<_short>Clock Font</_short>
-		<default>32pt default</default>
+		<default>3em default</default>
 	</option>
 	</group>
 	<group>
@@ -420,7 +429,13 @@
 	</option>
 	<option name="weather_font" type="string">
 		<_short>Weather Font</_short>
-		<default>64pt default</default>
+		<default>4em default</default>
+	</option>
+	<option name="weather_icon_size" type="double">
+		<_short>Icon Size</_short>
+		<default>5.0</default>
+		<min>0.5</min>
+		<max>10</max>
 	</option>
 	<option name="weather_always" type="bool">
 	    <_short>Always show</_short>
@@ -474,7 +489,13 @@
 	</option>
 	<option name="user_font" type="string">
 		<_short>Font</_short>
-		<default>16pt default</default>
+		<default>3em default</default>
+	</option>
+	<option name="user_icon_size" type="double">
+		<_short>Icon Size</_short>
+		<default>10.0</default>
+		<min>0.5</min>
+		<max>20</max>
 	</option>
 	<option name="user_always" type="bool">
 	    <_short>Always show</_short>
@@ -545,6 +566,16 @@
 	    <_short>Always show</_short>
 		<default>false</default>
 	</option>
+	<option name="mpris_icon_size" type="double">
+		<_short>Album art size</_short>
+		<default>5.0</default>
+		<min>0.5</min>
+		<max>20</max>
+	</option>
+	<option name="mpris_font" type="string">
+		<_short>Font</_short>
+		<default>1em default</default>
+	</option>
 	</group>
 	<group>
 	<_short>Battery</_short>
@@ -609,16 +640,17 @@
 	</option>
 	<option name="battery_percent_font" type="string">
 		<_short>Percent Font</_short>
-		<default>32pt default</default>
+		<default>3em default</default>
 	</option>
 	<option name="battery_description_font" type="string">
 		<_short>Description Font</_short>
-		<default>10pt default</default>
+		<default>0em default</default>
 	</option>
-	<option name="battery_icon_size" type="int">
+	<option name="battery_icon_size" type="double">
 		<_short>Icon Size</_short>
-		<default>96</default>
-		<min>16</min>
+		<default>3</default>
+		<min>0.5</min>
+		<max>10</max>
 	</option>
 	<option name="battery_always" type="bool">
 	    <_short>Always show</_short>
@@ -673,6 +705,12 @@
 	<option name="volume_always" type="bool">
 	    <_short>Always show</_short>
 		<default>false</default>
+	</option>
+	<option name="volume_icon_size" type="double">
+		<_short>Button size</_short>
+		<default>2.0</default>
+		<min>0.5</min>
+		<max>10.0</max>
 	</option>
 	</group>
 	<group>
