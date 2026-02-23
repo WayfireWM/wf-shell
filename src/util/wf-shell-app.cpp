@@ -249,12 +249,16 @@ void WayfireShellApp::on_activate()
 
 void WayfireShellApp::output_list_updated(const int pos, const int rem, const int add)
 {
-    auto display  = Gdk::Display::get_default();
-    auto monitors = display->get_monitors();
-    for (int i = 0; i < add; i++)
+    auto display     = Gdk::Display::get_default();
+    auto monitors    = display->get_monitors();
+    int num_monitors = monitors->get_n_items();
+    for (int i = 0; i < num_monitors; i++)
     {
-        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i + pos));
-        add_output(obj);
+        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+        if (obj && !obj->get_connector().empty())
+        {
+            add_output(obj);
+        }
     }
 }
 
@@ -295,6 +299,11 @@ void WayfireShellApp::rem_output(GMonitor monitor)
 Gio::Application::Flags WayfireShellApp::get_extra_application_flags()
 {
     return Gio::Application::Flags::NONE;
+}
+
+std::vector<std::unique_ptr<WayfireOutput>>*WayfireShellApp::get_wayfire_outputs()
+{
+    return &monitors;
 }
 
 WayfireShellApp::WayfireShellApp()

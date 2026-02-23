@@ -33,6 +33,11 @@
 		<_short>Autohide Duration</_short>
 		<default>300</default>
 	</option>
+	<option name="outputs" type="string">
+		<_short>Outputs on which to show a panel instance</_short>
+		<_long>A comma separated list of output names on which to show panel instances. Set to * wildcard for all outputs.</_long>
+		<default>*</default>
+	</option>
 	<option name="position" type="string">
 		<_short>Panel Position</_short>
 		<default>top</default>
