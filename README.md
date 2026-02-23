@@ -8,6 +8,22 @@ wf-shell is a repository which contains various components that can be used to b
 - wf-locker, a stylish and feature-full screen locker
 - wf-background, a simple background that can cycle through images
 
+## Configuration
+
+The wf-shell components use a common config file located (by default) at `XDG_CONFIG_HOME/wf-shell.ini` (so, most often resolves to `~/.config/wf-shell.ini`, which is a fallback),
+and the configuration is hot reloaded when the configuration file changes.
+
+An example configuration can be found in the file `wf-shell.ini.example`, alongside with comments what each option does.
+For an exhaustive breakdown of every option, check out the [github wiki](https://github.com/WayfireWM/wf-shell/wiki)
+
+The GUI [WCM](https://github.com/WayfireWM/wcm) can edit the configuration and show descriptions for the options.
+
+## Style & Theme
+
+Style and theme can be altered with CSS.
+Find [here](/data/css/) examples of styles that can be applied to customise the looks.
+A full tree of the css classes is available [here](https://github.com/WayfireWM/wf-shell/wiki/Style:-overview#widget-trees).
+
 ## Installation
 
 [![Distribution packages](https://repology.org/badge/vertical-allrepos/wf-shell.svg)](https://repology.org/project/wf-shell/versions)
@@ -29,22 +45,6 @@ meson build --prefix=/usr --buildtype=release
 ninja -C build
 sudo ninja -C build install
 ```
-
-## Configuration
-
-The wf-shell components use a common config file located (by default) at `XDG_CONFIG_HOME/wf-shell.ini` (so, most often resolves to `~/.config/wf-shell.ini`, which is a fallback),
-and the configuration is hot reloaded when the configuration file changes.
-
-An example configuration can be found in the file `wf-shell.ini.example`, alongside with comments what each option does.
-For an exhaustive breakdown of every option, check out the [github wiki](https://github.com/WayfireWM/wf-shell/wiki)
-
-The GUI [WCM](https://github.com/WayfireWM/wcm) can edit the configuration and show descriptions for the options.
-
-## Style & Theme
-
-Style and theme can be altered with CSS.
-Find [here](/data/css/) examples of styles that can be applied to customise the looks.
-A full tree of the css classes is available [here](https://github.com/WayfireWM/wf-shell/wiki/Style:-overview#widget-trees).
 
 ## Gallery
 
