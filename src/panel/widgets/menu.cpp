@@ -518,9 +518,11 @@ void WayfireMenu::on_popover_shown()
     set_category("All");
     flowbox.unselect_all();
 
-    Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
-
-    gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    if (force_show_popup.value())
+    {
+        Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
+        gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    }
 }
 
 bool WayfireMenu::update_icon()
@@ -615,8 +617,14 @@ void WayfireMenu::setup_popover_layout()
         return false;
     }, false));
     button->get_popover()->add_controller(typing_gesture);
+
     signals.push_back(button->get_popover()->signal_closed().connect([=] ()
     {
+        if (!force_show_popup.value())
+        {
+            return;
+        }
+
         Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
         WfOption<std::string> panel_layer{"panel/layer"};
 
