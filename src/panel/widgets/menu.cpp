@@ -105,7 +105,6 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
         extra_actions_button.activate();
         long_press_g->set_state(Gtk::EventSequenceState::CLAIMED);
         left_click_g->set_state(Gtk::EventSequenceState::DENIED);
-        right_click_g->set_state(Gtk::EventSequenceState::DENIED);
     }));
 
     if (menu->menu_list)
