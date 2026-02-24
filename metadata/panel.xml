@@ -127,6 +127,10 @@
 			<value>full</value>
 			<_name>Full Information</_name>
 		</desc>
+		<desc>
+			<value>percentage_overlay</value>
+			<_name>Percentage over Icon</_name>
+		</desc>
 	</option>
 	<option name="battery_icon_size" type="int">
 		<_short>Battery Icon Size</_short>
