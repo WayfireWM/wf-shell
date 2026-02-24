@@ -145,9 +145,18 @@ void WayfireBatteryInfo::update_details()
     if (status_opt.value() == BATTERY_STATUS_PERCENT)
     {
         label.set_text(percentage_string);
+        overlay.remove_overlay(label);
+        button_box.append(label);
     } else if (status_opt.value() == BATTERY_STATUS_FULL)
     {
         label.set_text(description);
+        overlay.remove_overlay(label);
+        button_box.append(label);
+    } else if (status_opt.value() == BATTERY_STATUS_OVERLAY)
+    {
+        label.set_text(percentage_string);
+        button_box.remove(label);
+        overlay.add_overlay(label);
     }
 
     if (status_opt.value() == BATTERY_STATUS_ICON)
@@ -215,7 +224,8 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
         return;
     }
 
-    button_box.append(icon);
+    button_box.append(overlay);
+    overlay.set_child(icon);
     icon.add_css_class("widget-icon");
     button.add_css_class("battery");
     button.add_css_class("flat");
