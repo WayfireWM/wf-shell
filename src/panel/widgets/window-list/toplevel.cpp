@@ -1,3 +1,4 @@
+#include <iostream>
 #include <gtkmm.h>
 #include <giomm/desktopappinfo.h>
 
@@ -7,6 +8,7 @@
 
 #include <glibmm.h>
 #include <cassert>
+#include <sys/mman.h>
 
 #include "toplevel.hpp"
 #include "window-list.hpp"
@@ -24,13 +26,174 @@ void set_image_from_icon(Gtk::Image& image,
     std::string app_id_list, int size, int scale);
 }
 
+static int create_anon_file(off_t size)
+{
+    int fd = memfd_create("wf-live-preview", MFD_CLOEXEC);
+
+    if (fd == -1)
+    {
+        perror("memfd_create");
+        return 1;
+    }
+
+    if (ftruncate(fd, size) == -1)
+    {
+        perror("ftruncate");
+        close(fd);
+        return 1;
+    }
+
+    return fd;
+}
+
+void handle_frame_buffer(void *data,
+    struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t format,
+    uint32_t width,
+    uint32_t height,
+    uint32_t stride)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    size_t size = width * height * int(stride / width);
+
+    if (tooltip_media->size != size)
+    {
+        tooltip_media->set_size_request(width, height);
+        tooltip_media->size = size;
+        auto anon_file = create_anon_file(size);
+        if (anon_file < 0)
+        {
+            perror("anon_file < 0");
+            return;
+        }
+
+        void *data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, anon_file, 0);
+        if (data == MAP_FAILED)
+        {
+            perror("data == MAP_FAILED");
+            close(anon_file);
+            return;
+        }
+
+        wl_shm_pool *pool = wl_shm_create_pool(tooltip_media->window_list->shm, anon_file, size);
+        tooltip_media->buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, format);
+        wl_shm_pool_destroy(pool);
+        close(anon_file);
+        tooltip_media->buffer_width  = width;
+        tooltip_media->buffer_height = height;
+        tooltip_media->buffer_stride = stride;
+        tooltip_media->shm_data = data;
+    }
+
+    zwlr_screencopy_frame_v1_copy(tooltip_media->frame, tooltip_media->buffer);
+}
+
+void handle_frame_flags(void*,
+    struct zwlr_screencopy_frame_v1*,
+    uint32_t)
+{}
+
+void handle_frame_ready(void *data,
+    struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t tv_sec_hi,
+    uint32_t tv_sec_lo,
+    uint32_t tv_nsec)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    auto bytes = Glib::Bytes::create(tooltip_media->shm_data, tooltip_media->size);
+
+    auto builder = Gdk::MemoryTextureBuilder::create();
+    builder->set_bytes(bytes);
+    builder->set_width(tooltip_media->buffer_width);
+    builder->set_height(tooltip_media->buffer_height);
+    builder->set_stride(tooltip_media->buffer_stride);
+    builder->set_format(Gdk::MemoryFormat::R8G8B8A8);
+
+    auto texture = builder->build();
+
+    tooltip_media->set_paintable(texture);
+}
+
+void handle_frame_failed(void*, struct zwlr_screencopy_frame_v1*)
+{}
+
+void handle_frame_damage(void*,
+    struct zwlr_screencopy_frame_v1*,
+    uint32_t,
+    uint32_t,
+    uint32_t,
+    uint32_t)
+{}
+
+void handle_frame_linux_dmabuf(void*,
+    struct zwlr_screencopy_frame_v1*,
+    uint32_t,
+    uint32_t,
+    uint32_t)
+{}
+
+void handle_frame_buffer_done(void*, struct zwlr_screencopy_frame_v1*)
+{}
+
+static struct zwlr_screencopy_frame_v1_listener screencopy_frame_listener =
+{
+    handle_frame_buffer,
+    handle_frame_flags,
+    handle_frame_ready,
+    handle_frame_failed,
+    handle_frame_damage,
+    handle_frame_linux_dmabuf,
+    handle_frame_buffer_done,
+};
+
+void TooltipMedia::request_next_frame()
+{
+    if (this->frame)
+    {
+        zwlr_screencopy_frame_v1_destroy(this->frame);
+        this->frame = NULL;
+    }
+
+    if (!window_list->wayfire_window_list_output->output)
+    {
+        return;
+    }
+
+    this->frame = zwlr_screencopy_manager_v1_capture_output(window_list->screencopy_manager, 0,
+        window_list->wayfire_window_list_output->output);
+    zwlr_screencopy_frame_v1_add_listener(this->frame, &screencopy_frame_listener, this);
+}
+
+TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
+{
+    this->window_list = window_list;
+    this->shm = window_list->shm;
+    this->screencopy_manager = window_list->screencopy_manager;
+
+    this->add_tick_callback([=] (const Glib::RefPtr<Gdk::FrameClock>& clock)
+    {
+        return this->on_tick(clock);
+    });
+}
+
+bool TooltipMedia::on_tick(const Glib::RefPtr<Gdk::FrameClock>& clock)
+{
+    this->request_next_frame();
+    return G_SOURCE_CONTINUE;
+}
+
 class WayfireToplevel::impl
 {
     zwlr_foreign_toplevel_handle_v1 *handle, *parent;
     std::vector<zwlr_foreign_toplevel_handle_v1*> children;
     uint32_t state;
+    uint64_t view_id;
 
     Gtk::Button button;
+    Gtk::Box custom_tooltip_content;
+    TooltipMedia *tooltip_media;
     Glib::RefPtr<Gio::SimpleActionGroup> actions;
 
     Gtk::PopoverMenu popover;
@@ -55,6 +218,15 @@ class WayfireToplevel::impl
 
     impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle)
     {
+        std::cout << "impl" << std::endl;
+        window_list->ipc_client = WayfirePanelApp::get().get_ipc_server_instance()->create_client();
+
+        if (!window_list->ipc_client)
+        {
+            std::cerr <<
+                "Failed to connect to ipc. Live window previews will not be available. (are ipc and ipc-rules plugins loaded?)";
+        }
+
         this->handle = handle;
         this->parent = nullptr;
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
@@ -69,7 +241,17 @@ class WayfireToplevel::impl
         button_contents.set_hexpand(true);
         button_contents.set_spacing(5);
         button.set_child(button_contents);
-        button.set_tooltip_text("none");
+        // button.set_tooltip_text("none");
+        tooltip_media = Gtk::make_managed<TooltipMedia>(window_list);
+        this->custom_tooltip_content.append(*tooltip_media);
+        // button.set_hover_point(0, 0);
+        // button.set_hover_timeout(0);
+        button.signal_query_tooltip().connect([=] (int x, int y, bool keyboard_mode,
+                                                   const Glib::RefPtr<Gtk::Tooltip>& tooltip)
+        {
+            return query_tooltip(x, y, keyboard_mode, tooltip);
+        }, false);
+        button.set_has_tooltip(true);
 
         label.set_ellipsize(Pango::EllipsizeMode::END);
         label.set_hexpand(true);
@@ -155,8 +337,24 @@ class WayfireToplevel::impl
                 popover.popup();
             }
         }));
+        auto motion_controller = Gtk::EventControllerMotion::create();
+        motion_controller->signal_leave().connect([=] ()
+        {
+            wf::json_t live_window_release_output_request;
+            live_window_release_output_request["method"] = "live_previews/release_output";
+            this->window_list->ipc_client->send(live_window_release_output_request.serialize(),
+                [=] (wf::json_t data)
+            {
+                if (data.serialize().find("error") != std::string::npos)
+                {
+                    std::cerr << data.serialize() << std::endl;
+                    std::cerr << "Error releasing output for live preview stream!" << std::endl;
+                }
+            });
+        });
         button.add_controller(long_press);
         button.add_controller(click_gesture);
+        button.add_controller(motion_controller);
 
         this->window_list = window_list;
 
@@ -171,6 +369,7 @@ class WayfireToplevel::impl
 
     bool drag_paused()
     {
+        std::cout << __func__ << std::endl;
         /*
          *  auto gseat = Gdk::Display::get_default()->get_default_seat()->get_wl_seat();
          *  //auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
@@ -181,6 +380,7 @@ class WayfireToplevel::impl
 
     void on_drag_begin(double _x, double _y)
     {
+        std::cout << __func__ << std::endl;
         // Set grab start, before transforming it to absolute position
         grab_start_x = _x;
         grab_start_y = _y;
@@ -202,6 +402,7 @@ class WayfireToplevel::impl
     static constexpr int DRAG_THRESHOLD = 3;
     void on_drag_update(double _x, double y)
     {
+        std::cout << __func__ << std::endl;
         /* Window was not just clicked, but also dragged. Ignore the next click,
          * which is the one that happens when the drag gesture ends. */
         set_ignore_next_click();
@@ -245,6 +446,7 @@ class WayfireToplevel::impl
 
     void on_drag_end(double _x, double _y)
     {
+        std::cout << __func__ << std::endl;
         int x     = _x + grab_start_x;
         int y     = _y + grab_start_y;
         int width = button.get_allocated_width();
@@ -278,6 +480,7 @@ class WayfireToplevel::impl
 
     void set_hide_text(bool hide_text)
     {
+        std::cout << __func__ << std::endl;
         if (hide_text)
         {
             label.hide();
@@ -289,6 +492,7 @@ class WayfireToplevel::impl
 
     void on_menu_minimize(Glib::VariantBase vb)
     {
+        std::cout << __func__ << std::endl;
         bool val = g_variant_get_boolean(vb.gobj());
         send_rectangle_hint();
         if (!val)
@@ -302,6 +506,7 @@ class WayfireToplevel::impl
 
     void on_menu_maximize(Glib::VariantBase vb)
     {
+        std::cout << __func__ << std::endl;
         bool val = g_variant_get_boolean(vb.gobj());
         if (!val)
         {
@@ -314,12 +519,14 @@ class WayfireToplevel::impl
 
     void on_menu_close(Glib::VariantBase vb)
     {
+        std::cout << __func__ << std::endl;
         zwlr_foreign_toplevel_handle_v1_close(handle);
     }
 
     bool ignore_next_click = false;
     void set_ignore_next_click()
     {
+        std::cout << __func__ << std::endl;
         ignore_next_click = true;
 
         /* Make sure that the view doesn't show clicked on animations while
@@ -330,6 +537,7 @@ class WayfireToplevel::impl
 
     void unset_ignore_next_click()
     {
+        std::cout << __func__ << std::endl;
         ignore_next_click = false;
         button.unset_state_flags(Gtk::StateFlags::SELECTED |
             Gtk::StateFlags::DROP_ACTIVE | Gtk::StateFlags::PRELIGHT);
@@ -337,6 +545,7 @@ class WayfireToplevel::impl
 
     void on_clicked()
     {
+        std::cout << __func__ << std::endl;
         /* If the button was dragged, we don't want to register the click.
          * Subsequent clicks should be handled though. */
         if (ignore_next_click)
@@ -375,19 +584,89 @@ class WayfireToplevel::impl
 
     void on_scale_update()
     {
+        std::cout << __func__ << std::endl;
         set_app_id(app_id);
+    }
+
+    bool query_tooltip(int x, int y, bool keyboard_mode, const Glib::RefPtr<Gtk::Tooltip>& tooltip)
+    {
+        std::cout << __func__ << std::endl;
+        if (!window_list->wayfire_window_list_output->output)
+        {
+            return false;
+        }
+
+        if (this->popover.is_visible())
+        {
+            return false;
+        }
+
+        wf::json_t live_window_preview_stream_request;
+        live_window_preview_stream_request["method"] = "live_previews/request_stream";
+        wf::json_t view_id_int;
+        view_id_int["id"] = this->view_id;
+        live_window_preview_stream_request["data"] = view_id_int;
+        this->window_list->ipc_client->send(live_window_preview_stream_request.serialize(),
+            [=] (wf::json_t data)
+        {
+            if (data.serialize().find("error") != std::string::npos)
+            {
+                std::cerr << data.serialize() << std::endl;
+                std::cerr << "Error acquiring live preview stream. (is live-previews wayfire plugin enabled?)" << std::endl;
+            }
+        });
+
+        tooltip->set_custom(this->custom_tooltip_content);
+
+        return true;
+    }
+
+    uint64_t get_view_id_from_full_app_id(const std::string& app_id)
+    {
+        const std::string sub_str = "wf-ipc-";
+        size_t pos = app_id.find(sub_str);
+
+        if (pos != std::string::npos)
+        {
+            size_t suffix_start_index = pos + sub_str.length();
+            if (suffix_start_index < app_id.length())
+            {
+                try {
+                    uint64_t view_id = std::stoi(app_id.substr(suffix_start_index, std::string::npos));
+                    return view_id;
+                } catch (...)
+                {
+                    return 0;
+                }
+            } else
+            {
+                return 0;
+            }
+        } else
+        {
+            return 0;
+        }
     }
 
     void set_app_id(std::string app_id)
     {
+        std::cout << __func__ << std::endl;
         WfOption<int> minimal_panel_height{"panel/minimal_height"};
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image, app_id,
             std::min(int(minimal_panel_height), 24), button.get_scale_factor());
+        this->view_id = get_view_id_from_full_app_id(app_id);
+        if (this->view_id == 0)
+        {
+            std::cerr <<
+                "Failed to get view id from app_id. (Is app_id_mode set to 'full' in wayfire workarounds?)" <<
+                std::endl;
+        }
     }
 
     void send_rectangle_hints()
     {
+        std::cout << __func__ << std::endl;
         for (const auto& toplevel_button : window_list->toplevels)
         {
             if (toplevel_button.second && toplevel_button.second->pimpl)
@@ -399,6 +678,7 @@ class WayfireToplevel::impl
 
     void send_rectangle_hint()
     {
+        std::cout << __func__ << std::endl;
         auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
         auto w     = button.get_width();
         auto h     = button.get_height();
@@ -413,39 +693,46 @@ class WayfireToplevel::impl
 
     void set_title(std::string title)
     {
+        std::cout << __func__ << std::endl;
         this->title = title;
-        button.set_tooltip_text(title);
+        // button.set_tooltip_text(title);
         label.set_text(title);
     }
 
     uint32_t get_state()
     {
+        std::cout << __func__ << std::endl;
         return this->state;
     }
 
     zwlr_foreign_toplevel_handle_v1 *get_parent()
     {
+        std::cout << __func__ << std::endl;
         return this->parent;
     }
 
     void set_parent(zwlr_foreign_toplevel_handle_v1 *parent)
     {
+        std::cout << __func__ << std::endl;
         this->parent = parent;
     }
 
     std::vector<zwlr_foreign_toplevel_handle_v1*>& get_children()
     {
+        std::cout << __func__ << std::endl;
         return this->children;
     }
 
     void remove_button()
     {
+        std::cout << __func__ << std::endl;
         window_list->remove(button);
         send_rectangle_hints();
     }
 
     void set_classes(uint32_t state)
     {
+        std::cout << __func__ << std::endl;
         if (state & WF_TOPLEVEL_STATE_ACTIVATED)
         {
             button.add_css_class("activated");
@@ -479,12 +766,14 @@ class WayfireToplevel::impl
 
     void set_state(uint32_t state)
     {
+        std::cout << __func__ << std::endl;
         this->state = state;
         set_classes(state);
     }
 
     ~impl()
     {
+        std::cout << "~impl" << std::endl;
         gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
         if (m_drag_timeout)
         {
@@ -501,6 +790,7 @@ class WayfireToplevel::impl
 
     void handle_output_enter(wl_output *output)
     {
+        std::cout << __func__ << std::endl;
         if (this->parent)
         {
             return;
@@ -515,6 +805,7 @@ class WayfireToplevel::impl
 
     void handle_output_leave(wl_output *output)
     {
+        std::cout << __func__ << std::endl;
         if (window_list->output->wo == output)
         {
             window_list->remove(button);
@@ -527,47 +818,58 @@ class WayfireToplevel::impl
 WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list,
     zwlr_foreign_toplevel_handle_v1 *handle) :
     pimpl(new WayfireToplevel::impl(window_list, handle))
-{}
-
+{
+    std::cout << "WayfireToplevel::WayfireToplevel" << std::endl;
+}
 
 std::vector<zwlr_foreign_toplevel_handle_v1*>& WayfireToplevel::get_children()
 {
+    std::cout << __func__ << std::endl;
     return pimpl->get_children();
 }
 
 uint32_t WayfireToplevel::get_state()
 {
+    std::cout << __func__ << std::endl;
     return pimpl->get_state();
 }
 
 void WayfireToplevel::send_rectangle_hint()
 {
+    std::cout << __func__ << std::endl;
     return pimpl->send_rectangle_hint();
 }
 
-WayfireToplevel::~WayfireToplevel() = default;
+WayfireToplevel::~WayfireToplevel()
+{
+    std::cout << "WayfireToplevel::~WayfireToplevel" << std::endl;
+}
 
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;
 static void handle_toplevel_title(void *data, toplevel_t, const char *title)
 {
+    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->set_title(title);
 }
 
 static void handle_toplevel_app_id(void *data, toplevel_t, const char *app_id)
 {
+    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->set_app_id(app_id);
 }
 
 static void handle_toplevel_output_enter(void *data, toplevel_t, wl_output *output)
 {
+    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->handle_output_enter(output);
 }
 
 static void handle_toplevel_output_leave(void *data, toplevel_t, wl_output *output)
 {
+    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->handle_output_leave(output);
 }
@@ -579,6 +881,7 @@ static void handle_toplevel_output_leave(void *data, toplevel_t, wl_output *outp
 template<class T>
 static void array_for_each(wl_array *array, std::function<void(T)> func)
 {
+    std::cout << __func__ << std::endl;
     assert(array->size % sizeof(T) == 0); // do not use malformed arrays
     for (T *entry = (T*)array->data; (char*)entry < ((char*)array->data + array->size); entry++)
     {
@@ -588,6 +891,7 @@ static void array_for_each(wl_array *array, std::function<void(T)> func)
 
 static void handle_toplevel_state(void *data, toplevel_t, wl_array *state)
 {
+    std::cout << __func__ << std::endl;
     uint32_t flags = 0;
     array_for_each<uint32_t>(state, [&flags] (uint32_t st)
     {
@@ -613,11 +917,13 @@ static void handle_toplevel_state(void *data, toplevel_t, wl_array *state)
 
 static void handle_toplevel_done(void *data, toplevel_t)
 {
+    std::cout << __func__ << std::endl;
 // auto impl = static_cast<WayfireToplevel::impl*> (data);
 }
 
 static void remove_child_from_parent(WayfireToplevel::impl *impl, toplevel_t child)
 {
+    std::cout << __func__ << std::endl;
     auto parent = impl->get_parent();
     auto& parent_toplevel = impl->window_list->toplevels[parent];
     if (child && parent && parent_toplevel)
@@ -629,6 +935,7 @@ static void remove_child_from_parent(WayfireToplevel::impl *impl, toplevel_t chi
 
 static void handle_toplevel_closed(void *data, toplevel_t handle)
 {
+    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->remove_button();
     remove_child_from_parent(impl, handle);
@@ -637,6 +944,7 @@ static void handle_toplevel_closed(void *data, toplevel_t handle)
 
 static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t parent)
 {
+    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     if (!parent)
     {
@@ -683,6 +991,7 @@ namespace
 {
 std::string tolower(std::string str)
 {
+    std::cout << __func__ << std::endl;
     for (auto& c : str)
     {
         c = std::tolower(c);
@@ -698,6 +1007,7 @@ std::string tolower(std::string str)
  * The filename is either the app_id + ".desktop" or lower_app_id + ".desktop" */
 Icon get_from_desktop_app_info(std::string app_id)
 {
+    std::cout << __func__ << std::endl;
     Glib::RefPtr<Gio::DesktopAppInfo> app_info;
 
     std::vector<std::string> prefixes = {
@@ -743,6 +1053,7 @@ Icon get_from_desktop_app_info(std::string app_id)
 void set_image_from_icon(Gtk::Image& image,
     std::string app_id_list, int size, int scale)
 {
+    std::cout << __func__ << std::endl;
     std::string app_id;
     std::istringstream stream(app_id_list);
 

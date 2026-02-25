@@ -1,15 +1,22 @@
 #pragma once
 
-#include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 #include <gtkmm.h>
 
 #include "../../widget.hpp"
 #include "toplevel.hpp"
 #include "layout.hpp"
+#include "wf-ipc.hpp"
+
+class WayfireWindowListOutput
+{
+  public:
+    wl_output *output;
+    std::string name;
+};
 
 class WayfireToplevel;
 
-class WayfireWindowList : public Gtk::Box, public WayfireWidget
+class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubscriber
 {
     WfOption<int> user_size{"panel/window_list_size"};
     std::shared_ptr<WayfireWindowListLayout> layout;
@@ -18,12 +25,19 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     std::map<zwlr_foreign_toplevel_handle_v1*,
         std::unique_ptr<WayfireToplevel>> toplevels;
 
+    wl_display *display;
+    wl_shm *shm;
     zwlr_foreign_toplevel_manager_v1 *manager = NULL;
+    zwlr_screencopy_manager_v1 *screencopy_manager = NULL;
     WayfireOutput *output;
     Gtk::ScrolledWindow scrolled_window;
 
+    uint32_t foreign_toplevel_manager_id;
+    uint32_t foreign_toplevel_version;
+
     WayfireWindowList(WayfireOutput *output);
     virtual ~WayfireWindowList();
+    std::unique_ptr<WayfireWindowListOutput> wayfire_window_list_output;
 
     void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
     void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
@@ -64,6 +78,12 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
      * @return The direct child widget or none if it doesn't exist
      */
     Gtk::Widget *get_widget_before(int x);
+
+    void handle_new_wl_output(void *data, wl_registry *registry, uint32_t name, const char *interface,
+        uint32_t version, wl_output *output);
+    void wl_output_enter();
+    void on_event(wf::json_t data) override;
+    std::shared_ptr<IPCClient> ipc_client;
 
   private:
     int get_default_button_width();
