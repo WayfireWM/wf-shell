@@ -81,7 +81,6 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
 
     void handle_new_wl_output(void *data, wl_registry *registry, uint32_t name, const char *interface,
         uint32_t version, wl_output *output);
-    void wl_output_enter();
     void on_event(wf::json_t data) override;
     std::shared_ptr<IPCClient> ipc_client;
     bool live_window_preview_tooltips    = false;

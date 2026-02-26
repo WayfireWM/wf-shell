@@ -440,7 +440,6 @@ class WayfireToplevel::impl
 
     bool drag_paused()
     {
-        std::cout << __func__ << std::endl;
         /*
          *  auto gseat = Gdk::Display::get_default()->get_default_seat()->get_wl_seat();
          *  //auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
@@ -451,7 +450,6 @@ class WayfireToplevel::impl
 
     void on_drag_begin(double _x, double _y)
     {
-        std::cout << __func__ << std::endl;
         // Set grab start, before transforming it to absolute position
         grab_start_x = _x;
         grab_start_y = _y;
@@ -473,7 +471,6 @@ class WayfireToplevel::impl
     static constexpr int DRAG_THRESHOLD = 3;
     void on_drag_update(double _x, double y)
     {
-        std::cout << __func__ << std::endl;
         /* Window was not just clicked, but also dragged. Ignore the next click,
          * which is the one that happens when the drag gesture ends. */
         set_ignore_next_click();
@@ -517,7 +514,6 @@ class WayfireToplevel::impl
 
     void on_drag_end(double _x, double _y)
     {
-        std::cout << __func__ << std::endl;
         int x     = _x + grab_start_x;
         int y     = _y + grab_start_y;
         int width = button.get_allocated_width();
@@ -551,7 +547,6 @@ class WayfireToplevel::impl
 
     void set_hide_text(bool hide_text)
     {
-        std::cout << __func__ << std::endl;
         if (hide_text)
         {
             label.hide();
@@ -563,7 +558,6 @@ class WayfireToplevel::impl
 
     void on_menu_minimize(Glib::VariantBase vb)
     {
-        std::cout << __func__ << std::endl;
         bool val = g_variant_get_boolean(vb.gobj());
         send_rectangle_hint();
         if (!val)
@@ -577,7 +571,6 @@ class WayfireToplevel::impl
 
     void on_menu_maximize(Glib::VariantBase vb)
     {
-        std::cout << __func__ << std::endl;
         bool val = g_variant_get_boolean(vb.gobj());
         if (!val)
         {
@@ -590,14 +583,12 @@ class WayfireToplevel::impl
 
     void on_menu_close(Glib::VariantBase vb)
     {
-        std::cout << __func__ << std::endl;
         zwlr_foreign_toplevel_handle_v1_close(handle);
     }
 
     bool ignore_next_click = false;
     void set_ignore_next_click()
     {
-        std::cout << __func__ << std::endl;
         ignore_next_click = true;
 
         /* Make sure that the view doesn't show clicked on animations while
@@ -608,7 +599,6 @@ class WayfireToplevel::impl
 
     void unset_ignore_next_click()
     {
-        std::cout << __func__ << std::endl;
         ignore_next_click = false;
         button.unset_state_flags(Gtk::StateFlags::SELECTED |
             Gtk::StateFlags::DROP_ACTIVE | Gtk::StateFlags::PRELIGHT);
@@ -616,7 +606,6 @@ class WayfireToplevel::impl
 
     void on_clicked()
     {
-        std::cout << __func__ << std::endl;
         /* If the button was dragged, we don't want to register the click.
          * Subsequent clicks should be handled though. */
         if (ignore_next_click)
@@ -655,13 +644,11 @@ class WayfireToplevel::impl
 
     void on_scale_update()
     {
-        std::cout << __func__ << std::endl;
         set_app_id(app_id);
     }
 
     bool query_tooltip(int x, int y, bool keyboard_mode, const Glib::RefPtr<Gtk::Tooltip>& tooltip)
     {
-        std::cout << __func__ << std::endl;
         if (this->popover.is_visible())
         {
             return false;
@@ -747,7 +734,6 @@ class WayfireToplevel::impl
 
     void set_app_id(std::string app_id)
     {
-        std::cout << __func__ << std::endl;
         WfOption<int> minimal_panel_height{"panel/minimal_height"};
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image, app_id,
@@ -763,7 +749,6 @@ class WayfireToplevel::impl
 
     void send_rectangle_hints()
     {
-        std::cout << __func__ << std::endl;
         for (const auto& toplevel_button : window_list->toplevels)
         {
             if (toplevel_button.second && toplevel_button.second->pimpl)
@@ -775,7 +760,6 @@ class WayfireToplevel::impl
 
     void send_rectangle_hint()
     {
-        std::cout << __func__ << std::endl;
         auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
         auto w     = button.get_width();
         auto h     = button.get_height();
@@ -790,7 +774,6 @@ class WayfireToplevel::impl
 
     void set_title(std::string title)
     {
-        std::cout << __func__ << std::endl;
         this->title = title;
         if (!this->window_list->live_window_preview_tooltips)
         {
@@ -802,38 +785,32 @@ class WayfireToplevel::impl
 
     uint32_t get_state()
     {
-        std::cout << __func__ << std::endl;
         return this->state;
     }
 
     zwlr_foreign_toplevel_handle_v1 *get_parent()
     {
-        std::cout << __func__ << std::endl;
         return this->parent;
     }
 
     void set_parent(zwlr_foreign_toplevel_handle_v1 *parent)
     {
-        std::cout << __func__ << std::endl;
         this->parent = parent;
     }
 
     std::vector<zwlr_foreign_toplevel_handle_v1*>& get_children()
     {
-        std::cout << __func__ << std::endl;
         return this->children;
     }
 
     void remove_button()
     {
-        std::cout << __func__ << std::endl;
         window_list->remove(button);
         send_rectangle_hints();
     }
 
     void set_classes(uint32_t state)
     {
-        std::cout << __func__ << std::endl;
         if (state & WF_TOPLEVEL_STATE_ACTIVATED)
         {
             button.add_css_class("activated");
@@ -867,14 +844,12 @@ class WayfireToplevel::impl
 
     void set_state(uint32_t state)
     {
-        std::cout << __func__ << std::endl;
         this->state = state;
         set_classes(state);
     }
 
     ~impl()
     {
-        std::cout << "~impl" << std::endl;
         gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
         if (m_drag_timeout)
         {
@@ -896,7 +871,6 @@ class WayfireToplevel::impl
 
     void handle_output_enter(wl_output *output)
     {
-        std::cout << __func__ << std::endl;
         if (this->parent)
         {
             return;
@@ -911,7 +885,6 @@ class WayfireToplevel::impl
 
     void handle_output_leave(wl_output *output)
     {
-        std::cout << __func__ << std::endl;
         if (window_list->output->wo == output)
         {
             window_list->remove(button);
@@ -930,19 +903,16 @@ WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list,
 
 std::vector<zwlr_foreign_toplevel_handle_v1*>& WayfireToplevel::get_children()
 {
-    std::cout << __func__ << std::endl;
     return pimpl->get_children();
 }
 
 uint32_t WayfireToplevel::get_state()
 {
-    std::cout << __func__ << std::endl;
     return pimpl->get_state();
 }
 
 void WayfireToplevel::send_rectangle_hint()
 {
-    std::cout << __func__ << std::endl;
     return pimpl->send_rectangle_hint();
 }
 
@@ -954,41 +924,35 @@ WayfireToplevel::~WayfireToplevel()
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;
 static void handle_toplevel_title(void *data, toplevel_t, const char *title)
 {
-    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->set_title(title);
 }
 
 static void handle_toplevel_app_id(void *data, toplevel_t, const char *app_id)
 {
-    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->set_app_id(app_id);
 }
 
 static void handle_toplevel_output_enter(void *data, toplevel_t, wl_output *output)
 {
-    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->handle_output_enter(output);
 }
 
 static void handle_toplevel_output_leave(void *data, toplevel_t, wl_output *output)
 {
-    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->handle_output_leave(output);
 }
 
 void WayfireToplevel::set_tooltip_media()
 {
-    std::cout << __func__ << std::endl;
     pimpl->set_tooltip_media();
 }
 
 void WayfireToplevel::unset_tooltip_media()
 {
-    std::cout << __func__ << std::endl;
     pimpl->unset_tooltip_media();
 }
 
@@ -999,7 +963,6 @@ void WayfireToplevel::unset_tooltip_media()
 template<class T>
 static void array_for_each(wl_array *array, std::function<void(T)> func)
 {
-    std::cout << __func__ << std::endl;
     assert(array->size % sizeof(T) == 0); // do not use malformed arrays
     for (T *entry = (T*)array->data; (char*)entry < ((char*)array->data + array->size); entry++)
     {
@@ -1009,7 +972,6 @@ static void array_for_each(wl_array *array, std::function<void(T)> func)
 
 static void handle_toplevel_state(void *data, toplevel_t, wl_array *state)
 {
-    std::cout << __func__ << std::endl;
     uint32_t flags = 0;
     array_for_each<uint32_t>(state, [&flags] (uint32_t st)
     {
@@ -1034,14 +996,10 @@ static void handle_toplevel_state(void *data, toplevel_t, wl_array *state)
 }
 
 static void handle_toplevel_done(void *data, toplevel_t)
-{
-    std::cout << __func__ << std::endl;
-// auto impl = static_cast<WayfireToplevel::impl*> (data);
-}
+{}
 
 static void remove_child_from_parent(WayfireToplevel::impl *impl, toplevel_t child)
 {
-    std::cout << __func__ << std::endl;
     auto parent = impl->get_parent();
     auto& parent_toplevel = impl->window_list->toplevels[parent];
     if (child && parent && parent_toplevel)
@@ -1053,7 +1011,6 @@ static void remove_child_from_parent(WayfireToplevel::impl *impl, toplevel_t chi
 
 static void handle_toplevel_closed(void *data, toplevel_t handle)
 {
-    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->remove_button();
     remove_child_from_parent(impl, handle);
@@ -1062,7 +1019,6 @@ static void handle_toplevel_closed(void *data, toplevel_t handle)
 
 static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t parent)
 {
-    std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     if (!parent)
     {
@@ -1125,7 +1081,6 @@ std::string tolower(std::string str)
  * The filename is either the app_id + ".desktop" or lower_app_id + ".desktop" */
 Icon get_from_desktop_app_info(std::string app_id)
 {
-    std::cout << __func__ << std::endl;
     Glib::RefPtr<Gio::DesktopAppInfo> app_info;
 
     std::vector<std::string> prefixes = {
@@ -1171,7 +1126,6 @@ Icon get_from_desktop_app_info(std::string app_id)
 void set_image_from_icon(Gtk::Image& image,
     std::string app_id_list, int size, int scale)
 {
-    std::cout << __func__ << std::endl;
     std::string app_id;
     std::istringstream stream(app_id_list);
 

@@ -9,7 +9,6 @@
 static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager,
     zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
-    std::cout << __func__ << std::endl;
     WayfireWindowList *window_list = (WayfireWindowList*)data;
     window_list->handle_new_toplevel(toplevel);
 }
@@ -59,14 +58,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
 }
 
 static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
-{
-    std::cout << __func__ << ": " << name << std::endl;
-}
-
-void WayfireWindowList::wl_output_enter()
-{
-    std::cout << __func__ << ": " << " output name: " << this->wayfire_window_list_output->name << std::endl;
-}
+{}
 
 static struct wl_registry_listener registry_listener =
 {
@@ -104,7 +96,6 @@ void handle_output_name(void *data,
     struct wl_output *wl_output,
     const char *name)
 {
-    std::cout << __func__ << ": " << data << std::endl;
     std::unique_ptr<WayfireWindowListOutput> *wayfire_window_list_output =
         (std::unique_ptr<WayfireWindowListOutput>*)data;
     (*wayfire_window_list_output)->name = std::string(name);
@@ -126,12 +117,10 @@ static struct wl_output_listener output_listener =
 void WayfireWindowList::handle_new_wl_output(void *data, wl_registry *registry, uint32_t name,
     const char *interface, uint32_t version, wl_output *output)
 {
-    std::cout << __func__ << std::endl;
     this->wayfire_window_list_output = std::make_unique<WayfireWindowListOutput>();
     this->wayfire_window_list_output->output = output;
     this->wayfire_window_list_output->name.clear();
     wl_output_add_listener(output, &output_listener, &this->wayfire_window_list_output);
-    this->wl_output_enter();
 }
 
 void WayfireWindowList::init(Gtk::Box *container)
@@ -171,7 +160,6 @@ void WayfireWindowList::init(Gtk::Box *container)
         }
     });
 
-    std::cout << __func__ << std::endl;
     auto gdk_display = gdk_display_get_default();
     auto display     = gdk_wayland_display_get_wl_display(gdk_display);
 
@@ -210,7 +198,6 @@ void WayfireWindowList::init(Gtk::Box *container)
 
 void WayfireWindowList::set_top_widget(Gtk::Widget *top)
 {
-    std::cout << __func__ << std::endl;
     this->layout->top_widget = top;
 
     if (layout->top_widget)
@@ -225,7 +212,6 @@ void WayfireWindowList::set_top_widget(Gtk::Widget *top)
 
 void WayfireWindowList::set_top_x(int x)
 {
-    std::cout << __func__ << std::endl;
     /* Make sure that the widget doesn't go outside of the box */
     if (this->layout->top_widget)
     {
@@ -250,7 +236,6 @@ void WayfireWindowList::set_top_x(int x)
 
 int WayfireWindowList::get_absolute_position(int x, Gtk::Widget& ref)
 {
-    std::cout << __func__ << std::endl;
     auto w = &ref;
     while (w && w != this)
     {
@@ -264,7 +249,6 @@ int WayfireWindowList::get_absolute_position(int x, Gtk::Widget& ref)
 
 Gtk::Widget*WayfireWindowList::get_widget_before(int x)
 {
-    std::cout << __func__ << std::endl;
     Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
 
     /* Widgets are stored bottom to top, so we will return the bottom-most
@@ -291,7 +275,6 @@ Gtk::Widget*WayfireWindowList::get_widget_before(int x)
 
 Gtk::Widget*WayfireWindowList::get_widget_at(int x)
 {
-    std::cout << __func__ << std::endl;
     Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
 
     /* Widgets are stored bottom to top, so we will return the bottom-most
@@ -315,19 +298,16 @@ Gtk::Widget*WayfireWindowList::get_widget_at(int x)
 
 void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager)
 {
-    std::cout << __func__ << std::endl;
     this->manager = manager;
 }
 
 void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
 {
-    std::cout << __func__ << std::endl;
     toplevels[handle] = std::unique_ptr<WayfireToplevel>(new WayfireToplevel(this, handle));
 }
 
 void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
 {
-    std::cout << __func__ << std::endl;
     toplevels.erase(handle);
 }
 
@@ -336,7 +316,6 @@ void WayfireWindowList::on_event(wf::json_t data)
 
 WayfireWindowList::WayfireWindowList(WayfireOutput *output)
 {
-    std::cout << "WayfireWindowList::WayfireWindowList" << std::endl;
     this->output = output;
 
     layout = std::make_shared<WayfireWindowListLayout>(this);
@@ -349,6 +328,5 @@ WayfireWindowList::WayfireWindowList(WayfireOutput *output)
 
 WayfireWindowList::~WayfireWindowList()
 {
-    std::cout << "WayfireWindowList::~WayfireWindowList" << std::endl;
     zwlr_foreign_toplevel_manager_v1_destroy(manager);
 }
