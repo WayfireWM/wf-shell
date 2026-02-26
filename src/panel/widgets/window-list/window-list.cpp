@@ -66,27 +66,6 @@ static void registry_remove_object(void *data, struct wl_registry *registry, uin
 void WayfireWindowList::wl_output_enter()
 {
     std::cout << __func__ << ": " << " output name: " << this->wayfire_window_list_output->name << std::endl;
-    // self.set_live_preview_output(None)
-    // if name.startswith("live-preview"):
-    // self.set_live_preview_output(output)
-    // return
-    // if name.startswith("live-preview"):
-    // return
-    // if not self.my_output and name == self.get_root().monitor_name:
-    // self.wl_surface = None
-    // if self.get_root().get_native().get_surface():
-    // wl_surface_ptr = gtk.gdk_wayland_surface_get_wl_surface(
-    // ffi.cast("void *", ctypes.pythonapi.PyCapsule_GetPointer(
-    // self.get_root().get_native().get_surface().__gpointer__, None)))
-    // self.wl_surface = WlSurface()
-    // self.wl_surface._ptr = wl_surface_ptr
-    // self.my_output = output
-    // else:
-    // toplevel_buttons = self.toplevel_buttons.copy()
-    // for handle in toplevel_buttons:
-    // button = self.toplevel_buttons[handle]
-    // if output != button.output:
-    // self.foreign_toplevel_closed(handle)
 }
 
 static struct wl_registry_listener registry_listener =
@@ -152,29 +131,46 @@ void WayfireWindowList::handle_new_wl_output(void *data, wl_registry *registry, 
     this->wayfire_window_list_output->output = output;
     this->wayfire_window_list_output->name.clear();
     wl_output_add_listener(output, &output_listener, &this->wayfire_window_list_output);
-    // while (this->wayfire_window_list_output->name.empty())
-    // {
-    // wl_display_dispatch(display);
-    // }
     this->wl_output_enter();
-    // if not output.name.startswith("live-preview"):
-    // if self.foreign_toplevel_manager:
-    // self.foreign_toplevel_manager.stop()
-    // self.wl_display.roundtrip()
-    // if self.foreign_toplevel_manager:
-    // self.destroy_foreign_toplevel_manager()
-    // self.foreign_toplevel_manager = self.registry.bind(self.foreign_toplevel_manager_id,
-    // ZwlrForeignToplevelManagerV1, self.foreign_toplevel_version)
-    // self.foreign_toplevel_manager.id = self.foreign_toplevel_manager_id
-    // self.wl_globals.append(self.foreign_toplevel_manager)
-    // self.foreign_toplevel_manager.dispatcher["toplevel"] = self.on_new_toplevel
-    // self.foreign_toplevel_manager.dispatcher["finished"] = self.on_foreign_toplevel_manager_finish
-    // self.wl_display.roundtrip()
-    // print(f"Monitor {output.name} ({interface}) connected", file=sys.stderr)
 }
 
 void WayfireWindowList::init(Gtk::Box *container)
 {
+    if (!this->ipc_client)
+    {
+        this->ipc_client = WayfirePanelApp::get().get_ipc_server_instance()->create_client();
+    }
+
+    if (!this->ipc_client)
+    {
+        std::cerr <<
+            "Failed to connect to ipc. Live window previews will not be available. (are ipc and ipc-rules plugins loaded?)";
+    }
+
+    wf::json_t ipc_methods_request;
+    ipc_methods_request["method"] = "list-methods"; // "live_previews/release_output";
+    this->ipc_client->send(ipc_methods_request.serialize(), [=] (wf::json_t data)
+    {
+        if (data.serialize().find("error") != std::string::npos)
+        {
+            std::cerr << data.serialize() << std::endl;
+            std::cerr << "Error getting ipc methods list!" << std::endl;
+            return;
+        }
+
+        if ((data.serialize().find("live_previews/request_stream") == std::string::npos) ||
+            (data.serialize().find(
+                "live_previews/release_output") == std::string::npos))
+        {
+            std::cerr << "Did not find live-previews ipc methods in methods list. Disabling live window preview tooltips. (is the live-previews plugin enabled?)" << std::endl;
+            this->live_window_preview_tooltips = false;
+        } else
+        {
+            std::cout << "Enabling live window preview tooltips." << std::endl;
+            this->live_window_preview_tooltips = true;
+        }
+    });
+
     std::cout << __func__ << std::endl;
     auto gdk_display = gdk_display_get_default();
     auto display     = gdk_wayland_display_get_wl_display(gdk_display);

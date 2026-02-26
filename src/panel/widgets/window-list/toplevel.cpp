@@ -13,7 +13,6 @@
 #include "toplevel.hpp"
 #include "window-list.hpp"
 #include "gtk-utils.hpp"
-#include "panel.hpp"
 
 namespace
 {
@@ -207,6 +206,7 @@ class WayfireToplevel::impl
     // Gtk::PopoverMenu menu;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
     sigc::connection m_drag_timeout;
+    sigc::connection query_tooltip_signal;
     std::vector<sigc::connection> signals;
 
     Glib::ustring app_id, title;
@@ -218,15 +218,7 @@ class WayfireToplevel::impl
 
     impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle)
     {
-        std::cout << "impl" << std::endl;
-        window_list->ipc_client = WayfirePanelApp::get().get_ipc_server_instance()->create_client();
-
-        if (!window_list->ipc_client)
-        {
-            std::cerr <<
-                "Failed to connect to ipc. Live window previews will not be available. (are ipc and ipc-rules plugins loaded?)";
-        }
-
+        this->window_list = window_list;
         this->handle = handle;
         this->parent = nullptr;
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
@@ -241,17 +233,6 @@ class WayfireToplevel::impl
         button_contents.set_hexpand(true);
         button_contents.set_spacing(5);
         button.set_child(button_contents);
-        // button.set_tooltip_text("none");
-        tooltip_media = Gtk::make_managed<TooltipMedia>(window_list);
-        this->custom_tooltip_content.append(*tooltip_media);
-        // button.set_hover_point(0, 0);
-        // button.set_hover_timeout(0);
-        button.signal_query_tooltip().connect([=] (int x, int y, bool keyboard_mode,
-                                                   const Glib::RefPtr<Gtk::Tooltip>& tooltip)
-        {
-            return query_tooltip(x, y, keyboard_mode, tooltip);
-        }, false);
-        button.set_has_tooltip(true);
 
         label.set_ellipsize(Pango::EllipsizeMode::END);
         label.set_hexpand(true);
@@ -337,29 +318,119 @@ class WayfireToplevel::impl
                 popover.popup();
             }
         }));
-        auto motion_controller = Gtk::EventControllerMotion::create();
-        motion_controller->signal_leave().connect([=] ()
-        {
-            wf::json_t live_window_release_output_request;
-            live_window_release_output_request["method"] = "live_previews/release_output";
-            this->window_list->ipc_client->send(live_window_release_output_request.serialize(),
-                [=] (wf::json_t data)
-            {
-                if (data.serialize().find("error") != std::string::npos)
-                {
-                    std::cerr << data.serialize() << std::endl;
-                    std::cerr << "Error releasing output for live preview stream!" << std::endl;
-                }
-            });
-        });
         button.add_controller(long_press);
         button.add_controller(click_gesture);
-        button.add_controller(motion_controller);
 
-        this->window_list = window_list;
+        this->query_tooltip_signal =
+            button.signal_query_tooltip().connect([=] (int x, int y, bool keyboard_mode,
+                                                       const Glib::RefPtr<Gtk::Tooltip>
+                                                       & tooltip)
+        {
+            return query_tooltip(x, y, keyboard_mode, tooltip);
+        }, false);
+        button.set_has_tooltip(true);
+        button.set_tooltip_text("none");
+        this->tooltip_media = nullptr;
+        update_tooltip();
 
         send_rectangle_hints();
         set_state(0); // will set the appropriate button style
+    }
+
+    void set_tooltip_media()
+    {
+        if (this->tooltip_media)
+        {
+            return;
+        }
+
+        this->tooltip_media = Gtk::make_managed<TooltipMedia>(this->window_list);
+        this->custom_tooltip_content.append(*this->tooltip_media);
+        this->window_list->live_window_preview_tooltips = true;
+    }
+
+    void unset_tooltip_media()
+    {
+        if (!this->tooltip_media)
+        {
+            return;
+        }
+
+        this->tooltip_media->unparent();
+        this->tooltip_media = nullptr;
+    }
+
+    void update_tooltip()
+    {
+        wf::json_t ipc_methods_request;
+        ipc_methods_request["method"] = "list-methods";
+        this->window_list->ipc_client->send(ipc_methods_request.serialize(), [=] (wf::json_t data)
+        {
+            if (data.serialize().find("error") != std::string::npos)
+            {
+                std::cerr << data.serialize() << std::endl;
+                std::cerr << "Error getting ipc methods list!" << std::endl;
+                return;
+            }
+
+            if ((data.serialize().find("live_previews/request_stream") == std::string::npos) ||
+                (data.serialize().find("live_previews/release_output") == std::string::npos))
+            {
+                unset_tooltip_media();
+                if (this->window_list->live_window_preview_tooltips)
+                {
+                    std::cerr << "Disabling live window preview tooltips." << std::endl;
+                    this->window_list->live_window_preview_tooltips = false;
+                    for (const auto& toplevel_button : this->window_list->toplevels)
+                    {
+                        if (toplevel_button.second && toplevel_button.second->pimpl)
+                        {
+                            toplevel_button.second->unset_tooltip_media();
+                        }
+                    }
+                }
+            } else
+            {
+                set_tooltip_media();
+                if (!this->window_list->live_window_preview_tooltips)
+                {
+                    std::cout << "Enabling live window preview tooltips." << std::endl;
+                    this->window_list->live_window_preview_tooltips = true;
+                    for (const auto& toplevel_button : this->window_list->toplevels)
+                    {
+                        if (toplevel_button.second && toplevel_button.second->pimpl)
+                        {
+                            toplevel_button.second->set_tooltip_media();
+                        }
+                    }
+                }
+            }
+        });
+        if (window_list->live_window_preview_tooltips)
+        {
+            auto motion_controller = Gtk::EventControllerMotion::create();
+            motion_controller->signal_leave().connect([=] ()
+            {
+                wf::json_t live_window_release_output_request;
+                live_window_release_output_request["method"] = "live_previews/release_output";
+                this->window_list->ipc_client->send(live_window_release_output_request.serialize(),
+                    [=] (wf::json_t data)
+                {
+                    this->window_list->live_window_preview_view_id = 0;
+                    if (data.serialize().find("error") != std::string::npos)
+                    {
+                        std::cerr << data.serialize() << std::endl;
+                        std::cerr << "Error releasing output for live preview stream!" << std::endl;
+                        this->window_list->live_window_preview_tooltips = false;
+                        return;
+                    }
+                });
+            });
+            button.add_controller(motion_controller);
+        } else
+        {
+            button.set_tooltip_text(title);
+        }
     }
 
     int grab_off_x;
@@ -591,14 +662,31 @@ class WayfireToplevel::impl
     bool query_tooltip(int x, int y, bool keyboard_mode, const Glib::RefPtr<Gtk::Tooltip>& tooltip)
     {
         std::cout << __func__ << std::endl;
-        if (!window_list->wayfire_window_list_output->output)
+        if (this->popover.is_visible())
         {
             return false;
         }
 
-        if (this->popover.is_visible())
+        update_tooltip();
+
+        if (this->window_list->live_window_preview_tooltips)
         {
-            return false;
+            if (!this->window_list->wayfire_window_list_output->output)
+            {
+                std::cerr << "Live window preview tooltips output not found." << std::endl;
+                tooltip->set_text(title);
+                return true;
+            }
+        } else
+        {
+            tooltip->set_text(title);
+            return true;
+        }
+
+        if (this->window_list->live_window_preview_view_id == this->view_id)
+        {
+            tooltip->set_custom(this->custom_tooltip_content);
+            return true;
         }
 
         wf::json_t live_window_preview_stream_request;
@@ -609,14 +697,23 @@ class WayfireToplevel::impl
         this->window_list->ipc_client->send(live_window_preview_stream_request.serialize(),
             [=] (wf::json_t data)
         {
-            if (data.serialize().find("error") != std::string::npos)
+            if ((data.serialize().find("error") != std::string::npos) &&
+                this->window_list->live_window_preview_tooltips)
             {
-                std::cerr << data.serialize() << std::endl;
-                std::cerr << "Error acquiring live preview stream. (is live-previews wayfire plugin enabled?)" << std::endl;
-            }
-        });
+                if (this->window_list->live_window_preview_tooltips)
+                {
+                    std::cerr << data.serialize() << std::endl;
+                    std::cerr << "Error acquiring live preview stream. (is live-previews wayfire plugin enabled?)" << std::endl;
+                    this->window_list->live_window_preview_tooltips = false;
+                    button.set_tooltip_text(title);
+                }
 
-        tooltip->set_custom(this->custom_tooltip_content);
+                return;
+            }
+
+            this->window_list->live_window_preview_view_id = this->view_id;
+            tooltip->set_custom(this->custom_tooltip_content);
+        });
 
         return true;
     }
@@ -695,7 +792,11 @@ class WayfireToplevel::impl
     {
         std::cout << __func__ << std::endl;
         this->title = title;
-        // button.set_tooltip_text(title);
+        if (!this->window_list->live_window_preview_tooltips)
+        {
+            button.set_tooltip_text(title);
+        }
+
         label.set_text(title);
     }
 
@@ -778,6 +879,11 @@ class WayfireToplevel::impl
         if (m_drag_timeout)
         {
             m_drag_timeout.disconnect();
+        }
+
+        if (query_tooltip_signal)
+        {
+            query_tooltip_signal.disconnect();
         }
 
         for (auto signal : signals)
@@ -872,6 +978,18 @@ static void handle_toplevel_output_leave(void *data, toplevel_t, wl_output *outp
     std::cout << __func__ << std::endl;
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->handle_output_leave(output);
+}
+
+void WayfireToplevel::set_tooltip_media()
+{
+    std::cout << __func__ << std::endl;
+    pimpl->set_tooltip_media();
+}
+
+void WayfireToplevel::unset_tooltip_media()
+{
+    std::cout << __func__ << std::endl;
+    pimpl->unset_tooltip_media();
 }
 
 /* wl_array_for_each isn't supported in C++, so we have to manually

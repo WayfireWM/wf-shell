@@ -84,6 +84,8 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
     void wl_output_enter();
     void on_event(wf::json_t data) override;
     std::shared_ptr<IPCClient> ipc_client;
+    bool live_window_preview_tooltips    = false;
+    uint64_t live_window_preview_view_id = 0;
 
   private:
     int get_default_button_width();

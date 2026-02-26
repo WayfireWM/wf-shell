@@ -9,6 +9,7 @@
 #include <wlr-screencopy-client-protocol.h>
 #include <wayland-client-protocol.h>
 #include <wf-option-wrap.hpp>
+#include "panel.hpp"
 
 class WayfireWindowList;
 class WayfireWindowListBox;
@@ -56,6 +57,8 @@ class WayfireToplevel
     std::vector<zwlr_foreign_toplevel_handle_v1*>& get_children();
     ~WayfireToplevel();
     void set_hide_text(bool hide_text);
+    void set_tooltip_media();
+    void unset_tooltip_media();
 
     class impl;
 
