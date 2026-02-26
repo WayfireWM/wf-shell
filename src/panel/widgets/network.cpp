@@ -22,6 +22,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     container->append(*button);
     button->set_child(button_content);
     button->add_css_class("flat");
+    button->set_has_frame(false);
 
     button->get_popover()->set_child(control);
 
