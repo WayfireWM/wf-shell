@@ -235,18 +235,6 @@ void BackgroundGLArea::show_image(std::shared_ptr<BackgroundImage> next_image)
         return;
     }
 
-    if ((window_width <= 0) || (window_height <= 0))
-    {
-        /* Retry momentarily */
-        Glib::signal_idle().connect([this, next_image]
-            ()
-        {
-            show_image(next_image);
-            return G_SOURCE_REMOVE;
-        });
-        return;
-    }
-
     if (to_image)
     {
         from_image = to_image;
@@ -342,7 +330,7 @@ bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
         1.0f, 1.0f,
     };
     static float from_adj[4] = {0.0, 0.0, 1.0, 1.0};
-    if (from_image)
+    if (from_image && from_image->adjustments)
     {
         from_adj[0] = from_image->adjustments->x;
         from_adj[1] = from_image->adjustments->y;
@@ -351,7 +339,7 @@ bool BackgroundGLArea::render(const Glib::RefPtr<Gdk::GLContext>& context)
     }
 
     static float to_adj[4] = {0.0, 0.0, 1.0, 1.0};
-    if (to_image)
+    if (to_image && to_image->adjustments)
     {
         to_adj[0] = to_image->adjustments->x;
         to_adj[1] = to_image->adjustments->y;

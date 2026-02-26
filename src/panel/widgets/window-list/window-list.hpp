@@ -26,6 +26,7 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
         std::unique_ptr<WayfireToplevel>> toplevels;
 
     wl_display *display;
+    wl_registry *registry;
     wl_shm *shm;
     zwlr_foreign_toplevel_manager_v1 *manager = NULL;
     zwlr_screencopy_manager_v1 *screencopy_manager = NULL;

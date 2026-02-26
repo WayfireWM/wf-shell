@@ -169,6 +169,8 @@ void WayfireWindowList::init(Gtk::Box *container)
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
 
+    this->registry = registry;
+
     while (!this->manager || this->wayfire_window_list_output->name.empty())
     {
         std::cout << "looping" << std::endl;
@@ -186,8 +188,6 @@ void WayfireWindowList::init(Gtk::Box *container)
     }
 
     scrolled_window.add_css_class("window-list");
-
-    // wl_registry_destroy(registry);
 
     scrolled_window.set_hexpand(true);
     scrolled_window.set_child(*this);
@@ -328,5 +328,6 @@ WayfireWindowList::WayfireWindowList(WayfireOutput *output)
 
 WayfireWindowList::~WayfireWindowList()
 {
+    wl_registry_destroy(this->registry);
     zwlr_foreign_toplevel_manager_v1_destroy(manager);
 }
