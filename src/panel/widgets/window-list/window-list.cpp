@@ -24,7 +24,6 @@ zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
 static void registry_add_object(void *data, wl_registry *registry, uint32_t name,
     const char *interface, uint32_t version)
 {
-    std::cout << __func__ << ": " << interface << std::endl;
     WayfireWindowList *window_list = (WayfireWindowList*)data;
 
     window_list->foreign_toplevel_manager_id = name;
@@ -32,7 +31,6 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
 
     if (strcmp(interface, wl_output_interface.name) == 0)
     {
-        std::cout << "New wl_output: " << name << std::endl;
         wl_output *output = (wl_output*)wl_registry_bind(registry, name, &wl_output_interface, version);
         window_list->handle_new_wl_output(data, registry, name, interface, version, output);
     } else if (strcmp(interface, wl_shm_interface.name) == 0)
@@ -123,7 +121,46 @@ void WayfireWindowList::handle_new_wl_output(void *data, wl_registry *registry, 
     wl_output_add_listener(output, &output_listener, &this->wayfire_window_list_output);
 }
 
-void WayfireWindowList::init(Gtk::Box *container)
+void WayfireWindowList::live_window_previews_plugin_check()
+{
+    wf::json_t ipc_methods_request;
+    ipc_methods_request["method"] = "list-methods";
+    this->ipc_client->send(ipc_methods_request.serialize(), [=] (wf::json_t data)
+    {
+        if (data.serialize().find(
+            "error") != std::string::npos)
+        {
+            std::cerr << "Error getting ipc methods list! (are ipc and ipc-rules plugins loaded?)" << std::endl;
+            this->live_window_preview_tooltips = false;
+            this->normal_title_tooltips = true;
+            return;
+        }
+
+        if ((data.serialize().find("live_previews/request_stream") == std::string::npos) ||
+            (data.serialize().find(
+                "live_previews/release_output") == std::string::npos))
+        {
+            std::cerr << "Did not find live-previews ipc methods in methods list. Disabling live window preview tooltips. (is the live-previews plugin enabled?)" << std::endl;
+            this->live_window_preview_tooltips = false;
+            this->normal_title_tooltips = true;
+        } else
+        {
+            if (!this->live_window_previews_opt)
+            {
+                std::cout << "Detected live-previews plugin is enabled but wf-shell configuration [panel] option 'live_window_previews' is set to 'false'." << std::endl;
+                this->live_window_preview_tooltips = false;
+                this->normal_title_tooltips = true;
+            } else
+            {
+                std::cout << "Enabling live window preview tooltips." << std::endl;
+                this->live_window_preview_tooltips = true;
+                this->normal_title_tooltips = false;
+            }
+        }
+    });
+}
+
+void WayfireWindowList::enable_ipc(bool enable)
 {
     if (!this->ipc_client)
     {
@@ -135,29 +172,28 @@ void WayfireWindowList::init(Gtk::Box *container)
         std::cerr <<
             "Failed to connect to ipc. Live window previews will not be available. (are ipc and ipc-rules plugins loaded?)";
     }
+}
 
-    wf::json_t ipc_methods_request;
-    ipc_methods_request["method"] = "list-methods"; // "live_previews/release_output";
-    this->ipc_client->send(ipc_methods_request.serialize(), [=] (wf::json_t data)
+void WayfireWindowList::enable_normal_tooltips_flag(bool enable)
+{
+    this->normal_title_tooltips = enable;
+    this->live_window_preview_tooltips = !enable;
+}
+
+bool WayfireWindowList::live_window_previews_enabled()
+{
+    return this->live_window_previews_opt && this->live_window_preview_tooltips && this->ipc_client;
+}
+
+void WayfireWindowList::init(Gtk::Box *container)
+{
+    enable_ipc(this->live_window_previews_opt);
+    live_window_previews_plugin_check();
+
+    this->live_window_previews_opt.set_callback([=] ()
     {
-        if (data.serialize().find("error") != std::string::npos)
-        {
-            std::cerr << data.serialize() << std::endl;
-            std::cerr << "Error getting ipc methods list!" << std::endl;
-            return;
-        }
-
-        if ((data.serialize().find("live_previews/request_stream") == std::string::npos) ||
-            (data.serialize().find(
-                "live_previews/release_output") == std::string::npos))
-        {
-            std::cerr << "Did not find live-previews ipc methods in methods list. Disabling live window preview tooltips. (is the live-previews plugin enabled?)" << std::endl;
-            this->live_window_preview_tooltips = false;
-        } else
-        {
-            std::cout << "Enabling live window preview tooltips." << std::endl;
-            this->live_window_preview_tooltips = true;
-        }
+        enable_ipc(this->live_window_previews_opt);
+        live_window_previews_plugin_check();
     });
 
     auto gdk_display = gdk_display_get_default();

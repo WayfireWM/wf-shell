@@ -80,12 +80,18 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
      */
     Gtk::Widget *get_widget_before(int x);
 
+    WfOption<bool> live_window_previews_opt{"panel/live_window_previews"};
     void handle_new_wl_output(void *data, wl_registry *registry, uint32_t name, const char *interface,
         uint32_t version, wl_output *output);
     void on_event(wf::json_t data) override;
     std::shared_ptr<IPCClient> ipc_client;
-    bool live_window_preview_tooltips    = false;
+    bool live_window_preview_tooltips = false;
+    bool normal_title_tooltips = false;
+    void enable_normal_tooltips_flag(bool enable);
     uint64_t live_window_preview_view_id = 0;
+    void live_window_previews_plugin_check();
+    void enable_ipc(bool enable);
+    bool live_window_previews_enabled();
 
   private:
     int get_default_button_width();
