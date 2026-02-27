@@ -9,6 +9,7 @@
 #include <wlr-screencopy-client-protocol.h>
 #include <wayland-client-protocol.h>
 #include <wf-option-wrap.hpp>
+#include "wf-shell-app.hpp"
 #include "panel.hpp"
 
 class WayfireWindowList;
@@ -30,11 +31,10 @@ class TooltipMedia : public Gtk::Picture
     void *shm_data    = NULL;
     char *screencopy_data = NULL;
     zwlr_screencopy_frame_v1 *frame = NULL;
-    zwlr_screencopy_manager_v1 *screencopy_manager = NULL;
 
-    int buffer_width  = 200;
-    int buffer_height = 200;
-    int buffer_stride = 200 * 4;
+    int buffer_width;
+    int buffer_height;
+    int buffer_stride;
     size_t size = 0;
 
     TooltipMedia(WayfireWindowList *window_list);

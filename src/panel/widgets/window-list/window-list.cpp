@@ -26,13 +26,10 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
 {
     WayfireWindowList *window_list = (WayfireWindowList*)data;
 
-    window_list->foreign_toplevel_manager_id = name;
-    window_list->foreign_toplevel_version    = version;
-
     if (strcmp(interface, wl_output_interface.name) == 0)
     {
         wl_output *output = (wl_output*)wl_registry_bind(registry, name, &wl_output_interface, version);
-        window_list->handle_new_wl_output(data, registry, name, interface, version, output);
+        window_list->handle_new_wl_output(output);
     } else if (strcmp(interface, wl_shm_interface.name) == 0)
     {
         window_list->shm = (wl_shm*)wl_registry_bind(registry, name, &wl_shm_interface, version);
@@ -42,7 +39,6 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
             wl_registry_bind(registry, name,
             &zwlr_foreign_toplevel_manager_v1_interface,
             version);
-        std::cout << __func__ << ": " << interface << std::endl;
         window_list->handle_toplevel_manager(zwlr_toplevel_manager);
         zwlr_foreign_toplevel_manager_v1_add_listener(window_list->manager,
             &toplevel_manager_v1_impl, window_list);
@@ -84,19 +80,29 @@ void handle_output_mode(void*,
     int32_t)
 {}
 
-void handle_output_done(void*, struct wl_output*)
-{}
+void handle_output_done(void *data, struct wl_output*)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    window_list->wl_outputs_done = true;
+}
 
 void handle_output_scale(void*, struct wl_output*, int32_t)
 {}
 
 void handle_output_name(void *data,
-    struct wl_output *wl_output,
+    struct wl_output *output,
     const char *name)
 {
-    std::unique_ptr<WayfireWindowListOutput> *wayfire_window_list_output =
-        (std::unique_ptr<WayfireWindowListOutput>*)data;
-    (*wayfire_window_list_output)->name = std::string(name);
+    std::string live_preview_output_name = WayfireShellApp::get().live_preview_output_name;
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    std::string output_name = name;
+
+    if (output_name == live_preview_output_name)
+    {
+        window_list->window_list_live_preview_output = std::make_unique<WayfireWindowListOutput>();
+        window_list->window_list_live_preview_output->output = output;
+        window_list->window_list_live_preview_output->name   = output_name;
+    }
 }
 
 void handle_output_description(void*, struct wl_output*, const char*)
@@ -112,13 +118,27 @@ static struct wl_output_listener output_listener =
     handle_output_description,
 };
 
-void WayfireWindowList::handle_new_wl_output(void *data, wl_registry *registry, uint32_t name,
-    const char *interface, uint32_t version, wl_output *output)
+void WayfireWindowList::destroy_window_list_live_preview_output()
 {
-    this->wayfire_window_list_output = std::make_unique<WayfireWindowListOutput>();
-    this->wayfire_window_list_output->output = output;
-    this->wayfire_window_list_output->name.clear();
-    wl_output_add_listener(output, &output_listener, &this->wayfire_window_list_output);
+    if (this->window_list_live_preview_output)
+    {
+        wl_output_destroy(this->window_list_live_preview_output->output);
+        this->window_list_live_preview_output.reset();
+        this->window_list_live_preview_output = nullptr;
+    }
+}
+
+void WayfireWindowList::handle_new_wl_output(wl_output *output)
+{
+    std::string live_preview_output_name = WayfireShellApp::get().live_preview_output_name;
+
+    wl_output_add_listener(output, &output_listener, this);
+
+    this->wl_outputs_done = false;
+    while (!this->wl_outputs_done)
+    {
+        wl_display_dispatch(this->display);
+    }
 }
 
 void WayfireWindowList::live_window_previews_plugin_check()
@@ -131,8 +151,7 @@ void WayfireWindowList::live_window_previews_plugin_check()
             "error") != std::string::npos)
         {
             std::cerr << "Error getting ipc methods list! (are ipc and ipc-rules plugins loaded?)" << std::endl;
-            this->live_window_preview_tooltips = false;
-            this->normal_title_tooltips = true;
+            this->enable_normal_tooltips_flag(true);
             return;
         }
 
@@ -141,20 +160,18 @@ void WayfireWindowList::live_window_previews_plugin_check()
                 "live_previews/release_output") == std::string::npos))
         {
             std::cerr << "Did not find live-previews ipc methods in methods list. Disabling live window preview tooltips. (is the live-previews plugin enabled?)" << std::endl;
-            this->live_window_preview_tooltips = false;
-            this->normal_title_tooltips = true;
+            this->enable_normal_tooltips_flag(
+                true);
         } else
         {
             if (!this->live_window_previews_opt)
             {
                 std::cout << "Detected live-previews plugin is enabled but wf-shell configuration [panel] option 'live_window_previews' is set to 'false'." << std::endl;
-                this->live_window_preview_tooltips = false;
-                this->normal_title_tooltips = true;
+                this->enable_normal_tooltips_flag(true);
             } else
             {
                 std::cout << "Enabling live window preview tooltips." << std::endl;
-                this->live_window_preview_tooltips = true;
-                this->normal_title_tooltips = false;
+                this->enable_normal_tooltips_flag(false);
             }
         }
     });
@@ -207,13 +224,6 @@ void WayfireWindowList::init(Gtk::Box *container)
 
     this->registry = registry;
 
-    while (!this->manager || this->wayfire_window_list_output->name.empty())
-    {
-        std::cout << "looping" << std::endl;
-        wl_display_dispatch(display);
-    }
-
-    std::cout << "output name: " << this->wayfire_window_list_output->name << std::endl;
     if (!this->manager)
     {
         std::cerr << "Compositor doesn't support" <<
@@ -364,6 +374,9 @@ WayfireWindowList::WayfireWindowList(WayfireOutput *output)
 
 WayfireWindowList::~WayfireWindowList()
 {
+    destroy_window_list_live_preview_output();
     wl_registry_destroy(this->registry);
-    zwlr_foreign_toplevel_manager_v1_destroy(manager);
+    wl_shm_destroy(this->shm);
+    zwlr_foreign_toplevel_manager_v1_destroy(this->manager);
+    zwlr_screencopy_manager_v1_destroy(this->screencopy_manager);
 }

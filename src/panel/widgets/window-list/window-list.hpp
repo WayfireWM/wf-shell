@@ -33,12 +33,8 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
     WayfireOutput *output;
     Gtk::ScrolledWindow scrolled_window;
 
-    uint32_t foreign_toplevel_manager_id;
-    uint32_t foreign_toplevel_version;
-
     WayfireWindowList(WayfireOutput *output);
     virtual ~WayfireWindowList();
-    std::unique_ptr<WayfireWindowListOutput> wayfire_window_list_output;
 
     void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
     void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
@@ -81,8 +77,10 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
     Gtk::Widget *get_widget_before(int x);
 
     WfOption<bool> live_window_previews_opt{"panel/live_window_previews"};
-    void handle_new_wl_output(void *data, wl_registry *registry, uint32_t name, const char *interface,
-        uint32_t version, wl_output *output);
+    void handle_new_wl_output(wl_output *output);
+    void destroy_window_list_live_preview_output();
+    bool wl_outputs_done;
+    std::unique_ptr<WayfireWindowListOutput> window_list_live_preview_output = nullptr;
     void on_event(wf::json_t data) override;
     std::shared_ptr<IPCClient> ipc_client;
     bool live_window_preview_tooltips = false;

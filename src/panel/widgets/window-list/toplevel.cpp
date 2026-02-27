@@ -155,13 +155,14 @@ void TooltipMedia::request_next_frame()
         this->frame = NULL;
     }
 
-    if (!window_list->wayfire_window_list_output->output)
+    if (!this->window_list->window_list_live_preview_output ||
+        !this->window_list->window_list_live_preview_output->output)
     {
         return;
     }
 
-    this->frame = zwlr_screencopy_manager_v1_capture_output(window_list->screencopy_manager, 0,
-        window_list->wayfire_window_list_output->output);
+    this->frame = zwlr_screencopy_manager_v1_capture_output(this->window_list->screencopy_manager, 0,
+        this->window_list->window_list_live_preview_output->output);
     zwlr_screencopy_frame_v1_add_listener(this->frame, &screencopy_frame_listener, this);
 }
 
@@ -169,7 +170,6 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
 {
     this->window_list = window_list;
     this->shm = window_list->shm;
-    this->screencopy_manager = window_list->screencopy_manager;
 
     this->add_tick_callback([=] (const Glib::RefPtr<Gdk::FrameClock>& clock)
     {
@@ -671,16 +671,7 @@ class WayfireToplevel::impl
 
         update_tooltip();
 
-        if (this->window_list->live_window_previews_enabled())
-        {
-            if (!this->window_list->wayfire_window_list_output->output)
-            {
-                std::cerr << "Live window preview tooltips output not found." << std::endl;
-                tooltip->set_text(title);
-                this->window_list->enable_normal_tooltips_flag(true);
-                return true;
-            }
-        } else
+        if (!this->window_list->live_window_previews_enabled())
         {
             if (!this->window_list->normal_title_tooltips)
             {
@@ -688,7 +679,7 @@ class WayfireToplevel::impl
                     "Normal title tooltips enabled. To enable live window preview tooltips, make sure to set [panel] option 'live_window_previews = true' in wf-shell configuration and enable wayfire plugin live-previews"
                           <<
                     std::endl;
-                this->window_list->normal_title_tooltips = true;
+                this->window_list->enable_normal_tooltips_flag(true);
             }
 
             tooltip->set_text(title);
@@ -764,7 +755,8 @@ class WayfireToplevel::impl
         if (this->view_id == 0)
         {
             std::cerr <<
-                "Failed to get view id from app_id. (Is app_id_mode set to 'full' in wayfire workarounds?)" <<
+                "Failed to get view id from app_id. (Is 'app_id_mode' set to 'full' in wayfire [workarounds]?)"
+                      <<
                 std::endl;
         }
     }
