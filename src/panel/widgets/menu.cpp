@@ -67,7 +67,6 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     label.set_text(app->get_name());
     label.set_ellipsize(Pango::EllipsizeMode::END);
 
-
     extra_actions_button.add_css_class("flat");
     extra_actions_button.add_css_class("app-button-extras");
     extra_actions_button.set_direction(Gtk::ArrowType::RIGHT);
@@ -77,8 +76,6 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     box.add_css_class("flat");
     box.add_css_class("widget-icon");
     box.add_css_class("app-button");
-
-    set_child(box);
 
     auto left_click_g  = Gtk::GestureClick::create();
     auto right_click_g = Gtk::GestureClick::create();
@@ -131,19 +128,23 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
 
         box.append(button);
         box.append(extra_actions_button);
+
+        set_child(box);
     } else
     {
         label.set_max_width_chars(0);
         box.set_orientation(Gtk::Orientation::VERTICAL);
+        box.append(image);
         if (app->list_actions().size() == 0)
         {
-            button.set_child(image);
+            button.set_child(box);
             button.add_css_class("flat");
-            box.append(button);
+            set_child(button);
         } else
         {
-            extra_actions_button.set_child(image);
-            box.append(extra_actions_button);
+            extra_actions_button.set_child(box);
+            extra_actions_button.add_css_class("flat");
+            set_child(extra_actions_button);
         }
 
         box.add_controller(left_click_g);
