@@ -59,69 +59,130 @@ void WfMenuCategoryButton::on_click()
     menu->set_category(category);
 }
 
-WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app) :
-    Gtk::FlowBoxChild(), menu(_menu), m_app_info(app)
+WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app) :
+    Gtk::FlowBoxChild(), menu(_menu), app_info(app)
 {
-    m_image.set((const Glib::RefPtr<const Gio::Icon>&)app->get_icon());
-    m_image.set_pixel_size(48);
-    m_label.set_text(app->get_name());
-    m_label.set_xalign(0.0);
-    m_label.set_hexpand(true);
-    m_has_actions = app->list_actions().size() > 0;
-    m_button_box.append(m_image);
-    m_button_box.append(m_label);
+    image.set((const Glib::RefPtr<const Gio::Icon>&)app->get_icon());
 
-    m_button.set_child(m_button_box);
-    signals.push_back(m_button.signal_clicked().connect(
-        [this] ()
+    label.set_text(app->get_name());
+    label.set_ellipsize(Pango::EllipsizeMode::END);
+
+    extra_actions_button.add_css_class("flat");
+    extra_actions_button.add_css_class("app-button-extras");
+    extra_actions_button.set_direction(Gtk::ArrowType::RIGHT);
+    extra_actions_button.set_has_frame(false);
+
+    box.set_expand(false);
+    box.add_css_class("flat");
+    box.add_css_class("widget-icon");
+    box.add_css_class("app-button");
+
+    auto left_click_g  = Gtk::GestureClick::create();
+    auto right_click_g = Gtk::GestureClick::create();
+    auto long_press_g  = Gtk::GestureLongPress::create();
+    left_click_g->set_button(1);
+    right_click_g->set_button(3);
+    long_press_g->set_touch_only(true);
+
+    signals.push_back(left_click_g->signal_pressed().connect(
+        [=] (int c, double x, double y)
     {
-        this->on_click();
+        on_click();
+        left_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
     }));
-    m_padding_box.append(m_button);
-    m_label.set_ellipsize(Pango::EllipsizeMode::END);
-    m_label.set_max_width_chars(5);
-    m_button.add_css_class("flat");
-    m_extra_actions_button.add_css_class("flat");
-    m_extra_actions_button.add_css_class("app-button-extras");
-    m_extra_actions_button.set_halign(Gtk::Align::END);
-    m_extra_actions_button.set_direction(Gtk::ArrowType::RIGHT);
-    m_extra_actions_button.set_has_frame(false);
-    m_extra_actions_button.set_icon_name("arrow-right");
-    m_menu    = Gio::Menu::create();
-    m_actions = Gio::SimpleActionGroup::create();
-    m_extra_actions_button.hide();
+    signals.push_back(right_click_g->signal_pressed().connect(
+        [=] (int c, double x, double y)
+    {
+        extra_actions_button.activate();
+        right_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
+    signals.push_back(long_press_g->signal_pressed().connect(
+        [=] (double x, double y)
+    {
+        extra_actions_button.activate();
+        long_press_g->set_state(Gtk::EventSequenceState::CLAIMED);
+        left_click_g->set_state(Gtk::EventSequenceState::DENIED);
+    }));
 
     if (menu->menu_list)
     {
-        m_padding_box.append(m_extra_actions_button);
-        this->set_size_request(menu->menu_min_content_width, 48);
-        for (auto action : app->list_actions())
+        label.set_hexpand(true);
+        label.set_halign(Gtk::Align::FILL);
+        label.set_halign(Gtk::Align::START);
+        label.set_xalign(0.0);
+        list_item.set_hexpand(true);
+        box.set_hexpand(true);
+        set_hexpand(true);
+        box.set_orientation(Gtk::Orientation::HORIZONTAL);
+        extra_actions_button.set_halign(Gtk::Align::END);
+        extra_actions_button.set_icon_name("arrow-right");
+        button.add_css_class("flat");
+
+        list_item.append(image);
+        list_item.append(label);
+        button.set_child(list_item);
+
+        list_item.add_controller(left_click_g);
+        list_item.add_controller(right_click_g);
+        list_item.add_controller(long_press_g);
+
+        box.append(button);
+        box.append(extra_actions_button);
+
+        set_child(box);
+    } else
+    {
+        label.set_max_width_chars(0);
+        box.set_orientation(Gtk::Orientation::VERTICAL);
+        box.append(image);
+        if (app->list_actions().size() == 0)
         {
-            std::stringstream ss;
-            ss << "app." << action;
-            std::string full_action = ss.str();
-
-            auto menu_item = Gio::MenuItem::create(m_app_info->get_action_name(action), full_action);
-
-            auto action_obj = Gio::SimpleAction::create(action);
-            signals.push_back(action_obj->signal_activate().connect(
-                [this, action] (Glib::VariantBase vb)
-            {
-                auto ctx = Gdk::Display::get_default()->get_app_launch_context();
-                m_app_info->launch_action(action, ctx);
-                menu->hide_menu();
-            }));
-            m_menu->append_item(menu_item);
-            m_actions->add_action(action_obj);
-
-            m_extra_actions_button.show();
+            button.set_child(box);
+            button.add_css_class("flat");
+            set_child(button);
+        } else
+        {
+            extra_actions_button.set_child(box);
+            extra_actions_button.add_css_class("flat");
+            set_child(extra_actions_button);
         }
 
-        m_extra_actions_button.set_menu_model(m_menu);
+        box.add_controller(left_click_g);
+        box.add_controller(right_click_g);
+        box.add_controller(long_press_g);
+
+        box.append(label);
     }
 
-    set_child(m_padding_box);
-    add_css_class("app-button");
+    m_menu  = Gio::Menu::create();
+    actions = Gio::SimpleActionGroup::create();
+    extra_actions_button.hide();
+
+    for (auto action : app->list_actions())
+    {
+        std::stringstream ss;
+        ss << "app." << action;
+        std::string full_action = ss.str();
+
+        auto menu_item = Gio::MenuItem::create(app_info->get_action_name(action), full_action);
+
+        auto action_obj = Gio::SimpleAction::create(action);
+        signals.push_back(action_obj->signal_activate().connect(
+            [this, action] (Glib::VariantBase vb)
+        {
+            auto ctx = Gdk::Display::get_default()->get_app_launch_context();
+            app_info->launch_action(action, ctx);
+            menu->hide_menu();
+        }));
+        m_menu->append_item(menu_item);
+        actions->add_action(action_obj);
+
+        extra_actions_button.show();
+    }
+
+    extra_actions_button.set_menu_model(m_menu);
+    extra_actions_button.insert_action_group("app", actions);
+
     set_has_tooltip();
     signals.push_back(signal_query_tooltip().connect([=] (int x, int y, bool key_mode,
                                                           const std::shared_ptr<Gtk::Tooltip>& tooltip) ->
@@ -130,32 +191,9 @@ WfMenuMenuItem::WfMenuMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppI
         tooltip->set_text(app->get_name());
         return true;
     }, false));
-    m_extra_actions_button.insert_action_group("app", m_actions);
-
-    auto click_gesture = Gtk::GestureClick::create();
-    auto long_press    = Gtk::GestureLongPress::create();
-    long_press->set_touch_only(true);
-    long_press->signal_pressed().connect(
-        [=] (double x, double y)
-    {
-        m_extra_actions_button.activate();
-        long_press->set_state(Gtk::EventSequenceState::CLAIMED);
-        click_gesture->set_state(Gtk::EventSequenceState::DENIED);
-    });
-    click_gesture->set_button(3);
-    signals.push_back(click_gesture->signal_pressed().connect([=] (int count, double x, double y)
-    {
-        click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-    }));
-    signals.push_back(click_gesture->signal_released().connect([=] (int count, double x, double y)
-    {
-        m_extra_actions_button.activate();
-    }));
-    m_button.add_controller(long_press);
-    m_button.add_controller(click_gesture);
 }
 
-WfMenuMenuItem::~WfMenuMenuItem()
+WfMenuItem::~WfMenuItem()
 {
     for (auto signal : signals)
     {
@@ -163,21 +201,21 @@ WfMenuMenuItem::~WfMenuMenuItem()
     }
 }
 
-void WfMenuMenuItem::on_click()
+void WfMenuItem::on_click()
 {
     auto ctx = Gdk::Display::get_default()->get_app_launch_context();
-    m_app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
+    app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
     menu->hide_menu();
 }
 
-void WfMenuMenuItem::set_search_value(uint32_t value)
+void WfMenuItem::set_search_value(uint32_t value)
 {
-    m_search_value = value;
+    search_value = value;
 }
 
-uint32_t WfMenuMenuItem::get_search_value()
+uint32_t WfMenuItem::get_search_value()
 {
-    return m_search_value;
+    return search_value;
 }
 
 /* Fuzzy search for pattern in text. We use a greedy algorithm as follows:
@@ -209,12 +247,12 @@ static bool fuzzy_match(Glib::ustring text, Glib::ustring pattern)
     return i == pattern.length();
 }
 
-uint32_t WfMenuMenuItem::fuzzy_match(Glib::ustring pattern)
+uint32_t WfMenuItem::fuzzy_match(Glib::ustring pattern)
 {
     uint32_t match_score = 0;
-    Glib::ustring name   = m_app_info->get_name();
-    Glib::ustring long_name = m_app_info->get_display_name();
-    Glib::ustring progr     = m_app_info->get_executable();
+    Glib::ustring name   = app_info->get_name();
+    Glib::ustring long_name = app_info->get_display_name();
+    Glib::ustring progr     = app_info->get_executable();
 
     auto name_lower = name.lowercase();
     auto long_name_lower = long_name.lowercase();
@@ -239,13 +277,13 @@ uint32_t WfMenuMenuItem::fuzzy_match(Glib::ustring pattern)
     return match_score;
 }
 
-uint32_t WfMenuMenuItem::matches(Glib::ustring pattern)
+uint32_t WfMenuItem::matches(Glib::ustring pattern)
 {
     uint32_t match_score    = 0;
-    Glib::ustring long_name = m_app_info->get_display_name();
-    Glib::ustring name  = m_app_info->get_name();
-    Glib::ustring progr = m_app_info->get_executable();
-    Glib::ustring descr = m_app_info->get_description();
+    Glib::ustring long_name = app_info->get_display_name();
+    Glib::ustring name  = app_info->get_name();
+    Glib::ustring progr = app_info->get_executable();
+    Glib::ustring descr = app_info->get_description();
 
     auto name_lower = name.lowercase();
     auto long_name_lower = long_name.lowercase();
@@ -280,10 +318,10 @@ uint32_t WfMenuMenuItem::matches(Glib::ustring pattern)
     return match_score;
 }
 
-bool WfMenuMenuItem::operator <(const WfMenuMenuItem& other)
+bool WfMenuItem::operator <(const WfMenuItem& other)
 {
-    return Glib::ustring(m_app_info->get_name()).lowercase() <
-           Glib::ustring(other.m_app_info->get_name()).lowercase();
+    return Glib::ustring(app_info->get_name()).lowercase() <
+           Glib::ustring(other.app_info->get_name()).lowercase();
 }
 
 void WayfireMenu::load_menu_item(AppInfo app_info)
@@ -384,7 +422,7 @@ void WayfireMenu::populate_menu_items(std::string category)
 
     for (auto app_info : category_list[category]->items)
     {
-        auto app = new WfMenuMenuItem(this, app_info);
+        auto app = new WfMenuItem(this, app_info);
         flowbox.append(*app);
     }
 }
@@ -442,11 +480,9 @@ void WayfireMenu::load_menu_items_all()
 
 void WayfireMenu::on_search_changed()
 {
-    search_entry.set_text(search_contents);
-    search_entry.set_position(search_contents.length());
     if (menu_show_categories)
     {
-        if (search_contents.length() == 0)
+        if (search_entry.get_text().length() == 0)
         {
             /* Text has been unset, show categories again */
             populate_menu_items(category);
@@ -459,7 +495,7 @@ void WayfireMenu::on_search_changed()
         }
     }
 
-    m_sort_names  = search_contents.length() == 0;
+    m_sort_names  = search_entry.get_text().length() == 0;
     fuzzy_filter  = false;
     count_matches = 0;
     flowbox.unselect_all();
@@ -480,10 +516,10 @@ void WayfireMenu::on_search_changed()
 
 bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
 {
-    auto button = dynamic_cast<WfMenuMenuItem*>(child);
+    auto button = dynamic_cast<WfMenuItem*>(child);
     assert(button);
 
-    auto text = search_contents;
+    auto text = search_entry.get_text();
     uint32_t match_score = this->fuzzy_filter ?
         button->fuzzy_match(text) : button->matches(text);
 
@@ -499,8 +535,8 @@ bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
 
 bool WayfireMenu::on_sort(Gtk::FlowBoxChild *a, Gtk::FlowBoxChild *b)
 {
-    auto b1 = dynamic_cast<WfMenuMenuItem*>(a);
-    auto b2 = dynamic_cast<WfMenuMenuItem*>(b);
+    auto b1 = dynamic_cast<WfMenuItem*>(a);
+    auto b2 = dynamic_cast<WfMenuItem*>(b);
     assert(b1 && b2);
 
     if (m_sort_names)
@@ -513,7 +549,7 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild *a, Gtk::FlowBoxChild *b)
 
 void WayfireMenu::on_popover_shown()
 {
-    search_contents = "";
+    search_entry.delete_text(0, search_entry.get_text_length());
     on_search_changed();
     set_category("All");
     flowbox.unselect_all();
@@ -574,26 +610,22 @@ void WayfireMenu::setup_popover_layout()
 
     search_entry.add_css_class("app-search");
 
+    signals.push_back((search_entry.signal_changed().connect(
+        [this] ()
+    {
+        on_search_changed();
+    })));
     auto typing_gesture = Gtk::EventControllerKey::create();
     typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
     signals.push_back(typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
                                                                         Gdk::ModifierType state)
     {
-        if (keyval == GDK_KEY_BackSpace)
-        {
-            if (search_contents.length() > 0)
-            {
-                search_contents.pop_back();
-            }
-
-            on_search_changed();
-            return true;
-        } else if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
+        if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
         {
             auto children = flowbox.get_selected_children();
             if (children.size() == 1)
             {
-                auto child = dynamic_cast<WfMenuMenuItem*>(children[0]);
+                auto child = dynamic_cast<WfMenuItem*>(children[0]);
                 child->on_click();
             }
 
@@ -601,15 +633,19 @@ void WayfireMenu::setup_popover_layout()
         } else if (keyval == GDK_KEY_Escape)
         {
             button->get_popover()->hide();
+        } else if ((keyval == GDK_KEY_Up) ||
+                   (keyval == GDK_KEY_Down) ||
+                   (keyval == GDK_KEY_Left) ||
+                   (keyval == GDK_KEY_Right))
+        {
+            return false;
+        } else if (search_entry.has_focus())
+        {
+            return false;
         } else
         {
-            std::string input = gdk_keyval_name(keyval);
-            if (input.length() == 1)
-            {
-                search_contents = search_contents + input;
-                on_search_changed();
-                return true;
-            }
+            search_entry.grab_focus();
+            on_search_changed();
         }
 
         return false;
@@ -650,6 +686,14 @@ void WayfireMenu::update_popover_layout()
     popover_layout_box.remove(scroll_pair);
     popover_layout_box.remove(separator);
     popover_layout_box.remove(box_bottom);
+
+    if (menu_list)
+    {
+        flowbox.set_max_children_per_line(1);
+    } else
+    {
+        flowbox.set_max_children_per_line(-1);
+    }
 
     if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {
@@ -877,6 +921,11 @@ void WayfireMenu::init(Gtk::Box *container)
 
     // configuration reloading callbacks
     menu_icon.set_callback([=] () { update_icon(); });
+    flowbox_spacing.set_callback([=] ()
+    {
+        flowbox.set_column_spacing(flowbox_spacing.value());
+        flowbox.set_column_spacing(flowbox_spacing.value());
+    });
     menu_min_category_width.set_callback([=] () { update_category_width(); });
     menu_min_content_height.set_callback([=] () { update_content_height(); });
     menu_min_content_width.set_callback([=] () { update_content_width(); });
@@ -957,7 +1006,6 @@ void WayfireMenu::update_content_width()
 
 void WayfireMenu::toggle_menu()
 {
-    search_contents = "";
     search_entry.set_text("");
     if (button->get_active())
     {
@@ -984,7 +1032,7 @@ void WayfireMenu::select_first_flowbox_item()
     auto child = flowbox.get_child_at_index(0);
     if (child)
     {
-        auto cast_child = dynamic_cast<WfMenuMenuItem*>(child);
+        auto cast_child = dynamic_cast<WfMenuItem*>(child);
         if (cast_child)
         {
             flowbox.select_child(*cast_child);

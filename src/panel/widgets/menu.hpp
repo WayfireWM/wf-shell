@@ -6,6 +6,8 @@
 #include <set>
 
 #include "../widget.hpp"
+#include "gtkmm/enums.h"
+#include "gtkmm/orientable.h"
 #include "wf-popover.hpp"
 
 class WayfireMenu;
@@ -43,37 +45,34 @@ class WfMenuCategoryButton : public Gtk::Button
     void on_click();
 };
 
-class WfMenuMenuItem : public Gtk::FlowBoxChild
+class WfMenuItem : public Gtk::FlowBoxChild
 {
   public:
-    WfMenuMenuItem(WayfireMenu *menu, AppInfo app);
-    ~WfMenuMenuItem();
+    WfMenuItem(WayfireMenu *menu, AppInfo app);
+    ~WfMenuItem();
 
     uint32_t matches(Glib::ustring text);
     uint32_t fuzzy_match(Glib::ustring text);
-    bool operator <(const WfMenuMenuItem& other);
+    bool operator <(const WfMenuItem& other);
     void set_search_value(uint32_t value);
     uint32_t get_search_value();
     void on_click();
 
   private:
     WayfireMenu *menu;
-    Gtk::Box m_left_pad, m_right_pad;
-    Gtk::Box m_padding_box;
-    Gtk::Box m_button_box;
-    Gtk::Button m_button;
-    Gtk::Box m_list_box;
-    Gtk::Image m_image;
-    Gtk::Label m_label;
+    Gtk::Box box, list_item;
+    Gtk::Image image;
+    Gtk::Label label;
     Glib::RefPtr<Gio::Menu> m_menu;
-    Glib::RefPtr<Gio::SimpleActionGroup> m_actions;
-    Gtk::MenuButton m_extra_actions_button;
+    Glib::RefPtr<Gio::SimpleActionGroup> actions;
+    Gtk::Button button;
+    Gtk::MenuButton extra_actions_button;
     std::vector<sigc::connection> signals;
 
-    bool m_has_actions = false;
-    uint32_t m_search_value = 0;
+    bool has_actions = false;
+    uint32_t search_value = 0;
 
-    AppInfo m_app_info;
+    AppInfo app_info;
 };
 
 class WayfireLogoutUIButton
@@ -122,8 +121,6 @@ class WayfireLogoutUI
 class WayfireMenu : public WayfireWidget
 {
     WayfireOutput *output;
-
-    std::string search_contents = "";
 
     Gtk::Box flowbox_container;
     Gtk::Box box, box_bottom, scroll_pair;
@@ -176,6 +173,7 @@ class WayfireMenu : public WayfireWidget
     WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
     WfOption<std::string> panel_position{"panel/position"};
     WfOption<std::string> menu_icon{"panel/menu_icon"};
+    WfOption<int> flowbox_spacing{"panel/menu_item_spacing"};
     WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     WfOption<bool> menu_show_categories{"panel/menu_show_categories"};

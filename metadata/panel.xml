@@ -194,6 +194,16 @@
 		<default>42</default>
 		<min>0</min>
 	</option>
+	<option name="menu_item_icon_size" type="int">
+		<_short>Menu item icon size</_short>
+		<default>48</default>
+		<min>0</min>
+	</option>
+	<option name="menu_item_spacing" type="int">
+		<_short>Space between menu items</_short>
+		<default>8</default>
+		<min>0</min>
+	</option>
 	<option name="menu_min_category_width" type="int">
 		<_short>Menu Minimum Category Width</_short>
 		<default>200</default>
