@@ -29,7 +29,6 @@ void WayfireWpMixer::cancel_popover_timeout()
 void WayfireWpMixer::reload_config()
 {
     // adjust margins and spacing
-    static WfOption<int> spacing{"panel/wp_spacing"};
     auto set_spacing = [&] (Gtk::Box& box)
     {
         box.set_spacing(spacing);
@@ -40,6 +39,8 @@ void WayfireWpMixer::reload_config()
     set_spacing(sinks_box);
     set_spacing(sources_box);
     set_spacing(streams_box);
+
+    master_box.set_orientation(stack_categories ? Gtk::Orientation::VERTICAL : Gtk::Orientation::HORIZONTAL);
 
     // big matching operation
     static WfOption<std::string> str_quick_target_choice{"panel/wp_quick_target_choice"};
