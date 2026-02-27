@@ -182,6 +182,11 @@ void NetworkManager::lost_nm()
     connection     = nullptr;
     settings_proxy = nullptr;
     nm_proxy = nullptr;
+    for (auto & it : all_devices)
+    {
+        device_removed.emit(it.second);
+    }
+
     all_devices.clear();
     all_vpns.clear();
     primary_connection     = "/";
