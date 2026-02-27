@@ -206,6 +206,26 @@ void WayfireVolume::init(Gtk::Box *container)
         "default-sink-changed", G_CALLBACK(default_sink_changed), this);
     gvc_mixer_control_open(gvc_control);
 
+    /* Ensure left click reliably toggles scale popover */
+    auto left_click_gesture = Gtk::GestureClick::create();
+    left_click_gesture->set_button(1);
+    left_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        left_click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+    });
+    left_click_gesture->signal_released().connect([=] (int count, double x, double y)
+    {
+        if (popover->is_visible())
+        {
+            popover->popdown();
+            popover_timeout.disconnect();
+        } else
+        {
+            popover->popup();
+            check_set_popover_timeout();
+        }
+    });
+
     /* Middle click toggle mute */
     auto middle_click_gesture = Gtk::GestureClick::create();
     auto long_press = Gtk::GestureLongPress::create();
@@ -231,6 +251,7 @@ void WayfireVolume::init(Gtk::Box *container)
         gvc_mixer_stream_push_volume(gvc_stream);
     }));
     button->add_controller(long_press);
+    button->add_controller(left_click_gesture);
     button->add_controller(middle_click_gesture);
 
     /* Setup layout */
