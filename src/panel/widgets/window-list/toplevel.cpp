@@ -101,6 +101,11 @@ void handle_frame_ready(void *data,
 {
     TooltipMedia *tooltip_media = (TooltipMedia*)data;
 
+    if (!tooltip_media->shm_data || !tooltip_media->size)
+    {
+        return;
+    }
+
     auto bytes = Glib::Bytes::create(tooltip_media->shm_data, tooltip_media->size);
 
     auto builder = Gdk::MemoryTextureBuilder::create();
@@ -179,9 +184,18 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
 
 TooltipMedia::~TooltipMedia()
 {
-    if (munmap(this->shm_data, this->size) < 0)
+    if (this->frame)
     {
-        perror("munmap failed");
+        zwlr_screencopy_frame_v1_destroy(this->frame);
+        this->frame = NULL;
+    }
+
+    if (this->shm_data && this->size)
+    {
+        if (munmap(this->shm_data, this->size) < 0)
+        {
+            perror("munmap failed");
+        }
     }
 
     this->shm_data = NULL;
@@ -340,6 +354,7 @@ class WayfireToplevel::impl
             this->window_list->ipc_client->send(live_window_release_output_request.serialize(),
                 [=] (wf::json_t data)
             {
+                unset_tooltip_media();
                 this->window_list->live_window_preview_view_id = 0;
                 if (data.serialize().find("error") != std::string::npos)
                 {
@@ -722,6 +737,7 @@ class WayfireToplevel::impl
                 return;
             }
 
+            set_tooltip_media();
             this->window_list->live_window_preview_view_id = this->view_id;
             tooltip->set_custom(this->custom_tooltip_content);
         });
