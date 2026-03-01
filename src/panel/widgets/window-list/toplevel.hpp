@@ -38,8 +38,7 @@ class TooltipMedia : public Gtk::Picture
     size_t size = 0;
 
     TooltipMedia(WayfireWindowList *window_list);
-    ~TooltipMedia()
-    {}
+    ~TooltipMedia();
 
     bool on_tick(const Glib::RefPtr<Gdk::FrameClock>& clock);
     void request_next_frame();

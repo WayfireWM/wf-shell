@@ -177,6 +177,17 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
     });
 }
 
+TooltipMedia::~TooltipMedia()
+{
+    if (munmap(this->shm_data, this->size) < 0)
+    {
+        perror("munmap failed");
+    }
+
+    this->shm_data = NULL;
+    this->size     = 0;
+}
+
 bool TooltipMedia::on_tick(const Glib::RefPtr<Gdk::FrameClock>& clock)
 {
     this->request_next_frame();
