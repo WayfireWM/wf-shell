@@ -81,10 +81,7 @@ void handle_output_mode(void*,
 {}
 
 void handle_output_done(void *data, struct wl_output*)
-{
-    WayfireWindowList *window_list = (WayfireWindowList*)data;
-    window_list->wl_outputs_done = true;
-}
+{}
 
 void handle_output_scale(void*, struct wl_output*, int32_t)
 {}
@@ -133,12 +130,6 @@ void WayfireWindowList::handle_new_wl_output(wl_output *output)
     std::string live_preview_output_name = WayfireShellApp::get().live_preview_output_name;
 
     wl_output_add_listener(output, &output_listener, this);
-
-    this->wl_outputs_done = false;
-    while (!this->wl_outputs_done)
-    {
-        wl_display_dispatch(this->display);
-    }
 }
 
 void WayfireWindowList::live_window_previews_plugin_check()

@@ -79,7 +79,6 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
     WfOption<bool> live_window_previews_opt{"panel/live_window_previews"};
     void handle_new_wl_output(wl_output *output);
     void destroy_window_list_live_preview_output();
-    bool wl_outputs_done;
     std::unique_ptr<WayfireWindowListOutput> window_list_live_preview_output = nullptr;
     void on_event(wf::json_t data) override;
     std::shared_ptr<IPCClient> ipc_client;

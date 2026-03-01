@@ -58,7 +58,6 @@ void handle_frame_buffer(void *data,
 
     if (tooltip_media->size != size)
     {
-        tooltip_media->set_size_request(width, height);
         tooltip_media->size = size;
         auto anon_file = create_anon_file(size);
         if (anon_file < 0)
@@ -180,6 +179,8 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
     {
         return this->on_tick(clock);
     });
+
+    request_next_frame();
 }
 
 TooltipMedia::~TooltipMedia()
@@ -369,6 +370,34 @@ class WayfireToplevel::impl
                     this->window_list->enable_normal_tooltips_flag(true);
                     return;
                 }
+            });
+        });
+        button.add_controller(motion_controller);
+        motion_controller = Gtk::EventControllerMotion::create();
+        motion_controller->signal_enter().connect([=] (double x, double y)
+        {
+            wf::json_t live_window_preview_stream_request;
+            live_window_preview_stream_request["method"] = "live_previews/request_stream";
+            wf::json_t view_id_int;
+            view_id_int["id"] = this->view_id;
+            live_window_preview_stream_request["data"] = view_id_int;
+            this->window_list->ipc_client->send(live_window_preview_stream_request.serialize(),
+                [=] (wf::json_t data)
+            {
+                if ((data.serialize().find("error") != std::string::npos) &&
+                    this->window_list->live_window_preview_tooltips)
+                {
+                    std::cerr << data.serialize() << std::endl;
+                    std::cerr <<
+                        "Error acquiring live preview stream. (is live-previews wayfire plugin enabled?)" <<
+                        std::endl;
+                    this->window_list->enable_normal_tooltips_flag(true);
+                    button.set_tooltip_text(title);
+
+                    return;
+                }
+
+                set_tooltip_media();
             });
         });
         button.add_controller(motion_controller);
@@ -712,35 +741,8 @@ class WayfireToplevel::impl
             return true;
         }
 
-        if (this->window_list->live_window_preview_view_id == this->view_id)
-        {
-            tooltip->set_custom(this->custom_tooltip_content);
-            return true;
-        }
-
-        wf::json_t live_window_preview_stream_request;
-        live_window_preview_stream_request["method"] = "live_previews/request_stream";
-        wf::json_t view_id_int;
-        view_id_int["id"] = this->view_id;
-        live_window_preview_stream_request["data"] = view_id_int;
-        this->window_list->ipc_client->send(live_window_preview_stream_request.serialize(),
-            [=] (wf::json_t data)
-        {
-            if ((data.serialize().find("error") != std::string::npos) &&
-                this->window_list->live_window_preview_tooltips)
-            {
-                std::cerr << data.serialize() << std::endl;
-                std::cerr << "Error acquiring live preview stream. (is live-previews wayfire plugin enabled?)" << std::endl;
-                this->window_list->enable_normal_tooltips_flag(true);
-                button.set_tooltip_text(title);
-
-                return;
-            }
-
-            set_tooltip_media();
-            this->window_list->live_window_preview_view_id = this->view_id;
-            tooltip->set_custom(this->custom_tooltip_content);
-        });
+        this->window_list->live_window_preview_view_id = this->view_id;
+        tooltip->set_custom(this->custom_tooltip_content);
 
         return true;
     }
