@@ -40,8 +40,7 @@ class WayfireShellApp
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
 
   protected:
-    /** This should be initialized by the subclass in each program which uses
-     * wf-shell-app */
+    /** This should be initialized by the subclass in each program which uses wf-shell-app */
     bool alternative_monitors = false; /* Used to skip monitor management in lockscreen */
     static std::unique_ptr<WayfireShellApp> instance;
     std::optional<std::string> cmdline_config;

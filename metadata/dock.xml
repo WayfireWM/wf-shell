@@ -12,8 +12,19 @@
 		<default>true</default>
 	</option>
 	<option name="autohide_duration" type="int">
-		<_short>Autohide duration</_short>
+		<_short>Autohide animation duration</_short>
+		<_long>Time (in milliseconds) the dock takes to expand and retract</_long>
 		<default>300</default>
+	</option>
+	<option name="autohide_show_delay" type="int">
+		<_short>Autohide show delay</_short>
+		<_long>Amount of time (in milliseconds) the cursor needs to be in the zone before showing.</_long>
+		<default>300</default>
+	</option>
+	<option name="autohide_hide_delay" type="int">
+		<_short>Autohide hide delay</_short>
+		<_long>Amount of time (in milliseconds) the cursor needs to be out of the zone before hiding.</_long>
+		<default>500</default>
 	</option>
 	<option name="position" type="string">
 		<_short>Position</_short>
@@ -26,10 +37,27 @@
 			<value>bottom</value>
 			<_name>Bottom</_name>
 		</desc>
+		<desc>
+			<value>left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>right</value>
+			<_name>Right</_name>
+		</desc>
 	</option>
-	<option name="dock_height" type="int">
-		<_short>Dock height</_short>
+	<option name="minimal_height" type="int">
+		<_short>Minimal height</_short>
 		<default>100</default>
+	</option>
+	<option name="minimal_width" type="int">
+		<_short>Minimal width</_short>
+		<default>100</default>
+	</option>
+	<option name="full_span" type="bool">
+		<_short>Anchor to edges</_short>
+		<_long>Wether the dock should extend all the way to the left and right; or top and bottom depending on orientation.</_long>
+		<default>false</default>
 	</option>
 	<option name="icon_height" type="int">
 		<_short>Dock icons height</_short>
