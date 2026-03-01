@@ -24,7 +24,7 @@ class WayfireWorkspaceWindow : public Gtk::Widget
 class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
 {
     std::string output_name;
-    void set_height();
+    void set_size();
     void on_event(wf::json_t data) override;
     void switcher_on_event(wf::json_t data);
     void grid_on_event(wf::json_t data);
@@ -50,7 +50,7 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
     Gtk::Box switcher_box;
     Gtk::Grid switch_grid;
     Gtk::Overlay overlay;
-    double get_scaled_width();
+    std::pair<double, double> get_scaled_size();
     std::unique_ptr<WayfireMenuButton> button;
     int output_width, output_height;
     void init(Gtk::Box *container) override;
@@ -64,8 +64,8 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
     int current_ws_x, current_ws_y;
     std::vector<WayfireWorkspaceWindow*> windows;
     WfOption<std::string> workspace_switcher_mode{"panel/workspace_switcher_mode"};
-    WfOption<double> workspace_switcher_target_height_opt{"panel/workspace_switcher_target_height"};
-    double workspace_switcher_target_height;
+    WfOption<double> workspace_switcher_target_size_opt{"panel/workspace_switcher_target_size"};
+    double workspace_switcher_target_size;
     WfOption<bool> workspace_switcher_render_views{"panel/workspace_switcher_render_views"};
 };
 
@@ -76,7 +76,7 @@ class WayfireWorkspaceBox : public Gtk::Overlay
   public:
     int x_index, y_index;
     int output_id, output_width, output_height;
-    int get_scaled_width();
+    std::pair<int, int> get_scaled_size();
     WayfireWorkspaceBox(WayfireWorkspaceSwitcher *switcher)
     {
         this->switcher = switcher;

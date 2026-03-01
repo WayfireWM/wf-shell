@@ -1,4 +1,5 @@
 #include "wf-popover.hpp"
+#include "gtkmm/enums.h"
 #include "wf-autohide-window.hpp"
 
 WayfireMenuButton::WayfireMenuButton(const std::string& section) :
@@ -9,8 +10,19 @@ WayfireMenuButton::WayfireMenuButton(const std::string& section) :
 
     auto cb = [=] ()
     {
-        // set_direction((std::string)panel_position == "top" ?
-        // Gtk::Arrow::DOWN : Gtk::Arrow::UP);
+        if (panel_position.value() == "top")
+        {
+            set_direction(Gtk::ArrowType::DOWN);
+        } else if (panel_position.value() == "bottom")
+        {
+            set_direction(Gtk::ArrowType::UP);
+        } else if (panel_position.value() == "left")
+        {
+            set_direction(Gtk::ArrowType::RIGHT);
+        } else if (panel_position.value() == "right")
+        {
+            set_direction(Gtk::ArrowType::LEFT);
+        }
 
         this->unset_popover();
         // m_popover.set_constrain_to(Gtk::POPOVER_CONSTRAINT_NONE);

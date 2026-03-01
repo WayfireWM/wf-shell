@@ -45,6 +45,9 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         return false;
     }
 
+    m_icon.set_halign(Gtk::Align::CENTER);
+    m_icon.set_valign(Gtk::Align::CENTER);
+
     button.set_child(m_icon);
     button.add_css_class("widget-icon");
     button.add_css_class("flat");
@@ -151,12 +154,32 @@ void WayfireLaunchers::init(Gtk::Box *container)
 {
     box.add_css_class("widget-icon");
     box.add_css_class("launchers");
+
     container->append(box);
+
+    box.set_halign(Gtk::Align::CENTER);
+    box.set_valign(Gtk::Align::CENTER);
+
     handle_config_reload();
+}
+
+void WayfireLaunchers::update_layout()
+{
+    WfOption<std::string> panel_position{"panel/position"};
+
+    if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
+    {
+        box.set_orientation(Gtk::Orientation::VERTICAL);
+    } else
+    {
+        box.set_orientation(Gtk::Orientation::HORIZONTAL);
+    }
 }
 
 void WayfireLaunchers::handle_config_reload()
 {
+    update_layout();
+
     for (auto child : box.get_children())
     {
         box.remove(*child);

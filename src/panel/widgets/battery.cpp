@@ -206,6 +206,24 @@ bool WayfireBatteryInfo::setup_dbus()
     return false;
 }
 
+void WayfireBatteryInfo::update_layout()
+{
+    WfOption<std::string> panel_position{"panel/position"};
+
+    if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
+    {
+        button_box.set_orientation(Gtk::Orientation::VERTICAL);
+    } else
+    {
+        button_box.set_orientation(Gtk::Orientation::HORIZONTAL);
+    }
+}
+
+void WayfireBatteryInfo::handle_config_reload()
+{
+    update_layout();
+}
+
 // TODO: simplify config loading
 
 void WayfireBatteryInfo::init(Gtk::Box *container)
@@ -232,6 +250,8 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
     button.set_child(button_box);
     button.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(*this, &WayfireBatteryInfo::update_icon));
+
+    update_layout();
 }
 
 WayfireBatteryInfo::~WayfireBatteryInfo()

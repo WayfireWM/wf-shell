@@ -1,17 +1,12 @@
-#include <gtkmm/window.h>
-#include <gdkmm/frameclock.h>
-#include <glibmm/main.h>
+#include <gtkmm.h>
+#include <glibmm.h>
 #include <gdk/wayland/gdkwayland.h>
-
-#include <gtk-utils.hpp>
-#include <wf-shell-app.hpp>
 #include <gtk4-layer-shell.h>
-#include <wf-autohide-window.hpp>
 
 #include "dock.hpp"
+#include "wf-shell-app.hpp"
+#include "wf-autohide-window.hpp"
 #include "../util/gtk-utils.hpp"
-#include <css-config.hpp>
-
 
 class WfDock::impl
 {
@@ -22,7 +17,7 @@ class WfDock::impl
     Gtk::Box box;
 
     WfOption<std::string> css_path{"dock/css_path"};
-    WfOption<int> dock_height{"dock/dock_height"};
+    WfOption<std::string> position{"dock/position"};
 
   public:
     impl(WayfireOutput *output)
@@ -32,18 +27,15 @@ class WfDock::impl
             new WayfireAutohidingWindow(output, "dock"));
         window->set_auto_exclusive_zone(false);
         gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
-        out_box.append(box);
-        out_box.add_css_class("out-box");
-        box.add_css_class("box");
-        window->set_child(out_box);
 
-        window->add_css_class("wf-dock");
+        out_box.append(box);
+        out_box.add_css_class("out_box");
+
+        box.add_css_class("box");
 
         out_box.set_halign(Gtk::Align::CENTER);
+        window->add_css_class("wf-dock");
+        window->set_child(out_box);
 
         if ((std::string)css_path != "")
         {
@@ -64,6 +56,31 @@ class WfDock::impl
             set_clickable_region();
             return true;
         });
+
+        auto update_position = [=] ()
+        {
+            if (position.value() == "bottom")
+            {
+                // this is not great, but we lack better options without doing a
+                // layout with boxes in boxes (ugly) or some sort of custom layout manager
+                box.set_orientation(Gtk::Orientation::HORIZONTAL);
+                box.set_direction(Gtk::TextDirection::LTR);
+            } else if (position.value() == "left")
+            {
+                box.set_orientation(Gtk::Orientation::VERTICAL);
+                box.set_direction(Gtk::TextDirection::LTR);
+            } else if (position.value() == "right")
+            {
+                box.set_orientation(Gtk::Orientation::VERTICAL);
+                box.set_direction(Gtk::TextDirection::RTL);
+            } else // top
+            {
+                box.set_orientation(Gtk::Orientation::HORIZONTAL);
+                box.set_direction(Gtk::TextDirection::LTR);
+            }
+        };
+        position.set_callback(update_position);
+        update_position();
     }
 
     void add_child(Gtk::Widget& widget)
@@ -82,7 +99,7 @@ class WfDock::impl
     }
 
     /* Sets the central section as clickable and transparent edges as click-through
-     *  Gets called regularly to ensure css size changes all register */
+     * Gets called regularly to ensure css size changes all register */
     void set_clickable_region()
     {
         auto surface = window->get_surface();

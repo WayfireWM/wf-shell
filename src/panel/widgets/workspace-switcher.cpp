@@ -33,7 +33,7 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     ipc_client->subscribe(this, {"output-layout-changed"});
     ipc_client->subscribe(this, {"wset-workspace-changed"});
 
-    workspace_switcher_target_height_opt.set_callback([=] () {set_height();});
+    workspace_switcher_target_size_opt.set_callback([=] () {set_size();});
 
     auto mode_cb = ([=] ()
     {
@@ -71,20 +71,27 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     mode_cb();
 }
 
-void WayfireWorkspaceSwitcher::set_height()
+void WayfireWorkspaceSwitcher::set_size()
 {
-    double val = workspace_switcher_target_height_opt.value();
+    double val = workspace_switcher_target_size_opt.value();
     if (val == 0.0)
     {
         val = (double)WfOption<int>{"panel/minimal_height"}.value();
     }
 
-    if (workspace_switcher_mode.value() == "grid")
+    if (workspace_switcher_mode.value() == "row")
+    {
+        WfOption<std::string> panel_position{"panel/position"};
+        if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
+        {
+            val = val / grid_width;
+        }
+    } else if (workspace_switcher_mode.value() == "grid")
     {
         val = val / grid_height;
     }
 
-    workspace_switcher_target_height = val;
+    workspace_switcher_target_size = val;
 }
 
 void WayfireWorkspaceSwitcher::get_wsets()
@@ -106,7 +113,7 @@ void WayfireWorkspaceSwitcher::get_wsets()
             grid_process_workspaces(data);
         }
 
-        set_height();
+        set_size();
     });
 }
 
@@ -142,8 +149,9 @@ std::pair<int, int> WayfireWorkspaceSwitcher::get_workspace(WayfireWorkspaceBox 
     WayfireWorkspaceWindow *w)
 {
     std::pair<int, int> workspace;
-    double scaled_output_width  = ws->get_scaled_width();
-    double scaled_output_height = workspace_switcher_target_height;
+    auto size = ws->get_scaled_size();
+    double scaled_output_width  = size.first;
+    double scaled_output_height = size.second;
     workspace.first  = std::floor((w->x + (w->w / 2)) / scaled_output_width) + this->current_ws_x;
     workspace.second = std::floor((w->y + (w->h / 2)) / scaled_output_height) + this->current_ws_y;
     return workspace;
@@ -152,8 +160,9 @@ std::pair<int, int> WayfireWorkspaceSwitcher::get_workspace(WayfireWorkspaceBox 
 std::pair<int, int> WayfireWorkspaceSwitcher::grid_get_workspace(WayfireWorkspaceWindow *w)
 {
     std::pair<int, int> workspace;
-    double scaled_output_width  = this->get_scaled_width();
-    double scaled_output_height = workspace_switcher_target_height;
+    auto size = this->get_scaled_size();
+    double scaled_output_width  = size.first;
+    double scaled_output_height = size.second;
     workspace.first  = std::floor((w->x + (w->w / 2)) / scaled_output_width) + this->current_ws_x;
     workspace.second = std::floor((w->y + (w->h / 2)) / scaled_output_height) + this->current_ws_y;
     return workspace;
@@ -177,8 +186,9 @@ bool WayfireWorkspaceSwitcher::on_grid_get_child_position(Gtk::Widget *widget, G
 {
     if (auto w = static_cast<WayfireWorkspaceWindow*>(widget))
     {
-        allocation.set_x(w->x + this->current_ws_x * this->get_scaled_width());
-        allocation.set_y(w->y + this->current_ws_y * this->workspace_switcher_target_height);
+        auto size = this->get_scaled_size();
+        allocation.set_x(w->x + this->current_ws_x * size.first);
+        allocation.set_y(w->y + this->current_ws_y * size.second);
         allocation.set_width(w->w);
         allocation.set_height(w->h);
         return true;
@@ -251,16 +261,28 @@ void WayfireWorkspaceBox::on_workspace_clicked(int count, double x, double y)
     }
 }
 
-double WayfireWorkspaceSwitcher::get_scaled_width()
+std::pair<double, double> WayfireWorkspaceSwitcher::get_scaled_size()
 {
-    return this->workspace_switcher_target_height *
-           (this->output_width / float(this->output_height));
+    WfOption<std::string> panel_position{"panel/position"};
+
+    if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
+    {
+        return {
+            workspace_switcher_target_size,
+            (workspace_switcher_target_size * this->output_height / float(this->output_width))
+        };
+    } else
+    {
+        return {
+            (workspace_switcher_target_size * this->output_width / float(this->output_height)),
+            workspace_switcher_target_size
+        };
+    }
 }
 
-int WayfireWorkspaceBox::get_scaled_width()
+std::pair<int, int> WayfireWorkspaceBox::get_scaled_size()
 {
-    return this->switcher->workspace_switcher_target_height *
-           (this->output_width / float(this->output_height));
+    return this->switcher->get_scaled_size();
 }
 
 bool WayfireWorkspaceBox::on_workspace_scrolled(double x, double y)
@@ -347,7 +369,8 @@ void WayfireWorkspaceSwitcher::render_workspace(wf::json_t workspace, int j, int
         false);
     ws->set_hexpand(false);
     ws->set_vexpand(false);
-    ws->set_size_request(ws->get_scaled_width(), workspace_switcher_target_height);
+    auto size = get_scaled_size();
+    ws->set_size_request(size.first, size.second);
     ws->add_controller(click_gesture);
     ws->add_controller(scroll_controller);
     box.append(*ws);
@@ -464,8 +487,9 @@ void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data
                         auto ws = Gtk::make_managed<WayfireWorkspaceBox>(this);
                         ws->output_id = output_data["id"].as_int();
                         ws->set_can_target(false);
-                        auto ws_width  = this->get_scaled_width() / this->grid_width;
-                        auto ws_height = this->workspace_switcher_target_height / this->grid_height;
+                        auto size = this->get_scaled_size();
+                        auto ws_width  = size.first / this->grid_width;
+                        auto ws_height = size.second / this->grid_height;
                         ws->set_size_request(ws_width, ws_height);
                         ws->add_css_class("workspace");
                         if ((workspace_data[i]["workspace"]["x"].as_int() == k) &&
@@ -485,8 +509,7 @@ void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data
 
                         ws = Gtk::make_managed<WayfireWorkspaceBox>(this);
                         ws->output_id = output_data["id"].as_int();
-                        ws->set_size_request(
-                            this->get_scaled_width(), this->workspace_switcher_target_height);
+                        ws->set_size_request(size.first, size.second);
                         ws->add_css_class("workspace");
                         if ((workspace_data[i]["workspace"]["x"].as_int() == k) &&
                             (workspace_data[i]["workspace"]["y"].as_int() == j))
@@ -579,8 +602,9 @@ void WayfireWorkspaceSwitcher::add_view(wf::json_t view_data)
             }
         }
 
-        double width  = ws->get_scaled_width();
-        double height = workspace_switcher_target_height;
+        auto size = ws->get_scaled_size();
+        double width  = size.first;
+        double height = size.second;
 
         v->x = x * (width / float(ws->output_width));
         v->y = y * (height / float(ws->output_height));
@@ -648,8 +672,9 @@ void WayfireWorkspaceSwitcher::grid_add_view(wf::json_t view_data)
             return;
         }
 
-        double width  = this->get_scaled_width();
-        double height = workspace_switcher_target_height;
+        auto size = this->get_scaled_size();
+        double width  = size.first;
+        double height = size.second;
 
         v->x = x * (width / float(this->output_width));
         v->y = y * (height / float(this->output_height));
