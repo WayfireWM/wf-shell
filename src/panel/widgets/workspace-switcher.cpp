@@ -487,8 +487,8 @@ void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data
                         auto ws = Gtk::make_managed<WayfireWorkspaceBox>(this);
                         ws->output_id = output_data["id"].as_int();
                         ws->set_can_target(false);
-                        auto size = this->get_scaled_size();
-                        auto ws_width  = size.first / this->grid_width;
+                        auto size     = this->get_scaled_size();
+                        auto ws_width = size.first / this->grid_width;
                         auto ws_height = size.second / this->grid_height;
                         ws->set_size_request(ws_width, ws_height);
                         ws->add_css_class("workspace");
@@ -602,7 +602,7 @@ void WayfireWorkspaceSwitcher::add_view(wf::json_t view_data)
             }
         }
 
-        auto size = ws->get_scaled_size();
+        auto size     = ws->get_scaled_size();
         double width  = size.first;
         double height = size.second;
 
@@ -672,7 +672,7 @@ void WayfireWorkspaceSwitcher::grid_add_view(wf::json_t view_data)
             return;
         }
 
-        auto size = this->get_scaled_size();
+        auto size     = this->get_scaled_size();
         double width  = size.first;
         double height = size.second;
 
