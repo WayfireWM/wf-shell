@@ -30,8 +30,15 @@ minimal_height = 24
 # automatically hide when pointer isn't over the panel
 autohide = false
 
-# time in milliseconds to wait before hiding
+# time in milliseconds the showing/hiding animation takes
 autohide_duration = 300
+
+# time in milliseconds to wait before showing
+autohide_show_delay= 300
+
+# time in milliseconds to wait before hiding
+autohide_hide_delay = 500
+
 
 # layer can be top, bottom, overlay or background
 layer = top

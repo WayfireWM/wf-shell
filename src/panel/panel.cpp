@@ -5,15 +5,18 @@
 #include <gtkmm/application.h>
 #include <gdk/wayland/gdkwayland.h>
 #include <gtk4-layer-shell.h>
+#include <gtkmm/sizegroup.h>
+#include <gtkmm/enums.h>
 
 #include <iostream>
 #include <memory>
 #include <sstream>
 
-#include <map>
 #include <css-config.hpp>
+
 #include "panel.hpp"
 
+#include "widget.hpp"
 #include "widgets/battery.hpp"
 #include "widgets/command-output.hpp"
 #include "widgets/language.hpp"
@@ -45,6 +48,7 @@ class WayfirePanel::impl
 
     Gtk::CenterBox content_box;
     Gtk::Box left_box, center_box, right_box;
+    std::shared_ptr<Gtk::SizeGroup> sides_size_group;
 
     using Widget = std::unique_ptr<WayfireWidget>;
     using WidgetContainer = std::vector<Widget>;
@@ -52,46 +56,94 @@ class WayfirePanel::impl
 
     WayfireOutput *output;
 
+    WfOption<std::string> panel_position{"panel/position"};
+    WfOption<bool> force_center{"panel/force_center"};
+
     WfOption<std::string> panel_layer{"panel/layer"};
     std::function<void()> set_panel_layer = [=] ()
     {
-        if ((std::string)panel_layer == "overlay")
+        if (panel_layer.value() == "overlay")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
         }
 
-        if ((std::string)panel_layer == "top")
+        if (panel_layer.value() == "top")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
         }
 
-        if ((std::string)panel_layer == "bottom")
+        if (panel_layer.value() == "bottom")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
         }
 
-        if ((std::string)panel_layer == "background")
+        if (panel_layer.value() == "background")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
         }
     };
 
-    WfOption<int> minimal_panel_height{"panel/minimal_height"};
+    void set_boxes_orientation(Gtk::Orientation orientation)
+    {
+        content_box.set_orientation(orientation);
+        left_box.set_orientation(orientation);
+        center_box.set_orientation(orientation);
+        right_box.set_orientation(orientation);
+    }
+
+    void update_orientation()
+    {
+        bool is_horizontal = !(panel_position.value() == "left" or panel_position.value() ==
+            "right"); // checking like this also works with the fallback being the top
+
+        set_boxes_orientation(is_horizontal ? Gtk::Orientation::HORIZONTAL : Gtk::Orientation::VERTICAL);
+
+        if (force_center)
+        {
+            left_box.set_halign(Gtk::Align::CENTER);
+            right_box.set_halign(Gtk::Align::CENTER);
+            left_box.set_valign(Gtk::Align::CENTER);
+            right_box.set_valign(Gtk::Align::CENTER);
+
+            if (is_horizontal)
+            {
+                sides_size_group->set_mode(Gtk::SizeGroup::Mode::HORIZONTAL);
+            } else
+            {
+                sides_size_group->set_mode(Gtk::SizeGroup::Mode::VERTICAL);
+            }
+        } else
+        {
+            sides_size_group->set_mode(Gtk::SizeGroup::Mode::NONE);
+
+            if (is_horizontal)
+            {
+                left_box.set_halign(Gtk::Align::START);
+                right_box.set_halign(Gtk::Align::END);
+                left_box.set_valign(Gtk::Align::CENTER);
+                right_box.set_valign(Gtk::Align::CENTER);
+            } else
+            {
+                left_box.set_valign(Gtk::Align::START);
+                right_box.set_valign(Gtk::Align::END);
+                left_box.set_halign(Gtk::Align::CENTER);
+                right_box.set_halign(Gtk::Align::CENTER);
+            }
+        }
+    }
 
     void create_window()
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
 
-        window->set_default_size(0, minimal_panel_height);
         window->add_css_class("wf-panel");
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
+
+        update_orientation();
 
         window->present();
+
         init_layout();
     }
 
@@ -100,6 +152,7 @@ class WayfirePanel::impl
         left_box.add_css_class("left");
         right_box.add_css_class("right");
         center_box.add_css_class("center");
+
         content_box.set_start_widget(left_box);
         if (!center_box.get_children().empty())
         {
@@ -109,10 +162,12 @@ class WayfirePanel::impl
         content_box.set_end_widget(right_box);
 
         content_box.set_hexpand(true);
+        content_box.set_vexpand(true);
 
-        left_box.set_halign(Gtk::Align::START);
         center_box.set_halign(Gtk::Align::CENTER);
-        right_box.set_halign(Gtk::Align::END);
+
+        sides_size_group->add_widget(left_box);
+        sides_size_group->add_widget(right_box);
 
         window->set_child(content_box);
     }
@@ -174,16 +229,6 @@ class WayfirePanel::impl
             return Widget(new WayfireVolume());
 #else
             std::cerr << "Built without pulse support, volume widget "
-                         " is not available." << std::endl;
-#endif
-        }
-
-        if (name == "wp-mixer")
-        {
-#ifdef HAVE_WIREPLUMBER
-            return Widget(new WayfireWpMixer());
-#else
-            std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
 #endif
         }
@@ -302,13 +347,10 @@ class WayfirePanel::impl
         }
     }
 
-    WfOption<std::string> left_widgets_opt{"panel/widgets_left"};
-    WfOption<std::string> right_widgets_opt{"panel/widgets_right"};
-    WfOption<std::string> center_widgets_opt{"panel/widgets_center"};
-
   public:
     impl(WayfireOutput *output) : output(output)
     {
+        sides_size_group = Gtk::SizeGroup::create(Gtk::SizeGroup::Mode::NONE);
         create_window();
     }
 
@@ -324,6 +366,8 @@ class WayfirePanel::impl
 
     void handle_config_reload()
     {
+        update_orientation();
+
         for (auto& w : left_widgets)
         {
             w->handle_config_reload();
@@ -346,19 +390,23 @@ class WayfirePanel::impl
         this->panel_app = panel_app;
     }
 
+    WfOption<std::string> left_widgets_opt{"panel/widgets_left"};
+    WfOption<std::string> right_widgets_opt{"panel/widgets_right"};
+    WfOption<std::string> center_widgets_opt{"panel/widgets_center"};
+
     void init_widgets()
     {
         left_widgets_opt.set_callback([=] ()
         {
-            reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
+            reload_widgets(left_widgets_opt.value(), left_widgets, left_box);
         });
         right_widgets_opt.set_callback([=] ()
         {
-            reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
+            reload_widgets(right_widgets_opt.value(), right_widgets, right_box);
         });
         center_widgets_opt.set_callback([=] ()
         {
-            reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+            reload_widgets(center_widgets_opt.value(), center_widgets, center_box);
             if (center_box.get_children().empty())
             {
                 content_box.unset_center_widget();
