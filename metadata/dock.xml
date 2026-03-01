@@ -27,6 +27,11 @@
 			<_name>Bottom</_name>
 		</desc>
 	</option>
+	<option name="max_per_line" type="int">
+		<_short>Max icons per line</_short>
+		<_long>If greater than 0, the dock will have a maximum number of entries per line, after which a new line is created.</_long>
+		<default>0</default>
+	</option>
 	<option name="dock_height" type="int">
 		<_short>Dock height</_short>
 		<default>100</default>

@@ -18,11 +18,11 @@ class WfDock::impl
     WayfireOutput *output;
     std::unique_ptr<WayfireAutohidingWindow> window;
     wl_surface *_wl_surface;
-    Gtk::Box out_box;
-    Gtk::Box box;
+    Gtk::FlowBox box;
 
     WfOption<std::string> css_path{"dock/css_path"};
     WfOption<int> dock_height{"dock/dock_height"};
+    WfOption<int> entries_per_line{"dock/max_per_line"};
 
   public:
     impl(WayfireOutput *output)
@@ -32,18 +32,11 @@ class WfDock::impl
             new WayfireAutohidingWindow(output, "dock"));
         window->set_auto_exclusive_zone(false);
         gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
-        out_box.append(box);
-        out_box.add_css_class("out-box");
+
         box.add_css_class("box");
-        window->set_child(out_box);
 
         window->add_css_class("wf-dock");
-
-        out_box.set_halign(Gtk::Align::CENTER);
+        window->set_child(box);
 
         if ((std::string)css_path != "")
         {
@@ -64,6 +57,21 @@ class WfDock::impl
             set_clickable_region();
             return true;
         });
+
+        auto update_entries_per_line = [=] ()
+        {
+            if (entries_per_line == 0)
+            {
+                box.set_min_children_per_line(-1);
+                box.set_max_children_per_line(-1);
+                return;
+            }
+
+            box.set_min_children_per_line(entries_per_line);
+            box.set_max_children_per_line(entries_per_line);
+        };
+        entries_per_line.set_callback(update_entries_per_line);
+        update_entries_per_line();
     }
 
     void add_child(Gtk::Widget& widget)
@@ -82,7 +90,7 @@ class WfDock::impl
     }
 
     /* Sets the central section as clickable and transparent edges as click-through
-     *  Gets called regularly to ensure css size changes all register */
+     * Gets called regularly to ensure css size changes all register */
     void set_clickable_region()
     {
         auto surface = window->get_surface();
