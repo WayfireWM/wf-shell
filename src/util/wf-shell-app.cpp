@@ -307,7 +307,9 @@ std::vector<std::unique_ptr<WayfireOutput>>*WayfireShellApp::get_wayfire_outputs
 }
 
 WayfireShellApp::WayfireShellApp()
-{}
+{
+    live_preview_output_name = "live-preview";
+}
 
 void WayfireShellApp::init_app()
 {

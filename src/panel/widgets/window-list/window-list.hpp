@@ -1,15 +1,22 @@
 #pragma once
 
-#include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 #include <gtkmm.h>
 
 #include "../../widget.hpp"
 #include "toplevel.hpp"
 #include "layout.hpp"
+#include "wf-ipc.hpp"
+
+class WayfireWindowListOutput
+{
+  public:
+    wl_output *output;
+    std::string name;
+};
 
 class WayfireToplevel;
 
-class WayfireWindowList : public Gtk::Box, public WayfireWidget
+class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubscriber
 {
     WfOption<int> user_size{"panel/window_list_size"};
     std::shared_ptr<WayfireWindowListLayout> layout;
@@ -18,7 +25,11 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     std::map<zwlr_foreign_toplevel_handle_v1*,
         std::unique_ptr<WayfireToplevel>> toplevels;
 
+    wl_display *display;
+    wl_registry *registry;
+    wl_shm *shm;
     zwlr_foreign_toplevel_manager_v1 *manager = NULL;
+    zwlr_screencopy_manager_v1 *screencopy_manager = NULL;
     WayfireOutput *output;
     Gtk::ScrolledWindow scrolled_window;
 
@@ -64,6 +75,20 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
      * @return The direct child widget or none if it doesn't exist
      */
     Gtk::Widget *get_widget_before(int x);
+
+    WfOption<bool> live_window_previews_opt{"panel/live_window_previews"};
+    void handle_new_wl_output(wl_output *output);
+    void destroy_window_list_live_preview_output();
+    std::unique_ptr<WayfireWindowListOutput> window_list_live_preview_output = nullptr;
+    void on_event(wf::json_t data) override;
+    std::shared_ptr<IPCClient> ipc_client;
+    bool live_window_preview_tooltips = false;
+    bool normal_title_tooltips = false;
+    void enable_normal_tooltips_flag(bool enable);
+    uint64_t live_window_preview_view_id = 0;
+    void live_window_previews_plugin_check();
+    void enable_ipc(bool enable);
+    bool live_window_previews_enabled();
 
   private:
     int get_default_button_width();
