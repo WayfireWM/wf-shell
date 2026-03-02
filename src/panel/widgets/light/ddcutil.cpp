@@ -100,11 +100,15 @@ class WfLightDdcaControl : public WfLightControl
 };
 
 DdcaSurveillor::DdcaSurveillor(){
-	// watch for new valid monitors
+	auto status = ddca_init2(NULL, DDCA_SYSLOG_NOTICE, DDCA_INIT_OPTIONS_NONE, NULL);
+	show_err("ddca init", status);
 
+	// watch for new valid monitors
 	// when ddcutil implements DDCA_EVENT_CLASS_DPMS (unimpl in 2.2.0), we can handle it
-	auto status = ddca_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
+	status = ddca_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
+	show_err("start watch displays", status);
 	status = ddca_register_display_status_callback(on_display_change);
+	show_err("register callback", status);
 
 	ddca_enable_verify(true);
 	DDCA_Display_Info_List *display_list = NULL;
