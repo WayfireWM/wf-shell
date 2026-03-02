@@ -231,9 +231,8 @@ class WayfireToplevel::impl
     Gtk::Label label;
     // Gtk::PopoverMenu menu;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
-    sigc::connection m_drag_timeout;
-    sigc::connection query_tooltip_signal;
     std::vector<sigc::connection> signals;
+    sigc::connection button_leave_signal;
 
     Glib::ustring app_id, title;
 
@@ -348,7 +347,7 @@ class WayfireToplevel::impl
         button.add_controller(click_gesture);
 
         auto motion_controller = Gtk::EventControllerMotion::create();
-        motion_controller->signal_leave().connect([=] ()
+        button_leave_signal = motion_controller->signal_leave().connect([=] ()
         {
             wf::json_t live_window_release_output_request;
             live_window_release_output_request["method"] = "live_previews/release_output";
@@ -374,7 +373,7 @@ class WayfireToplevel::impl
         });
         button.add_controller(motion_controller);
         motion_controller = Gtk::EventControllerMotion::create();
-        motion_controller->signal_enter().connect([=] (double x, double y)
+        signals.push_back(motion_controller->signal_enter().connect([=] (double x, double y)
         {
             wf::json_t live_window_preview_stream_request;
             live_window_preview_stream_request["method"] = "live_previews/request_stream";
@@ -399,17 +398,16 @@ class WayfireToplevel::impl
 
                 set_tooltip_media();
             });
-        });
+        }));
         button.add_controller(motion_controller);
         button.set_tooltip_text("none");
         this->tooltip_media = nullptr;
-        this->query_tooltip_signal =
-            button.signal_query_tooltip().connect([=] (int x, int y, bool keyboard_mode,
-                                                       const Glib::RefPtr<Gtk::Tooltip>
-                                                       & tooltip)
+        signals.push_back(button.signal_query_tooltip().connect([=] (int x, int y, bool keyboard_mode,
+                                                                     const Glib::RefPtr<Gtk::Tooltip>
+                                                                     & tooltip)
         {
             return query_tooltip(x, y, keyboard_mode, tooltip);
-        }, false);
+        }, false));
         button.set_has_tooltip(true);
         update_tooltip();
 
@@ -848,6 +846,7 @@ class WayfireToplevel::impl
 
     void remove_button()
     {
+        button_leave_signal.disconnect();
         window_list->remove(button);
         send_rectangle_hints();
     }
@@ -894,15 +893,8 @@ class WayfireToplevel::impl
     ~impl()
     {
         gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
-        if (m_drag_timeout)
-        {
-            m_drag_timeout.disconnect();
-        }
 
-        if (query_tooltip_signal)
-        {
-            query_tooltip_signal.disconnect();
-        }
+        button_leave_signal.disconnect();
 
         for (auto signal : signals)
         {
