@@ -120,7 +120,7 @@ class DdcaSurveillor : public LightManager {
     DdcaSurveillor();
     void catch_up_widget(WayfireLight *widget);
     void strip_widget(WayfireLight *widget);
-    static void on_new_display(DDCA_Display_Status_Event event);
+    static void on_display_change(DDCA_Display_Status_Event event);
 
     static inline std::unique_ptr<DdcaSurveillor> instance;
 

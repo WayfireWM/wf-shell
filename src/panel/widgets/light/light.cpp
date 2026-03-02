@@ -192,12 +192,10 @@ void WayfireLight::add_control(std::shared_ptr<WfLightControl> control){
         {
             ctrl_this_display = std::shared_ptr(control);
             display_box.append(*control);
-        } else
-        {
-            box.append(*control);
         }
     }
 
+    box.append(*control);
     controls.push_back(control);
 }
 
