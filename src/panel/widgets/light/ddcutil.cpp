@@ -31,6 +31,8 @@ class WfLightDdcaControl : public WfLightControl
         WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Info2 *_info) : WfLightControl(parent){
             info = _info;
 
+            DdcaSurveillor::get().info_to_controls.at(info).push_back((std::shared_ptr<WfLightControl>)this);
+
             // drm_card_connector is something like cardX-<connector-name>
             connector = std::string(info->drm_card_connector);
             connector = connector.substr(connector.find("-") + 1, connector.size());
@@ -158,7 +160,6 @@ void DdcaSurveillor::on_display_change(DDCA_Display_Status_Event event)
         for (auto& widget : instance->widgets)
         {
             auto control = std::make_shared<WfLightDdcaControl>(widget, info);
-            instance->info_to_controls.at(info).push_back((std::shared_ptr<WfLightControl>)control);
             widget->add_control((std::shared_ptr<WfLightControl>)control);
         }
     } else if (event.event_type == DDCA_EVENT_DISPLAY_DISCONNECTED)
@@ -184,7 +185,6 @@ void DdcaSurveillor::catch_up_widget(WayfireLight *widget){
     for (auto pair : info_to_controls)
     {
         auto control = std::make_shared<WfLightDdcaControl>(widget, pair.first);
-        pair.second.push_back((std::shared_ptr<WfLightControl>)control);
         widget->add_control((std::shared_ptr<WfLightControl>)control);
     }
 }
