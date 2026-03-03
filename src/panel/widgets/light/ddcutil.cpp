@@ -10,10 +10,9 @@
 #define VCP_BRIGHTNESS_CODE 0x10
 
 void show_err(std::string location, DDCA_Status status){
-    // if (!status)
+    if (!status)
         std::cerr << location << " :" << ddca_rc_name(status) << " : " << ddca_rc_desc(status) << "\n";
 }
-
 
 class WfLightDdcaControl : public WfLightControl
 {
@@ -114,17 +113,17 @@ class WfLightDdcaControl : public WfLightControl
             status = ddca_get_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, &value);
             show_err("get brightness", status);
             ddca_close_display(handle);
-            return value.sh << 8 | value.sl;
+            return (value.sh << 8 | value.sl) / 100.0;
         }
 };
 
 DdcaSurveillor::DdcaSurveillor(){
     DDCA_Status status;
-    status = ddca_init2(NULL, DDCA_SYSLOG_NOTICE, DDCA_INIT_OPTIONS_NONE, NULL);
+    status = ddca_init2(NULL, DDCA_SYSLOG_ERROR, DDCA_INIT_OPTIONS_NONE, NULL);
     show_err("ddca init", status);
 
     // watch for new valid monitors
-    // when ddcutil implements DDCA_EVENT_CLASS_DPMS (unimpl in 2.2.0), we can handle it
+    // when ddcutil implements DDCA_EVENT_CLASS_DPMS, we can handle it
     status = ddca_register_display_status_callback(on_display_change);
     show_err("register callback", status);
     status = ddca_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);

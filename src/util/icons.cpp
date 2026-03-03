@@ -2,7 +2,7 @@
 
 std::string icon_for(std::map<double, std::string> icons, double value)
 {
-    if (value > MAX || value < MIN)
+    if (value > ICONS_VMAX || value < ICONS_VMIN)
     {
         return icons.begin()->second;
     }

@@ -47,7 +47,9 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
         // correct for a "good feeling" change at sensitivity 1
         change *= 0.2;
 
-        set_brightness(get_scale_target_value() + change);
+        double newv = get_scale_target_value() + change;
+        set_brightness(newv);
+        set_scale_target_value(newv);
         return true;
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
@@ -169,17 +171,20 @@ void WayfireLight::init(Gtk::Box *container){
 }
 
 void WayfireLight::add_control(std::shared_ptr<WfLightControl> control){
-    if (!ctrl_this_display){
-        auto connector = output->monitor->get_connector();
-        if (control->get_connector() == connector)
+    auto connector = output->monitor->get_connector();
+    if (control->get_connector() == connector)
+    {
+        if (!ctrl_this_display)
         {
             ctrl_this_display = std::shared_ptr(control);
             display_box.append(*control);
             update_icon();
         }
+    } else
+    {
+        box.append(*control);
     }
 
-    box.append(*control);
     controls.push_back(control);
 }
 
@@ -199,15 +204,12 @@ void WayfireLight::rem_control(std::shared_ptr<WfLightControl> control)
 }
 
 void WayfireLight::update_icon(){
-    std::cout << "updating icon : ";
     // if none, show unavailable
     if (!ctrl_this_display){
-        std::cout << "no face\n";
         icon.set_from_icon_name(icon_for(brightness_display_icons, -1));
         return;
     }
 
-    std::cout << "normal\n";
     icon.set_from_icon_name(icon_for(brightness_display_icons, ctrl_this_display->get_scale_target_value()));
 }
 
