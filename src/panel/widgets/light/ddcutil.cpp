@@ -32,11 +32,9 @@ class WfLightDdcaControl : public WfLightControl
         WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Info2 *_info) : WfLightControl(parent){
             info = _info;
 
-            connector = "";
             // drm_card_connector is something like cardX-<connector-name>
             connector = std::string(info->drm_card_connector);
             connector = connector.substr(connector.find("-") + 1, connector.size());
-
 
             DDCA_Display_Handle handle;
             DDCA_Status status = ddca_open_display2(info->dref, false, &handle);
@@ -47,7 +45,9 @@ class WfLightDdcaControl : public WfLightControl
             max = value.mh << 8 | value.ml;
             ddca_close_display(handle);
             scale.set_target_value(get_brightness());
+            update_parent_icon();
             label.set_text(get_name());
+            icons = brightness_display_icons;
         }
 
         std::string get_connector()
@@ -56,7 +56,7 @@ class WfLightDdcaControl : public WfLightControl
         }
 
         std::string get_name(){
-            return connector;
+            return std::string(info->model_name);
         }
 
         void set_brightness(double brightness){
@@ -67,6 +67,16 @@ class WfLightDdcaControl : public WfLightControl
             if (wish_pending.compare_exchange_strong(expected, true))
             {
                 std::thread(writevcp, this).detach();
+            }
+
+            update_parent_icon();
+
+            // we don’t really have a good way to track changes to the monitor’s brightness, so here,
+            // we don’t update on external changes and just update the controls of the other widgets
+            // see watching for VCP changes : https://github.com/rockowitz/ddcutil/issues/589
+            for (auto control : DdcaSurveillor::get().info_to_controls[info])
+            {
+                control->set_scale_target_value(brightness);
             }
         }
 
@@ -159,11 +169,16 @@ void DdcaSurveillor::on_display_change(DDCA_Display_Status_Event event)
         {
             for (auto control : widget->controls)
             {
-                // if (control == )
+                auto vec = instance->info_to_controls[info];
+                auto it = std::find(vec.begin(), vec.end(), control);
+                if (it != vec.end())
+                {
+                    widget->rem_control(control);
+                }
             }
         }
 
-        // instance->info_to_controls.erase(info);
+        instance->info_to_controls.erase(info);
     }
 }
 

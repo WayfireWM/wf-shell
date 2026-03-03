@@ -126,10 +126,10 @@ class DdcaSurveillor : public LightManager {
 
     static inline std::unique_ptr<DdcaSurveillor> instance;
 
-    std::map<DDCA_Display_Info2*, std::vector<std::shared_ptr<WfLightControl>>> info_to_controls;
-
   public:
     ~DdcaSurveillor();
+
+    std::map<DDCA_Display_Info2*, std::vector<std::shared_ptr<WfLightControl>>> info_to_controls;
 
     static DdcaSurveillor& get();
 };
@@ -170,6 +170,7 @@ class WayfireLight : public WayfireWidget {
     void cancel_popover_timeout();
 
     void add_control(std::shared_ptr<WfLightControl> control);
+    void rem_control(std::shared_ptr<WfLightControl> control);
 
     void update_icon();
 };
