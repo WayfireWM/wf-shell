@@ -58,6 +58,14 @@ void handle_frame_buffer(void *data,
 
     if (tooltip_media->size != size)
     {
+        if (tooltip_media->shm_data && tooltip_media->size)
+        {
+            if (munmap(tooltip_media->shm_data, tooltip_media->size) < 0)
+            {
+                perror("munmap failed");
+            }
+        }
+
         tooltip_media->size = size;
         auto anon_file = create_anon_file(size);
         if (anon_file < 0)
