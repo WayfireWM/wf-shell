@@ -53,8 +53,13 @@ class WfLightSysfsControl: public WfLightControl
             icons = brightness_display_icons;
         }
 
-        std::string get_name(){
+        std::string get_connector()
+        {
             return connector_name;
+        }
+
+        std::string get_name(){
+            return "Integrated display";
         }
 
         void set_brightness(double brightness){

@@ -18,7 +18,8 @@ void show_err(std::string location, DDCA_Status status){
 class WfLightDdcaControl : public WfLightControl
 {
     private:
-        DDCA_Display_Ref ref;
+        DDCA_Display_Info2 *info;
+        std::string connector;
         int max;
         std::atomic<double> brightness_wish;
         std::atomic<bool>   wish_pending{false};
@@ -28,11 +29,17 @@ class WfLightDdcaControl : public WfLightControl
         }
 
     public:
-        WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Ref _ref) : WfLightControl(parent){
-            ref = _ref;
+        WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Info2 *_info) : WfLightControl(parent){
+            info = _info;
+
+            connector = "";
+            // drm_card_connector is something like cardX-<connector-name>
+            connector = std::string(info->drm_card_connector);
+            connector = connector.substr(connector.find("-") + 1, connector.size());
+
 
             DDCA_Display_Handle handle;
-            DDCA_Status status = ddca_open_display2(ref, false, &handle);
+            DDCA_Status status = ddca_open_display2(info->dref, false, &handle);
             show_err("open display", status);
 
             DDCA_Non_Table_Vcp_Value value;
@@ -43,10 +50,13 @@ class WfLightDdcaControl : public WfLightControl
             label.set_text(get_name());
         }
 
+        std::string get_connector()
+        {
+            return connector;
+        }
+
         std::string get_name(){
-            std::string name;
-            name = "display";
-            return name;
+            return connector;
         }
 
         void set_brightness(double brightness){
@@ -65,7 +75,7 @@ class WfLightDdcaControl : public WfLightControl
             double target = control->brightness_wish.load();
 
             DDCA_Display_Handle handle;
-            DDCA_Status status = ddca_open_display2(control->ref, false, &handle);
+            DDCA_Status status = ddca_open_display2(control->info->dref, false, &handle);
             show_err("open display", status);
 
             uint16_t value = (uint16_t)(control->get_max() * target);
@@ -88,7 +98,7 @@ class WfLightDdcaControl : public WfLightControl
 
         double get_brightness(){
             DDCA_Display_Handle handle;
-            DDCA_Status status = ddca_open_display2(ref, false, &handle);
+            DDCA_Status status = ddca_open_display2(info->dref, false, &handle);
             show_err("open display", status);
 
             DDCA_Non_Table_Vcp_Value value;
@@ -100,49 +110,68 @@ class WfLightDdcaControl : public WfLightControl
 };
 
 DdcaSurveillor::DdcaSurveillor(){
-    auto status = ddca_init2(NULL, DDCA_SYSLOG_NOTICE, DDCA_INIT_OPTIONS_NONE, NULL);
+    DDCA_Status status;
+    status = ddca_init2(NULL, DDCA_SYSLOG_NOTICE, DDCA_INIT_OPTIONS_NONE, NULL);
     show_err("ddca init", status);
 
     // watch for new valid monitors
     // when ddcutil implements DDCA_EVENT_CLASS_DPMS (unimpl in 2.2.0), we can handle it
-    status = ddca_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
-    show_err("start watch displays", status);
     status = ddca_register_display_status_callback(on_display_change);
     show_err("register callback", status);
+    status = ddca_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
+    show_err("start watch displays", status);
 
-    ddca_enable_verify(true);
+    ddca_enable_verify(false);
     DDCA_Display_Info_List *display_list = NULL;
     ddca_get_display_info_list2(false, &display_list);
 
     for (int i = 0 ; i < display_list->ct ; i++){
-        displays_info.push_back(&display_list->info[i]);
+        // we have a list of Info, but we want Info2 for the connector name
+        DDCA_Display_Info2 *info;
+        status = ddca_get_display_info2(display_list->info[i].dref, &info);
+        show_err("get info2", status);
+        info_to_controls[info];
     }
 }
 
 DdcaSurveillor::~DdcaSurveillor()
 {
-    ddca_stop_watch_displays(true);
+    ddca_stop_watch_displays(false);
 }
 
-void DdcaSurveillor::on_display_change(DDCA_Display_Status_Event event){
+void DdcaSurveillor::on_display_change(DDCA_Display_Status_Event event)
+{
+    DDCA_Display_Info2 *info;
+    ddca_get_display_info2(event.dref, &info);
 
     if (event.event_type == DDCA_EVENT_DISPLAY_CONNECTED)
     {
-        for (auto widget : DdcaSurveillor::get().widgets)
+        instance->info_to_controls[info];
+        for (auto& widget : instance->widgets)
         {
-            auto control = std::make_shared<WfLightDdcaControl>(widget, event.dref);
+            auto control = std::make_shared<WfLightDdcaControl>(widget, info);
+            instance->info_to_controls.at(info).push_back((std::shared_ptr<WfLightControl>)control);
             widget->add_control((std::shared_ptr<WfLightControl>)control);
         }
     } else if (event.event_type == DDCA_EVENT_DISPLAY_DISCONNECTED)
     {
+        for (auto widget : instance->widgets)
+        {
+            for (auto control : widget->controls)
+            {
+                // if (control == )
+            }
+        }
 
+        // instance->info_to_controls.erase(info);
     }
 }
 
 void DdcaSurveillor::catch_up_widget(WayfireLight *widget){
-    for (auto info : displays_info)
+    for (auto pair : info_to_controls)
     {
-        auto control = std::make_shared<WfLightDdcaControl>(widget, info->dref);
+        auto control = std::make_shared<WfLightDdcaControl>(widget, pair.first);
+        pair.second.push_back((std::shared_ptr<WfLightControl>)control);
         widget->add_control((std::shared_ptr<WfLightControl>)control);
     }
 }

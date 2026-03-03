@@ -188,7 +188,7 @@ void WayfireLight::init(Gtk::Box *container){
 void WayfireLight::add_control(std::shared_ptr<WfLightControl> control){
     if (!ctrl_this_display){
         auto connector = output->monitor->get_connector();
-        if (control->get_name() == connector)
+        if (control->get_connector() == connector)
         {
             ctrl_this_display = std::shared_ptr(control);
             display_box.append(*control);

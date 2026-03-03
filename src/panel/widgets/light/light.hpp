@@ -1,4 +1,5 @@
 #include <gtkmm.h>
+#include <memory>
 #include <sigc++/connection.h>
 #include <filesystem>
 #include <thread>
@@ -47,6 +48,7 @@ class WfLightControl : public Gtk::Box
   public:
     WfLightControl(WayfireLight *parent);
 
+    virtual std::string get_connector() = 0;
     virtual std::string get_name() = 0;
     WayfireLight *get_parent();
 
@@ -124,7 +126,7 @@ class DdcaSurveillor : public LightManager {
 
     static inline std::unique_ptr<DdcaSurveillor> instance;
 
-    std::vector<DDCA_Display_Info*> displays_info;
+    std::map<DDCA_Display_Info2*, std::vector<std::shared_ptr<WfLightControl>>> info_to_controls;
 
   public:
     ~DdcaSurveillor();
