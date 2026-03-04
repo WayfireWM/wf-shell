@@ -28,9 +28,11 @@
 
 #define ETHERNET_TYPE  1
 #define WIFI_TYPE      2
+#define BLUETOOTH_TYPE 5
 #define MODEM_TYPE     8
 #define GENERIC_TYPE   14
-#define BLUETOOTH_TYPE 5
+#define TUN_TYPE       16
+#define LOOPBACK_TYPE  32
 
 NetworkManager::NetworkManager()
 {
@@ -344,6 +346,7 @@ void NetworkManager::add_network(std::string path)
             "org.freedesktop.NetworkManager.Device.Wireless");
         all_devices.emplace(path, new WifiNetwork(path, device_proxy, wifi_proxy));
         device_added.emit(all_devices[path]);
+        return;
     } else if (connection_type == MODEM_TYPE)
     {
         auto modem_proxy = Gio::DBus::Proxy::create_sync(connection,
@@ -352,6 +355,7 @@ void NetworkManager::add_network(std::string path)
             "org.freedesktop.NetworkManager.Device.Modem");
         all_devices.emplace(path, new ModemNetwork(path, device_proxy, modem_proxy));
         device_added.emit(all_devices[path]);
+        return;
     } else if (connection_type == BLUETOOTH_TYPE)
     {
         auto bluetooth_proxy = Gio::DBus::Proxy::create_sync(connection,
@@ -360,11 +364,24 @@ void NetworkManager::add_network(std::string path)
             "org.freedesktop.NetworkManager.Device.Bluetooth");
         all_devices.emplace(path, new BluetoothNetwork(path, device_proxy, bluetooth_proxy));
         device_added.emit(all_devices[path]);
+        return;
     } else if (connection_type == ETHERNET_TYPE)
     {
         all_devices.emplace(path, new WiredNetwork(path, device_proxy));
         device_added.emit(all_devices[path]);
+        return;
+    } else if ((connection_type == LOOPBACK_TYPE) ||
+               (connection_type == TUN_TYPE))
+    {
+        /* Known and ignored
+         *  Loopback - nothing for user to do or know about this
+         *  TUN - Part of VPN systems. Either controlled by VPN Settings or ignore entirely
+         */
+        return;
     }
+
+    std::cerr << "DeviceAdded for unknown device type : " << path << " : type : " << connection_type <<
+        std::endl;
 }
 
 void NetworkManager::on_nm_properties_changed(const Gio::DBus::Proxy::MapChangedProperties& properties,
@@ -439,7 +456,18 @@ void NetworkManager::on_nm_signal(const Glib::ustring& sender, const Glib::ustri
         add_network(val);
     } else if (signal == "DeviceRemoved")
     {
-        auto val = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(container.get_child()).get();
+        auto val =
+            Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(container.get_child()).get();
+        auto network = all_devices[val];
+        if (network)
+        {
+            device_removed.emit(network);
+        } else
+        {
+            /* Skip networks we avoided dealing with */
+            std::cerr << "DeviceRemoved did not exist : " << val << std::endl;
+        }
+
         all_devices.erase(val);
     } else
     {

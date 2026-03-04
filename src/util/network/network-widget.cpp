@@ -358,6 +358,12 @@ NetworkControlWidget::NetworkControlWidget()
     append(bt_box);
     append(vpn_box);
 
+    mobile_box.set_orientation(Gtk::Orientation::VERTICAL);
+    wifi_box.set_orientation(Gtk::Orientation::VERTICAL);
+    wire_box.set_orientation(Gtk::Orientation::VERTICAL);
+    bt_box.set_orientation(Gtk::Orientation::VERTICAL);
+    vpn_box.set_orientation(Gtk::Orientation::VERTICAL);
+
     mobile_networking.set_halign(Gtk::Align::END);
     wifi_networking.set_halign(Gtk::Align::END);
 
