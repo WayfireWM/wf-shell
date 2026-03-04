@@ -182,7 +182,7 @@ void WayfireLight::add_control(std::shared_ptr<WfLightControl> control){
         }
     } else
     {
-        box.append(*control);
+        other_box.append(*control);
     }
 
     controls.push_back(control);
@@ -197,16 +197,12 @@ void WayfireLight::rem_control(WfLightControl* control)
         update_icon();
     } else
     {
-        box.remove(*control);
+        other_box.remove(*control);
     }
 
-    for (auto& item : controls)
-    {
-        if (item.get() == control)
-        {
-            controls.erase(std::find(controls.begin(), controls.end(), item));
-        }
-    }
+    controls.erase(std::remove_if(controls.begin(), controls.end(),
+        [control](const std::shared_ptr<WfLightControl>& c){ return c.get() == control; }),
+        controls.end());
 }
 
 void WayfireLight::update_icon(){

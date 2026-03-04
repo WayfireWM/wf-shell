@@ -334,6 +334,15 @@ void SysfsSurveillor::catch_up_widget(WayfireLight* widget){
 }
 
 void SysfsSurveillor::strip_widget(WayfireLight *widget){
+    for (auto& [wd, path_controls] : wd_to_path_controls)
+    {
+        auto& controls = path_controls.second;
+        controls.erase(std::remove_if(controls.begin(), controls.end(),
+            [widget](const std::shared_ptr<WfLightControl>& c){
+                return c->get_parent() == widget;
+            }),
+            controls.end());
+    }
 }
 
 SysfsSurveillor& SysfsSurveillor::get(){

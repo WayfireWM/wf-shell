@@ -32,8 +32,6 @@ class WfLightDdcaControl : public WfLightControl
         WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Ref _ref) : WfLightControl(parent){
             ref = _ref;
 
-            DdcaSurveillor::get().ref_to_controls.at(ref).push_back((std::shared_ptr<WfLightControl>)this);
-
             DDCA_Status status;
 
             // we want Info2 for the connector name
@@ -158,27 +156,44 @@ void DdcaSurveillor::on_display_change(DDCA_Display_Status_Event event)
 {
     if (event.event_type == DDCA_EVENT_DISPLAY_CONNECTED)
     {
-        DdcaSurveillor::get().ref_to_controls[event.dref];
+        auto& controls = DdcaSurveillor::get().ref_to_controls[event.dref];
         for (auto& widget : DdcaSurveillor::get().widgets)
         {
             auto control = std::make_shared<WfLightDdcaControl>(widget, event.dref);
+            controls.push_back(control);
             widget->add_control(control);
         }
     } else if (event.event_type == DDCA_EVENT_DISPLAY_DISCONNECTED)
     {
-        DdcaSurveillor::get().ref_to_controls.erase(event.dref);
+        auto it = DdcaSurveillor::get().ref_to_controls.find(event.dref);
+        if (it == DdcaSurveillor::get().ref_to_controls.end())
+            return;
+
+        for (auto& control : it->second)
+            control->get_parent()->rem_control(control.get());
+
+        DdcaSurveillor::get().ref_to_controls.erase(it);
     }
 }
 
 void DdcaSurveillor::catch_up_widget(WayfireLight *widget){
-    for (auto pair : ref_to_controls)
+    for (auto& [ref, controls] : ref_to_controls)
     {
-        auto control = std::make_shared<WfLightDdcaControl>(widget, pair.first);
+        auto control = std::make_shared<WfLightDdcaControl>(widget, ref);
+        controls.push_back(control);
         widget->add_control(control);
     }
 }
 
 void DdcaSurveillor::strip_widget(WayfireLight *widget){
+    for (auto& [ref, controls] : ref_to_controls)
+    {
+        controls.erase(std::remove_if(controls.begin(), controls.end(),
+            [widget](const std::shared_ptr<WfLightControl>& c){
+                return c->get_parent() == widget;
+            }),
+            controls.end());
+    }
 }
 
 DdcaSurveillor& DdcaSurveillor::get(){
