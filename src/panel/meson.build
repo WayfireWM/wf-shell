@@ -22,7 +22,6 @@ widget_sources = [
   'widgets/tray/dbusmenu.cpp',
   'widgets/workspace-switcher.cpp',
   'widgets/light/light.cpp',
-  'widgets/light/ddcutil.cpp',
   'widgets/light/sysfs.cpp',
 ]
 
@@ -66,6 +65,13 @@ if get_option('weather') == true
   ]
 else
   message('Weather disabled, weather widgets and owf service not included.')
+endif
+
+if ddcutil.found()
+  widget_sources += 'widgets/light/ddcutil.cpp'
+  deps += ddcutil
+else
+  message('Libddcutil not found, light widget will not support external monitors.')
 endif
 
 executable(
