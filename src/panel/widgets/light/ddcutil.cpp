@@ -10,7 +10,7 @@
 #define VCP_BRIGHTNESS_CODE 0x10
 
 void show_err(std::string location, DDCA_Status status){
-    if (!status)
+    if (!status && status != DDCRC_OK)
         std::cerr << location << " :" << ddca_rc_name(status) << " : " << ddca_rc_desc(status) << "\n";
 }
 
@@ -20,8 +20,8 @@ class WfLightDdcaControl : public WfLightControl
         DDCA_Display_Info2 *info;
         std::string connector;
         int max;
-        std::atomic<double> brightness_wish;
-        std::atomic<bool>   wish_pending{false};
+        double brightness_wish;
+        bool wish_pending = false;
 
         int get_max(){
             return max;
@@ -61,11 +61,12 @@ class WfLightDdcaControl : public WfLightControl
 
         void set_brightness(double brightness){
             brightness_wish = brightness;
-            bool expected = false;
 
             // set the value in another thread to not block panel, as it can take a while
-            if (wish_pending.compare_exchange_strong(expected, true))
+            // even if we accidentally have another call go through, it’s no biggie
+            if (!wish_pending)
             {
+                wish_pending = true;
                 std::thread(writevcp, this).detach();
             }
 
@@ -82,7 +83,7 @@ class WfLightDdcaControl : public WfLightControl
 
         static void writevcp(WfLightDdcaControl* control)
         {
-            double target = control->brightness_wish.load();
+            double target = control->brightness_wish;
 
             DDCA_Display_Handle handle;
             DDCA_Status status = ddca_open_display2(control->info->dref, false, &handle);
@@ -98,12 +99,12 @@ class WfLightDdcaControl : public WfLightControl
             // value changed again, re-run
             // for this to be infinite recursion, the user needs to constantly keep
             // moving the slider before the write is done, should be safe enough
-            if (control->brightness_wish.load() != target)
+            if (control->brightness_wish != target)
             {
                 writevcp(control);
             }
 
-            control->wish_pending.store(false);
+            control->wish_pending = false;
         }
 
         double get_brightness(){
@@ -123,6 +124,8 @@ DdcaSurveillor::DdcaSurveillor(){
     DDCA_Status status;
     status = ddca_init2(NULL, DDCA_SYSLOG_ERROR, DDCA_INIT_OPTIONS_NONE, NULL);
     show_err("ddca init", status);
+
+    ddca_enable_dynamic_sleep(true);
 
     // watch for new valid monitors
     // when ddcutil implements DDCA_EVENT_CLASS_DPMS, we can handle it
@@ -156,28 +159,20 @@ void DdcaSurveillor::on_display_change(DDCA_Display_Status_Event event)
 
     if (event.event_type == DDCA_EVENT_DISPLAY_CONNECTED)
     {
-        instance->info_to_controls[info];
-        for (auto& widget : instance->widgets)
+        DdcaSurveillor::get().info_to_controls[info];
+        for (auto& widget : DdcaSurveillor::get().widgets)
         {
             auto control = std::make_shared<WfLightDdcaControl>(widget, info);
             widget->add_control((std::shared_ptr<WfLightControl>)control);
         }
     } else if (event.event_type == DDCA_EVENT_DISPLAY_DISCONNECTED)
     {
-        for (auto widget : instance->widgets)
+        for (auto control : DdcaSurveillor::get().info_to_controls[info])
         {
-            for (auto control : widget->controls)
-            {
-                auto vec = instance->info_to_controls[info];
-                auto it = std::find(vec.begin(), vec.end(), control);
-                if (it != vec.end())
-                {
-                    widget->rem_control(control);
-                }
-            }
+            control->get_parent()->rem_control(control);
         }
 
-        instance->info_to_controls.erase(info);
+        DdcaSurveillor::get().info_to_controls.erase(info);
     }
 }
 
