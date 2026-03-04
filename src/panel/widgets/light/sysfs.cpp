@@ -101,56 +101,6 @@ class WfLightSysfsControl : public WfLightControl
     }
 };
 
-// utilities to check permissions
-bool is_group_member(gid_t file_group_id)
-{
-    gid_t current_group = getgid();
-    gid_t supplementary_groups[NGROUPS_MAX];
-    int n_groups = getgroups(NGROUPS_MAX, supplementary_groups);
-
-    if (current_group == file_group_id)
-    {
-        return true;
-    }
-
-    for (int i = 0; i < n_groups; ++i)
-    {
-        if (supplementary_groups[i] == file_group_id)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// let’s assume the file is not owned by the user and only bother with groups
-bool is_in_file_group(const std::filesystem::path& file_path)
-{
-    struct stat file_info;
-    if (stat(file_path.c_str(), &file_info) != 0)
-    {
-        std::cerr << "Failed to stat " << file_path << ".\n";
-        return false;
-    }
-
-    struct group *file_group = getgrgid(file_info.st_gid);
-
-    if (!file_group)
-    {
-        std::cerr << "Failed to fetch owner/group info for " << file_path << ".\n";
-        return false;
-    }
-
-    if (is_group_member(file_info.st_gid))
-    {
-        return true;
-    } else
-    {
-        return false;
-    }
-}
-
 SysfsSurveillor::SysfsSurveillor()
 {
     fd = inotify_init();
@@ -291,48 +241,15 @@ bool SysfsSurveillor::check_perms(std::filesystem::path path)
     const std::filesystem::path b_path     = path.string() + "/brightness";
     const std::filesystem::path max_b_path = path.string() + "/max_brightness";
 
-    // verity they exist
-    if (!std::filesystem::exists(b_path))
+    if (access(b_path.c_str(), R_OK | W_OK))
     {
-        std::cout << "No brightness found for " << path.string() << ", ignoring.\n";
+        std::cerr << "Cannot read/write brightness for " << path << ", ignoring.\n";
         return false;
     }
 
-    if (!std::filesystem::exists(b_path))
+    if (access(max_b_path.c_str(), R_OK))
     {
-        std::cout << "No max_brightness found for " << path.string() << ", ignoring.\n";
-        return false;
-    }
-
-    auto max_perms = std::filesystem::status(max_b_path).permissions();
-    // can the file be read?
-    if (!(((max_perms & std::filesystem::perms::others_read) != std::filesystem::perms::none) ||
-          (is_in_file_group(max_b_path) &&
-           ((max_perms & std::filesystem::perms::group_read) != std::filesystem::perms::none))
-    ))
-    {
-        std::cout << "Cannot read max_brightness file.\n";
-        return false;
-    }
-
-    auto perms = std::filesystem::status(b_path).permissions();
-    // can the file be read?
-    if (!(((perms & std::filesystem::perms::others_read) != std::filesystem::perms::none) ||
-          (is_in_file_group(b_path) &&
-           ((perms & std::filesystem::perms::group_read) != std::filesystem::perms::none))
-    ))
-    {
-        std::cout << "Cannot read brightness file.\n";
-        return false;
-    }
-
-    // and written?
-    if (!(((perms & std::filesystem::perms::others_write) != std::filesystem::perms::none) ||
-          (is_in_file_group(b_path) &&
-           ((perms & std::filesystem::perms::group_write) != std::filesystem::perms::none))
-    ))
-    {
-        std::cout << "Can read backlight, but cannot write. Ignoring.\n";
+        std::cerr << "Cannot read max_brightness for " << path << ", ignoring.\n";
         return false;
     }
 
