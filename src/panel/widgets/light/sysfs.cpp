@@ -192,9 +192,13 @@ void SysfsSurveillor::handle_inotify_events(){
                 // look for the watch descriptor
                 if (wd_to_path_controls.find(event->wd) != wd_to_path_controls.end()){
                     // update every control
-                    for (auto control : wd_to_path_controls[event->wd].second){
-                        control->set_scale_target_value(control->get_brightness());
-                    }
+                    auto controls = wd_to_path_controls[event->wd].second;
+                    Glib::signal_idle().connect_once([controls] ()
+                    {
+                        for (auto control : controls){
+                            control->set_scale_target_value(control->get_brightness());
+                        }
+                    });
                 }
             }
 
@@ -220,21 +224,23 @@ void SysfsSurveillor::handle_inotify_events(){
 
             // a backlight device appeared
             if (event->mask & IN_CREATE){
-                if (wd_additions == event->wd){
-                    if (event->len)
+                if (wd_additions == event->wd && event->len){
+                    std::string name = event->name;
+                    Glib::signal_idle().connect_once([this, name] ()
                     {
-                        add_dev(event->name);
-                    }
+                        add_dev(std::filesystem::path("/sys/class/backlight") / name);
+                    });
                 }
             }
 
             // a backlight device was removed
             if (event->mask & IN_DELETE){
-                if (wd_removal == event->wd){
-                    if (event->len)
+                if (wd_removal == event->wd && event->len){
+                    std::string name = event->name;
+                    Glib::signal_idle().connect_once([this, name] ()
                     {
-                        rem_dev(event->name);
-                    }
+                        rem_dev(std::filesystem::path("/sys/class/backlight") / name);
+                    });
                 }
             }
         }
