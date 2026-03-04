@@ -21,6 +21,7 @@ widget_sources = [
   'widgets/tray/host.cpp',
   'widgets/tray/dbusmenu.cpp',
   'widgets/workspace-switcher.cpp',
+  'widgets/light/light.cpp'
 ]
 
 deps = [
