@@ -5,9 +5,9 @@
 #include <filesystem>
 #include <thread>
 #ifdef HAVE_DDCUTIL
-extern "C"{
-	#include <ddcutil_c_api.h>
-	#include <ddcutil_status_codes.h>
+extern "C" {
+    #include <ddcutil_c_api.h>
+    #include <ddcutil_status_codes.h>
 }
 #endif
 
@@ -41,17 +41,18 @@ class WfLightControl : public Gtk::Box
     // a double from 0 to 1 for min to max
     virtual void set_brightness(double brightness) = 0;
     virtual double get_brightness() = 0;
-
 };
 
-class LightManager {
+class LightManager
+{
   protected:
-    LightManager(){}
+    LightManager()
+    {}
     // managed widgets
     std::vector<WayfireLight*> widgets;
 
     virtual void catch_up_widget(WayfireLight *widget) = 0;
-    virtual void strip_widget(WayfireLight *widget) = 0;
+    virtual void strip_widget(WayfireLight *widget)    = 0;
 
   public:
     void add_widget(WayfireLight *widget);
@@ -61,7 +62,8 @@ class LightManager {
 // singleton that monitors sysfs and calls the necessary functions
 // monitors appearance and deletion of backlight devices
 // and the brightness of each of them
-class SysfsSurveillor : public LightManager {
+class SysfsSurveillor : public LightManager
+{
   private:
     SysfsSurveillor();
     void handle_inotify_events();
@@ -101,7 +103,8 @@ class SysfsSurveillor : public LightManager {
 };
 
 #ifdef HAVE_DDCUTIL
-class DdcaSurveillor : public LightManager {
+class DdcaSurveillor : public LightManager
+{
   private:
     DdcaSurveillor();
     void catch_up_widget(WayfireLight *widget);
@@ -119,7 +122,8 @@ class DdcaSurveillor : public LightManager {
 };
 #endif
 
-class WayfireLight : public WayfireWidget {
+class WayfireLight : public WayfireWidget
+{
   private:
     void init(Gtk::Box *container) override;
 
@@ -154,7 +158,7 @@ class WayfireLight : public WayfireWidget {
     void cancel_popover_timeout();
 
     void add_control(std::shared_ptr<WfLightControl> control);
-    void rem_control(WfLightControl* control);
+    void rem_control(WfLightControl *control);
 
     void update_icon();
 };

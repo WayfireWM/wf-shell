@@ -10,14 +10,16 @@
 #include "wf-shell-app.hpp"
 #include "icons.hpp"
 
-WfLightControl::WfLightControl(WayfireLight *_parent){
+WfLightControl::WfLightControl(WayfireLight *_parent)
+{
     parent = _parent;
 
     // preparation
     scale.set_range(0.0, 1.0);
     scale.set_size_request(slider_length.value());
 
-    scale.set_user_changed_callback([this](){
+    scale.set_user_changed_callback([this] ()
+    {
         this->set_brightness(scale.get_target_value());
     });
 
@@ -41,8 +43,11 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
             // Number of pixels expected to have scrolled. usually in 100s
             change = (dy * parent->scroll_sensitivity) / 100;
         }
+
         if (!(parent->invert_scroll))
+        {
             change *= -1;
+        }
 
         // correct for a "good feeling" change at sensitivity 1
         change *= 0.2;
@@ -56,7 +61,8 @@ WfLightControl::WfLightControl(WayfireLight *_parent){
     add_controller(scroll_gesture);
 }
 
-WayfireLight *WfLightControl::get_parent(){
+WayfireLight*WfLightControl::get_parent()
+{
     return parent;
 }
 
@@ -71,22 +77,27 @@ double WfLightControl::get_scale_target_value()
     return scale.get_target_value();
 }
 
-void WfLightControl::update_parent_icon(){
-    if (parent->ctrl_this_display.get() == this){
+void WfLightControl::update_parent_icon()
+{
+    if (parent->ctrl_this_display.get() == this)
+    {
         parent->update_icon();
-        if (parent->popup_on_change && !parent->button->get_active()){
+        if (parent->popup_on_change && !parent->button->get_active())
+        {
             parent->button->activate();
             parent->check_set_popover_timeout();
         }
     }
 }
 
-void LightManager::add_widget(WayfireLight *widget){
+void LightManager::add_widget(WayfireLight *widget)
+{
     widgets.push_back(widget);
     catch_up_widget(widget);
 }
 
-void LightManager::rem_widget(WayfireLight *widget){
+void LightManager::rem_widget(WayfireLight *widget)
+{
     strip_widget(widget);
     widgets.erase(find(widgets.begin(), widgets.end(), widget));
 }
@@ -99,12 +110,13 @@ WayfireLight::WayfireLight(WayfireOutput *_output)
 WayfireLight::~WayfireLight()
 {
     SysfsSurveillor::get().rem_widget(this);
-    #ifdef HAVE_DDCUTIL
+#ifdef HAVE_DDCUTIL
     DdcaSurveillor::get().rem_widget(this);
-    #endif
+#endif
 }
 
-void WayfireLight::init(Gtk::Box *container){
+void WayfireLight::init(Gtk::Box *container)
+{
     button = std::make_unique<WayfireMenuButton>("panel");
     button->get_style_context()->add_class("widget-icon");
     button->get_style_context()->add_class("light");
@@ -145,8 +157,11 @@ void WayfireLight::init(Gtk::Box *container){
             // Number of pixels expected to have scrolled. usually in 100s
             change = (dy * scroll_sensitivity) / 100;
         }
+
         if (!invert_scroll)
+        {
             change *= -1;
+        }
 
         // correct for a "good feeling" change at sensitivity 1
         change *= 0.2;
@@ -163,14 +178,15 @@ void WayfireLight::init(Gtk::Box *container){
     container->append(*button);
 
     SysfsSurveillor::get().add_widget(this);
-    #ifdef HAVE_DDCUTIL
+#ifdef HAVE_DDCUTIL
     DdcaSurveillor::get().add_widget(this);
-    #endif
+#endif
 
     update_icon();
 }
 
-void WayfireLight::add_control(std::shared_ptr<WfLightControl> control){
+void WayfireLight::add_control(std::shared_ptr<WfLightControl> control)
+{
     auto connector = output->monitor->get_connector();
     if (control->get_connector() == connector)
     {
@@ -188,7 +204,7 @@ void WayfireLight::add_control(std::shared_ptr<WfLightControl> control){
     controls.push_back(control);
 }
 
-void WayfireLight::rem_control(WfLightControl* control)
+void WayfireLight::rem_control(WfLightControl *control)
 {
     if (control == ctrl_this_display.get())
     {
@@ -201,13 +217,15 @@ void WayfireLight::rem_control(WfLightControl* control)
     }
 
     controls.erase(std::remove_if(controls.begin(), controls.end(),
-        [control](const std::shared_ptr<WfLightControl>& c){ return c.get() == control; }),
+        [control] (const std::shared_ptr<WfLightControl>& c) { return c.get() == control; }),
         controls.end());
 }
 
-void WayfireLight::update_icon(){
+void WayfireLight::update_icon()
+{
     // if none, show unavailable
-    if (!ctrl_this_display){
+    if (!ctrl_this_display)
+    {
         icon.set_from_icon_name(icon_for(brightness_display_icons, -1));
         return;
     }
