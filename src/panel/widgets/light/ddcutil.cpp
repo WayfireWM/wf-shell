@@ -81,6 +81,7 @@ class WfLightDdcaControl : public WfLightControl
             std::thread(writevcp, this).detach();
         }
 
+        parent->cancel_popover_timeout();
         update_parent_icon();
 
         // we don’t really have a good way to track changes to the monitor’s brightness, so here,

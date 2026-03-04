@@ -81,6 +81,7 @@ class WfLightSysfsControl : public WfLightControl
             return;
         }
 
+        parent->cancel_popover_timeout();
         update_parent_icon();
     }
 
