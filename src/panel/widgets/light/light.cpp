@@ -8,24 +8,7 @@
 #include "light.hpp"
 #include "wf-popover.hpp"
 #include "wf-shell-app.hpp"
-
-static BrightnessLevel light_icon_for(double value)
-{
-    double max = 1.0;
-    auto third = max / 3;
-    if (value <= third)
-    {
-        return BRIGHTNESS_LEVEL_LOW;
-    } else if ((value > third) && (value <= (third * 2)))
-    {
-        return BRIGHTNESS_LEVEL_MEDIUM;
-    } else if ((value > (third * 2)) && (value <= max))
-    {
-        return BRIGHTNESS_LEVEL_HIGH;
-    }
-
-    return BRIGHTNESS_LEVEL_OOR;
-}
+#include "icons.hpp"
 
 WfLightControl::WfLightControl(WayfireLight *_parent){
     parent = _parent;
@@ -220,14 +203,12 @@ void WayfireLight::update_icon(){
     // if none, show unavailable
     if (!ctrl_this_display){
         std::cout << "no face\n";
-        icon.set_from_icon_name(brightness_display_icons.at(BRIGHTNESS_LEVEL_OOR));
+        icon.set_from_icon_name(icon_for(brightness_display_icons, -1));
         return;
     }
 
     std::cout << "normal\n";
-    icon.set_from_icon_name(brightness_display_icons.at(
-        light_icon_for(ctrl_this_display->get_scale_target_value()))
-    );
+    icon.set_from_icon_name(icon_for(brightness_display_icons, ctrl_this_display->get_scale_target_value()));
 }
 
 bool WayfireLight::on_popover_timeout(int timer)

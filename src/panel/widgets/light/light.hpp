@@ -14,22 +14,6 @@ extern "C"{
 #include "widget.hpp"
 #include "animated-scale.hpp"
 
-enum BrightnessLevel
-{
-  BRIGHTNESS_LEVEL_LOW,
-  BRIGHTNESS_LEVEL_MEDIUM,
-  BRIGHTNESS_LEVEL_HIGH,
-  BRIGHTNESS_LEVEL_OOR, /* Out of range */
-};
-
-const std::map<BrightnessLevel, std::string> brightness_display_icons = {
-  {BRIGHTNESS_LEVEL_LOW, "display-brightness-low"},
-  {BRIGHTNESS_LEVEL_MEDIUM, "display-brightness-medium"},
-  {BRIGHTNESS_LEVEL_HIGH, "display-brightness-high"},
-  // this icon seems rare, so probably best to have a generic failure
-  {BRIGHTNESS_LEVEL_OOR, "display-brightness-invalid"},
-};
-
 class WayfireLight;
 
 class WfLightControl : public Gtk::Box
@@ -37,7 +21,6 @@ class WfLightControl : public Gtk::Box
   protected:
     WayfireAnimatedScale scale;
     Gtk::Label label;
-    std::map<BrightnessLevel, std::string> icons;
     WayfireLight *parent;
     std::vector<sigc::connection> signals;
 

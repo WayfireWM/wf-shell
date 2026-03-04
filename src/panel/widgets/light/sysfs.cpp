@@ -49,8 +49,6 @@ class WfLightSysfsControl: public WfLightControl
 
             scale.set_target_value(get_brightness());
             label.set_text(get_name());
-
-            icons = brightness_display_icons;
         }
 
         std::string get_connector()

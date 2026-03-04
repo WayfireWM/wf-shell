@@ -47,7 +47,6 @@ class WfLightDdcaControl : public WfLightControl
             scale.set_target_value(get_brightness());
             update_parent_icon();
             label.set_text(get_name());
-            icons = brightness_display_icons;
         }
 
         std::string get_connector()
