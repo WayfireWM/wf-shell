@@ -789,10 +789,10 @@ class WayfireToplevel::impl
         this->view_id = get_view_id_from_full_app_id(app_id);
         if (this->view_id == 0)
         {
-            std::cerr <<
-                "Failed to get view id from app_id. (Is 'app_id_mode' set to 'full' in wayfire [workarounds]?)"
-                      <<
-                std::endl;
+            std::cerr << "Failed to get view id from app_id. " <<
+                "(Ensure 'app_id_mode' set to 'full' in wayfire " <<
+                "[workarounds] and restart wf-panel or the applications " <<
+                "in the window list)" << std::endl;
         }
     }
 
