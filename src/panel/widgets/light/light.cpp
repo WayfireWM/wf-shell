@@ -188,19 +188,25 @@ void WayfireLight::add_control(std::shared_ptr<WfLightControl> control){
     controls.push_back(control);
 }
 
-void WayfireLight::rem_control(std::shared_ptr<WfLightControl> control)
+void WayfireLight::rem_control(WfLightControl* control)
 {
-    if (control == ctrl_this_display)
+    if (control == ctrl_this_display.get())
     {
-        ctrl_this_display = nullptr;
         display_box.remove(*control);
+        ctrl_this_display = nullptr;
         update_icon();
     } else
     {
         box.remove(*control);
     }
 
-    controls.erase(std::find(controls.begin(), controls.end(), control));
+    for (auto& item : controls)
+    {
+        if (item.get() == control)
+        {
+            controls.erase(std::find(controls.begin(), controls.end(), item));
+        }
+    }
 }
 
 void WayfireLight::update_icon(){

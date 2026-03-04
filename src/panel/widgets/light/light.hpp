@@ -1,3 +1,4 @@
+#include <ddcutil_types.h>
 #include <gtkmm.h>
 #include <memory>
 #include <sigc++/connection.h>
@@ -112,7 +113,7 @@ class DdcaSurveillor : public LightManager {
   public:
     ~DdcaSurveillor();
 
-    std::map<DDCA_Display_Info2*, std::vector<std::shared_ptr<WfLightControl>>> info_to_controls;
+    std::map<DDCA_Display_Ref, std::vector<std::shared_ptr<WfLightControl>>> ref_to_controls;
 
     static DdcaSurveillor& get();
 };
@@ -125,7 +126,7 @@ class WayfireLight : public WayfireWidget {
     WayfireOutput *output;
 
     Gtk::Image icon;
-    std::unique_ptr<WayfireMenuButton> button;
+    Gtk::Popover *popover;
     Gtk::Box box, display_box, other_box;
     Gtk::Label display_label, other_label;
     Gtk::Separator disp_othr_sep;
@@ -139,11 +140,11 @@ class WayfireLight : public WayfireWidget {
     WayfireLight(WayfireOutput *output);
     ~WayfireLight();
 
+    std::unique_ptr<WayfireMenuButton> button;
+
     WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
     WfOption<bool> popup_on_change{"panel/light_popup_on_change"};
-
-    Gtk::Popover *popover;
 
     std::shared_ptr<WfLightControl> ctrl_this_display;
 
@@ -153,7 +154,7 @@ class WayfireLight : public WayfireWidget {
     void cancel_popover_timeout();
 
     void add_control(std::shared_ptr<WfLightControl> control);
-    void rem_control(std::shared_ptr<WfLightControl> control);
+    void rem_control(WfLightControl* control);
 
     void update_icon();
 };

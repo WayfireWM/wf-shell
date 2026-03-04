@@ -17,6 +17,7 @@ void show_err(std::string location, DDCA_Status status){
 class WfLightDdcaControl : public WfLightControl
 {
     private:
+        DDCA_Display_Ref ref;
         DDCA_Display_Info2 *info;
         std::string connector;
         int max;
@@ -28,17 +29,22 @@ class WfLightDdcaControl : public WfLightControl
         }
 
     public:
-        WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Info2 *_info) : WfLightControl(parent){
-            info = _info;
+        WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Ref _ref) : WfLightControl(parent){
+            ref = _ref;
 
-            DdcaSurveillor::get().info_to_controls.at(info).push_back((std::shared_ptr<WfLightControl>)this);
+            DdcaSurveillor::get().ref_to_controls.at(ref).push_back((std::shared_ptr<WfLightControl>)this);
+
+            DDCA_Status status;
+
+            // we want Info2 for the connector name
+            status = ddca_get_display_info2(ref, &info);
 
             // drm_card_connector is something like cardX-<connector-name>
             connector = std::string(info->drm_card_connector);
             connector = connector.substr(connector.find("-") + 1, connector.size());
 
             DDCA_Display_Handle handle;
-            DDCA_Status status = ddca_open_display2(info->dref, false, &handle);
+            ddca_open_display2(info->dref, false, &handle);
             show_err("open display", status);
 
             DDCA_Non_Table_Vcp_Value value;
@@ -75,7 +81,7 @@ class WfLightDdcaControl : public WfLightControl
             // we don’t really have a good way to track changes to the monitor’s brightness, so here,
             // we don’t update on external changes and just update the controls of the other widgets
             // see watching for VCP changes : https://github.com/rockowitz/ddcutil/issues/589
-            for (auto control : DdcaSurveillor::get().info_to_controls[info])
+            for (auto control : DdcaSurveillor::get().ref_to_controls[ref])
             {
                 control->set_scale_target_value(brightness);
             }
@@ -139,11 +145,7 @@ DdcaSurveillor::DdcaSurveillor(){
     ddca_get_display_info_list2(false, &display_list);
 
     for (int i = 0 ; i < display_list->ct ; i++){
-        // we have a list of Info, but we want Info2 for the connector name
-        DDCA_Display_Info2 *info;
-        status = ddca_get_display_info2(display_list->info[i].dref, &info);
-        show_err("get info2", status);
-        info_to_controls[info];
+        ref_to_controls[display_list->info[i].dref];
     }
 }
 
@@ -154,38 +156,29 @@ DdcaSurveillor::~DdcaSurveillor()
 
 void DdcaSurveillor::on_display_change(DDCA_Display_Status_Event event)
 {
-    DDCA_Display_Info2 *info;
-    ddca_get_display_info2(event.dref, &info);
-
     if (event.event_type == DDCA_EVENT_DISPLAY_CONNECTED)
     {
-        DdcaSurveillor::get().info_to_controls[info];
+        DdcaSurveillor::get().ref_to_controls[event.dref];
         for (auto& widget : DdcaSurveillor::get().widgets)
         {
-            auto control = std::make_shared<WfLightDdcaControl>(widget, info);
-            widget->add_control((std::shared_ptr<WfLightControl>)control);
+            auto control = std::make_shared<WfLightDdcaControl>(widget, event.dref);
+            widget->add_control(control);
         }
     } else if (event.event_type == DDCA_EVENT_DISPLAY_DISCONNECTED)
     {
-        for (auto control : DdcaSurveillor::get().info_to_controls[info])
-        {
-            control->get_parent()->rem_control(control);
-        }
-
-        DdcaSurveillor::get().info_to_controls.erase(info);
+        DdcaSurveillor::get().ref_to_controls.erase(event.dref);
     }
 }
 
 void DdcaSurveillor::catch_up_widget(WayfireLight *widget){
-    for (auto pair : info_to_controls)
+    for (auto pair : ref_to_controls)
     {
         auto control = std::make_shared<WfLightDdcaControl>(widget, pair.first);
-        widget->add_control((std::shared_ptr<WfLightControl>)control);
+        widget->add_control(control);
     }
 }
 
 void DdcaSurveillor::strip_widget(WayfireLight *widget){
-
 }
 
 DdcaSurveillor& DdcaSurveillor::get(){

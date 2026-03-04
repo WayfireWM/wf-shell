@@ -305,7 +305,7 @@ void SysfsSurveillor::add_dev(std::filesystem::path path){
     for (auto widget : widgets)
     {
         auto control = std::make_shared<WfLightSysfsControl>(widget, path);
-        wd_to_path_controls[wd].second.push_back(std::shared_ptr<WfLightSysfsControl>(control));
+        wd_to_path_controls[wd].second.push_back(control);
 
         widget->add_control(control);
     }
@@ -317,7 +317,7 @@ void SysfsSurveillor::rem_dev(std::filesystem::path path){
         if (it.second.first == path){
             auto& controls = it.second.second;
             for (auto control : controls){
-                controls.erase(find(controls.begin(), controls.end(), control));
+                control->get_parent()->rem_control(control.get());
             }
             wd_to_path_controls.erase(it.first);
         }
@@ -328,23 +328,12 @@ void SysfsSurveillor::catch_up_widget(WayfireLight* widget){
     // for each managed device, create a control and add it to the widget and keep track of it
     for (auto& it : wd_to_path_controls){
         auto control = std::make_shared<WfLightSysfsControl>(widget, it.second.first.string());
-        it.second.second.push_back(std::shared_ptr<WfLightSysfsControl>(control));
-        widget->add_control((std::shared_ptr<WfLightControl>)control);
+        it.second.second.push_back(control);
+        widget->add_control(control);
     }
 }
 
 void SysfsSurveillor::strip_widget(WayfireLight *widget){
-    for (auto& it : wd_to_path_controls)
-    {
-        auto& controls = it.second.second;
-        for (auto& control : controls)
-        {
-            if (control->get_parent() == widget)
-            {
-                controls.erase(find(controls.begin(), controls.end(), control));
-            }
-        }
-    }
 }
 
 SysfsSurveillor& SysfsSurveillor::get(){
