@@ -1,3 +1,4 @@
+#include <cassert>
 #include <giomm.h>
 #include <glibmm.h>
 #include <iostream>
@@ -18,7 +19,6 @@
 #include "null.hpp"
 #define NM_DBUS_NAME "org.freedesktop.NetworkManager"
 #define MM_DBUS_NAME "org.freedesktop.ModemManager1"
-#define ACTIVE_CONNECTION "PrimaryConnection"
 #define STRENGTH "Strength"
 
 #define NM_PATH "/org/freedesktop/NetworkManager"
@@ -32,6 +32,7 @@
 #define MODEM_TYPE     8
 #define GENERIC_TYPE   14
 #define TUN_TYPE       16
+#define WIREGUARD_TYPE 29
 #define LOOPBACK_TYPE  32
 
 NetworkManager::NetworkManager()
@@ -296,7 +297,7 @@ void NetworkManager::check_add_vpn(std::string path)
         {
             auto name = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(conname).get();
             auto contype_str = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(contype).get();
-            if (contype_str == "vpn")
+            if ((contype_str == "vpn") || (contype_str == "wireguard"))
             {
                 all_vpns[path] = std::make_shared<VpnConfig>(path, proxy, name);
             }
@@ -320,9 +321,7 @@ void NetworkManager::get_all_devices_cb(std::shared_ptr<Gio::AsyncResult> async)
     /* Now get the current connection */
     nm_dbus_signals.push_back(Glib::signal_idle().connect([this] ()
     {
-        Glib::Variant<std::string> path_read;
-        nm_proxy->get_cached_property(path_read, "PrimaryConnection");
-        changed_primary(path_read.get());
+        changed_primary();
         return G_SOURCE_REMOVE;
     }));
     /* And emit a start event */
@@ -389,10 +388,10 @@ void NetworkManager::on_nm_properties_changed(const Gio::DBus::Proxy::MapChanged
 {
     for (auto & it : properties)
     {
-        if (it.first == "PrimaryConnection")
+        if ((it.first == "PrimaryConnection") ||
+            (it.first == "ActiveConnections"))
         {
-            auto value = Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(it.second).get();
-            changed_primary(value);
+            changed_primary();
         } else if ((it.first == "NetworkingEnabled") || (it.first == "WirelessEnabled") ||
                    (it.first == "WirelessHardwareEnabled") ||
                    (it.first == "WwanEnabled") || (it.first == "WwanHardwareEnabled"))
@@ -402,17 +401,72 @@ void NetworkManager::on_nm_properties_changed(const Gio::DBus::Proxy::MapChanged
     }
 }
 
-void NetworkManager::changed_primary(std::string value)
+void NetworkManager::changed_primary()
 {
-    if (value != primary_connection)
+    Glib::Variant<std::string> primary_value, connecting_value;
+    Glib::Variant<std::vector<std::string>> connections_value;
+    nm_proxy->get_cached_property(primary_value, "PrimaryConnection");
+    nm_proxy->get_cached_property(connections_value, "ActiveConnections");
+
+    auto connection_path = primary_value.get();
+
+    std::shared_ptr<Connection> network;
+    /* At this point there are two known paths for VPNS
+     * OpenVPN shows up as primary active connection pointing to the device under it
+     * WireGuard shows up as 'an' active connection but not primary
+     */
+
+    auto connections_values = connections_value.get();
+
+    auto vpns_not_changed{all_vpns};
+    for (auto connection_path_loop : connections_values)
+    {
+        /* Pile up wireguard connections */
+        auto maybe_wireguard_connection = get_connection(connection_path_loop);
+        if (maybe_wireguard_connection->has_wireguard)
+        {
+            auto next_step = get_connection(connection_path);
+            maybe_wireguard_connection->replace_devices(next_step->devices);
+            connection_path = connection_path_loop;
+            network = maybe_wireguard_connection;
+        }
+
+        auto connection_proxy = Gio::DBus::Proxy::create_sync(connection,
+            NM_DBUS_NAME,
+            connection_path_loop,
+            "org.freedesktop.NetworkManager.Connection.Active");
+
+        Glib::Variant<std::string> inner_connection_val;
+        connection_proxy->get_cached_property(inner_connection_val, "Connection");
+        if (vpns_not_changed.count(inner_connection_val.get()) > 0)
+        {
+            auto vpn = vpns_not_changed[inner_connection_val.get()];
+            vpn->set_connection_path(connection_path_loop);
+            vpn->set_active(true);
+            vpns_not_changed.erase(inner_connection_val.get());
+        }
+    }
+
+    for (auto & it : vpns_not_changed)
+    {
+        it.second->set_active(false);
+    }
+
+    /* Different than previously, reattach primary */
+    if (connection_path != primary_connection)
     {
         if (primary_signal)
         {
             primary_signal.disconnect();
         }
 
-        primary_connection = value;
-        auto network = get_connection(value);
+        primary_connection = connection_path;
+        if (!network)
+        {
+            network = get_connection(connection_path);
+        }
+
+        assert(network != nullptr);
         primary_connection_obj = network;
 
         /* Any change inside the primary connection also called default_changed */
@@ -507,6 +561,7 @@ void NetworkManager::activate_connection(std::string p1, std::string p2, std::st
     {
         /* It's most likely a WIFI AP with no password set. Let's ask */
         std::cout << p2 << std::endl;
+        /* No, it's not a regex */
         if (p2.find("/Devices/") != std::string::npos)
         {
             auto device = std::dynamic_pointer_cast<WifiNetwork>(all_devices[p2]);

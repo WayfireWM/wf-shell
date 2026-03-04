@@ -78,10 +78,24 @@ std::shared_ptr<AccessPoint> AccessPointWidget::get_ap()
 VPNControlWidget::VPNControlWidget(std::shared_ptr<VpnConfig> config) :
     config(config)
 {
+    add_css_class("vpn");
     append(image);
     append(label);
     label.set_label(config->name);
     image.set_from_icon_name("network-vpn-symbolic");
+    signals.push_back(config->signal_state_changed().connect(
+        [this, config] (bool active)
+    {
+        if (active)
+        {
+            this->add_css_class("active");
+        } else
+        {
+            this->remove_css_class("active");
+        }
+
+        label.set_label(config->name);
+    }));
 }
 
 VPNControlWidget::~VPNControlWidget()
@@ -441,20 +455,19 @@ void NetworkControlWidget::add_vpn(std::shared_ptr<VpnConfig> config)
     vpn_widgets.emplace(config->path, widget);
 
     auto click = Gtk::GestureClick::create();
-    auto sig   = click->signal_released().connect(
+    widget->signals.push_back(click->signal_released().connect(
         [this, config] (int, double, double)
     {
-        auto primary = network_manager->get_primary_network();
-        if (primary->has_vpn)
+        if (config->get_active())
         {
-            network_manager->deactivate_connection(primary->get_path());
+            network_manager->deactivate_connection(config->get_connection_path());
         } else
         {
             network_manager->activate_connection(config->path, "/", "/");
         }
-    });
+    }));
     widget->add_controller(click);
-    widget->signals.push_back(sig);
+
     vpn_box.append(*widget);
 }
 

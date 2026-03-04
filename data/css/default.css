@@ -228,6 +228,11 @@
   background: #8f83;
 }
 
+.network-control-center .vpn.active{
+  font-weight: bold;
+  background: #8f83;
+}
+
 .network-control-center .access-point .band {
     font-size: 1em;
     font-weight: bolder;

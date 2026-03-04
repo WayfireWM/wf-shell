@@ -15,6 +15,8 @@ class Connection : public Network
     std::vector<std::shared_ptr<Network>> devices;
     std::string vpn_path = "";
 
+    bool has_wireguard = false;
+
     Connection();
     Connection(std::string path, std::shared_ptr<Gio::DBus::Proxy> connection_proxy,
         std::vector<std::shared_ptr<Network>> devices);
@@ -22,4 +24,6 @@ class Connection : public Network
     std::string get_name();
     std::string get_icon_name();
     std::vector<std::string> get_css_classes();
+
+    void replace_devices(std::vector<std::shared_ptr<Network>> devices_in);
 };

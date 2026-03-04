@@ -48,7 +48,7 @@ class NetworkManager
     void get_all_devices_cb(std::shared_ptr<Gio::AsyncResult>);
     void add_network(std::string path);
     void check_add_vpn(std::string path);
-    void changed_primary(std::string path);
+    void changed_primary();
     void connect_nm();
     void lost_nm();
 

@@ -1,3 +1,5 @@
+#include <cassert>
+#include <memory>
 #include "connection.hpp"
 #include "network/manager.hpp"
 
@@ -9,21 +11,18 @@ Connection::Connection(std::string path, std::shared_ptr<Gio::DBus::Proxy> conne
     std::vector<std::shared_ptr<Network>> devices) :
     Network(path, nullptr), connection_proxy(connection_proxy), devices(devices)
 {
-    /* Bubble up emits from any device here */
-    for (auto & it : devices)
-    {
-        signals.push_back(it->signal_network_altered().connect(
-            [this] ()
-        {
-            network_altered.emit();
-        }));
-    }
+    replace_devices(devices);
+
+    Glib::Variant<std::string> type_data;
+    connection_proxy->get_cached_property(type_data, "Type");
+    std::string type = type_data.get();
+    has_wireguard = (type == "wireguard");
 
     Glib::Variant<bool> vpn_data;
     connection_proxy->get_cached_property(vpn_data, "Vpn");
     has_vpn = vpn_data.get();
 
-    if (has_vpn)
+    if (has_vpn || has_wireguard)
     {
         Glib::Variant<std::string> vpn_path_start;
         connection_proxy->get_cached_property(vpn_path_start, "Connection");
@@ -47,7 +46,7 @@ std::string Connection::get_name()
     }
 
     std::string secure = "";
-    if (has_vpn)
+    if (has_vpn || has_wireguard)
     {
         auto settings = NetworkManager::getInstance()->get_vpn(vpn_path);
         if (settings)
@@ -70,7 +69,7 @@ std::string Connection::get_icon_name()
     }
 
     std::string secure = "";
-    if (has_vpn)
+    if (has_vpn || has_wireguard)
     {
         secure = devices[0]->get_secure_variant();
     }
@@ -86,4 +85,32 @@ std::vector<std::string> Connection::get_css_classes()
     }
 
     return devices[0]->get_css_classes();
+}
+
+void Connection::replace_devices(std::vector<std::shared_ptr<Network>> devices_in)
+{
+    /* Clean out previous contents */
+    for (auto sig : signals)
+    {
+        sig.disconnect();
+    }
+
+    signals.clear();
+    devices.clear();
+
+    /* Bubble up emits from any device here */
+    for (auto & it : devices_in)
+    {
+        if (it)
+        {
+            signals.push_back(it->signal_network_altered().connect(
+                [this] ()
+            {
+                network_altered.emit();
+            }));
+            devices.push_back(it);
+        }
+    }
+
+    network_altered.emit();
 }
