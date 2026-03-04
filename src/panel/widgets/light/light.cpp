@@ -3,7 +3,6 @@
 #include <pulse/proplist.h>
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
-#include <iostream>
 
 #include "light.hpp"
 #include "wf-popover.hpp"

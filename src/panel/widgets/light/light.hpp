@@ -1,11 +1,12 @@
-#include <ddcutil_types.h>
 #include <gtkmm.h>
 #include <memory>
 #include <sigc++/connection.h>
 #include <filesystem>
 #include <thread>
+
 #ifdef HAVE_DDCUTIL
 extern "C" {
+    #include <ddcutil_types.h>
     #include <ddcutil_c_api.h>
     #include <ddcutil_status_codes.h>
 }
