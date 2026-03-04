@@ -29,6 +29,7 @@ libgvc = subproject('gvc', default_options: ['static=true'], required: get_optio
 pipewire = dependency('libpipewire-0.3', required: get_option('wp-mixer-widget'))
 wireplumber = dependency('wireplumber-0.5', required: get_option('wp-mixer-widget'))
 ddcutil = dependency('libddcutil-5', required: get_option('ddcutil'))
+ddcutil = dependency('ddcutil', required: get_option('ddcutil'))
 dbusmenu_gtk = dependency('dbusmenu-glib-0.4')
 xkbregistry = dependency('xkbregistry')
 json = subproject('wf-json').get_variable('wfjson')
