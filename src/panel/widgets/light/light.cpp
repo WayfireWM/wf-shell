@@ -13,8 +13,11 @@ WfLightControl::WfLightControl(WayfireLight *_parent)
 {
     parent = _parent;
 
-    // preparation
     scale.set_range(0.0, 1.0);
+    slider_length.set_callback([=] ()
+    {
+        scale.set_size_request(slider_length.value());
+    });
     scale.set_size_request(slider_length.value());
 
     scale.set_user_changed_callback([this] ()
@@ -22,7 +25,6 @@ WfLightControl::WfLightControl(WayfireLight *_parent)
         this->set_brightness(scale.get_target_value());
     });
 
-    // layout
     set_orientation(Gtk::Orientation::VERTICAL);
     append(label);
     append(scale);
