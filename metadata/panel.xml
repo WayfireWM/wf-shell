@@ -478,6 +478,11 @@ Set to -1 to only run it by clicking the button.
 		<default>192</default>
 		<min>1</min>
 	</option>
+	<option name="live_window_previews" type="bool">
+		<_short>Live Window Previews</_short>
+		<_long>Enable live window previews when hovering over application buttons in the window list instead of the title tooltip.</_long>
+		<default>false</default>
+	</option>
 	</group>
 	<group>
 	<_short>Workspace Switcher</_short>

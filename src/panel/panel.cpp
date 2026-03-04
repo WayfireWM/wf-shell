@@ -437,6 +437,13 @@ void WayfirePanelApp::on_config_reload()
 
 bool WayfirePanelApp::panel_allowed_by_config(bool allowed, std::string output_name)
 {
+    std::string prefix = WayfireShellApp::get().live_preview_output_name;
+
+    if (output_name.compare(0, prefix.length(), prefix) == 0)
+    {
+        return false;
+    }
+
     if (allowed)
     {
         return std::string(*priv->panel_outputs).find("*") != std::string::npos ||
