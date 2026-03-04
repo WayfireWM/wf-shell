@@ -119,9 +119,10 @@ WayfireBacklight::~WayfireBacklight()
 void WayfireBacklight::init(Gtk::Box *container)
 {
     button = std::make_unique<WayfireMenuButton>("panel");
-    button->get_style_context()->add_class("widget-icon");
-    button->get_style_context()->add_class("light");
-    button->get_style_context()->add_class("flat");
+    button->add_css_class("widget-icon");
+    button->add_css_class("backlight");
+    button->add_css_class("flat");
+    button->get_children()[0]->add_css_class("flat");
     button->set_child(icon);
     button->show();
     popover = button->get_popover();
@@ -138,10 +139,12 @@ void WayfireBacklight::init(Gtk::Box *container)
     display_label.set_text("This monitor");
     display_box.append(display_label);
     display_box.set_orientation(Gtk::Orientation::VERTICAL);
+    display_label.add_css_class("this-monitor");
 
     other_label.set_text("Other monitors");
     other_box.append(other_label);
     other_box.set_orientation(Gtk::Orientation::VERTICAL);
+    display_label.add_css_class("other-monitors");
 
     // scroll to brighten and dim the monitor the panel is on
     auto scroll_gesture = Gtk::EventControllerScroll::create();
@@ -174,7 +177,7 @@ void WayfireBacklight::init(Gtk::Box *container)
     button->add_controller(scroll_gesture);
 
     popover->set_child(box);
-    popover->get_style_context()->add_class("light-popover");
+    popover->get_style_context()->add_class("backlight-popover");
 
     container->append(*button);
 
