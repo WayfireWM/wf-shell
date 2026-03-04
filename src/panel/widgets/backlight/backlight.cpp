@@ -4,12 +4,12 @@
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
 
-#include "light.hpp"
+#include "backlight.hpp"
 #include "wf-popover.hpp"
 #include "wf-shell-app.hpp"
 #include "icons.hpp"
 
-WfLightControl::WfLightControl(WayfireLight *_parent)
+WfLightControl::WfLightControl(WayfireBacklight *_parent)
 {
     parent = _parent;
 
@@ -62,7 +62,7 @@ WfLightControl::WfLightControl(WayfireLight *_parent)
     add_controller(scroll_gesture);
 }
 
-WayfireLight*WfLightControl::get_parent()
+WayfireBacklight*WfLightControl::get_parent()
 {
     return parent;
 }
@@ -91,24 +91,24 @@ void WfLightControl::update_parent_icon()
     }
 }
 
-void LightManager::add_widget(WayfireLight *widget)
+void LightManager::add_widget(WayfireBacklight *widget)
 {
     widgets.push_back(widget);
     catch_up_widget(widget);
 }
 
-void LightManager::rem_widget(WayfireLight *widget)
+void LightManager::rem_widget(WayfireBacklight *widget)
 {
     strip_widget(widget);
     widgets.erase(find(widgets.begin(), widgets.end(), widget));
 }
 
-WayfireLight::WayfireLight(WayfireOutput *_output)
+WayfireBacklight::WayfireBacklight(WayfireOutput *_output)
 {
     output = _output;
 }
 
-WayfireLight::~WayfireLight()
+WayfireBacklight::~WayfireBacklight()
 {
     SysfsSurveillor::get().rem_widget(this);
 #ifdef HAVE_DDCUTIL
@@ -116,7 +116,7 @@ WayfireLight::~WayfireLight()
 #endif
 }
 
-void WayfireLight::init(Gtk::Box *container)
+void WayfireBacklight::init(Gtk::Box *container)
 {
     button = std::make_unique<WayfireMenuButton>("panel");
     button->get_style_context()->add_class("widget-icon");
@@ -186,7 +186,7 @@ void WayfireLight::init(Gtk::Box *container)
     update_icon();
 }
 
-void WayfireLight::add_control(std::shared_ptr<WfLightControl> control)
+void WayfireBacklight::add_control(std::shared_ptr<WfLightControl> control)
 {
     auto connector = output->monitor->get_connector();
     if (control->get_connector() == connector)
@@ -205,7 +205,7 @@ void WayfireLight::add_control(std::shared_ptr<WfLightControl> control)
     controls.push_back(control);
 }
 
-void WayfireLight::rem_control(WfLightControl *control)
+void WayfireBacklight::rem_control(WfLightControl *control)
 {
     if (control == ctrl_this_display.get())
     {
@@ -222,7 +222,7 @@ void WayfireLight::rem_control(WfLightControl *control)
         controls.end());
 }
 
-void WayfireLight::update_icon()
+void WayfireBacklight::update_icon()
 {
     // if none, show unavailable
     if (!ctrl_this_display)
@@ -234,22 +234,22 @@ void WayfireLight::update_icon()
     icon.set_from_icon_name(icon_for(brightness_display_icons, ctrl_this_display->get_scale_target_value()));
 }
 
-bool WayfireLight::on_popover_timeout(int timer)
+bool WayfireBacklight::on_popover_timeout(int timer)
 {
     popover_timeout.disconnect();
     popover->popdown();
     return false;
 }
 
-void WayfireLight::check_set_popover_timeout()
+void WayfireBacklight::check_set_popover_timeout()
 {
     popover_timeout.disconnect();
 
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireLight::on_popover_timeout), 0), popup_timeout * 1000);
+        &WayfireBacklight::on_popover_timeout), 0), popup_timeout * 1000);
 }
 
-void WayfireLight::cancel_popover_timeout()
+void WayfireBacklight::cancel_popover_timeout()
 {
     popover_timeout.disconnect();
 }

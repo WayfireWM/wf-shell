@@ -16,14 +16,14 @@ extern "C" {
 #include "widget.hpp"
 #include "animated-scale.hpp"
 
-class WayfireLight;
+class WayfireBacklight;
 
 class WfLightControl : public Gtk::Box
 {
   protected:
     WayfireAnimatedScale scale;
     Gtk::Label label;
-    WayfireLight *parent;
+    WayfireBacklight *parent;
     std::vector<sigc::connection> signals;
 
     void update_parent_icon();
@@ -31,11 +31,11 @@ class WfLightControl : public Gtk::Box
     WfOption<int> slider_length{"panel/light_slider_length"};
 
   public:
-    WfLightControl(WayfireLight *parent);
+    WfLightControl(WayfireBacklight *parent);
 
     virtual std::string get_connector() = 0;
     virtual std::string get_name() = 0;
-    WayfireLight *get_parent();
+    WayfireBacklight *get_parent();
 
     void set_scale_target_value(double value);
     double get_scale_target_value();
@@ -50,14 +50,14 @@ class LightManager
     LightManager()
     {}
     // managed widgets
-    std::vector<WayfireLight*> widgets;
+    std::vector<WayfireBacklight*> widgets;
 
-    virtual void catch_up_widget(WayfireLight *widget) = 0;
-    virtual void strip_widget(WayfireLight *widget)    = 0;
+    virtual void catch_up_widget(WayfireBacklight *widget) = 0;
+    virtual void strip_widget(WayfireBacklight *widget)    = 0;
 
   public:
-    void add_widget(WayfireLight *widget);
-    void rem_widget(WayfireLight *widget);
+    void add_widget(WayfireBacklight *widget);
+    void rem_widget(WayfireBacklight *widget);
 };
 
 // singleton that monitors sysfs and calls the necessary functions
@@ -71,8 +71,8 @@ class SysfsSurveillor : public LightManager
     bool check_perms(std::filesystem::path);
     void add_dev(std::filesystem::path);
     void rem_dev(std::filesystem::path);
-    void catch_up_widget(WayfireLight *widget);
-    void strip_widget(WayfireLight *widget);
+    void catch_up_widget(WayfireBacklight *widget);
+    void strip_widget(WayfireBacklight *widget);
 
     static inline std::unique_ptr<SysfsSurveillor> instance;
 
@@ -92,7 +92,7 @@ class SysfsSurveillor : public LightManager
     int wd_additions, wd_removal;
 
     // managed widgets
-    std::vector<WayfireLight*> widgets;
+    std::vector<WayfireBacklight*> widgets;
 
     // thread on which to run handle_inotify_event on loop
     std::thread inotify_thread;
@@ -108,8 +108,8 @@ class DdcaSurveillor : public LightManager
 {
   private:
     DdcaSurveillor();
-    void catch_up_widget(WayfireLight *widget);
-    void strip_widget(WayfireLight *widget);
+    void catch_up_widget(WayfireBacklight *widget);
+    void strip_widget(WayfireBacklight *widget);
     static void on_display_change(DDCA_Display_Status_Event event);
 
     static inline std::unique_ptr<DdcaSurveillor> instance;
@@ -123,7 +123,7 @@ class DdcaSurveillor : public LightManager
 };
 #endif
 
-class WayfireLight : public WayfireWidget
+class WayfireBacklight : public WayfireWidget
 {
   private:
     void init(Gtk::Box *container) override;
@@ -142,8 +142,8 @@ class WayfireLight : public WayfireWidget
     bool on_popover_timeout(int timer);
 
   public:
-    WayfireLight(WayfireOutput *output);
-    ~WayfireLight();
+    WayfireBacklight(WayfireOutput *output);
+    ~WayfireBacklight();
 
     std::unique_ptr<WayfireMenuButton> button;
 

@@ -33,7 +33,7 @@
 #ifdef HAVE_WIREPLUMBER
     #include "widgets/wp-mixer/wp-mixer.hpp"
 #endif
-#include "widgets/light/light.hpp"
+#include "widgets/backlight/backlight.hpp"
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
 #include "widgets/tray/tray.hpp"
@@ -189,11 +189,11 @@ class WayfirePanel::impl
 #endif
         }
 
-        if (name == "light")
+        if (name == "backlight")
         {
-            return Widget(new WayfireLight(output));
+            return Widget(new WayfireBacklight(output));
 #ifndef HAVE_DDCUTIL
-            std::cout << "Built without DDC/CI support, light widget "
+            std::cout << "Built without DDC/CI support, backlight widget "
                          " doesn’t support external monitors." << std::endl;
 #endif
         }

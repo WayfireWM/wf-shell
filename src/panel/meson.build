@@ -21,8 +21,8 @@ widget_sources = [
   'widgets/tray/host.cpp',
   'widgets/tray/dbusmenu.cpp',
   'widgets/workspace-switcher.cpp',
-  'widgets/light/light.cpp',
-  'widgets/light/sysfs.cpp',
+  'widgets/backlight/backlight.cpp',
+  'widgets/backlight/sysfs.cpp',
 ]
 
 deps = [
@@ -66,7 +66,7 @@ else
 endif
 
 if ddcutil.found()
-  widget_sources += 'widgets/light/ddcutil.cpp'
+  widget_sources += 'widgets/backlight/ddcutil.cpp'
   deps += ddcutil
 else
   message('Libddcutil not found, light widget will not support external monitors.')

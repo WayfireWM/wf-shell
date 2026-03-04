@@ -5,7 +5,7 @@
 #include <iostream>
 #include <thread>
 
-#include "light.hpp"
+#include "backlight.hpp"
 
 #define VCP_BRIGHTNESS_CODE 0x10
 
@@ -33,7 +33,7 @@ class WfLightDdcaControl : public WfLightControl
     }
 
   public:
-    WfLightDdcaControl(WayfireLight *parent, DDCA_Display_Ref _ref) : WfLightControl(parent)
+    WfLightDdcaControl(WayfireBacklight *parent, DDCA_Display_Ref _ref) : WfLightControl(parent)
     {
         ref = _ref;
 
@@ -191,7 +191,7 @@ void DdcaSurveillor::on_display_change(DDCA_Display_Status_Event event)
     }
 }
 
-void DdcaSurveillor::catch_up_widget(WayfireLight *widget)
+void DdcaSurveillor::catch_up_widget(WayfireBacklight *widget)
 {
     for (auto& [ref, controls] : ref_to_controls)
     {
@@ -201,7 +201,7 @@ void DdcaSurveillor::catch_up_widget(WayfireLight *widget)
     }
 }
 
-void DdcaSurveillor::strip_widget(WayfireLight *widget)
+void DdcaSurveillor::strip_widget(WayfireBacklight *widget)
 {
     for (auto& [ref, controls] : ref_to_controls)
     {

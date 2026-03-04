@@ -1,8 +1,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <memory>
-#include <thread>
 #include <pwd.h>
 #include <grp.h>
 extern "C" {
@@ -10,7 +8,7 @@ extern "C" {
 }
 #include <errno.h>
 
-#include "light.hpp"
+#include "backlight.hpp"
 
 class WfLightSysfsControl : public WfLightControl
 {
@@ -36,7 +34,7 @@ class WfLightSysfsControl : public WfLightControl
     }
 
   public:
-    WfLightSysfsControl(WayfireLight *parent, std::string _path) : WfLightControl(parent)
+    WfLightSysfsControl(WayfireBacklight *parent, std::string _path) : WfLightControl(parent)
     {
         path = _path;
 
@@ -302,7 +300,7 @@ void SysfsSurveillor::rem_dev(std::filesystem::path path)
     }
 }
 
-void SysfsSurveillor::catch_up_widget(WayfireLight *widget)
+void SysfsSurveillor::catch_up_widget(WayfireBacklight *widget)
 {
     // for each managed device, create a control and add it to the widget and keep track of it
     for (auto& it : wd_to_path_controls)
@@ -313,7 +311,7 @@ void SysfsSurveillor::catch_up_widget(WayfireLight *widget)
     }
 }
 
-void SysfsSurveillor::strip_widget(WayfireLight *widget)
+void SysfsSurveillor::strip_widget(WayfireBacklight *widget)
 {
     for (auto& [wd, path_controls] : wd_to_path_controls)
     {
