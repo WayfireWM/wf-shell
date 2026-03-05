@@ -510,6 +510,12 @@ void NetworkControlWidget::add_device(std::shared_ptr<Network> network)
 void NetworkControlWidget::remove_device(std::shared_ptr<Network> network)
 {
     auto widget = widgets[network->get_path()];
+    if (!widget)
+    {
+        std::cout << "Null widget removed" << std::endl;
+        return;
+    }
+
     if (widget->type == "wifi")
     {
         wifi_box.remove(*widget);
