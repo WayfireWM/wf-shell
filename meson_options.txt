@@ -28,3 +28,9 @@ option(
     value: false,
     description: 'Install weather widgets and open-weather-fetch systemd service',
 )
+option(
+    'live-previews-dmabuf',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable live window preview tooltips when hovering over window-list buttons in wf-panel'
+)

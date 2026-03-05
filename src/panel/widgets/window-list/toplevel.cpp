@@ -45,6 +45,31 @@ static int create_anon_file(off_t size)
     return fd;
 }
 
+#ifdef HAVE_DMABUF
+static void dmabuf_created(void *data, struct zwp_linux_buffer_params_v1*,
+    struct wl_buffer *wl_buffer)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    tooltip_media->buffer = wl_buffer;
+    zwlr_screencopy_frame_v1_copy(tooltip_media->frame, tooltip_media->buffer);
+}
+
+static void dmabuf_failed(void *data, struct zwp_linux_buffer_params_v1*)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    std::cerr << "Failed to create dmabuf, trying shm" << std::endl;
+    tooltip_media->window_list->live_previews_dmabuf = false;
+}
+
+static const struct zwp_linux_buffer_params_v1_listener params_listener =
+{
+    .created = dmabuf_created,
+    .failed  = dmabuf_failed,
+};
+#endif // HAVE_DMABUF
+
 void handle_frame_buffer(void *data,
     struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
     uint32_t format,
@@ -53,6 +78,12 @@ void handle_frame_buffer(void *data,
     uint32_t stride)
 {
     TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    if (tooltip_media->window_list->live_previews_dmabuf)
+    {
+        tooltip_media->shm_data = nullptr;
+        return;
+    }
 
     size_t size = width * height * int(stride / width);
 
@@ -110,12 +141,63 @@ void handle_frame_ready(void *data,
 
     tooltip_media->request_next_frame();
 
-    if (!tooltip_media->shm_data || !tooltip_media->size)
+#ifdef HAVE_DMABUF
+    if (tooltip_media->window_list->live_previews_dmabuf && tooltip_media->bo)
+    {
+        uint32_t stride = 0;
+        tooltip_media->map_data    = nullptr;
+        tooltip_media->dmabuf_data = gbm_bo_map(tooltip_media->bo,
+            0, 0, tooltip_media->buffer_width, tooltip_media->buffer_height,
+            GBM_BO_TRANSFER_READ, &stride, &tooltip_media->map_data);
+
+        if (!tooltip_media->dmabuf_data)
+        {
+            perror("Failed to map bo");
+            std::cerr << "Trying shm" << std::endl;
+            tooltip_media->window_list->live_previews_dmabuf = false;
+            return;
+        }
+
+        if (tooltip_media->bo && tooltip_media->map_data)
+        {
+            gbm_bo_unmap(tooltip_media->bo, tooltip_media->map_data);
+            tooltip_media->map_data = nullptr;
+        }
+
+        tooltip_media->buffer_stride = stride;
+        tooltip_media->size = tooltip_media->buffer_height * tooltip_media->buffer_stride;
+    }
+
+#endif // HAVE_DMABUF
+
+    if ((!tooltip_media->shm_data
+#ifdef HAVE_DMABUF
+         && !tooltip_media->dmabuf_data
+#endif // HAVE_DMABUF
+        ) || !tooltip_media->size)
     {
         return;
     }
 
-    auto bytes = Glib::Bytes::create(tooltip_media->shm_data, tooltip_media->size);
+    std::shared_ptr<Glib::Bytes> bytes = 0;
+    size_t size = tooltip_media->buffer_height * tooltip_media->buffer_stride;
+    if (tooltip_media->shm_data)
+    {
+        bytes = Glib::Bytes::create(tooltip_media->shm_data, size);
+    }
+
+#ifdef HAVE_DMABUF
+    else if (tooltip_media->dmabuf_data)
+    {
+        bytes = Glib::Bytes::create(tooltip_media->dmabuf_data, size);
+        tooltip_media->dmabuf_data = nullptr;
+    }
+#endif // HAVE_DMABUF
+
+    if (!bytes)
+    {
+        return;
+    }
 
     auto builder = Gdk::MemoryTextureBuilder::create();
     builder->set_bytes(bytes);
@@ -140,12 +222,86 @@ void handle_frame_damage(void*,
     uint32_t)
 {}
 
-void handle_frame_linux_dmabuf(void*,
-    struct zwlr_screencopy_frame_v1*,
-    uint32_t,
-    uint32_t,
-    uint32_t)
-{}
+void handle_frame_linux_dmabuf(void *data,
+    struct zwlr_screencopy_frame_v1 *frame,
+    uint32_t format,
+    uint32_t width,
+    uint32_t height)
+{
+#ifdef HAVE_DMABUF
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    if (!tooltip_media->window_list->live_previews_dmabuf)
+    {
+        return;
+    }
+
+    tooltip_media->buffer_width  = width;
+    tooltip_media->buffer_height = height;
+
+    if (!tooltip_media->buffer)
+    {
+        if (tooltip_media->bo)
+        {
+            if (tooltip_media->buffer)
+            {
+                wl_buffer_destroy(tooltip_media->buffer);
+                tooltip_media->buffer = nullptr;
+            }
+
+            if (tooltip_media->params)
+            {
+                zwp_linux_buffer_params_v1_destroy(tooltip_media->params);
+                tooltip_media->params = nullptr;
+            }
+
+            if (tooltip_media->bo)
+            {
+                gbm_bo_destroy(tooltip_media->bo);
+                tooltip_media->bo = nullptr;
+            }
+        }
+
+        const uint64_t modifier = 0; // DRM_FORMAT_MOD_LINEAR
+        tooltip_media->bo = gbm_bo_create_with_modifiers(tooltip_media->window_list->dmabuf_device,
+            tooltip_media->buffer_width,
+            tooltip_media->buffer_height, format, &modifier, 1);
+        if (!tooltip_media->bo)
+        {
+            tooltip_media->bo = gbm_bo_create(tooltip_media->window_list->dmabuf_device,
+                tooltip_media->buffer_width,
+                tooltip_media->buffer_height, format, GBM_BO_USE_LINEAR | GBM_BO_USE_RENDERING);
+        }
+
+        if (!tooltip_media->bo)
+        {
+            perror("Failed to create gbm bo");
+            std::cerr << "Trying shm" << std::endl;
+            tooltip_media->window_list->live_previews_dmabuf = false;
+            return;
+        }
+
+        tooltip_media->buffer_stride = gbm_bo_get_stride(tooltip_media->bo);
+
+        tooltip_media->params = zwp_linux_dmabuf_v1_create_params(tooltip_media->window_list->dmabuf);
+
+        uint64_t mod = gbm_bo_get_modifier(tooltip_media->bo);
+        zwp_linux_buffer_params_v1_add(tooltip_media->params,
+            gbm_bo_get_fd(tooltip_media->bo), 0,
+            gbm_bo_get_offset(tooltip_media->bo, 0),
+            gbm_bo_get_stride(tooltip_media->bo),
+            mod >> 32, mod & 0xffffffff);
+
+        zwp_linux_buffer_params_v1_add_listener(tooltip_media->params, &params_listener, tooltip_media);
+        zwp_linux_buffer_params_v1_create(tooltip_media->params, tooltip_media->buffer_width,
+            tooltip_media->buffer_height, format, 0);
+    } else
+    {
+        zwlr_screencopy_frame_v1_copy(frame, tooltip_media->buffer);
+    }
+
+#endif // HAVE_DMABUF
+}
 
 void handle_frame_buffer_done(void*, struct zwlr_screencopy_frame_v1*)
 {}
@@ -198,10 +354,13 @@ TooltipMedia::~TooltipMedia()
     if (this->frame)
     {
         zwlr_screencopy_frame_v1_destroy(this->frame);
-        this->frame = NULL;
     }
 
-    if (this->shm_data && this->size)
+    if (
+#ifdef HAVE_DMABUF
+        !this->window_list->live_previews_dmabuf &&
+#endif // HAVE_DMABUF
+        this->shm_data && this->size)
     {
         if (munmap(this->shm_data, this->size) < 0)
         {
@@ -209,8 +368,28 @@ TooltipMedia::~TooltipMedia()
         }
     }
 
-    this->shm_data = NULL;
-    this->size     = 0;
+    if (this->buffer)
+    {
+        wl_buffer_destroy(this->buffer);
+    }
+
+#ifdef HAVE_DMABUF
+    if (this->params)
+    {
+        zwp_linux_buffer_params_v1_destroy(this->params);
+    }
+
+    if (this->bo && this->map_data)
+    {
+        gbm_bo_unmap(this->bo, this->map_data);
+    }
+
+    if (this->bo)
+    {
+        gbm_bo_destroy(this->bo);
+    }
+
+#endif // HAVE_DMABUF
 }
 
 class WayfireToplevel::impl
@@ -895,6 +1074,8 @@ class WayfireToplevel::impl
 
     ~impl()
     {
+        unset_tooltip_media();
+
         gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
 
         button_leave_signal.disconnect();

@@ -12,6 +12,12 @@
 #include "wf-shell-app.hpp"
 #include "panel.hpp"
 
+#ifdef HAVE_DMABUF
+    #include <gbm.h>
+    #include <xf86drm.h>
+    #include <linux-dmabuf-unstable-v1-client-protocol.h>
+#endif // HAVE_DMABUF
+
 class WayfireWindowList;
 class WayfireWindowListBox;
 
@@ -25,17 +31,22 @@ enum WayfireToplevelState
 class TooltipMedia : public Gtk::Picture
 {
   public:
-    WayfireWindowList *window_list = NULL;
-    wl_shm *shm = NULL;
-    wl_buffer *buffer = NULL;
-    void *shm_data    = NULL;
-    char *screencopy_data = NULL;
-    zwlr_screencopy_frame_v1 *frame = NULL;
-
-    int buffer_width;
-    int buffer_height;
-    int buffer_stride;
+    WayfireWindowList *window_list = nullptr;
+    wl_shm *shm = nullptr;
+    wl_buffer *buffer = nullptr;
+    void *shm_data    = nullptr;
+    zwlr_screencopy_frame_v1 *frame = nullptr;
+    uint32_t buffer_width;
+    uint32_t buffer_height;
+    uint32_t buffer_stride;
     size_t size = 0;
+
+#ifdef HAVE_DMABUF
+    gbm_bo *bo = nullptr;
+    zwp_linux_buffer_params_v1 *params = nullptr;
+    void *dmabuf_data = nullptr;
+    void *map_data    = nullptr;
+#endif // HAVE_DMABUF
 
     TooltipMedia(WayfireWindowList *window_list);
     ~TooltipMedia();
