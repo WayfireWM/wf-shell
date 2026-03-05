@@ -1,3 +1,4 @@
+#include <giomm.h>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -15,7 +16,7 @@ class WfLightSysfsControl : public WfLightControl
     // if we exist, it means we can just read/write, as the files and permissions
     // have already been checked and are being monitored with inotify
 
-  private:
+  protected:
     std::string path, connector_name;
 
     int get_max()
@@ -42,7 +43,7 @@ class WfLightSysfsControl : public WfLightControl
         ///sys/devices/pciXXXX:XX/XXXX:XX:XX.X/XXXX:XX:XX.X/drm/cardX-<connector-name>/<name>
         // what we are intersted in here is the connector name
         std::string realpath = std::filesystem::canonical(path);
-        // the offset is constant until cardX, after which we look for the -.
+        // the offset is constant until cardX (60), after which we look for the -.
         connector_name = realpath.substr(60, realpath.size());
         connector_name = connector_name.substr(connector_name.find("-") + 1, connector_name.size());
         // then, the connector is what remains until /
@@ -97,6 +98,57 @@ class WfLightSysfsControl : public WfLightControl
         b_file.close();
         max = get_max();
         return (((double)brightness + (double)max) / (double)max) - 1;
+    }
+};
+
+// some systems don’t have permissions to write there and use the
+// SetBrightness dbus method of systemd-logind
+class WfLightSysfsDbusSystemdControl : public WfLightSysfsControl
+{
+  private:
+    Glib::RefPtr<Gio::DBus::Connection> connection;
+    std::string session_path, name;
+
+  public:
+    WfLightSysfsDbusSystemdControl(WayfireBacklight *parent, std::string _path) : WfLightSysfsControl(parent,
+            _path)
+    {
+        connection = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM);
+        auto result = connection->call_sync(
+            "/org/freedesktop/login1",
+            "org.freedesktop.login1.Manager",
+            "GetSessionByPID",
+            Glib::VariantContainerBase::create_tuple({
+            Glib::Variant<guint32>::create(static_cast<guint32>(getpid()))
+        }),
+            "org.freedesktop.login1");
+
+        Glib::Variant<Glib::DBusObjectPathString> dbus_path;
+        result.get_child(dbus_path, 0);
+        session_path = dbus_path.get();
+
+        ///sys/class/backlight is constant, so 21
+        name = path.substr(21, path.length());
+    }
+
+    void set_brightness(double brightness) override
+    {
+        auto params = Glib::VariantContainerBase::create_tuple({
+            Glib::Variant<Glib::ustring>::create("backlight"),
+            Glib::Variant<Glib::ustring>::create(name),
+            Glib::Variant<guint32>::create(brightness * (double)get_max())
+        });
+
+        connection->call_sync(
+            session_path, // object path
+            "org.freedesktop.login1.Session", // interface
+            "SetBrightness", // method
+            params,
+            "org.freedesktop.login1" // bus name
+        );
+
+        parent->cancel_popover_timeout();
+        update_parent_icon();
     }
 };
 
@@ -237,18 +289,18 @@ bool SysfsSurveillor::check_perms(std::filesystem::path path)
     // brightness for reading / setting the value (0 to max),
     // and max_brightness for getting the maximum value for this device.
     // we need to be able to read max_brightness and write to brightness.
-    const std::filesystem::path b_path     = path.string() + "/brightness";
     const std::filesystem::path max_b_path = path.string() + "/max_brightness";
-
-    if (access(b_path.c_str(), R_OK | W_OK))
-    {
-        std::cerr << "Cannot read/write brightness for " << path << ", ignoring.\n";
-        return false;
-    }
+    const std::filesystem::path b_path     = path.string() + "/brightness";
 
     if (access(max_b_path.c_str(), R_OK))
     {
         std::cerr << "Cannot read max_brightness for " << path << ", ignoring.\n";
+        return false;
+    }
+
+    if (access(b_path.c_str(), R_OK))
+    {
+        std::cerr << "Cannot read/write brightness for " << path << ", ignoring.\n";
         return false;
     }
 
@@ -275,9 +327,16 @@ void SysfsSurveillor::add_dev(std::filesystem::path path)
     // create a control for each widget, and insert it in the vector we just created
     for (auto widget : widgets)
     {
-        auto control = std::make_shared<WfLightSysfsControl>(widget, path);
-        wd_to_path_controls[wd].second.push_back(control);
+        std::shared_ptr<WfLightSysfsControl> control;
+        if (access((std::string(path) + "/brightness").c_str(), W_OK))
+        {
+            control = std::make_shared<WfLightSysfsDbusSystemdControl>(widget, path);
+        } else
+        {
+            control = std::make_shared<WfLightSysfsControl>(widget, path);
+        }
 
+        wd_to_path_controls[wd].second.push_back(control);
         widget->add_control(control);
     }
 }
@@ -305,7 +364,16 @@ void SysfsSurveillor::catch_up_widget(WayfireBacklight *widget)
     // for each managed device, create a control and add it to the widget and keep track of it
     for (auto& it : wd_to_path_controls)
     {
-        auto control = std::make_shared<WfLightSysfsControl>(widget, it.second.first.string());
+        auto path = it.second.first;
+        std::shared_ptr<WfLightSysfsControl> control;
+        if (access((std::string(path) + "/brightness").c_str(), W_OK))
+        {
+            control = std::make_shared<WfLightSysfsDbusSystemdControl>(widget, path);
+        } else
+        {
+            control = std::make_shared<WfLightSysfsControl>(widget, path);
+        }
+
         it.second.second.push_back(control);
         widget->add_control(control);
     }
