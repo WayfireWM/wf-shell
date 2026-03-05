@@ -7,6 +7,10 @@
 #include "layout.hpp"
 #include "wf-ipc.hpp"
 
+#ifdef HAVE_DMABUF
+    #include <gbm.h>
+#endif // HAVE_DMABUF
+
 class WayfireWindowListOutput
 {
   public:
@@ -27,9 +31,9 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
 
     wl_display *display;
     wl_registry *registry;
-    wl_shm *shm;
-    zwlr_foreign_toplevel_manager_v1 *manager = NULL;
-    zwlr_screencopy_manager_v1 *screencopy_manager = NULL;
+    wl_shm *shm = nullptr;
+    zwlr_foreign_toplevel_manager_v1 *manager = nullptr;
+    zwlr_screencopy_manager_v1 *screencopy_manager = nullptr;
     WayfireOutput *output;
     Gtk::ScrolledWindow scrolled_window;
 
@@ -89,6 +93,13 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
     void live_window_previews_plugin_check();
     void enable_ipc(bool enable);
     bool live_window_previews_enabled();
+    bool live_previews_dmabuf = true;
+
+#ifdef HAVE_DMABUF
+    zwp_linux_dmabuf_feedback_v1 *feedback = nullptr;
+    zwp_linux_dmabuf_v1 *dmabuf = nullptr;
+    gbm_device *dmabuf_device   = nullptr;
+#endif // HAVE_DMABUF
 
   private:
     int get_default_button_width();
