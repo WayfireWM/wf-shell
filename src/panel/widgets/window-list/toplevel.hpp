@@ -40,8 +40,7 @@ class TooltipMedia : public Gtk::Picture
     TooltipMedia(WayfireWindowList *window_list);
     ~TooltipMedia();
 
-    bool on_tick(const Glib::RefPtr<Gdk::FrameClock>& clock);
-    void request_next_frame();
+    bool request_next_frame();
 };
 
 /* Represents a single opened toplevel window.

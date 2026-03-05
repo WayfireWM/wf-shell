@@ -108,6 +108,8 @@ void handle_frame_ready(void *data,
 {
     TooltipMedia *tooltip_media = (TooltipMedia*)data;
 
+    tooltip_media->request_next_frame();
+
     if (!tooltip_media->shm_data || !tooltip_media->size)
     {
         return;
@@ -159,7 +161,7 @@ static struct zwlr_screencopy_frame_v1_listener screencopy_frame_listener =
     handle_frame_buffer_done,
 };
 
-void TooltipMedia::request_next_frame()
+bool TooltipMedia::request_next_frame()
 {
     if (this->frame)
     {
@@ -170,12 +172,14 @@ void TooltipMedia::request_next_frame()
     if (!this->window_list->window_list_live_preview_output ||
         !this->window_list->window_list_live_preview_output->output)
     {
-        return;
+        return false;
     }
 
     this->frame = zwlr_screencopy_manager_v1_capture_output(this->window_list->screencopy_manager, 0,
         this->window_list->window_list_live_preview_output->output);
     zwlr_screencopy_frame_v1_add_listener(this->frame, &screencopy_frame_listener, this);
+
+    return true;
 }
 
 TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
@@ -185,10 +189,8 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
 
     this->add_tick_callback([=] (const Glib::RefPtr<Gdk::FrameClock>& clock)
     {
-        return this->on_tick(clock);
+        return !this->request_next_frame();
     });
-
-    request_next_frame();
 }
 
 TooltipMedia::~TooltipMedia()
@@ -209,12 +211,6 @@ TooltipMedia::~TooltipMedia()
 
     this->shm_data = NULL;
     this->size     = 0;
-}
-
-bool TooltipMedia::on_tick(const Glib::RefPtr<Gdk::FrameClock>& clock)
-{
-    this->request_next_frame();
-    return G_SOURCE_CONTINUE;
 }
 
 class WayfireToplevel::impl
@@ -405,6 +401,7 @@ class WayfireToplevel::impl
                 }
 
                 set_tooltip_media();
+                update_tooltip();
             });
         }));
         button.add_controller(motion_controller);
@@ -729,8 +726,6 @@ class WayfireToplevel::impl
         {
             return false;
         }
-
-        update_tooltip();
 
         if (!this->window_list->live_window_previews_enabled())
         {
