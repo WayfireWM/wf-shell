@@ -150,6 +150,11 @@ void WayfireBacklight::init(Gtk::Box *container)
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
+        if (!ctrl_this_display)
+        {
+            return false;
+        }
+
         double change = 0;
 
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
