@@ -87,6 +87,11 @@ If full_span is off, both sides of the panel will take the same amount of space,
 			<_name>Right</_name>
 		</desc>
 	</option>
+	<option name="edge_margin" type="int">
+		<_short>Edge margin</_short>
+		<_long>Space between the panel the edge</_long>
+		<default>0</default>
+	</option>
 	<option name="edge_hotspot_size" type="int">
 		<_short>Edge hotspot size</_short>
 		<_long>The distance to the edge of screen to place the cursor in to show the panel when it's hidden.</_long>
