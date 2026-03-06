@@ -95,6 +95,7 @@ class WayfireAutohidingWindow : public Gtk::Window
     WfOption<int> autohide_show_delay;
     WfOption<int> autohide_hide_delay;
 
+    WfOption<int> edge_margin;
     WfOption<int> edge_hotspot_size, adjeacent_edge_hotspot_size;
     int last_edge_hotspot_size = 0, last_adjeacent_edge_hotspot_size = 0;
 
