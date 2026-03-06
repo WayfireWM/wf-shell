@@ -88,9 +88,14 @@ This will lead to unused space on the side that has the least space taken up by 
 			<_name>Right</_name>
 		</desc>
 	</option>
-	<option name="edge_offset" type="int">
-		<_short>Edge offset</_short>
-		<_long>The distance from the cursor to the edge of screen to show the panel when it's hidden.</_long>
+	<option name="edge_hotspot_size" type="int">
+		<_short>Edge hotspot size</_short>
+		<_long>The distance to the edge of screen to place the cursor in to show the panel when it's hidden.</_long>
+		<default>20</default>
+	</option>
+	<option name="adjeacent_edge_hotspot_size" type="int">
+		<_short>Edge hotspot size</_short>
+		<_long>The distance to the edge of screen to place the cursor in to show the panel when it's hidden.</_long>
 		<default>20</default>
 	</option>
 	<option name="layer" type="string">

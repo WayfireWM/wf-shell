@@ -87,19 +87,19 @@ class WayfireAutohidingWindow : public Gtk::Window
     WfOption<bool> full_span;
     void update_position();
 
-    wf::animation::simple_animation_t autohide_animation;
     int (Gtk::Widget::*get_allocated_height_or_width)() const;
     bool update_margin();
 
-    WfOption<int> edge_offset;
-    int last_edge_offset = -1;
-
-    WfOption<int> minimal_height;
-    WfOption<int> minimal_width;
-
+    wf::animation::simple_animation_t autohide_animation;
     WfOption<bool> autohide_opt;
     WfOption<int> autohide_show_delay;
     WfOption<int> autohide_hide_delay;
+
+    WfOption<int> edge_hotspot_size, adjeacent_edge_hotspot_size;
+    int last_edge_hotspot_size = 0, last_adjeacent_edge_hotspot_size = 0;
+
+    WfOption<int> minimal_height;
+    WfOption<int> minimal_width;
 
     bool last_autohide_value = autohide_opt;
     void setup_autohide();
@@ -121,13 +121,10 @@ class WayfireAutohidingWindow : public Gtk::Window
     /** Show the window but hide if no pointer input */
     void m_show_uncertain();
 
-    std::string last_position = "";
-    int32_t last_hotspot_size = -1;
-    bool input_inside_panel   = false;
-    zwf_hotspot_v2 *edge_hotspot  = NULL;
-    zwf_hotspot_v2 *panel_hotspot = NULL;
-    std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> edge_callbacks;
-    std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> panel_callbacks;
+    bool input_inside_panel = false;
+    zwf_hotspot_v2 *edge_hotspot  = NULL, *adjeacent_edge_hotspot = NULL, *panel_hotspot = NULL;
+    std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> edge_callbacks, adjeacent_edge_callbacks, panel_callbacks;
+    WayfireOutput *find_adjeacent_output();
     void setup_hotspot();
 
     sigc::connection popover_hide;
