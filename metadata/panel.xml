@@ -194,6 +194,11 @@
 		<default>42</default>
 		<min>0</min>
 	</option>
+	<option name="menu_force_show_popup" type="bool">
+		<_short>Force showing the menu popup</_short>
+		<_long>Show the menu popup over other windows, even if it and the panel would be hidden otherwise.</_long>
+		<default>true</default>
+	</option>
 	<option name="menu_min_category_width" type="int">
 		<_short>Menu Minimum Category Width</_short>
 		<default>200</default>
