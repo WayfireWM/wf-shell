@@ -219,7 +219,7 @@ void WayfireAutohidingWindow::update_position()
     }
 
     // need different measurements depending on position
-    if (edge == GTK_LAYER_SHELL_EDGE_LEFT || edge == GTK_LAYER_SHELL_EDGE_RIGHT)
+    if ((edge == GTK_LAYER_SHELL_EDGE_LEFT) || (edge == GTK_LAYER_SHELL_EDGE_RIGHT))
     {
         get_allocated_height_or_width = &Gtk::Widget::get_allocated_width;
     } else
@@ -257,7 +257,7 @@ static zwf_hotspot_v2_listener hotspot_listener = {
     .leave = handle_hotspot_leave,
 };
 
-WayfireOutput *WayfireAutohidingWindow::find_adjeacent_output()
+WayfireOutput*WayfireAutohidingWindow::find_adjeacent_output()
 {
     Gdk::Rectangle geom_this;
     this->output->monitor->get_geometry(geom_this);
@@ -265,8 +265,15 @@ WayfireOutput *WayfireAutohidingWindow::find_adjeacent_output()
 
     for (auto& wo : *WayfireShellApp::get().get_wayfire_outputs())
     {
-        if (wo.get() == this->output) continue;
-        if (!wo->output) continue;
+        if (wo.get() == this->output)
+        {
+            continue;
+        }
+
+        if (!wo->output)
+        {
+            continue;
+        }
 
         Gdk::Rectangle other_geo;
         wo->monitor->get_geometry(other_geo);
@@ -274,19 +281,27 @@ WayfireOutput *WayfireAutohidingWindow::find_adjeacent_output()
         if (pos == WF_WINDOW_POSITION_TOP)
         {
             if (other_geo.get_y() + other_geo.get_height() == geom_this.get_y())
+            {
                 return wo.get();
+            }
         } else if (pos == WF_WINDOW_POSITION_BOTTOM)
         {
             if (other_geo.get_y() == geom_this.get_y() + geom_this.get_height())
+            {
                 return wo.get();
+            }
         } else if (pos == WF_WINDOW_POSITION_LEFT)
         {
             if (other_geo.get_x() + other_geo.get_width() == geom_this.get_x())
+            {
                 return wo.get();
+            }
         } else if (pos == WF_WINDOW_POSITION_RIGHT)
         {
             if (other_geo.get_x() == geom_this.get_x() + geom_this.get_width())
+            {
                 return wo.get();
+            }
         }
     }
 
@@ -346,7 +361,8 @@ void WayfireAutohidingWindow::setup_hotspot()
         edge, edge_hotspot_size, autohide_show_delay);
 
     auto adjeacent_output = find_adjeacent_output();
-    if (adjeacent_output){
+    if (adjeacent_output)
+    {
         this->adjeacent_edge_hotspot = zwf_output_v2_create_hotspot(adjeacent_output->output,
             adjeacent_edge, adjeacent_edge_hotspot_size, autohide_show_delay);
     }
@@ -403,10 +419,12 @@ void WayfireAutohidingWindow::setup_hotspot()
 
     zwf_hotspot_v2_add_listener(edge_hotspot, &hotspot_listener,
         edge_callbacks.get());
-    if (adjeacent_output){
+    if (adjeacent_output)
+    {
         zwf_hotspot_v2_add_listener(adjeacent_edge_hotspot, &hotspot_listener,
             adjeacent_edge_callbacks.get());
     }
+
     zwf_hotspot_v2_add_listener(panel_hotspot, &hotspot_listener,
         panel_callbacks.get());
 }

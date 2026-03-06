@@ -123,8 +123,9 @@ class WayfireAutohidingWindow : public Gtk::Window
     void m_show_uncertain();
 
     bool input_inside_panel = false;
-    zwf_hotspot_v2 *edge_hotspot  = NULL, *adjeacent_edge_hotspot = NULL, *panel_hotspot = NULL;
-    std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> edge_callbacks, adjeacent_edge_callbacks, panel_callbacks;
+    zwf_hotspot_v2 *edge_hotspot = NULL, *adjeacent_edge_hotspot = NULL, *panel_hotspot = NULL;
+    std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> edge_callbacks, adjeacent_edge_callbacks,
+        panel_callbacks;
     WayfireOutput *find_adjeacent_output();
     void setup_hotspot();
 
