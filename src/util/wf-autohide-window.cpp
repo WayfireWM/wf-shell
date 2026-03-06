@@ -20,7 +20,8 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     autohide_opt{section + "/autohide"},
     autohide_show_delay{section + "/autohide_show_delay"},
     autohide_hide_delay{section + "/autohide_hide_delay"},
-    edge_offset{section + "/edge_offset"}
+    edge_hotspot_size{section + "/edge_hotspot_size"},
+    adjacent_edge_hotspot_size{section + "/adjacent_edge_hotspot_size"}
 {
     this->output = output;
     this->set_decorated(false);
@@ -62,9 +63,19 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
 
     this->setup_autohide();
 
-    this->edge_offset.set_callback([=] () { this->setup_hotspot(); });
+    this->edge_hotspot_size.set_callback([=] () { this->setup_hotspot(); });
 
     this->autohide_opt.set_callback([=] { setup_autohide(); });
+
+    auto display  = Gdk::Display::get_default();
+    auto monitors = display->get_monitors();
+    signals.push_back(monitors->signal_items_changed().connect([=] (auto, auto, auto)
+    {
+        reinit_ext_hotspots();
+    }));
+
+    // wait for idle, so once everything is initialised. Else, things depend on loading order.
+    Glib::signal_idle().connect_once([=] () { this->reinit_ext_hotspots(); });
 
     if (!output->output)
     {
@@ -97,6 +108,11 @@ WayfireAutohidingWindow::~WayfireAutohidingWindow()
     if (this->panel_hotspot)
     {
         zwf_hotspot_v2_destroy(this->panel_hotspot);
+    }
+
+    for (auto adjacent_edge_hotspot : adjacent_edges_hotspots)
+    {
+        zwf_hotspot_v2_destroy(adjacent_edge_hotspot);
     }
 
     for (auto handler : signals)
@@ -247,6 +263,97 @@ static zwf_hotspot_v2_listener hotspot_listener = {
     .leave = handle_hotspot_leave,
 };
 
+void WayfireAutohidingWindow::reinit_ext_hotspots()
+{
+    for (auto adjacent_edge_hotspot : adjacent_edges_hotspots)
+    {
+        zwf_hotspot_v2_destroy(adjacent_edge_hotspot);
+    }
+
+    adjacent_edges_hotspots.clear();
+
+    uint32_t adjacent_edge;
+    auto position = check_position(this->position);
+    if (position == WF_WINDOW_POSITION_TOP)
+    {
+        adjacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
+    } else if (position == WF_WINDOW_POSITION_BOTTOM)
+    {
+        adjacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP;
+    } else if (position == WF_WINDOW_POSITION_LEFT)
+    {
+        adjacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_RIGHT;
+    } else if (position == WF_WINDOW_POSITION_RIGHT)
+    {
+        adjacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_LEFT;
+    }
+
+    Gdk::Rectangle geom_this;
+    this->output->monitor->get_geometry(geom_this);
+    auto pos = check_position(this->position);
+
+    std::map<WayfireOutput*, zwf_output_v2_hotspot_edge> wo_edg;
+
+    for (auto& wo : *WayfireShellApp::get().get_wayfire_outputs())
+    {
+        if (!wo->output || (wo.get() == this->output))
+        {
+            continue;
+        }
+
+        Gdk::Rectangle other_geo;
+        wo->monitor->get_geometry(other_geo);
+
+        if (pos == WF_WINDOW_POSITION_TOP)
+        {
+            if (other_geo.get_y() + other_geo.get_height() == geom_this.get_y())
+            {
+                wo_edg[wo.get()] = ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
+            }
+        } else if (pos == WF_WINDOW_POSITION_BOTTOM)
+        {
+            if (other_geo.get_y() == geom_this.get_y() + geom_this.get_height())
+            {
+                wo_edg[wo.get()] = ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP;
+            }
+        } else if (pos == WF_WINDOW_POSITION_LEFT)
+        {
+            if (other_geo.get_x() + other_geo.get_width() == geom_this.get_x())
+            {
+                wo_edg[wo.get()] = ZWF_OUTPUT_V2_HOTSPOT_EDGE_RIGHT;
+            }
+        } else if (pos == WF_WINDOW_POSITION_RIGHT)
+        {
+            if (other_geo.get_x() == geom_this.get_x() + geom_this.get_width())
+            {
+                wo_edg[wo.get()] = ZWF_OUTPUT_V2_HOTSPOT_EDGE_LEFT;
+            }
+        }
+    }
+
+    for (auto pair : wo_edg)
+    {
+        adjacent_edges_hotspots.push_back(zwf_output_v2_create_hotspot(pair.first->output,
+            adjacent_edge, adjacent_edge_hotspot_size, autohide_show_delay));
+    }
+
+    adjacent_edge_callbacks->on_enter = [=] ()
+    {
+        schedule_show(0);
+    };
+
+    adjacent_edge_callbacks->on_leave = [=] ()
+    {
+        m_do_hide();
+    };
+
+    for (auto ad_ed_ht : adjacent_edges_hotspots)
+    {
+        zwf_hotspot_v2_add_listener(ad_ed_ht, &hotspot_listener,
+            adjacent_edge_callbacks.get());
+    }
+}
+
 /**
  * An autohide window needs 2 hotspots.
  * One of them is used to trigger autohide and is generally a tiny strip on the
@@ -254,6 +361,9 @@ static zwf_hotspot_v2_listener hotspot_listener = {
  *
  * The other hotspot covers the whole window. It is used primarily to know when
  * the input leaves the window, in which case we need to hide the window again.
+ *
+ * A last one is optional and is placed as a mirror of the first one on an
+ * adjacent monitor, and serves to have more room to pop out the window
  */
 
 void WayfireAutohidingWindow::setup_hotspot()
@@ -285,12 +395,14 @@ void WayfireAutohidingWindow::setup_hotspot()
     }
 
     this->edge_hotspot = zwf_output_v2_create_hotspot(output->output,
-        edge, edge_offset, autohide_show_delay);
+        edge, edge_hotspot_size, autohide_show_delay);
 
     this->panel_hotspot = zwf_output_v2_create_hotspot(output->output,
         edge, (this->*get_allocated_height_or_width)(), 0); // immediate
 
     this->edge_callbacks =
+        std::make_unique<WayfireAutohidingWindowHotspotCallbacks>();
+    this->adjacent_edge_callbacks =
         std::make_unique<WayfireAutohidingWindowHotspotCallbacks>();
     this->panel_callbacks =
         std::make_unique<WayfireAutohidingWindowHotspotCallbacks>();
@@ -327,6 +439,7 @@ void WayfireAutohidingWindow::setup_hotspot()
 
     zwf_hotspot_v2_add_listener(edge_hotspot, &hotspot_listener,
         edge_callbacks.get());
+
     zwf_hotspot_v2_add_listener(panel_hotspot, &hotspot_listener,
         panel_callbacks.get());
 }
