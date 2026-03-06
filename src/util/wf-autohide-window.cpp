@@ -20,6 +20,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     autohide_opt{section + "/autohide"},
     autohide_show_delay{section + "/autohide_show_delay"},
     autohide_hide_delay{section + "/autohide_hide_delay"},
+    edge_margin{section + "/edge_margin"},
     edge_hotspot_size{section + "/edge_hotspot_size"},
     adjacent_edge_hotspot_size{section + "/adjacent_edge_hotspot_size"}
 {
@@ -30,8 +31,10 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     gtk_layer_set_monitor(this->gobj(), output->monitor->gobj());
     gtk_layer_set_namespace(this->gobj(), "panel");
 
+
     this->position.set_callback([=] () { this->update_position(); });
     this->full_span.set_callback([=] () { this->update_position(); });
+    this->edge_margin.set_callback([=] () { update_position(); });
     this->update_position();
 
     const auto set_size = [=] () { this->set_size_request(minimal_width, minimal_height); };
@@ -205,6 +208,7 @@ void WayfireAutohidingWindow::update_position()
     /* Set new anchor */
     GtkLayerShellEdge edge = get_anchor_edge(position);
     gtk_layer_set_anchor(this->gobj(), edge, true);
+    gtk_layer_set_margin(this->gobj(), edge, edge_margin);
 
     if (full_span)
     {
@@ -503,7 +507,7 @@ bool WayfireAutohidingWindow::should_autohide() const
 
 bool WayfireAutohidingWindow::m_do_hide()
 {
-    autohide_animation.animate(-(this->*get_allocated_height_or_width)());
+    autohide_animation.animate(-((this->*get_allocated_height_or_width)() + edge_margin));
     start_draw_timer();
     update_margin();
     return false; // disconnect
@@ -567,7 +571,7 @@ bool WayfireAutohidingWindow::update_margin()
     if (autohide_animation.running())
     {
         gtk_layer_set_margin(this->gobj(),
-            get_anchor_edge(position), autohide_animation);
+            get_anchor_edge(position), edge_margin + autohide_animation);
         // queue_draw does not work when the panel is hidden
         // so calling wl_surface_commit to make WM show the panel back
         if (get_surface())
