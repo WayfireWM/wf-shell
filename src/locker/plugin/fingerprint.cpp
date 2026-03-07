@@ -151,6 +151,7 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
             {
                 std::cout << "No match" << std::endl;
                 show();
+                failure();
                 update("Invalid fingerprint", "dialog-error-symbolic", "bad");
                 stop_fingerprint_scanning();
                 WayfireLockerApp::get().recieved_bad_auth();
@@ -408,6 +409,14 @@ void WayfireLockerFingerprintPlugin::update(std::string label, std::string image
         widget->remove_css_class("bad");
         widget->remove_css_class("good");
         widget->add_css_class(color);
+    }
+}
+
+void WayfireLockerFingerprintPlugin::failure()
+{
+    for (auto & it : widgets)
+    {
+        it.second->failure();
     }
 }
 

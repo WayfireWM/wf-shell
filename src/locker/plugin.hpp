@@ -26,5 +26,7 @@ class WayfireLockerPlugin
     virtual void deinit() = 0; /* Called after lockscreen unlocked. */
     virtual void lockout_changed(bool lockout)
     {} /* Called when too many failed logins have occured */
+    virtual void failure()
+    {}
     virtual ~WayfireLockerPlugin() = default;
 };
