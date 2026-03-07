@@ -9,6 +9,7 @@ util = static_library(
         'wf-ipc.cpp',
         'animated-scale.cpp',
         'background-gl.cpp',
+        'icon-select.cpp'
     ],
     dependencies: [wf_protos, gtklayershell, wayland_client, gtkmm, wfconfig, libinotify, json],
 )
