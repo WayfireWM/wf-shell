@@ -54,6 +54,7 @@ WfLightControl::WfLightControl(WayfireBacklight *_parent)
         change *= 0.2;
 
         double newv = get_scale_target_value() + change;
+        newv = std::clamp(newv, 0.0, 1.0);
         set_brightness(newv);
         set_scale_target_value(newv);
         return true;
@@ -175,7 +176,10 @@ void WayfireBacklight::init(Gtk::Box *container)
         // correct for a "good feeling" change at sensitivity 1
         change *= 0.2;
 
-        ctrl_this_display->set_brightness(ctrl_this_display->get_scale_target_value() + change);
+        double newv = ctrl_this_display->get_scale_target_value() + change;
+        newv = std::clamp(newv, 0.0, 1.0);
+        ctrl_this_display->set_brightness(newv);
+        ctrl_this_display->set_scale_target_value(newv);
         return true;
     }, true);
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
