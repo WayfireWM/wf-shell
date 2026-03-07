@@ -49,6 +49,7 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     void init() override;
     void deinit() override;
     void lockout_changed(bool lockout) override;
+    void failure() override;
     void hide();
     void show();
     void color(std::string color);
