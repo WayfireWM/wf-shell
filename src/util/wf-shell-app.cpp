@@ -255,10 +255,7 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
     for (int i = 0; i < num_monitors; i++)
     {
         auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
-        if (obj && !obj->get_connector().empty())
-        {
-            add_output(obj);
-        }
+        add_output(obj);
     }
 }
 
