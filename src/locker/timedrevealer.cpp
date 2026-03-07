@@ -121,11 +121,12 @@ void WayfireLockerTimedRevealer::failure()
         signal_failure.disconnect();
     }
 
-    add_css_class("failure");
-    signal_failure = Glib::signal_timeout().connect_seconds(
+    remove_css_class("failure");
+
+    Glib::signal_idle().connect(
         [this] ()
     {
-        remove_css_class("failure");
+        add_css_class("failure");
         return G_SOURCE_REMOVE;
-    }, 1);
+    });
 }
