@@ -4,12 +4,17 @@
 #include <gdk/wayland/gdkwayland.h>
 
 #include <gtk-utils.hpp>
+#include <memory>
 #include <wf-shell-app.hpp>
 #include <gtk4-layer-shell.h>
 #include <wf-autohide-window.hpp>
 
 #include "dock.hpp"
 #include "../util/gtk-utils.hpp"
+#include "gtkmm/flowbox.h"
+#include "network/manager.hpp"
+#include "network/network-widget.hpp"
+#include "network/network.hpp"
 #include <css-config.hpp>
 
 
@@ -18,15 +23,22 @@ class WfDock::impl
     WayfireOutput *output;
     std::unique_ptr<WayfireAutohidingWindow> window;
     wl_surface *_wl_surface;
+    Gtk::Box out_box;
     Gtk::FlowBox box;
+    std::unique_ptr<WayfireMenuButton> network_image;
+    std::unique_ptr<NetworkControlWidget> network_control;
+    std::shared_ptr<NetworkManager> network_manager;
 
     WfOption<std::string> css_path{"dock/css_path"};
     WfOption<int> dock_height{"dock/dock_height"};
+    WfOption<bool> network{"dock/show_network_status"};
     WfOption<int> entries_per_line{"dock/max_per_line"};
 
   public:
     impl(WayfireOutput *output)
     {
+        network_image = std::make_unique<WayfireMenuButton>("dock");
+
         this->output = output;
         window = std::unique_ptr<WayfireAutohidingWindow>(
             new WayfireAutohidingWindow(output, "dock"));
@@ -46,6 +58,34 @@ class WfDock::impl
                 auto display = Gdk::Display::get_default();
                 Gtk::StyleContext::add_provider_for_display(display, css, GTK_STYLE_PROVIDER_PRIORITY_USER);
             }
+        }
+
+        if (network)
+        {
+            network_manager = NetworkManager::getInstance();
+            add_child(*network_image);
+            network_control = std::make_unique<NetworkControlWidget>();
+            network_image->get_popover()->set_child(*network_control);
+            network_image->set_has_frame(false);
+            network_manager->signal_default_changed().connect(
+                [this] (std::shared_ptr<Network> network)
+            {
+                network_image->set_icon_name(network->get_icon_name());
+                for (auto clas : network_image->get_css_classes())
+                {
+                    network_image->remove_css_class(clas);
+                }
+
+                for (auto clas : network->get_css_classes())
+                {
+                    network_image->add_css_class(clas);
+                }
+
+                network_image->set_tooltip_text(network->get_name());
+
+                network_image->add_css_class("network");
+                network_image->add_css_class("flat");
+            });
         }
 
         window->present();
