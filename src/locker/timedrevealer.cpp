@@ -5,6 +5,7 @@
 WayfireLockerTimedRevealer::WayfireLockerTimedRevealer(std::string always_option) :
     always_show(WfOption<bool>{always_option})
 {
+    set_overflow(Gtk::Overflow::VISIBLE);
     if ((hide_timeout > 0) && !always_show)
     {
         set_reveal_child(false);
@@ -84,6 +85,11 @@ WayfireLockerTimedRevealer::~WayfireLockerTimedRevealer()
     {
         signal.disconnect();
     }
+
+    if (signal_failure)
+    {
+        signal_failure.disconnect();
+    }
 }
 
 void WayfireLockerTimedRevealer::activity()
@@ -106,4 +112,20 @@ void WayfireLockerTimedRevealer::activity()
         return G_SOURCE_REMOVE;
     },
         hide_timeout * 1000);
+}
+
+void WayfireLockerTimedRevealer::failure()
+{
+    if (signal_failure)
+    {
+        signal_failure.disconnect();
+    }
+
+    add_css_class("failure");
+    signal_failure = Glib::signal_timeout().connect_seconds(
+        [this] ()
+    {
+        remove_css_class("failure");
+        return G_SOURCE_REMOVE;
+    }, 1);
 }
