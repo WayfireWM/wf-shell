@@ -172,7 +172,7 @@ void WayfireLockerPasswordPlugin::submit_user_password(std::string password)
     int retval;
     /* Start the password-based conversation */
     std::cout << "PAM start ... " << std::endl;
-    retval = pam_start("wf-locker-password", username, &local_conversation, &local_auth_handle);
+    retval = pam_start("wf-locker", username, &local_conversation, &local_auth_handle);
     if (retval != PAM_SUCCESS)
     {
         /* We don't expect to be here. No graceful way out of this. */
