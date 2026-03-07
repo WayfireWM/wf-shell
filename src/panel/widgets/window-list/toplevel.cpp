@@ -509,16 +509,7 @@ class WayfireToplevel::impl
             [=] (int count, double x, double y)
         {
             int butt = click_gesture->get_current_button();
-            if (butt == 1)
-            {
-                // Ah, it was a press after all!
-                if (!ignore_next_click)
-                {
-                    this->on_clicked();
-                }
-
-                ignore_next_click = false;
-            } else if ((butt == 2) && middle_click_close.value())
+            if ((butt == 2) && middle_click_close.value())
             {
                 zwlr_foreign_toplevel_handle_v1_close(handle);
             } else if (butt == 3)
@@ -723,10 +714,6 @@ class WayfireToplevel::impl
     static constexpr int DRAG_THRESHOLD = 3;
     void on_drag_update(double _x, double y)
     {
-        /* Window was not just clicked, but also dragged. Ignore the next click,
-         * which is the one that happens when the drag gesture ends. */
-        set_ignore_next_click();
-
         int x = _x + grab_start_x;
         x = window_list->get_absolute_position(x, button);
         if (std::abs(x - grab_abs_start_x) > DRAG_THRESHOLD)
@@ -766,29 +753,11 @@ class WayfireToplevel::impl
 
     void on_drag_end(double _x, double _y)
     {
-        int x     = _x + grab_start_x;
-        int y     = _y + grab_start_y;
-        int width = button.get_allocated_width();
-        int height = button.get_allocated_height();
-
         window_list->set_top_widget(nullptr);
         set_classes(state);
 
-        /* When a button is dropped after dnd, we ignore the unclick
-         * event so action doesn't happen in addition to dropping.
-         * If the drag ends and the unclick event happens outside
-         * the button, unset ignore_next_click or else the next
-         * click on the button won't cause action. */
-        if ((x < 0) || (x > width) || (y < 0) || (y > height))
-        {
-            unset_ignore_next_click();
-        }
-
-        /* When dragging with touch or pen, we allow some small movement while
-         * still counting the action as button press as opposed to only dragging. */
         if (!drag_exceeds_threshold)
         {
-            unset_ignore_next_click();
             this->on_clicked();
         }
 
@@ -838,34 +807,8 @@ class WayfireToplevel::impl
         zwlr_foreign_toplevel_handle_v1_close(handle);
     }
 
-    bool ignore_next_click = false;
-    void set_ignore_next_click()
-    {
-        ignore_next_click = true;
-
-        /* Make sure that the view doesn't show clicked on animations while
-         * dragging (this happens only on some themes) */
-        button.set_state_flags(Gtk::StateFlags::SELECTED |
-            Gtk::StateFlags::DROP_ACTIVE | Gtk::StateFlags::PRELIGHT);
-    }
-
-    void unset_ignore_next_click()
-    {
-        ignore_next_click = false;
-        button.unset_state_flags(Gtk::StateFlags::SELECTED |
-            Gtk::StateFlags::DROP_ACTIVE | Gtk::StateFlags::PRELIGHT);
-    }
-
     void on_clicked()
     {
-        /* If the button was dragged, we don't want to register the click.
-         * Subsequent clicks should be handled though. */
-        if (ignore_next_click)
-        {
-            unset_ignore_next_click();
-            return;
-        }
-
         bool child_activated = false;
         for (auto c : get_children())
         {
