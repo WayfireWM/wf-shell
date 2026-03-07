@@ -48,6 +48,18 @@ void WayfireLockerPasswordPlugin::blank_passwords()
     }
 }
 
+void WayfireLockerPasswordPluginWidget::lockout_changed(bool lockout)
+{
+    if (lockout)
+    {
+        entry.set_text("");
+        entry.set_sensitive(false);
+    } else
+    {
+        entry.set_sensitive(true);
+    }
+}
+
 void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerPasswordPluginWidget());
@@ -203,9 +215,17 @@ void WayfireLockerPasswordPlugin::submit_user_password(std::string password)
     }
 }
 
+void WayfireLockerPasswordPlugin::lockout_changed(bool lockout)
+{
+    for (auto & it : widgets)
+    {
+        it.second->lockout_changed(lockout);
+    }
+}
+
 void WayfireLockerPasswordPlugin::failure()
 {
-    std::cout << "Password failure" << std::endl;
+    WayfireLockerApp::get().recieved_bad_auth();
     for (auto & it : widgets)
     {
         it.second->failure();
