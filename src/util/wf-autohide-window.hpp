@@ -3,9 +3,11 @@
 
 #include <gtkmm/window.h>
 #include <gdk/wayland/gdkwayland.h>
-#include "wf-popover.hpp"
-#include <wf-option-wrap.hpp>
+#include <sigc++/connection.h>
 #include <wayfire/util/duration.hpp>
+
+#include "wf-option-wrap.hpp"
+#include "wf-popover.hpp"
 
 struct WayfireOutput;
 struct zwf_hotspot_v2;
@@ -83,6 +85,8 @@ class WayfireAutohidingWindow : public Gtk::Window
   private:
     WayfireOutput *output;
 
+    std::vector<sigc::connection> signals;
+
     WfOption<std::string> position;
     WfOption<bool> full_span;
     void update_position();
@@ -123,10 +127,11 @@ class WayfireAutohidingWindow : public Gtk::Window
     void m_show_uncertain();
 
     bool input_inside_panel = false;
-    zwf_hotspot_v2 *edge_hotspot = NULL, *adjeacent_edge_hotspot = NULL, *panel_hotspot = NULL;
+    zwf_hotspot_v2 *edge_hotspot = NULL, *panel_hotspot = NULL;
+    std::vector<zwf_hotspot_v2*> adjeacent_edges_hotspots;
     std::unique_ptr<WayfireAutohidingWindowHotspotCallbacks> edge_callbacks, adjeacent_edge_callbacks,
         panel_callbacks;
-    WayfireOutput *find_adjeacent_output();
+    void reinit_ext_hotspots();
     void setup_hotspot();
 
     sigc::connection popover_hide;

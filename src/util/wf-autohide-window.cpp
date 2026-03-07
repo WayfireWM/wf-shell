@@ -43,7 +43,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     set_size();
 
     auto pointer_gesture = Gtk::EventControllerMotion::create();
-    pointer_gesture->signal_enter().connect([=] (double x, double y)
+    signals.push_back(pointer_gesture->signal_enter().connect([=] (double x, double y)
     {
         if (this->pending_hide.connected())
         {
@@ -53,15 +53,15 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         this->input_inside_panel = true;
         autohide_animation.animate(0);
         start_draw_timer();
-    });
-    pointer_gesture->signal_leave().connect([=]
+    }));
+    signals.push_back(pointer_gesture->signal_leave().connect([=]
     {
         this->input_inside_panel = false;
         if (this->should_autohide())
         {
             this->schedule_hide(autohide_hide_delay);
         }
-    });
+    }));
     this->add_controller(pointer_gesture);
 
     this->setup_autohide();
@@ -72,13 +72,13 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
 
     auto display  = Gdk::Display::get_default();
     auto monitors = display->get_monitors();
-    monitors->signal_items_changed().connect([=] (auto, auto, auto)
+    signals.push_back(monitors->signal_items_changed().connect([=] (auto, auto, auto)
     {
-        this->setup_hotspot();
-    });
+        reinit_ext_hotspots();
+    }));
 
     // wait for idle, so once everything is initialised. Else, things depend on loading order.
-    Glib::signal_idle().connect_once([=] () { this->setup_hotspot(); });
+    Glib::signal_idle().connect_once([=] () { this->reinit_ext_hotspots(); });
 
     if (!output->output)
     {
@@ -111,6 +111,16 @@ WayfireAutohidingWindow::~WayfireAutohidingWindow()
     if (this->panel_hotspot)
     {
         zwf_hotspot_v2_destroy(this->panel_hotspot);
+    }
+
+    for (auto adjeacent_edge_hotspot : adjeacent_edges_hotspots)
+    {
+        zwf_hotspot_v2_destroy(adjeacent_edge_hotspot);
+    }
+
+    for (auto handler : signals)
+    {
+        handler.disconnect();
     }
 }
 
@@ -257,11 +267,34 @@ static zwf_hotspot_v2_listener hotspot_listener = {
     .leave = handle_hotspot_leave,
 };
 
-WayfireOutput*WayfireAutohidingWindow::find_adjeacent_output()
+void WayfireAutohidingWindow::reinit_ext_hotspots()
 {
+    for (auto adjeacent_edge_hotspot : adjeacent_edges_hotspots)
+    {
+        zwf_hotspot_v2_destroy(adjeacent_edge_hotspot);
+    }
+
+    uint32_t adjeacent_edge;
+    auto position = check_position(this->position);
+    if (position == WF_WINDOW_POSITION_TOP)
+    {
+        adjeacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
+    } else if (position == WF_WINDOW_POSITION_BOTTOM)
+    {
+        adjeacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP;
+    } else if (position == WF_WINDOW_POSITION_LEFT)
+    {
+        adjeacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_RIGHT;
+    } else if (position == WF_WINDOW_POSITION_RIGHT)
+    {
+        adjeacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_LEFT;
+    }
+
     Gdk::Rectangle geom_this;
     this->output->monitor->get_geometry(geom_this);
     auto pos = check_position(this->position);
+
+    std::map<WayfireOutput*, zwf_output_v2_hotspot_edge> wo_edg;
 
     for (auto& wo : *WayfireShellApp::get().get_wayfire_outputs())
     {
@@ -282,30 +315,50 @@ WayfireOutput*WayfireAutohidingWindow::find_adjeacent_output()
         {
             if (other_geo.get_y() + other_geo.get_height() == geom_this.get_y())
             {
-                return wo.get();
+                wo_edg[wo.get()] = ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
             }
         } else if (pos == WF_WINDOW_POSITION_BOTTOM)
         {
             if (other_geo.get_y() == geom_this.get_y() + geom_this.get_height())
             {
-                return wo.get();
+                wo_edg[wo.get()] = ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP;
             }
         } else if (pos == WF_WINDOW_POSITION_LEFT)
         {
             if (other_geo.get_x() + other_geo.get_width() == geom_this.get_x())
             {
-                return wo.get();
+                wo_edg[wo.get()] = ZWF_OUTPUT_V2_HOTSPOT_EDGE_RIGHT;
             }
         } else if (pos == WF_WINDOW_POSITION_RIGHT)
         {
             if (other_geo.get_x() == geom_this.get_x() + geom_this.get_width())
             {
-                return wo.get();
+                wo_edg[wo.get()] = ZWF_OUTPUT_V2_HOTSPOT_EDGE_LEFT;
             }
         }
     }
 
-    return nullptr;
+    for (auto pair : wo_edg)
+    {
+        adjeacent_edges_hotspots.push_back(zwf_output_v2_create_hotspot(pair.first->output,
+            adjeacent_edge, adjeacent_edge_hotspot_size, autohide_show_delay));
+    }
+
+    adjeacent_edge_callbacks->on_enter = [=] ()
+    {
+        schedule_show(0);
+    };
+
+    adjeacent_edge_callbacks->on_leave = [=] ()
+    {
+        m_do_hide();
+    };
+
+    for (auto ad_ed_ht : adjeacent_edges_hotspots)
+    {
+        zwf_hotspot_v2_add_listener(ad_ed_ht, &hotspot_listener,
+            adjeacent_edge_callbacks.get());
+    }
 }
 
 /**
@@ -327,45 +380,29 @@ void WayfireAutohidingWindow::setup_hotspot()
         zwf_hotspot_v2_destroy(edge_hotspot);
     }
 
-    if (this->adjeacent_edge_hotspot)
-    {
-        zwf_hotspot_v2_destroy(adjeacent_edge_hotspot);
-    }
-
     if (this->panel_hotspot)
     {
         zwf_hotspot_v2_destroy(panel_hotspot);
     }
 
-    uint32_t edge, adjeacent_edge;
+    uint32_t edge;
     auto position = check_position(this->position);
     if (position == WF_WINDOW_POSITION_TOP)
     {
         edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP;
-        adjeacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
     } else if (position == WF_WINDOW_POSITION_BOTTOM)
     {
         edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
-        adjeacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP;
     } else if (position == WF_WINDOW_POSITION_LEFT)
     {
         edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_LEFT;
-        adjeacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_RIGHT;
     } else if (position == WF_WINDOW_POSITION_RIGHT)
     {
         edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_RIGHT;
-        adjeacent_edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_LEFT;
     }
 
     this->edge_hotspot = zwf_output_v2_create_hotspot(output->output,
         edge, edge_hotspot_size, autohide_show_delay);
-
-    auto adjeacent_output = find_adjeacent_output();
-    if (adjeacent_output)
-    {
-        this->adjeacent_edge_hotspot = zwf_output_v2_create_hotspot(adjeacent_output->output,
-            adjeacent_edge, adjeacent_edge_hotspot_size, autohide_show_delay);
-    }
 
     this->panel_hotspot = zwf_output_v2_create_hotspot(output->output,
         edge, (this->*get_allocated_height_or_width)(), 0); // immediate
@@ -385,16 +422,6 @@ void WayfireAutohidingWindow::setup_hotspot()
     edge_callbacks->on_leave = [=] ()
     {
         // nothing
-    };
-
-    adjeacent_edge_callbacks->on_enter = [=] ()
-    {
-        schedule_show(0);
-    };
-
-    adjeacent_edge_callbacks->on_leave = [=] ()
-    {
-        m_do_hide();
     };
 
     this->input_inside_panel  = false;
@@ -419,11 +446,6 @@ void WayfireAutohidingWindow::setup_hotspot()
 
     zwf_hotspot_v2_add_listener(edge_hotspot, &hotspot_listener,
         edge_callbacks.get());
-    if (adjeacent_output)
-    {
-        zwf_hotspot_v2_add_listener(adjeacent_edge_hotspot, &hotspot_listener,
-            adjeacent_edge_callbacks.get());
-    }
 
     zwf_hotspot_v2_add_listener(panel_hotspot, &hotspot_listener,
         panel_callbacks.get());
