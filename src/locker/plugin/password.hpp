@@ -25,6 +25,7 @@ class WayfireLockerPasswordPluginWidget : public WayfireLockerTimedRevealer
     std::vector<sigc::connection> replies_signals;
 
     void add_reply(std::string message);
+    void lockout_changed(bool lockout);
 };
 
 class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
@@ -38,6 +39,7 @@ class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
     void submit_user_password(std::string password);
     void blank_passwords();
     void update_passwords(std::string password);
+    void lockout_changed(bool lockout) override;
     void failure() override;
 
     sigc::connection timeout;
