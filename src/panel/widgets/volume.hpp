@@ -1,10 +1,9 @@
 #pragma once
 
 #include "../widget.hpp"
-#include "wf-popover.hpp"
-#include <gtkmm/button.h>
 #include <gtkmm/image.h>
 #include "../../util/animated-scale.hpp"
+
 #include <pulse/pulseaudio.h>
 #include <gvc-mixer-control.h>
 #include <wayfire/util/duration.hpp>

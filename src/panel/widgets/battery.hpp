@@ -41,6 +41,9 @@ class WayfireBatteryInfo : public WayfireWidget
     void update_details();
     void update_state();
 
+    void update_layout();
+    void handle_config_reload();
+
     void on_properties_changed(
         const Gio::DBus::Proxy::MapChangedProperties& properties,
         const std::vector<Glib::ustring>& invalidated);
