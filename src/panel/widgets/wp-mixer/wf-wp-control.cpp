@@ -2,7 +2,9 @@
 #include <gtkmm.h>
 
 #include "wf-wp-control.hpp"
-#include "../volume-level.hpp"
+#include "icon-select.hpp"
+
+#define ICON(volume) icon_from_range(volume_icons, volume)
 
 WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
 {
@@ -143,12 +145,12 @@ void WfWpControl::update_icon()
     if (button.get_active())
     {
         add_css_class("muted");
-        volume_icon.set_from_icon_name(volume_icon_for(0)); // mute
+        volume_icon.set_from_icon_name(ICON(0)); // mute
         return;
     }
 
     remove_css_class("muted");
-    volume_icon.set_from_icon_name(volume_icon_for(get_scale_target_value()));
+    volume_icon.set_from_icon_name(ICON(get_scale_target_value()));
 }
 
 double WfWpControl::get_scale_target_value()
