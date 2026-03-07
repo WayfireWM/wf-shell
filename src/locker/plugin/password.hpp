@@ -22,6 +22,7 @@ class WayfireLockerPasswordPluginWidget : public WayfireLockerTimedRevealer
     WayfireLockerPasswordPluginWidget();
 
     sigc::connection entry_updated, entry_submitted;
+    std::vector<sigc::connection> replies_signals;
 
     void add_reply(std::string message);
 };

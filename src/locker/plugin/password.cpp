@@ -25,6 +25,11 @@ WayfireLockerPasswordPluginWidget::~WayfireLockerPasswordPluginWidget()
     {
         entry_submitted.disconnect();
     }
+
+    for (auto signal : replies_signals)
+    {
+        signal.disconnect();
+    }
 }
 
 void WayfireLockerPasswordPlugin::add_reply(std::string text)
@@ -102,11 +107,11 @@ void WayfireLockerPasswordPluginWidget::add_reply(std::string message)
     std::shared_ptr<Gtk::Label> new_label = std::make_shared<Gtk::Label>(message);
     replies.append(*new_label);
 
-    Glib::signal_timeout().connect_seconds([this, new_label] ()
+    replies_signals.push_back(Glib::signal_timeout().connect_seconds([this, new_label] ()
     {
         replies.remove(*new_label);
         return G_SOURCE_REMOVE;
-    }, 15);
+    }, 15));
 }
 
 void WayfireLockerPasswordPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
