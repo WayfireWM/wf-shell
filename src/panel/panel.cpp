@@ -373,6 +373,14 @@ class WayfirePanel::impl
         reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
         reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
         reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+
+        if (center_box.get_children().empty())
+        {
+            content_box.unset_center_widget();
+        } else
+        {
+            content_box.set_center_widget(center_box);
+        }
     }
 
     std::shared_ptr<WayfireIPC> get_ipc_server_instance()
@@ -413,19 +421,115 @@ class WayfirePanelApp::impl
 {
   public:
     std::map<WayfireOutput*, std::unique_ptr<WayfirePanel>> panels;
+    WfOption<std::string> *panel_outputs = NULL;
 };
 
 void WayfirePanelApp::on_config_reload()
 {
+    if (!priv->panel_outputs)
+    {
+        priv->panel_outputs = new WfOption<std::string>("panel/outputs");
+    }
+
     for (auto& p : priv->panels)
     {
         p.second->handle_config_reload();
     }
 }
 
+bool WayfirePanelApp::panel_allowed_by_config(bool allowed, std::string output_name)
+{
+    std::string prefix = WayfireShellApp::get().live_preview_output_name;
+
+    if (output_name.compare(0, prefix.length(), prefix) == 0)
+    {
+        return false;
+    }
+
+    if (allowed)
+    {
+        return std::string(*priv->panel_outputs).find("*") != std::string::npos ||
+               std::string(*priv->panel_outputs).find(output_name) != std::string::npos;
+    } else
+    {
+        return std::string(*priv->panel_outputs).find("*") == std::string::npos &&
+               std::string(*priv->panel_outputs).find(output_name) == std::string::npos;
+    }
+}
+
+void WayfirePanelApp::update_panels()
+{
+    for (auto& o : *get_wayfire_outputs())
+    {
+        auto output = o.get();
+        auto output_name = o->monitor->get_connector();
+
+        if (panel_allowed_by_config(false, output_name))
+        {
+            std::cout << "Removing panel from output: " << output_name << std::endl;
+            priv->panels.erase(output);
+        }
+
+        const auto it = std::find_if(priv->panels.begin(), priv->panels.end(),
+            [&output_name] (const auto& panel)
+        {
+            return panel.first->monitor->get_connector() == output_name;
+        });
+
+        if ((it == priv->panels.end()) && panel_allowed_by_config(true, output_name))
+        {
+            std::cout << "Adding panel for output: " << output_name << std::endl;
+            priv->panels[output] = std::unique_ptr<WayfirePanel>(
+                new WayfirePanel(output));
+
+            if (ipc_server)
+            {
+                priv->panels[output]->handle_config_reload();
+                priv->panels[output]->set_panel_app(this);
+                priv->panels[output]->init_widgets();
+            }
+        }
+    }
+}
+
 void WayfirePanelApp::on_activate()
 {
     WayfireShellApp::on_activate();
+
+    priv->panel_outputs->set_callback([=] ()
+    {
+        update_panels();
+    });
+
+    if (!ipc_server)
+    {
+        ipc_server = WayfireIPC::get_instance();
+    }
+
+    for (auto& p : priv->panels)
+    {
+        p.second->handle_config_reload();
+        p.second->set_panel_app(this);
+        p.second->init_widgets();
+    }
+
+    if (priv->panels.empty())
+    {
+        std::cout << std::endl <<
+            "WARNING: wf-panel outputs option did not match any outputs, " \
+            "so none were created. Set the [panel] outputs option to * " \
+            "wildcard character in wf-shell configuariton file to match " \
+            "all outputs, or set one or more of the following detected outputs:" <<
+            std::endl << std::endl;
+
+        for (auto& o : *get_wayfire_outputs())
+        {
+            std::cout << o->monitor->get_connector() << std::endl;
+        }
+
+        std::cout << std::endl << "Currently the [panel] outputs option is set to: " <<
+            std::string(*priv->panel_outputs) << std::endl;
+    }
 
     const static std::vector<std::pair<std::string, std::string>> icon_sizes_args =
     {
@@ -436,6 +540,7 @@ void WayfirePanelApp::on_activate()
         {"panel/network_icon_size", ".network"},
         {"panel/volume_icon_size", ".volume"},
         {"panel/wp_icon_size", ".wireplumber"},
+        {"panel/wp_popup_icon_size", ".wireplumber-popup"},
         {"panel/notifications_icon_size", ".notification-center "},
         {"panel/tray_icon_size", ".tray-button"}
     };
@@ -452,13 +557,6 @@ void WayfirePanelApp::on_activate()
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");
     new CssFromConfigFont("panel/weather_font", ".weather {", "}");
-
-    ipc_server = WayfireIPC::get_instance();
-    for (auto& p : priv->panels)
-    {
-        p.second->set_panel_app(this);
-        p.second->init_widgets();
-    }
 }
 
 std::shared_ptr<WayfireIPC> WayfirePanelApp::get_ipc_server_instance()
@@ -468,8 +566,7 @@ std::shared_ptr<WayfireIPC> WayfirePanelApp::get_ipc_server_instance()
 
 void WayfirePanelApp::handle_new_output(WayfireOutput *output)
 {
-    priv->panels[output] = std::unique_ptr<WayfirePanel>(
-        new WayfirePanel(output));
+    update_panels();
 }
 
 WayfirePanel*WayfirePanelApp::panel_for_wl_output(wl_output *output)

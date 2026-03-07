@@ -73,7 +73,6 @@ void WayfireBackgroundApp::on_activate()
     WayfireShellApp::on_activate();
 
     prep_cache();
-    change_background();
 }
 
 void WayfireBackgroundApp::prep_cache()
@@ -93,6 +92,7 @@ void WayfireBackgroundApp::handle_new_output(WayfireOutput *output)
 {
     backgrounds[output] = std::unique_ptr<WayfireBackground>(
         new WayfireBackground(output));
+    change_background();
 }
 
 void WayfireBackgroundApp::handle_output_removed(WayfireOutput *output)

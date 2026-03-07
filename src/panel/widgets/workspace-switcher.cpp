@@ -27,6 +27,7 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     ipc_client->subscribe(this, {"view-mapped"});
     ipc_client->subscribe(this, {"view-focused"});
     ipc_client->subscribe(this, {"view-unmapped"});
+    ipc_client->subscribe(this, {"view-minimized"});
     ipc_client->subscribe(this, {"view-set-output"});
     ipc_client->subscribe(this, {"view-geometry-changed"});
     ipc_client->subscribe(this, {"output-layout-changed"});
@@ -541,6 +542,11 @@ void WayfireWorkspaceSwitcher::add_view(wf::json_t view_data)
         return;
     }
 
+    if (view_data["minimized"].as_bool())
+    {
+        return;
+    }
+
     auto v = Gtk::make_managed<WayfireWorkspaceWindow>();
     v->add_css_class("view");
     v->add_css_class(view_data["app-id"].as_string());
@@ -605,6 +611,11 @@ void WayfireWorkspaceSwitcher::grid_add_view(wf::json_t view_data)
     }
 
     if (view_data["output-name"].as_string() != this->output_name)
+    {
+        return;
+    }
+
+    if (view_data["minimized"].as_bool())
     {
         return;
     }
@@ -823,7 +834,8 @@ void WayfireWorkspaceSwitcher::switcher_on_event(wf::json_t data)
     {
         add_view(data["view"]);
     } else if ((data["event"].as_string() == "output-layout-changed") ||
-               (data["event"].as_string() == "wset-workspace-changed"))
+               (data["event"].as_string() == "wset-workspace-changed") ||
+               (data["event"].as_string() == "view-minimized"))
     {
         get_wsets();
     }
@@ -901,7 +913,8 @@ void WayfireWorkspaceSwitcher::grid_on_event(wf::json_t data)
     {
         grid_add_view(data["view"]);
     } else if ((data["event"].as_string() == "output-layout-changed") ||
-               (data["event"].as_string() == "wset-workspace-changed"))
+               (data["event"].as_string() == "wset-workspace-changed") ||
+               (data["event"].as_string() == "view-minimized"))
     {
         get_wsets();
     }

@@ -61,6 +61,7 @@ WayfireLockerVolumePluginWidget::WayfireLockerVolumePluginWidget() :
     WayfireLockerTimedRevealer("locker/volume_always")
 {
     set_child(box);
+    box.add_css_class("volume");
     sink_button.add_css_class("volume-button");
     source_button.add_css_class("mic-button");
 

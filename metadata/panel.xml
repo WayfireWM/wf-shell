@@ -33,6 +33,11 @@
 		<_short>Autohide Duration</_short>
 		<default>300</default>
 	</option>
+	<option name="outputs" type="string">
+		<_short>Outputs on which to show a panel instance</_short>
+		<_long>A comma separated list of output names on which to show panel instances. Set to * wildcard for all outputs.</_long>
+		<default>*</default>
+	</option>
 	<option name="position" type="string">
 		<_short>Panel Position</_short>
 		<default>top</default>
@@ -80,6 +85,7 @@
 	<option name="launchers_spacing" type="int">
 		<_short>Launchers Spacing</_short>
 		<default>4</default>
+		<min>0</min>
 	</option>
 	<option name="launchers_size" type="int">
 		<_short>Launchers Icon Size</_short>
@@ -121,6 +127,10 @@
 		<desc>
 			<value>full</value>
 			<_name>Full Information</_name>
+		</desc>
+		<desc>
+			<value>percentage_overlay</value>
+			<_name>Percentage over Icon</_name>
 		</desc>
 	</option>
 	<option name="battery_icon_size" type="int">
@@ -314,6 +324,11 @@
 		<_long>Displays the mute and set default icon on the left</_long>
 		<default>false</default>
 	</option>
+	<option name="wp_stack_categories" type="bool">
+		<_short>Stack categories</_short>
+		<_long>Displays the outputs, inputs and streams stacked on top of each other instead of side by side</_long>
+		<default>false</default>
+	</option>
 	<option name="wp_spacing" type="int">
 		<_short>Spacing between controls</_short>
 		<default>8</default>
@@ -368,6 +383,11 @@
 		<default>0</default>
 		<min>0</min>
 	</option>
+	<option name="wp_popup_icon_size" type="int">
+		<_short>Size of the icons in the popups</_short>
+		<default>0</default>
+		<min>0</min>
+	</option>
 	</group>
 	<group>
 	<_short>Notifications</_short>
@@ -397,6 +417,11 @@
 	<option name="tray_icon_size" type="int">
 		<_short>Default Icon Size</_short>
 		<default>0</default>
+		<min>0</min>
+	</option>
+	<option name="tray_spacing" type="int">
+		<_short>Space between tray icons</_short>
+		<default>5</default>
 		<min>0</min>
 	</option>
 	<option name="tray_menu_on_middle_click" type="bool">
@@ -476,6 +501,11 @@ Set to -1 to only run it by clicking the button.
 		<_short>Window List Size</_short>
 		<default>192</default>
 		<min>1</min>
+	</option>
+	<option name="live_window_previews" type="bool">
+		<_short>Live Window Previews</_short>
+		<_long>Enable live window previews when hovering over application buttons in the window list instead of the title tooltip.</_long>
+		<default>false</default>
 	</option>
 	</group>
 	<group>

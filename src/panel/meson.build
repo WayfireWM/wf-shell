@@ -65,6 +65,12 @@ else
   message('Weather disabled, weather widgets and owf service not included.')
 endif
 
+if gbm.found() and drm.found() and not get_option('live-previews-dmabuf').disabled()
+  deps += [gbm, drm]
+else
+  message('Development packages for gbm and drm are required to enable live window preview tooltips in wf-panel.')
+endif
+
 executable(
   'wf-panel',
   ['panel.cpp'] + widget_sources,

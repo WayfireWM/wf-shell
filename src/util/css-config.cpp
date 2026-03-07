@@ -125,7 +125,7 @@ CssFromConfigFont::CssFromConfigFont(std::string option_name, std::string css_be
 
 void CssFromConfigFont::set_from_string()
 {
-    std::regex matcher("(.*?)(\\d+(?:pt|px|rem|em|))(.*?)");
+    std::regex matcher("(.*?)(\\d+\\.?\\d*(?:pt|px|rem|em|))(.*?)");
     std::string font_name = (std::string)option_value;
     std::smatch matches;
     if (std::regex_match(font_name, matches, matcher))
