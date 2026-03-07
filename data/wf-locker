@@ -1,1 +1,2 @@
-auth include login
+auth    required pam_unix.so nodelay unlock_time=60
+account required pam_unix.so nodelay unlock_time=60
