@@ -1,18 +1,20 @@
 #include <gtkmm.h>
 #include <glibmm.h>
-#include "volume.hpp"
 
-#include "icons.hpp"
+#include "volume.hpp"
+#include "icon-select.hpp"
+
+#define ICON(volume) icon_from_range(volume_icons, volume)
 
 void WayfireVolume::update_icon()
 {
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
-        main_image.set_from_icon_name(icon_for(volume_icons, 0.0)); // mute
+        main_image.set_from_icon_name(ICON(0)); // mute
         return;
     }
 
-    main_image.set_from_icon_name(icon_for(volume_icons, volume_scale.get_target_value() / (double)max_norm));
+    main_image.set_from_icon_name(ICON(volume_scale.get_target_value() / (double)max_norm));
 }
 
 bool WayfireVolume::on_popover_timeout(int timer)

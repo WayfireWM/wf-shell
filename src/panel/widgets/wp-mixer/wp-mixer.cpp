@@ -3,8 +3,10 @@
 #include <wp/proxy.h>
 
 #include "wp-mixer.hpp"
-#include "icons.hpp"
 #include "wf-wp-control.hpp"
+#include "icon-select.hpp"
+
+#define ICON(volume) icon_from_range(volume_icons, volume)
 
 bool WayfireWpMixer::on_popover_timeout(int timer)
 {
@@ -332,17 +334,17 @@ void WayfireWpMixer::update_icon()
     // depends on quick_target widget
     if (!quick_target)
     {
-        main_image.set_from_icon_name(icon_for(volume_icons, -1)); // OOR
+        main_image.set_from_icon_name(ICON(-1)); // OOR
         return;
     }
 
     if (quick_target->button.get_active())
     {
-        main_image.set_from_icon_name(icon_for(volume_icons, 0)); // mute
+        main_image.set_from_icon_name(ICON(0)); // mute
         return;
     }
 
-    main_image.set_from_icon_name(icon_for(volume_icons, quick_target->get_scale_target_value()));
+    main_image.set_from_icon_name(ICON(quick_target->get_scale_target_value()));
 }
 
 void WayfireWpMixer::set_quick_target_from(WfWpControl *from)

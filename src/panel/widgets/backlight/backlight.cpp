@@ -7,7 +7,9 @@
 #include "backlight.hpp"
 #include "wf-popover.hpp"
 #include "wf-shell-app.hpp"
-#include "icons.hpp"
+#include "icon-select.hpp"
+
+#define ICON(volume) icon_from_range(brightness_display_icons, volume)
 
 WfLightControl::WfLightControl(WayfireBacklight *_parent)
 {
@@ -239,11 +241,11 @@ void WayfireBacklight::update_icon()
     // if none, show unavailable
     if (!ctrl_this_display)
     {
-        icon.set_from_icon_name(icon_for(brightness_display_icons, -1));
+        icon.set_from_icon_name(ICON(-1));
         return;
     }
 
-    icon.set_from_icon_name(icon_for(brightness_display_icons, ctrl_this_display->get_scale_target_value()));
+    icon.set_from_icon_name(ICON(ctrl_this_display->get_scale_target_value()));
 }
 
 bool WayfireBacklight::on_popover_timeout(int timer)
