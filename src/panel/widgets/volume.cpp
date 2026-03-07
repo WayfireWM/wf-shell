@@ -2,17 +2,17 @@
 #include <glibmm.h>
 #include "volume.hpp"
 
-#include "volume-level.hpp"
+#include "icons.hpp"
 
 void WayfireVolume::update_icon()
 {
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
-        main_image.set_from_icon_name(volume_icon_for(0)); // mute
+        main_image.set_from_icon_name(icon_for(volume_icons, 0.0)); // mute
         return;
     }
 
-    main_image.set_from_icon_name(volume_icon_for(volume_scale.get_target_value() / (double)max_norm));
+    main_image.set_from_icon_name(icon_for(volume_icons, volume_scale.get_target_value() / (double)max_norm));
 }
 
 bool WayfireVolume::on_popover_timeout(int timer)

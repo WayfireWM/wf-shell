@@ -21,6 +21,8 @@ widget_sources = [
   'widgets/tray/host.cpp',
   'widgets/tray/dbusmenu.cpp',
   'widgets/workspace-switcher.cpp',
+  'widgets/backlight/backlight.cpp',
+  'widgets/backlight/sysfs.cpp',
 ]
 
 deps = [
@@ -38,7 +40,6 @@ deps = [
 if libpulse.found()
   widget_sources += [
     'widgets/volume.cpp',
-    'widgets/volume-level.cpp',
   ]
   deps += [libpulse, libgvc]
 else
@@ -50,7 +51,6 @@ if wireplumber.found()
     'widgets/wp-mixer/wp-mixer.cpp',
     'widgets/wp-mixer/wf-wp-control.cpp',
     'widgets/wp-mixer/wp-common.cpp',
-    'widgets/volume-level.cpp',
   ]
   deps += [pipewire, wireplumber]
 else
@@ -63,6 +63,13 @@ if get_option('weather') == true
   ]
 else
   message('Weather disabled, weather widgets and owf service not included.')
+endif
+
+if ddcutil.found()
+  widget_sources += 'widgets/backlight/ddcutil.cpp'
+  deps += ddcutil
+else
+  message('Libddcutil not found, light widget will not support external monitors.')
 endif
 
 executable(

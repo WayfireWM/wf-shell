@@ -1,7 +1,9 @@
 util = static_library(
     'util',
     [
+        'animated-scale.cpp',
         'gtk-utils.cpp',
+        'icons.cpp',
         'wf-shell-app.cpp',
         'wf-autohide-window.cpp',
         'wf-popover.cpp',
