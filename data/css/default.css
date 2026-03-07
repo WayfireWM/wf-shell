@@ -243,7 +243,7 @@ text-shadow: 1px  1px 0 var(--bcol),
 
 .wf-locker .failure {
     animation-name: shake;
-    animation-duration:0.3s;
+    animation-duration:0.5s;
     animation-timing-function: linear;
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
