@@ -4,6 +4,7 @@
 #include <gtkmm/image.h>
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
+#include <gtkmm/overlay.h>
 
 #include <giomm/dbusproxy.h>
 #include <giomm/dbusconnection.h>
@@ -18,6 +19,7 @@ using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
 static const std::string BATTERY_STATUS_ICON    = "icon"; // icon
 static const std::string BATTERY_STATUS_PERCENT = "percentage"; // icon + percentage
 static const std::string BATTERY_STATUS_FULL    = "full"; // icon + percentage + TimeToFull/TimeToEmpty
+static const std::string BATTERY_STATUS_OVERLAY = "percentage_overlay";
 
 class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
@@ -29,6 +31,7 @@ class WayfireBatteryInfo : public WayfireWidget
     Gtk::Button button;
     Gtk::Label label;
     Gtk::Box button_box;
+    Gtk::Overlay overlay;
 
     Gtk::Image icon;
 
