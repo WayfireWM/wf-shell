@@ -646,10 +646,26 @@ void WayfireMenu::update_popover_layout()
 {
     /* Layout was already initialized, make sure to remove widgets before
      * adding them again */
-    popover_layout_box.remove(search_entry);
-    popover_layout_box.remove(scroll_pair);
-    popover_layout_box.remove(separator);
-    popover_layout_box.remove(box_bottom);
+    auto children = popover_layout_box.get_children();
+    if (std::count(children.begin(), children.end(), &search_entry))
+    {
+        popover_layout_box.remove(search_entry);
+    }
+
+    if (std::count(children.begin(), children.end(), &scroll_pair))
+    {
+        popover_layout_box.remove(scroll_pair);
+    }
+
+    if (std::count(children.begin(), children.end(), &separator))
+    {
+        popover_layout_box.remove(separator);
+    }
+
+    if (std::count(children.begin(), children.end(), &box_bottom))
+    {
+        popover_layout_box.remove(box_bottom);
+    }
 
     if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {
