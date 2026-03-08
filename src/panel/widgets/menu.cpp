@@ -574,10 +574,9 @@ void WayfireMenu::setup_popover_layout()
 
     signals.push_back((search_entry.signal_changed().connect(
         [this] ()
-        {
-            on_search_changed();
-        }
-    )));
+    {
+        on_search_changed();
+    })));
     auto typing_gesture = Gtk::EventControllerKey::create();
     typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
     signals.push_back(typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
@@ -596,10 +595,10 @@ void WayfireMenu::setup_popover_layout()
         } else if (keyval == GDK_KEY_Escape)
         {
             button->get_popover()->hide();
-        } else if (keyval == GDK_KEY_Up ||
-                   keyval == GDK_KEY_Down ||
-                   keyval == GDK_KEY_Left ||
-                   keyval == GDK_KEY_Right)
+        } else if ((keyval == GDK_KEY_Up) ||
+                   (keyval == GDK_KEY_Down) ||
+                   (keyval == GDK_KEY_Left) ||
+                   (keyval == GDK_KEY_Right))
         {
             return false;
         } else if (search_entry.has_focus())
