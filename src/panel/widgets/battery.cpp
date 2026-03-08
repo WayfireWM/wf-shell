@@ -150,12 +150,22 @@ void WayfireBatteryInfo::update_details()
     } else if (status_opt.value() == BATTERY_STATUS_FULL)
     {
         label.set_text(description);
-        overlay.remove_overlay(label);
+        auto children = overlay.get_children();
+        if (std::count(children.begin(), children.end(), &label))
+        {
+            overlay.remove_overlay(label);
+        }
+
         button_box.append(label);
     } else if (status_opt.value() == BATTERY_STATUS_OVERLAY)
     {
         label.set_text(percentage_string);
-        button_box.remove(label);
+        auto children = button_box.get_children();
+        if (std::count(children.begin(), children.end(), &label))
+        {
+            button_box.remove(label);
+        }
+
         overlay.add_overlay(label);
     }
 
@@ -236,7 +246,6 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
     update_icon();
 
     container->append(button);
-    button_box.append(label);
     button_box.set_spacing(5);
 
     button.set_child(button_box);
