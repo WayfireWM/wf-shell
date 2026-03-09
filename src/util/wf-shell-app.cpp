@@ -261,8 +261,8 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
         /* XXX: Workaround bug that causes a new output to have
          * no name. We use the name for various reasons so we need
          * it to be valid when signaling new output to the apps.
-         * We only wait for 100ms, then print a warning if the
-         * timeout did not expire. */
+         * We set a timer for 100ms, then print a warning if the
+         * timeout fired. */
         std::string output_name = monitor->get_connector();
 
         bool cancel_wait    = false;
