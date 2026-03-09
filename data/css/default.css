@@ -161,7 +161,7 @@ text-shadow: 1px  1px 0 var(--bcol),
 }
 
 .wf-dock,
-.wf-dock>.out-box {
+.wf-dock .out-box {
     background: transparent;
 }
 
@@ -172,18 +172,18 @@ text-shadow: 1px  1px 0 var(--bcol),
     border-radius: 1em;
 }
 
-.wf-dock button.toplevel-icon {
+.wf-dock button {
     background: transparent;
     padding-left: 0rem;
     padding-right: 0rem;
 }
 
-.wf-dock .box button.activated {
+.wf-dock button.activated {
     border-bottom: 3px solid white;
     margin-bottom: 5px;
 }
 
-.wf-dock .box image {
+.wf-dock image {
     background: transparent;
     padding-left: 0rem;
     padding-right: 0rem;
@@ -191,7 +191,7 @@ text-shadow: 1px  1px 0 var(--bcol),
     -gtk-icon-transform: scale(0.7);
 }
 
-.wf-dock .box image:hover {
+.wf-dock image:hover {
     background: transparent;
     padding-left: 0rem;
     padding-right: 0rem;
@@ -199,27 +199,19 @@ text-shadow: 1px  1px 0 var(--bcol),
     -gtk-icon-transform: scale(1.0);
 }
 
-.wf-dock .box image.toplevel-icon {
+.wf-dock image.toplevel-icon {
     animation-name: embiggen;
     animation-duration: 1000ms;
     animation-timing-function: linear;
     animation-iteration-count: 1;
 }
 
-.wf-dock .box .closing image.toplevel-icon {
+.wf-dock .closing image {
     animation-name: kromulent;
     animation-duration: 1000ms;
     animation-timing-function: linear;
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
-}
-
-.wf-dock .network .image-button{
-    -gtk-icon-size:64px;
-}
-
-.wf-dock .network-control-center {
-    -gtk-icon-size: 48px;
 }
 
 .network-control-center image.access-point {
@@ -259,15 +251,12 @@ text-shadow: 1px  1px 0 var(--bcol),
 .wf-locker .fingerprint-overlay-image.good {
     color: #0f0;
 }
-
 .wf-locker .fingerprint-overlay-image.bad {
     color: #f00;
 }
-
 .wf-locker .fingerprint-overlay-image.info {
     color: #88f;
 }
-
 .wf-locker .user label {
     font-weight: bold;
     text-transform: capitalize;
