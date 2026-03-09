@@ -594,7 +594,6 @@ void WayfireMenu::setup_popover_layout()
     app_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
 
     category_box.add_css_class("category-list");
-    category_box.set_orientation(Gtk::Orientation::VERTICAL);
 
     category_scrolled_window.set_min_content_width(int(menu_min_category_width));
     category_scrolled_window.set_min_content_height(int(menu_min_content_height));
@@ -621,6 +620,11 @@ void WayfireMenu::setup_popover_layout()
         flowbox.get_first_child()->measure(Gtk::Orientation::VERTICAL, -1, y_min, y_nat, y_min_base, y_nat_base);
         if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
         {
+            if (vfocus_x == -1)
+            {
+                category_box.get_selected_row()->activate();
+            }
+
             auto children = flowbox.get_selected_children();
             if (children.size() == 1)
             {
@@ -635,8 +639,14 @@ void WayfireMenu::setup_popover_layout()
             return true;
         } else if (keyval == GDK_KEY_Up)
         {
-            if (vfocus_y <= 0)
-                return false;
+            if (vfocus_x == -1)
+            {
+                vfocus_cat -= 1;
+                auto row = category_box.get_row_at_index(vfocus_cat);
+                category_box.select_row(*row);
+                row->activate();
+                return true;
+            }
 
             if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, (vfocus_y-1) * y_nat))
             {
@@ -646,6 +656,15 @@ void WayfireMenu::setup_popover_layout()
             }
         } else if (keyval == GDK_KEY_Down)
         {
+            if (vfocus_x == -1)
+            {
+                vfocus_cat += 1;
+                auto row = category_box.get_row_at_index(vfocus_cat);
+                category_box.select_row(*row);
+                row->activate();
+                return true;
+            }
+
             if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, (vfocus_y+1) * y_nat))
             {
                 vfocus_y += 1;
@@ -655,8 +674,18 @@ void WayfireMenu::setup_popover_layout()
             return true;
         } else if (keyval == GDK_KEY_Left)
         {
-            if (vfocus_x <= 0)
+            if (vfocus_x <= -1)
                 return false;
+
+            if (vfocus_x <= 0)
+            {
+                // now in categories
+                flowbox.unselect_all();
+                vfocus_x = -1;
+                auto row = category_box.get_row_at_index(vfocus_cat);
+                category_box.select_row(*row);
+                return true;
+            }
 
             if (auto *child = flowbox.get_child_at_pos((vfocus_x-1) * x_nat, vfocus_y * y_nat))
             {
