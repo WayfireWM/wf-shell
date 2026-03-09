@@ -604,13 +604,14 @@ void WayfireMenu::setup_popover_layout()
             return true;
         } else if (keyval == GDK_KEY_Up)
         {
-            if (vfocus_x == 0)
+            if (vfocus_x == -1)
             {
                 if (auto row = category_box.get_row_at_index(vfocus_cat-1))
                 {
                     vfocus_cat -= 1;
                     category_box.select_row(*row);
                     set_category(category_order[vfocus_cat]);
+                    vfocus_y = 0;
                     row->activate(); // scroll to it
                     search_entry.grab_focus();
                     return true;
@@ -628,13 +629,14 @@ void WayfireMenu::setup_popover_layout()
             }
         } else if (keyval == GDK_KEY_Down)
         {
-            if (vfocus_x == 0)
+            if (vfocus_x == -1)
             {
                 if (auto row = category_box.get_row_at_index(vfocus_cat+1))
                 {
                     vfocus_cat += 1;
                     category_box.select_row(*row);
                     set_category(category_order[vfocus_cat]);
+                    vfocus_y = 0;
                     row->activate(); // scroll to it
                     search_entry.grab_focus();
                     return true;
@@ -653,13 +655,13 @@ void WayfireMenu::setup_popover_layout()
             return true;
         } else if (keyval == GDK_KEY_Left)
         {
-            if (vfocus_x <= 0)
+            if (vfocus_x <= -1)
                 return false;
 
-            if (vfocus_x <= 1)
+            if (vfocus_x <= 0)
             {
                 // now in categories
-                vfocus_x = 0;
+                vfocus_x = -1;
                 auto row = category_box.get_row_at_index(vfocus_cat);
                 category_box.select_row(*row);
                 flowbox.unselect_all();
@@ -1074,8 +1076,8 @@ void WayfireMenu::set_category(std::string in_category)
 
 void WayfireMenu::select_first_flowbox_item()
 {
-    vfocus_x = 1;
-    vfocus_y = 1;
+    vfocus_x = 0;
+    vfocus_y = 0;
     auto child = flowbox.get_child_at_index(0);
     if (child)
     {
