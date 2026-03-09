@@ -638,17 +638,17 @@ void WayfireMenu::setup_popover_layout()
             if (vfocus_y <= 0)
                 return false;
 
-            vfocus_y -= 1;
-            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat))
+            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, (vfocus_y-1) * y_nat))
             {
+                vfocus_y -= 1;
                 flowbox.select_child(*child);
                 scroll_to(child);
             }
         } else if (keyval == GDK_KEY_Down)
         {
-            vfocus_y += 1;
-            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat))
+            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, (vfocus_y+1) * y_nat))
             {
+                vfocus_y += 1;
                 flowbox.select_child(*child);
                 scroll_to(child);
             }
@@ -658,9 +658,9 @@ void WayfireMenu::setup_popover_layout()
             if (vfocus_x <= 0)
                 return false;
 
-            vfocus_x -= 1;
-            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat))
+            if (auto *child = flowbox.get_child_at_pos((vfocus_x-1) * x_nat, vfocus_y * y_nat))
             {
+                vfocus_x -= 1;
                 flowbox.select_child(*child);
                 scroll_to(child);
             }
@@ -670,9 +670,9 @@ void WayfireMenu::setup_popover_layout()
             if (search_entry.get_position() != (int)search_entry.get_text().length())
                 return false;
 
-            vfocus_x += 1;
-            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat))
+            if (auto *child = flowbox.get_child_at_pos((vfocus_x+1) * x_nat, vfocus_y * y_nat))
             {
+                vfocus_x += 1;
                 flowbox.select_child(*child);
                 scroll_to(child);
             }
