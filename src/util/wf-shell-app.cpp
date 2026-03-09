@@ -252,11 +252,40 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
 {
     auto display = Gdk::Display::get_default();
     auto monitor_list = display->get_monitors();
+    auto context = g_main_context_default();
 
     for (int i = pos; i < pos + add; i++)
     {
-        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
-        add_output(obj);
+        auto monitor = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
+
+        /* XXX: Workaround bug that causes a new output to have
+         * no name. We use the name for various reasons so we need
+         * it to be valid when signaling new output to the apps.
+         * We only wait for 100ms, then print a warning if the
+         * timeout did not expire. */
+        std::string output_name = monitor->get_connector();
+
+        bool cancel_wait    = false;
+        auto timeout_signal = Glib::signal_timeout().connect([&cancel_wait] ()
+        {
+            cancel_wait = true;
+            return G_SOURCE_REMOVE;
+        }, 100);
+
+        while (output_name.empty() && !cancel_wait)
+        {
+            g_main_context_iteration(context, true);
+            output_name = monitor->get_connector();
+        }
+
+        timeout_signal.disconnect();
+        if (cancel_wait)
+        {
+            std::cerr << "Timeout reached while waiting for output name. " <<
+                "Our local output object may not have a name at this point." << std::endl;
+        } /* XXX: End workaround. */
+
+        add_output(monitor);
     }
 }
 
