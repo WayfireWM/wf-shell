@@ -590,11 +590,6 @@ void WayfireMenu::setup_popover_layout()
         flowbox.get_first_child()->measure(Gtk::Orientation::VERTICAL, -1, y_min, y_nat, y_min_base, y_nat_base);
         if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
         {
-            if (vfocus_x == -1)
-            {
-                category_box.get_selected_row()->activate();
-            }
-
             auto children = flowbox.get_selected_children();
             if (children.size() == 1)
             {
@@ -609,7 +604,7 @@ void WayfireMenu::setup_popover_layout()
             return true;
         } else if (keyval == GDK_KEY_Up)
         {
-            if (vfocus_x == -1)
+            if (vfocus_x == 0)
             {
                 if (auto row = category_box.get_row_at_index(vfocus_cat-1))
                 {
@@ -617,6 +612,7 @@ void WayfireMenu::setup_popover_layout()
                     category_box.select_row(*row);
                     set_category(category_order[vfocus_cat]);
                     row->activate(); // scroll to it
+                    search_entry.grab_focus();
                     return true;
                 }
 
@@ -628,10 +624,11 @@ void WayfireMenu::setup_popover_layout()
                 vfocus_y -= 1;
                 flowbox.select_child(*child);
                 child->activate();
+                search_entry.grab_focus();
             }
         } else if (keyval == GDK_KEY_Down)
         {
-            if (vfocus_x == -1)
+            if (vfocus_x == 0)
             {
                 if (auto row = category_box.get_row_at_index(vfocus_cat+1))
                 {
@@ -639,6 +636,7 @@ void WayfireMenu::setup_popover_layout()
                     category_box.select_row(*row);
                     set_category(category_order[vfocus_cat]);
                     row->activate(); // scroll to it
+                    search_entry.grab_focus();
                     return true;
                 }
 
@@ -650,20 +648,21 @@ void WayfireMenu::setup_popover_layout()
                 vfocus_y += 1;
                 flowbox.select_child(*child);
                 child->activate();
+                search_entry.grab_focus();
             }
             return true;
         } else if (keyval == GDK_KEY_Left)
         {
-            if (vfocus_x <= -1)
+            if (vfocus_x <= 0)
                 return false;
 
-            if (vfocus_x <= 0)
+            if (vfocus_x <= 1)
             {
                 // now in categories
-                flowbox.unselect_all();
-                vfocus_x = -1;
+                vfocus_x = 0;
                 auto row = category_box.get_row_at_index(vfocus_cat);
                 category_box.select_row(*row);
+                flowbox.unselect_all();
                 return true;
             }
 
@@ -672,6 +671,7 @@ void WayfireMenu::setup_popover_layout()
                 vfocus_x -= 1;
                 flowbox.select_child(*child);
                 child->activate();
+                search_entry.grab_focus();
             }
             return true;
         } else if (keyval == GDK_KEY_Right)
@@ -684,6 +684,7 @@ void WayfireMenu::setup_popover_layout()
                 vfocus_x += 1;
                 flowbox.select_child(*child);
                 child->activate();
+                search_entry.grab_focus();
             }
             return true;
         }
@@ -1073,8 +1074,8 @@ void WayfireMenu::set_category(std::string in_category)
 
 void WayfireMenu::select_first_flowbox_item()
 {
-    vfocus_x = 0;
-    vfocus_y = 0;
+    vfocus_x = 1;
+    vfocus_y = 1;
     auto child = flowbox.get_child_at_index(0);
     if (child)
     {
