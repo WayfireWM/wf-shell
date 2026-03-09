@@ -473,6 +473,8 @@ void WayfireMenu::on_search_changed()
         flowbox.invalidate_sort();
     }
 
+    vfocus_x = 0;
+    vfocus_y = 0;
     select_first_flowbox_item();
 }
 
@@ -514,7 +516,7 @@ void WayfireMenu::on_popover_shown()
     search_entry.delete_text(0, search_entry.get_text_length());
     on_search_changed();
     set_category("All");
-    flowbox.unselect_all();
+    select_first_flowbox_item();
 
     Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
 
@@ -582,6 +584,11 @@ void WayfireMenu::setup_popover_layout()
     signals.push_back(typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
                                                                         Gdk::ModifierType state)
     {
+        std::cout << "x : " << vfocus_x << ", y : " << vfocus_y << "\n";
+        int x_min, x_nat, x_min_base, x_nat_base;
+        int y_min, y_nat, y_min_base, y_nat_base;
+        flowbox.get_first_child()->measure(Gtk::Orientation::HORIZONTAL, -1, x_min, x_nat, x_min_base, x_nat_base);
+        flowbox.get_first_child()->measure(Gtk::Orientation::VERTICAL, -1, y_min, y_nat, y_min_base, y_nat_base);
         if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
         {
             auto children = flowbox.get_selected_children();
@@ -595,24 +602,49 @@ void WayfireMenu::setup_popover_layout()
         } else if (keyval == GDK_KEY_Escape)
         {
             button->get_popover()->hide();
-        } else if ((keyval == GDK_KEY_Up) ||
-                   (keyval == GDK_KEY_Down) ||
-                   (keyval == GDK_KEY_Left) ||
-                   (keyval == GDK_KEY_Right))
+            return true;
+        } else if (keyval == GDK_KEY_Up)
         {
-            return false;
-        } else if (search_entry.has_focus())
-        {
-            return false;
-        } else
-        {
-            search_entry.grab_focus();
-            on_search_changed();
-        }
+            if (vfocus_y <= 0)
+                return false;
 
-        return false;
+            vfocus_y -= 1;
+            flowbox.select_child(*flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat));
+            return true;
+        } else if (keyval == GDK_KEY_Down)
+        {
+            vfocus_y += 1;
+            flowbox.select_child(*flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat));
+            return true;
+        } else if (keyval == GDK_KEY_Left)
+        {
+            if (vfocus_x <= 0)
+                return false;
+
+            vfocus_x -= 1;
+            flowbox.select_child(*flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat));
+            return true;
+        } else if (keyval == GDK_KEY_Right)
+        {
+            if (search_entry.get_position() != (int)search_entry.get_text().length())
+                return false;
+
+            vfocus_x += 1;
+            flowbox.select_child(*flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat));
+            return true;
+        }
+        // } else if (search_entry.has_focus())
+        // {
+            // return false;
+        // } else
+        // {
+            // search_entry.grab_focus();
+            // on_search_changed();
+            return false;
+        // }
     }, false));
     button->get_popover()->add_controller(typing_gesture);
+
     signals.push_back(button->get_popover()->signal_closed().connect([=] ()
     {
         Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
@@ -994,6 +1026,8 @@ void WayfireMenu::set_category(std::string in_category)
 
 void WayfireMenu::select_first_flowbox_item()
 {
+    vfocus_x = 0;
+    vfocus_y = 0;
     auto child = flowbox.get_child_at_index(0);
     if (child)
     {

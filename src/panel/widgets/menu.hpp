@@ -123,6 +123,8 @@ class WayfireMenu : public WayfireWidget
 {
     WayfireOutput *output;
 
+    int vfocus_x = -1, vfocus_y = -1, vfocus_cat = -1;
+
     Gtk::Box flowbox_container;
     Gtk::Box box, box_bottom, scroll_pair;
     Gtk::Box bottom_pad;
