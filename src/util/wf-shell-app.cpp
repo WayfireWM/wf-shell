@@ -242,8 +242,8 @@ void WayfireShellApp::on_activate()
         int num_monitors = monitor_list->get_n_items();
         for (int i = 0; i < num_monitors; i++)
         {
-            auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
-            add_output(obj);
+            auto monitor = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
+            add_output(monitor);
         }
     }
 }
