@@ -54,9 +54,11 @@ void WayfireLockerPasswordPluginWidget::lockout_changed(bool lockout)
     {
         entry.set_text("");
         entry.set_sensitive(false);
+        entry.set_placeholder_text("Too many attempts");
     } else
     {
         entry.set_sensitive(true);
+        entry.set_placeholder_text("Password");
     }
 }
 
