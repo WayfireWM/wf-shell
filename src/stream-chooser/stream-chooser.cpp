@@ -1,0 +1,228 @@
+#include <iostream>
+#include <gtk4-layer-shell/gtk4-layer-shell.h>
+#include <gdk/wayland/gdkwayland.h>
+#include <ext-foreign-toplevel-list-v1-client-protocol.h>
+
+#include "stream-chooser.hpp"
+#include "outputwidget.hpp"
+#include "toplevelwidget.hpp"
+
+#define EXT_IMAGE_COPY_CAPTURE_V1 "ext-image-copy-capture-v1"
+
+/* Static callbacks for toplevel list object */
+static void handle_toplevel(void *data,
+    struct ext_foreign_toplevel_list_v1 *list,
+    struct ext_foreign_toplevel_handle_v1 *toplevel)
+{
+    WayfireStreamChooserApp::getInstance().add_toplevel(toplevel);
+}
+
+static void handle_finished(void *data,
+    struct ext_foreign_toplevel_list_v1 *list)
+{
+    ext_foreign_toplevel_list_v1_stop(list);
+    ext_foreign_toplevel_list_v1_destroy(list);
+}
+
+ext_foreign_toplevel_list_v1_listener toplevel_list_v1_impl = {
+    .toplevel = handle_toplevel,
+    .finished = handle_finished,
+};
+
+/* Static callbacks for wayland registry */
+static void registry_add_object(void *data, wl_registry *registry, uint32_t name,
+    const char *interface, uint32_t version)
+{
+    if (strcmp(interface, ext_foreign_toplevel_list_v1_interface.name) == 0)
+    {
+        auto list = (ext_foreign_toplevel_list_v1*)
+            wl_registry_bind(registry, name,
+            &ext_foreign_toplevel_list_v1_interface,
+            version);
+
+        WayfireStreamChooserApp::getInstance().set_toplevel_list(list);
+        ext_foreign_toplevel_list_v1_add_listener(list,
+            &toplevel_list_v1_impl, NULL);
+    } else if (strcmp(interface, EXT_IMAGE_COPY_CAPTURE_V1) == 0)
+    {
+        /* We need this to exist, but we're not using it directly */
+        WayfireStreamChooserApp::getInstance().has_image_copy_capture = true;
+    }
+}
+
+static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
+{}
+
+static struct wl_registry_listener registry_listener =
+{
+    &registry_add_object,
+    &registry_remove_object
+};
+
+WayfireStreamChooserApp::WayfireStreamChooserApp() : Gtk::Application("org.wayfire.screen-chooser",
+        Gio::Application::Flags::NONE)
+{
+    signal_activate().connect(sigc::mem_fun(*this, &WayfireStreamChooserApp::activate));
+}
+
+void WayfireStreamChooserApp::activate()
+{
+    window.set_size_request(300, 300);
+    add_window(window);
+    window.set_child(main);
+    main.append(header);
+    main.append(notebook);
+    main.append(buttons);
+
+    notebook.set_expand(true);
+    notebook.append_page(window_list, window_label);
+    notebook.append_page(screen_list, screen_label);
+
+    main.set_orientation(Gtk::Orientation::VERTICAL);
+
+    buttons.set_hexpand(true);
+    buttons.append(cancel);
+    cancel.set_halign(Gtk::Align::START);
+    buttons.append(done);
+    done.set_halign(Gtk::Align::END);
+
+    window_label.set_label("Window");
+    screen_label.set_label("Screen");
+    header.set_label("Choose a view to share");
+
+    cancel.set_label("Cancel");
+    done.set_label("Done");
+    buttons.set_homogeneous(true);
+
+    done.signal_clicked().connect([this] ()
+    {
+        if (notebook.get_current_page() == 0)
+        {
+            auto children = window_list.get_selected_children();
+            if (children.size() == 1)
+            {
+                WayfireChooserTopLevel *cast_child = (WayfireChooserTopLevel*)(children[0]->get_child());
+                cast_child->print();
+            }
+
+            /* TODO Consider an error to let user know the selection was invalid */
+            exit(0);
+        } else
+        {
+            auto children = screen_list.get_selected_children();
+            if (children.size() == 1)
+            {
+                WayfireChooserOutput *cast_child = (WayfireChooserOutput*)(children[0]->get_child());
+                cast_child->print();
+            }
+
+            /* TODO Consider an error to let user know the selection was invalid */
+            exit(0);
+        }
+    });
+
+    cancel.signal_clicked().connect([] ()
+    {
+        exit(0);
+    });
+
+    /* Attempt to get Window list */
+    auto gdk_display = gdk_display_get_default();
+    auto display     = gdk_wayland_display_get_wl_display(gdk_display);
+
+    this->display = display;
+
+    wl_registry *registry = wl_display_get_registry(display);
+    wl_registry_add_listener(registry, &registry_listener, this);
+    this->registry = registry;
+    wl_display_roundtrip(display);
+
+    if (this->list && has_image_copy_capture)
+    {} else
+    {
+        std::cerr << "Compositor doesn't support" <<
+            " ext-foreign-toplevel-list and/or ext-image-copy-capture-v1." <<
+            " Only screens can be cast currently." << std::endl;
+        window_label.set_sensitive(false);
+        window_label.set_tooltip_text("This compositor does not currently support sharing individual windows");
+        notebook.set_current_page(1);
+    }
+
+    /* Get output list */
+    auto gtkdisplay = Gdk::Display::get_default();
+    auto monitors   = gtkdisplay->get_monitors();
+    monitors->signal_items_changed().connect(
+        [this] (const int pos, const int rem, const int add)
+    {
+        auto display     = Gdk::Display::get_default();
+        auto monitors    = display->get_monitors();
+        int num_monitors = monitors->get_n_items();
+        for (int i = 0; i < num_monitors; i++)
+        {
+            auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+            add_output(obj);
+        }
+    });
+
+    // Initial monitors
+    int num_monitors = monitors->get_n_items();
+    for (int i = 0; i < num_monitors; i++)
+    {
+        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+        add_output(obj);
+    }
+
+    gtk_layer_init_for_window(window.gobj());
+    gtk_layer_set_namespace(window.gobj(), "chooser");
+    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
+    gtk_layer_set_keyboard_mode(window.gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+    gtk_layer_set_exclusive_zone(window.gobj(), 0);
+    window.present();
+}
+
+void WayfireStreamChooserApp::add_toplevel(ext_foreign_toplevel_handle_v1 *handle)
+{
+    toplevels.emplace(handle, new WayfireChooserTopLevel(handle));
+    window_list.append(*toplevels[handle]);
+    if (window_list.get_selected_children().size() == 0)
+    {
+        auto child = window_list.get_child_at_index(0);
+        window_list.select_child(*child);
+    }
+}
+
+void WayfireStreamChooserApp::remove_toplevel(WayfireChooserTopLevel *toplevel)
+{
+    window_list.remove(*toplevel);
+    toplevels.erase(toplevel->handle);
+}
+
+void WayfireStreamChooserApp::add_output(std::shared_ptr<Gdk::Monitor> monitor)
+{
+    std::string connector = monitor->get_connector();
+    outputs.emplace(connector, new WayfireChooserOutput(monitor));
+    screen_list.append(*outputs[connector]);
+    if (screen_list.get_selected_children().size() == 0)
+    {
+        auto child = screen_list.get_child_at_index(0);
+        screen_list.select_child(*child);
+    }
+}
+
+void WayfireStreamChooserApp::remove_output(std::string connector)
+{
+    screen_list.remove(*outputs[connector]);
+    outputs.erase(connector);
+}
+
+void WayfireStreamChooserApp::set_toplevel_list(ext_foreign_toplevel_list_v1 *list)
+{
+    this->list = list;
+}
+
+/* Starting point */
+int main(int argc, char **argv)
+{
+    WayfireStreamChooserApp::getInstance().run();
+    exit(0);
+}

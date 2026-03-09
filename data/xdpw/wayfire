@@ -1,0 +1,3 @@
+[screencast]
+chooser_cmd=wf-stream-chooser
+chooser_type=simple
