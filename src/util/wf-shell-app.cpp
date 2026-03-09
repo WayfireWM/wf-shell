@@ -281,8 +281,10 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
         timeout_signal.disconnect();
         if (cancel_wait)
         {
-            std::cerr << "Timeout reached while waiting for output name. " <<
-                "Our local output object may not have a name at this point." << std::endl;
+            std::cerr << "Timeout reached while waiting for output name." <<
+                    (output_name.empty() ?
+                " Our local output object does not have a name at this point." :
+                "") << std::endl;
         } /* XXX: End workaround. */
 
         if (monitor->get_connector() == live_preview_output_name)
