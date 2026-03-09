@@ -179,7 +179,6 @@ class WayfireMenu : public WayfireWidget
     WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     WfOption<bool> menu_show_categories{"panel/menu_show_categories"};
-    void scroll_to(Gtk::FlowBoxChild *child);
     void setup_popover_layout();
     void update_popover_layout();
     void update_category_width();
