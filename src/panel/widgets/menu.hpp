@@ -151,8 +151,8 @@ class WayfireMenu : public WayfireWidget
 
     bool update_icon();
 
-    bool m_sort_names     = true;
-    bool fuzzy_filter     = false;
+    bool m_sort_names = true;
+    bool fuzzy_filter = false;
     int32_t count_matches = 0;
 
     bool on_sort(Gtk::FlowBoxChild*, Gtk::FlowBoxChild*);
