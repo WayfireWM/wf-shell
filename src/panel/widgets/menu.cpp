@@ -641,11 +641,16 @@ void WayfireMenu::setup_popover_layout()
         {
             if (vfocus_x == -1)
             {
-                vfocus_cat -= 1;
-                auto row = category_box.get_row_at_index(vfocus_cat);
-                category_box.select_row(*row);
-                row->activate();
-                return true;
+                if (auto row = category_box.get_row_at_index(vfocus_cat-1))
+                {
+                    vfocus_cat -= 1;
+                    category_box.select_row(*row);
+                    set_category(category_order[vfocus_cat]);
+                    row->activate(); // scroll to it
+                    return true;
+                }
+
+                return false;
             }
 
             if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, (vfocus_y-1) * y_nat))
@@ -658,11 +663,16 @@ void WayfireMenu::setup_popover_layout()
         {
             if (vfocus_x == -1)
             {
-                vfocus_cat += 1;
-                auto row = category_box.get_row_at_index(vfocus_cat);
-                category_box.select_row(*row);
-                row->activate();
-                return true;
+                if (auto row = category_box.get_row_at_index(vfocus_cat+1))
+                {
+                    vfocus_cat += 1;
+                    category_box.select_row(*row);
+                    set_category(category_order[vfocus_cat]);
+                    row->activate(); // scroll to it
+                    return true;
+                }
+
+                return false;
             }
 
             if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, (vfocus_y+1) * y_nat))
