@@ -538,6 +538,36 @@ bool WayfireMenu::update_icon()
     return true;
 }
 
+void WayfireMenu::scroll_to(Gtk::FlowBoxChild *child)
+{
+    if (!child)
+        return;
+
+    // Get child allocation
+    Gtk::Allocation alloc = child->get_allocation();
+    int child_y      = alloc.get_y();
+    int child_height = alloc.get_height();
+
+    // Get vertical adjustment from the scrolled window
+    auto vadj = app_scrolled_window.get_vadjustment();
+    if (!vadj)
+        return;
+
+    double value = vadj->get_value();
+    double page  = vadj->get_page_size();
+
+    // If child is above current view, scroll up
+    if (child_y < value)
+    {
+        vadj->set_value(child_y);
+    }
+    // If child is below current view, scroll down
+    else if ((child_y + child_height) > (value + page))
+    {
+        vadj->set_value(child_y + child_height - page);
+    }
+};
+
 void WayfireMenu::setup_popover_layout()
 {
     button->get_popover()->set_child(popover_layout_box);
@@ -609,12 +639,19 @@ void WayfireMenu::setup_popover_layout()
                 return false;
 
             vfocus_y -= 1;
-            flowbox.select_child(*flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat));
-            return true;
+            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat))
+            {
+                flowbox.select_child(*child);
+                scroll_to(child);
+            }
         } else if (keyval == GDK_KEY_Down)
         {
             vfocus_y += 1;
-            flowbox.select_child(*flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat));
+            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat))
+            {
+                flowbox.select_child(*child);
+                scroll_to(child);
+            }
             return true;
         } else if (keyval == GDK_KEY_Left)
         {
@@ -622,7 +659,11 @@ void WayfireMenu::setup_popover_layout()
                 return false;
 
             vfocus_x -= 1;
-            flowbox.select_child(*flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat));
+            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat))
+            {
+                flowbox.select_child(*child);
+                scroll_to(child);
+            }
             return true;
         } else if (keyval == GDK_KEY_Right)
         {
@@ -630,18 +671,15 @@ void WayfireMenu::setup_popover_layout()
                 return false;
 
             vfocus_x += 1;
-            flowbox.select_child(*flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat));
+            if (auto *child = flowbox.get_child_at_pos(vfocus_x * x_nat, vfocus_y * y_nat))
+            {
+                flowbox.select_child(*child);
+                scroll_to(child);
+            }
             return true;
         }
-        // } else if (search_entry.has_focus())
-        // {
-            // return false;
-        // } else
-        // {
-            // search_entry.grab_focus();
-            // on_search_changed();
-            return false;
-        // }
+
+        return false;
     }, false));
     button->get_popover()->add_controller(typing_gesture);
 
