@@ -252,8 +252,8 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
 {
     auto display = Gdk::Display::get_default();
     auto monitor_list = display->get_monitors();
-    int num_monitors  = monitor_list->get_n_items();
-    for (int i = 0; i < num_monitors; i++)
+
+    for (int i = pos; i < pos + add; i++)
     {
         auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
         add_output(obj);
