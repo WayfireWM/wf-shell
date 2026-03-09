@@ -285,6 +285,11 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
                 "Our local output object may not have a name at this point." << std::endl;
         } /* XXX: End workaround. */
 
+        if (monitor->get_connector() == live_preview_output_name)
+        {
+            continue;
+        }
+
         add_output(monitor);
     }
 }
