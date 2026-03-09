@@ -233,15 +233,16 @@ void WayfireShellApp::on_activate()
     if (!alternative_monitors)
     {
         // Hook up monitor tracking
-        auto display  = Gdk::Display::get_default();
-        auto monitors = display->get_monitors();
-        monitors->signal_items_changed().connect(sigc::mem_fun(*this, &WayfireShellApp::output_list_updated));
+        auto display = Gdk::Display::get_default();
+        auto monitor_list = display->get_monitors();
+        monitor_list->signal_items_changed().connect(sigc::mem_fun(*this,
+            &WayfireShellApp::output_list_updated));
 
         // initial monitors
-        int num_monitors = monitors->get_n_items();
+        int num_monitors = monitor_list->get_n_items();
         for (int i = 0; i < num_monitors; i++)
         {
-            auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+            auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
             add_output(obj);
         }
     }
@@ -249,12 +250,12 @@ void WayfireShellApp::on_activate()
 
 void WayfireShellApp::output_list_updated(const int pos, const int rem, const int add)
 {
-    auto display     = Gdk::Display::get_default();
-    auto monitors    = display->get_monitors();
-    int num_monitors = monitors->get_n_items();
+    auto display = Gdk::Display::get_default();
+    auto monitor_list = display->get_monitors();
+    int num_monitors  = monitor_list->get_n_items();
     for (int i = 0; i < num_monitors; i++)
     {
-        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
+        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
         add_output(obj);
     }
 }
