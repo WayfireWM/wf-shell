@@ -538,7 +538,7 @@ void WayfirePanelApp::on_activate()
         {"panel/network_icon_size", ".network"},
         {"panel/volume_icon_size", ".volume"},
         {"panel/wp_icon_size", ".wp-mixer"},
-        {"panel/wp_popup_icon_size", ".wp-mixer-control"},
+        {"panel/wp_popup_icon_size", ".mute-toggle, .default-button"},
         {"panel/notifications_icon_size", ".notification-center "},
         {"panel/tray_icon_size", ".tray-button"}
     };
