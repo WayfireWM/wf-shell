@@ -1,39 +1,57 @@
 #include "notification-center.hpp"
 
 #include <glibmm/main.h>
+#include <gtkmm.h>
 
 #include <gtk-utils.hpp>
 
 #include "single-notification.hpp"
 
-void WayfireNotificationCenter::init(Gtk::HBox *container)
+void WayfireNotificationCenter::init(Gtk::Box *container)
 {
     button = std::make_unique<WayfireMenuButton>("panel");
-    button->get_style_context()->add_class("notification-center");
+    icon.add_css_class("widget-icon");
+    button->add_css_class("notification-center");
+    button->get_children()[0]->add_css_class("flat");
 
     updateIcon();
-    button->add(icon);
-    container->add(*button);
-    button->show_all();
+    button->set_child(icon);
+    container->append(*button);
 
     auto *popover = button->get_popover();
     popover->set_size_request(WIDTH, HEIGHT);
-    popover->get_style_context()->add_class("notification-popover");
+    popover->add_css_class("notification-popover");
 
-    vbox.set_valign(Gtk::ALIGN_START);
-    scrolled_window.add(vbox);
-    scrolled_window.show_all();
-    popover->add(scrolled_window);
+    box.set_valign(Gtk::Align::START);
+    box.set_orientation(Gtk::Orientation::VERTICAL);
+    scrolled_window.set_child(box);
+    popover->set_child(scrolled_window);
 
     button->set_tooltip_text("Middle click to toggle DND mode.");
-    button->signal_button_press_event().connect_notify([=] (GdkEventButton *ev)
+
+    auto click_gesture = Gtk::GestureClick::create();
+    auto long_press    = Gtk::GestureLongPress::create();
+    long_press->set_touch_only(true);
+    long_press->signal_pressed().connect(
+        [=] (double x, double y)
     {
-        if (ev->button == 2)
-        {
-            dnd_enabled = !dnd_enabled;
-            updateIcon();
-        }
+        dnd_enabled = !dnd_enabled;
+        updateIcon();
+        long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+        click_gesture->set_state(Gtk::EventSequenceState::DENIED);
     });
+    click_gesture->set_button(2);
+    click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+    });
+    click_gesture->signal_released().connect([=] (int count, double x, double y)
+    {
+        dnd_enabled = !dnd_enabled;
+        updateIcon();
+    });
+    button->add_controller(long_press);
+    button->add_controller(click_gesture);
 
     for (const auto & [id, _] : daemon->getNotifications())
     {
@@ -57,8 +75,7 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id, bool s
     g_assert(notification_widgets.count(id) == 0);
     notification_widgets.insert({id, std::make_unique<WfSingleNotification>(notification)});
     auto & widget = notification_widgets.at(id);
-    vbox.pack_end(*widget);
-    vbox.show_all();
+    box.append(*widget);
     widget->set_reveal_child();
     if (show_popup && !dnd_enabled || (show_critical_in_dnd && (notification.hints.urgency == 2)))
     {
@@ -115,9 +132,9 @@ void WayfireNotificationCenter::updateIcon()
 {
     if (dnd_enabled)
     {
-        set_image_icon(icon, "notifications-disabled", icon_size);
+        icon.set_from_icon_name("notifications-disabled");
     } else
     {
-        set_image_icon(icon, "notifications", icon_size);
+        icon.set_from_icon_name("notifications");
     }
 }

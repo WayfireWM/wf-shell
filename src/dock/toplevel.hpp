@@ -1,5 +1,4 @@
-#ifndef WF_DOCK_TOPLEVEL_HPP
-#define WF_DOCK_TOPLEVEL_HPP
+#pragma once
 
 #include <memory>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
@@ -19,6 +18,7 @@ class WfToplevel
     WfToplevel(zwlr_foreign_toplevel_handle_v1 *handle);
     ~WfToplevel();
 
+    void close();
     void handle_output_leave(wl_output *output);
 
     class impl;
@@ -26,5 +26,3 @@ class WfToplevel
   private:
     std::unique_ptr<impl> pimpl;
 };
-
-#endif /* end of include guard: WF_DOCK_TOPLEVEL_HPP */

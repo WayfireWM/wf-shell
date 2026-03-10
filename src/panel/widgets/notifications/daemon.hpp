@@ -1,5 +1,4 @@
-#ifndef NOTIFICATION_DAEMON_HPP
-#define NOTIFICATION_DAEMON_HPP
+#pragma once
 
 #include "notification-info.hpp"
 
@@ -72,7 +71,8 @@ class Daemon
     notification_signal signal_notification_replaced;
     notification_signal signal_notification_closed;
 
-    const Gio::DBus::InterfaceVTable interface_vtable{sigc::mem_fun(this, &Daemon::on_interface_method_call)};
+    const Gio::DBus::InterfaceVTable interface_vtable{sigc::mem_fun(*this,
+        &Daemon::on_interface_method_call)};
 
     Daemon();
 
@@ -89,5 +89,3 @@ class Daemon
 
     void on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
 };
-
-#endif

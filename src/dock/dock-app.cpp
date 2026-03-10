@@ -1,8 +1,10 @@
 #include "dock.hpp"
+#include "giomm/application.h"
 #include "toplevel.hpp"
 #include "toplevel-icon.hpp"
 #include <iostream>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
+#include <css-config.hpp>
 
 
 namespace
@@ -46,6 +48,7 @@ class WfDockApp::impl
 void WfDockApp::on_activate()
 {
     WayfireShellApp::on_activate();
+    new CssFromConfigInt("dock/icon_height", ".toplevel-icon {-gtk-icon-size:", "px;}");
     IconProvider::load_custom_icons();
 
     /* At this point, wayland connection has been initialized,
@@ -113,7 +116,19 @@ void WfDockApp::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
 
 void WfDockApp::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
 {
-    priv->toplevels.erase(handle);
+    priv->toplevels[handle]->close();
+    WfOption<bool> use_close_animations{"dock/show_close"};
+    if (use_close_animations)
+    {
+        Glib::signal_timeout().connect([=]
+        {
+            priv->toplevels.erase(handle);
+            return false;
+        }, 2000);
+    } else
+    {
+        priv->toplevels.erase(handle);
+    }
 }
 
 WfDockApp& WfDockApp::get()
@@ -133,12 +148,22 @@ void WfDockApp::create(int argc, char **argv)
         throw std::logic_error("Running WfDockApp twice!");
     }
 
-    instance = std::unique_ptr<WfDockApp>{new WfDockApp(argc, argv)};
-    instance->run();
+    instance = std::unique_ptr<WfDockApp>{new WfDockApp()};
+    instance->init_app();
+    instance->run(argc, argv);
 }
 
-WfDockApp::WfDockApp(int argc, char **argv) :
-    WayfireShellApp(argc, argv), priv(new WfDockApp::impl())
+std::string WfDockApp::get_application_name()
+{
+    return "org.wayfire.dock";
+}
+
+Gio::Application::Flags WfDockApp::get_extra_application_flags()
+{
+    return Gio::Application::Flags::NON_UNIQUE;
+}
+
+WfDockApp::WfDockApp() : WayfireShellApp(), priv(new WfDockApp::impl())
 {}
 WfDockApp::~WfDockApp() = default;
 

@@ -1,13 +1,15 @@
-#ifndef WIDGETS_BATTERY_HPP
-#define WIDGETS_BATTERY_HPP
+#pragma once
 
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
-#include <gtkmm/hvbox.h>
+#include <gtkmm/box.h>
 #include <gtkmm/label.h>
+#include <gtkmm/overlay.h>
 
 #include <giomm/dbusproxy.h>
 #include <giomm/dbusconnection.h>
+
+#include <sigc++/connection.h>
 
 #include "../widget.hpp"
 
@@ -17,18 +19,19 @@ using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
 static const std::string BATTERY_STATUS_ICON    = "icon"; // icon
 static const std::string BATTERY_STATUS_PERCENT = "percentage"; // icon + percentage
 static const std::string BATTERY_STATUS_FULL    = "full"; // icon + percentage + TimeToFull/TimeToEmpty
+static const std::string BATTERY_STATUS_OVERLAY = "percentage_overlay";
 
 class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
     WfOption<std::string> status_opt{"panel/battery_status"};
-    WfOption<std::string> font_opt{"panel/battery_font"};
-    WfOption<int> size_opt{"panel/battery_icon_size"};
-    WfOption<bool> invert_opt{"panel/battery_icon_invert"};
+
+    sigc::connection btn_sig, disp_dev_sig;
 
     Gtk::Button button;
     Gtk::Label label;
-    Gtk::HBox button_box;
+    Gtk::Box button_box;
+    Gtk::Overlay overlay;
 
     Gtk::Image icon;
 
@@ -37,7 +40,6 @@ class WayfireBatteryInfo : public WayfireWidget
 
     bool setup_dbus();
 
-    void update_font();
     void update_icon();
     void update_details();
     void update_state();
@@ -47,9 +49,6 @@ class WayfireBatteryInfo : public WayfireWidget
         const std::vector<Glib::ustring>& invalidated);
 
   public:
-    virtual void init(Gtk::HBox *container);
-    virtual ~WayfireBatteryInfo() = default;
+    virtual void init(Gtk::Box *container);
+    virtual ~WayfireBatteryInfo();
 };
-
-
-#endif /* end of include guard: WIDGETS_BATTERY_HPP */

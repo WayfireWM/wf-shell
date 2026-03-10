@@ -1,7 +1,7 @@
-#include "battery.hpp"
 #include <gtk-utils.hpp>
 #include <iostream>
-#include <algorithm>
+
+#include "battery.hpp"
 
 #define UPOWER_NAME "org.freedesktop.UPower"
 #define DISPLAY_DEVICE "/org/freedesktop/UPower/devices/DisplayDevice"
@@ -74,11 +74,7 @@ void WayfireBatteryInfo::update_icon()
 {
     Glib::Variant<Glib::ustring> icon_name;
     display_device->get_cached_property(icon_name, ICON);
-
-    WfIconLoadOptions options;
-    options.invert     = invert_opt;
-    options.user_scale = button.get_scale_factor();
-    set_image_icon(icon, icon_name.get(), size_opt, options);
+    icon.set_from_icon_name(icon_name.get());
 }
 
 static std::string state_descriptions[] = {
@@ -115,17 +111,6 @@ static std::string uint_to_time(int64_t time)
     return format_digit(hrs) + ":" + format_digit(min);
 }
 
-void WayfireBatteryInfo::update_font()
-{
-    if ((std::string)font_opt == "default")
-    {
-        label.unset_font();
-    } else
-    {
-        label.override_font(Pango::FontDescription((std::string)font_opt));
-    }
-}
-
 void WayfireBatteryInfo::update_details()
 {
     Glib::Variant<guint32> type;
@@ -160,9 +145,28 @@ void WayfireBatteryInfo::update_details()
     if (status_opt.value() == BATTERY_STATUS_PERCENT)
     {
         label.set_text(percentage_string);
+        overlay.remove_overlay(label);
+        button_box.append(label);
     } else if (status_opt.value() == BATTERY_STATUS_FULL)
     {
         label.set_text(description);
+        auto children = overlay.get_children();
+        if (std::count(children.begin(), children.end(), &label))
+        {
+            overlay.remove_overlay(label);
+        }
+
+        button_box.append(label);
+    } else if (status_opt.value() == BATTERY_STATUS_OVERLAY)
+    {
+        label.set_text(percentage_string);
+        auto children = button_box.get_children();
+        if (std::count(children.begin(), children.end(), &label))
+        {
+            button_box.remove(label);
+        }
+
+        overlay.add_overlay(label);
     }
 
     if (status_opt.value() == BATTERY_STATUS_ICON)
@@ -183,7 +187,7 @@ void WayfireBatteryInfo::update_state()
 bool WayfireBatteryInfo::setup_dbus()
 {
     auto cancellable = Gio::Cancellable::create();
-    connection = Gio::DBus::Connection::get_sync(Gio::DBus::BUS_TYPE_SYSTEM, cancellable);
+    connection = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM, cancellable);
     if (!connection)
     {
         std::cerr << "Failed to connect to dbus" << std::endl;
@@ -212,8 +216,8 @@ bool WayfireBatteryInfo::setup_dbus()
     display_device->get_cached_property(present, SHOULD_DISPLAY);
     if (present.get())
     {
-        display_device->signal_properties_changed().connect(
-            sigc::mem_fun(this, &WayfireBatteryInfo::on_properties_changed));
+        disp_dev_sig = display_device->signal_properties_changed().connect(
+            sigc::mem_fun(*this, &WayfireBatteryInfo::on_properties_changed));
 
         return true;
     }
@@ -223,34 +227,34 @@ bool WayfireBatteryInfo::setup_dbus()
 
 // TODO: simplify config loading
 
-static const std::string default_font = "default";
-void WayfireBatteryInfo::init(Gtk::HBox *container)
+void WayfireBatteryInfo::init(Gtk::Box *container)
 {
     if (!setup_dbus())
     {
         return;
     }
 
-    button_box.add(icon);
-    button.get_style_context()->add_class("battery");
-    button.get_style_context()->add_class("flat");
+    button_box.append(overlay);
+    overlay.set_child(icon);
+    icon.add_css_class("widget-icon");
+    button.add_css_class("battery");
+    button.add_css_class("flat");
 
     status_opt.set_callback([=] () { update_details(); });
-    font_opt.set_callback([=] () { update_font(); });
-    size_opt.set_callback([=] () { update_icon(); });
-    invert_opt.set_callback([=] () { update_icon(); });
 
     update_details();
-    update_font();
     update_icon();
 
-    container->pack_start(button, Gtk::PACK_SHRINK);
-    button_box.add(label);
+    container->append(button);
     button_box.set_spacing(5);
 
-    button.add(button_box);
+    button.set_child(button_box);
     button.property_scale_factor().signal_changed()
-        .connect(sigc::mem_fun(this, &WayfireBatteryInfo::update_icon));
+        .connect(sigc::mem_fun(*this, &WayfireBatteryInfo::update_icon));
+}
 
-    button.show_all();
+WayfireBatteryInfo::~WayfireBatteryInfo()
+{
+    btn_sig.disconnect();
+    disp_dev_sig.disconnect();
 }

@@ -32,8 +32,8 @@ static const auto introspection_data = Gio::DBus::NodeInfo::create_for_xml(
 )")->lookup_interface();
 
 Watcher::Watcher() :
-    dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::BUS_TYPE_SESSION, SNW_NAME,
-        sigc::mem_fun(this, &Watcher::on_bus_acquired)))
+    dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SESSION, SNW_NAME,
+        sigc::mem_fun(*this, &Watcher::on_bus_acquired)))
 {}
 
 std::shared_ptr<Watcher> Watcher::Launch()
@@ -65,8 +65,17 @@ Watcher::~Watcher()
         Gio::DBus::unwatch_name(item_id);
     }
 
-    watcher_connection->unregister_object(dbus_object_id);
-    Gio::DBus::unown_name(dbus_name_id);
+    if (dbus_object_id)
+    {
+        watcher_connection->unregister_object(dbus_object_id);
+        dbus_object_id = 0;
+    }
+
+    if (dbus_name_id)
+    {
+        Gio::DBus::unown_name(dbus_name_id);
+        dbus_name_id = 0;
+    }
 }
 
 void Watcher::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connection> & connection,
@@ -80,15 +89,24 @@ void Watcher::register_status_notifier_item(const Glib::RefPtr<Gio::DBus::Connec
     const Glib::ustring & sender, const Glib::ustring & path)
 {
     const auto full_obj_path = sender + path;
+    if (sn_items_id.count(full_obj_path) != 0)
+    {
+        std::cout << "Unabe to add status notifier : already exists" << std::endl;
+        return;
+    }
+
     emit_signal("StatusNotifierItemRegistered", full_obj_path);
     sn_items_id.emplace(full_obj_path, Gio::DBus::watch_name(
-        Gio::DBus::BUS_TYPE_SESSION, sender, {},
+        Gio::DBus::BusType::SESSION, sender, {},
         [this, full_obj_path] (const Glib::RefPtr<Gio::DBus::Connection> & connection,
                                const Glib::ustring & name)
     {
-        Gio::DBus::unwatch_name(sn_items_id.at(full_obj_path));
-        sn_items_id.erase(full_obj_path);
-        emit_signal("StatusNotifierItemUnregistered", full_obj_path);
+        if (sn_items_id.count(full_obj_path) == 1)
+        {
+            Gio::DBus::unwatch_name(sn_items_id.at(full_obj_path));
+            sn_items_id.erase(full_obj_path);
+            emit_signal("StatusNotifierItemUnregistered", full_obj_path);
+        }
     }));
 }
 

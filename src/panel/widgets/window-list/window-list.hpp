@@ -1,22 +1,52 @@
-#ifndef WIDGETS_WINDOW_LIST_HPP
-#define WIDGETS_WINDOW_LIST_HPP
+#pragma once
+
+#include <gtkmm.h>
 
 #include "../../widget.hpp"
-#include "panel.hpp"
-#include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
+#include "toplevel.hpp"
+#include "layout.hpp"
+#include "wf-ipc.hpp"
 
-#include <gtkmm/button.h>
-#include <gtkmm/scrolledwindow.h>
+#ifdef HAVE_DMABUF
+    #include <gbm.h>
+#endif // HAVE_DMABUF
+
+class WayfireWindowListOutput
+{
+  public:
+    wl_output *output;
+    std::string name;
+};
 
 class WayfireToplevel;
 
-class WayfireWindowListBox : public Gtk::HBox
+class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubscriber
 {
-    Gtk::Widget *top_widget = nullptr;
-    int top_x = 0;
+    WfOption<int> user_size{"panel/window_list_size"};
+    std::shared_ptr<WayfireWindowListLayout> layout;
 
   public:
-    WayfireWindowListBox();
+    std::map<zwlr_foreign_toplevel_handle_v1*,
+        std::unique_ptr<WayfireToplevel>> toplevels;
+
+    wl_display *display;
+    wl_registry *registry;
+    wl_shm *shm = nullptr;
+    zwlr_foreign_toplevel_manager_v1 *manager = nullptr;
+    zwlr_screencopy_manager_v1 *screencopy_manager = nullptr;
+    WayfireOutput *output;
+    Gtk::ScrolledWindow scrolled_window;
+
+    WayfireWindowList(WayfireOutput *output);
+    virtual ~WayfireWindowList();
+
+    void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
+    void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
+    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
+
+    wayfire_config *get_config();
+
+    void init(Gtk::Box *container) override;
 
     /**
      * Set the widget which should always be rendered on top of the other child
@@ -24,13 +54,6 @@ class WayfireWindowListBox : public Gtk::HBox
     void set_top_widget(Gtk::Widget *top = nullptr);
     /** Set the absolute position of the top widget */
     void set_top_x(int x);
-
-    /**
-     * Override some of Gtk::HBox's built-in layouting functions, so that we
-     * support manually dragging a button
-     */
-    void forall_vfunc(gboolean, GtkCallback callback, gpointer callback_data) override;
-    void on_size_allocate(Gtk::Allocation& alloc) override;
 
     /**
      * @param x the x-axis position, relative to ref
@@ -48,43 +71,37 @@ class WayfireWindowListBox : public Gtk::HBox
      * @return The direct child widget or none if it doesn't exist
      */
     Gtk::Widget *get_widget_at(int x);
-
-    /**
-     * Get the list of widgets sorted from left to right, i.e ignoring the top
-     * widget setting
+    /** Find the direct child widget before the given box-relative coordinates,
+     * ignoring the top widget if possible, i.e if the top widget and some
+     * other widget are at the given coordinates, then the bottom widget will
+     * be returned
+     *
+     * @return The direct child widget or none if it doesn't exist
      */
-    std::vector<Gtk::Widget*> get_unsorted_widgets();
-};
+    Gtk::Widget *get_widget_before(int x);
 
-class WayfireWindowList : public WayfireWidget
-{
-  public:
-    std::map<zwlr_foreign_toplevel_handle_v1*,
-        std::unique_ptr<WayfireToplevel>> toplevels;
+    WfOption<bool> live_window_previews_opt{"panel/live_window_previews"};
+    void handle_new_wl_output(wl_output *output);
+    void destroy_window_list_live_preview_output();
+    std::unique_ptr<WayfireWindowListOutput> window_list_live_preview_output = nullptr;
+    void on_event(wf::json_t data) override;
+    std::shared_ptr<IPCClient> ipc_client;
+    bool live_window_preview_tooltips = false;
+    bool normal_title_tooltips = false;
+    void enable_normal_tooltips_flag(bool enable);
+    uint64_t live_window_preview_view_id = 0;
+    void live_window_previews_plugin_check();
+    void enable_ipc(bool enable);
+    bool live_window_previews_enabled();
+    bool live_previews_dmabuf = true;
 
-    zwlr_foreign_toplevel_manager_v1 *manager = NULL;
-    WayfireOutput *output;
-    WayfireWindowListBox box;
-    Gtk::ScrolledWindow scrolled_window;
-
-    WayfireWindowList(WayfireOutput *output);
-    virtual ~WayfireWindowList();
-
-    void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
-    void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
-    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
-
-    wayfire_config *get_config();
-
-    void init(Gtk::HBox *container) override;
-    void add_output(WayfireOutput *output);
+#ifdef HAVE_DMABUF
+    zwp_linux_dmabuf_feedback_v1 *feedback = nullptr;
+    zwp_linux_dmabuf_v1 *dmabuf = nullptr;
+    gbm_device *dmabuf_device   = nullptr;
+#endif // HAVE_DMABUF
 
   private:
-    void on_draw(const Cairo::RefPtr<Cairo::Context>&);
-
-    void set_button_width(int width);
     int get_default_button_width();
     int get_target_button_width();
 };
-
-#endif /* end of include guard: WIDGETS_WINDOW_LIST_HPP */

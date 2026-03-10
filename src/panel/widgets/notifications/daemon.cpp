@@ -86,9 +86,9 @@ try {
     {
         signal_notification_new.emit(id);
     }
-} catch (const std::invalid_argument & err)
+} catch (const std::exception & err)
 {
-    std::cerr << "Error at " << __PRETTY_FUNCTION__ << ": " << err.what() << std::endl;
+    std::cerr << "Error at " << __PRETTY_FUNCTION__ << ": " << err.what() << '\n';
 }
 
 dbus_method(Daemon::CloseNotification)
@@ -150,9 +150,9 @@ std::shared_ptr<Daemon> Daemon::Instance()
 }
 
 Daemon::Daemon() :
-    owner_id(Gio::DBus::own_name(Gio::DBus::BUS_TYPE_SESSION, FDN_NAME,
-        sigc::mem_fun(this, &Daemon::on_bus_acquired),
-        {}, {}, Gio::DBus::BUS_NAME_OWNER_FLAGS_REPLACE))
+    owner_id(Gio::DBus::own_name(Gio::DBus::BusType::SESSION, FDN_NAME,
+        sigc::mem_fun(*this, &Daemon::on_bus_acquired),
+        {}, {}, Gio::DBus::BusNameOwnerFlags::REPLACE))
 {}
 
 Daemon::~Daemon()

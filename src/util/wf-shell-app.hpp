@@ -1,16 +1,17 @@
-#ifndef WF_SHELL_APP_HPP
-#define WF_SHELL_APP_HPP
+#pragma once
 
-#include <set>
+#include <memory>
 #include <string>
 #include <wayfire/config/config-manager.hpp>
 
 #include <gtkmm/application.h>
 #include <gdkmm/monitor.h>
+#include <gtkmm/cssprovider.h>
 
 #include "wayfire-shell-unstable-v2-client-protocol.h"
 
 using GMonitor = Glib::RefPtr<Gdk::Monitor>;
+
 /**
  * Represents a single output
  */
@@ -36,16 +37,20 @@ class WayfireShellApp
 {
   private:
     std::vector<std::unique_ptr<WayfireOutput>> monitors;
+    std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
 
   protected:
     /** This should be initialized by the subclass in each program which uses
      * wf-shell-app */
+    bool alternative_monitors = false; /* Used to skip monitor management in lockscreen */
     static std::unique_ptr<WayfireShellApp> instance;
     std::optional<std::string> cmdline_config;
     std::optional<std::string> cmdline_css;
 
     Glib::RefPtr<Gtk::Application> app;
+    bool activated = false;
 
+    void output_list_updated(int pos, int rem, int add);
     virtual void add_output(GMonitor monitor);
     virtual void rem_output(GMonitor monitor);
 
@@ -67,18 +72,25 @@ class WayfireShellApp
     wf::config::config_manager_t config;
     zwf_shell_manager_v2 *wf_shell_manager = nullptr;
 
-    WayfireShellApp(int argc, char **argv);
+    WayfireShellApp();
     virtual ~WayfireShellApp();
+    void init_app();
 
     virtual std::string get_config_file();
     virtual std::string get_css_config_dir();
-    virtual void run();
+    virtual void run(int argc, char **argv);
+    virtual void command_line()
+    {}
 
     virtual void on_config_reload()
     {}
-
-    virtual void on_css_reload()
-    {}
+    void on_css_reload();
+    void clear_css_rules();
+    void add_css_file(std::string file, int priority);
+    virtual Gio::Application::Flags get_extra_application_flags();
+    virtual std::string get_application_name() = 0;
+    std::vector<std::unique_ptr<WayfireOutput>> *get_wayfire_outputs();
+    std::string live_preview_output_name;
 
     /**
      * WayfireShellApp is a singleton class.
@@ -87,5 +99,3 @@ class WayfireShellApp
      */
     static WayfireShellApp& get();
 };
-
-#endif /* end of include guard: WF_SHELL_APP_HPP */

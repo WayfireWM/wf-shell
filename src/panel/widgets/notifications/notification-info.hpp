@@ -1,9 +1,9 @@
-#ifndef NOTIFICATION_INFO_HPP
-#define NOTIFICATION_INFO_HPP
+#pragma once
 
 #include <gtkmm/image.h>
 #include <map>
 #include <string>
+#include <ctime>
 
 #include <gdkmm/pixbuf.h>
 #include <glibmm/refptr.h>
@@ -52,5 +52,3 @@ struct Notification
   private:
     inline static guint notifications_count = 0;
 };
-
-#endif

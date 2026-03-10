@@ -36,6 +36,11 @@ struct NoConnectionInfo : public WfNetworkConnectionInfo
         return 0;
     }
 
+    std::string get_strength_str()
+    {
+        return "none";
+    }
+
     std::string get_ip()
     {
         return "127.0.0.1";
@@ -45,10 +50,39 @@ struct NoConnectionInfo : public WfNetworkConnectionInfo
     {}
 };
 
+struct VPNConnectionInfo : public WfNetworkConnectionInfo
+{
+    VPNConnectionInfo(const std::shared_ptr<Gio::DBus::Connection>& connection, std::string path)
+    {}
+    virtual std::string get_icon_name(WfConnectionState state) override
+    {
+        return "network-vpn-symbolic";
+    }
+
+    int get_connection_strength() override
+    {
+        return 0;
+    }
+
+    std::string get_strength_str() override
+    {
+        return "excellent";
+    }
+
+    std::string get_ip() override
+    {
+        return "0.0.0.0";
+    }
+
+    virtual ~VPNConnectionInfo()
+    {}
+};
+
 struct WifiConnectionInfo : public WfNetworkConnectionInfo
 {
     WayfireNetworkInfo *widget;
     DBusProxy ap;
+    sigc::connection ap_sig;
 
     WifiConnectionInfo(const DBusConnection& connection, std::string path,
         WayfireNetworkInfo *widget)
@@ -60,8 +94,8 @@ struct WifiConnectionInfo : public WfNetworkConnectionInfo
 
         if (ap)
         {
-            ap->signal_properties_changed().connect_notify(
-                sigc::mem_fun(this, &WifiConnectionInfo::on_properties_changed));
+            ap_sig = ap->signal_properties_changed().connect(
+                sigc::mem_fun(*this, &WifiConnectionInfo::on_properties_changed));
         }
     }
 
@@ -187,6 +221,11 @@ struct EthernetConnectionInfo : public WfNetworkConnectionInfo
         return "Ethernet - " + connection_name;
     }
 
+    std::string get_strength_str()
+    {
+        return "excellent";
+    }
+
     virtual int get_connection_strength()
     {
         return 100;
@@ -220,10 +259,7 @@ void WayfireNetworkInfo::update_icon()
 {
     auto icon_name = info->get_icon_name(
         get_connection_state(active_connection_proxy));
-    WfIconLoadOptions options;
-    options.invert     = icon_invert_opt;
-    options.user_scale = icon.get_scale_factor();
-    set_image_icon(icon, icon_name, icon_size_opt, options);
+    icon.set_from_icon_name(icon_name);
 }
 
 struct status_color
@@ -239,31 +275,6 @@ struct status_color
 
 #define MAX_COLORS (sizeof(status_colors) / sizeof(status_color))
 
-static Gdk::RGBA get_color_for_pc(int pc)
-{
-    for (int i = MAX_COLORS - 2; i >= 0; i--)
-    {
-        if (status_colors[i].point <= pc)
-        {
-            auto& r1 = status_colors[i].rgba;
-            auto& r2 = status_colors[i + 1].rgba;
-
-            double a = 1.0 * (pc - status_colors[i].point) /
-                (status_colors[i + 1].point - status_colors[i].point);
-            Gdk::RGBA result;
-            result.set_rgba(
-                r1.get_red() * (1 - a) + r2.get_red() * a,
-                r1.get_green() * (1 - a) + r2.get_green() * a,
-                r1.get_blue() * (1 - a) + r2.get_blue() * a,
-                r1.get_alpha() * (1 - a) + r2.get_alpha() * a);
-
-            return result;
-        }
-    }
-
-    return Gdk::RGBA{"#ffffff"};
-}
-
 void WayfireNetworkInfo::update_status()
 {
     std::string description = info->get_connection_name();
@@ -271,12 +282,13 @@ void WayfireNetworkInfo::update_status()
     status.set_text(description);
     button.set_tooltip_text(description);
 
+    status.remove_css_class("excellent");
+    status.remove_css_class("good");
+    status.remove_css_class("weak");
+    status.remove_css_class("none");
     if (status_color_opt)
     {
-        status.override_color(get_color_for_pc(info->get_connection_strength()));
-    } else
-    {
-        status.unset_color();
+        status.add_css_class(info->get_strength_str());
     }
 }
 
@@ -320,11 +332,15 @@ void WayfireNetworkInfo::update_active_connection()
         {
             info = std::unique_ptr<WfNetworkConnectionInfo>(
                 new EthernetConnectionInfo(connection, object));
-        } else if (type.find("bluetooth"))
+        } else if (type.find("bluetooth") != type.npos)
         {
             std::cout << "Unimplemented: bluetooth connection" << std::endl;
             set_no_connection();
             // TODO
+        } else if (type.find("vpn") != type.npos)
+        {
+            info = std::unique_ptr<WfNetworkConnectionInfo>(
+                new VPNConnectionInfo(connection, object));
         } else
         {
             std::cout << "Unimplemented: unknown connection type" << std::endl;
@@ -357,7 +373,7 @@ void WayfireNetworkInfo::on_nm_properties_changed(
 bool WayfireNetworkInfo::setup_dbus()
 {
     auto cancellable = Gio::Cancellable::create();
-    connection = Gio::DBus::Connection::get_sync(Gio::DBus::BUS_TYPE_SYSTEM, cancellable);
+    connection = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM, cancellable);
     if (!connection)
     {
         std::cerr << "Failed to connect to dbus" << std::endl;
@@ -374,8 +390,8 @@ bool WayfireNetworkInfo::setup_dbus()
         return false;
     }
 
-    nm_proxy->signal_properties_changed().connect_notify(
-        sigc::mem_fun(this, &WayfireNetworkInfo::on_nm_properties_changed));
+    signals.push_back(nm_proxy->signal_properties_changed().connect(
+        sigc::mem_fun(*this, &WayfireNetworkInfo::on_nm_properties_changed)));
 
     return true;
 }
@@ -391,7 +407,7 @@ void WayfireNetworkInfo::on_click()
     }
 }
 
-void WayfireNetworkInfo::init(Gtk::HBox *container)
+void WayfireNetworkInfo::init(Gtk::Box *container)
 {
     if (!setup_dbus())
     {
@@ -399,25 +415,26 @@ void WayfireNetworkInfo::init(Gtk::HBox *container)
         return;
     }
 
-    auto style = button.get_style_context();
-    style->add_class("flat");
-    style->add_class("network");
+    button.add_css_class("widget-icon");
+    button.add_css_class("flat");
+    button.add_css_class("network");
 
-    container->add(button);
-    button.add(button_content);
-    button.get_style_context()->add_class("flat");
+    container->append(button);
+    button.set_child(button_content);
+    button.add_css_class("flat");
 
-    button.signal_clicked().connect_notify(
-        sigc::mem_fun(this, &WayfireNetworkInfo::on_click));
+    signals.push_back(button.signal_clicked().connect(
+        sigc::mem_fun(*this, &WayfireNetworkInfo::on_click)));
 
-    button_content.set_valign(Gtk::ALIGN_CENTER);
-    button_content.pack_start(icon, Gtk::PACK_SHRINK);
-    button_content.pack_start(status, Gtk::PACK_SHRINK);
+    button_content.set_valign(Gtk::Align::CENTER);
+    button_content.append(icon);
+    button_content.append(status);
     button_content.set_spacing(6);
 
-    icon.set_valign(Gtk::ALIGN_CENTER);
-    icon.property_scale_factor().signal_changed().connect(
-        sigc::mem_fun(this, &WayfireNetworkInfo::update_icon));
+    icon.set_valign(Gtk::Align::CENTER);
+    signals.push_back(icon.property_scale_factor().signal_changed().connect(
+        sigc::mem_fun(*this, &WayfireNetworkInfo::update_icon)));
+    icon.add_css_class("network-icon");
 
     update_active_connection();
     handle_config_reload();
@@ -425,15 +442,6 @@ void WayfireNetworkInfo::init(Gtk::HBox *container)
 
 void WayfireNetworkInfo::handle_config_reload()
 {
-    if ((std::string)status_font_opt == "default")
-    {
-        status.unset_font();
-    } else
-    {
-        status.override_font(
-            Pango::FontDescription((std::string)status_font_opt));
-    }
-
     if (status_opt.value() == NETWORK_STATUS_ICON)
     {
         if (status.get_parent())
@@ -444,8 +452,7 @@ void WayfireNetworkInfo::handle_config_reload()
     {
         if (!status.get_parent())
         {
-            button_content.pack_start(status);
-            button_content.show_all();
+            button_content.append(status);
         }
     }
 
@@ -456,4 +463,9 @@ void WayfireNetworkInfo::handle_config_reload()
 }
 
 WayfireNetworkInfo::~WayfireNetworkInfo()
-{}
+{
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
+}

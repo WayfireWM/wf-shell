@@ -1,11 +1,11 @@
-#ifndef WF_DOCK_HPP
-#define WF_DOCK_HPP
+#pragma once
 
-#include <map>
-#include <gtkmm/hvbox.h>
+#include <gtkmm/box.h>
 #include <wayland-client.h>
+#include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
+#include <wf-option-wrap.hpp>
 
-#include "toplevel-icon.hpp"
+#include "giomm/application.h"
 #include "wf-shell-app.hpp"
 
 class WfDock
@@ -38,16 +38,16 @@ class WfDockApp : public WayfireShellApp
      * call to run() */
     static void create(int argc, char **argv);
     virtual ~WfDockApp();
+    std::string get_application_name() override;
+    Gio::Application::Flags get_extra_application_flags() override;
 
     void on_activate() override;
     void handle_new_output(WayfireOutput *output) override;
     void handle_output_removed(WayfireOutput *output) override;
 
   private:
-    WfDockApp(int argc, char **argv);
+    WfDockApp();
 
     class impl;
     std::unique_ptr<impl> priv;
 };
-
-#endif /* end of include guard: WF_DOCK_HPP */

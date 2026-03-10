@@ -23,7 +23,7 @@
 	</option>
 	<option name="minimal_height" type="int">
 		<_short>Minimal Height</_short>
-		<default>24</default>
+		<default>32</default>
 	</option>
 	<option name="autohide" type="bool">
 		<_short>Autohide</_short>
@@ -32,6 +32,11 @@
 	<option name="autohide_duration" type="int">
 		<_short>Autohide Duration</_short>
 		<default>300</default>
+	</option>
+	<option name="outputs" type="string">
+		<_short>Outputs on which to show a panel instance</_short>
+		<_long>A comma separated list of output names on which to show panel instances. Set to * wildcard for all outputs.</_long>
+		<default>*</default>
 	</option>
 	<option name="position" type="string">
 		<_short>Panel Position</_short>
@@ -80,10 +85,12 @@
 	<option name="launchers_spacing" type="int">
 		<_short>Launchers Spacing</_short>
 		<default>4</default>
+		<min>0</min>
 	</option>
 	<option name="launchers_size" type="int">
-		<_short>Launchers Size</_short>
+		<_short>Launchers Icon Size</_short>
 		<default>42</default>
+		<min>0</min>
 	</option>
 	</group>
 	<group>
@@ -94,6 +101,13 @@
 	</option>
 	<option name="clock_font" type="string">
 		<_short>Clock Font</_short>
+		<default>default</default>
+	</option>
+	</group>
+	<group>
+	<_short>Weather</_short>
+	<option name="weather_font" type="string">
+		<_short>Weather Font</_short>
 		<default>default</default>
 	</option>
 	</group>
@@ -114,11 +128,15 @@
 			<value>full</value>
 			<_name>Full Information</_name>
 		</desc>
+		<desc>
+			<value>percentage_overlay</value>
+			<_name>Percentage over Icon</_name>
+		</desc>
 	</option>
 	<option name="battery_icon_size" type="int">
 		<_short>Battery Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	<option name="battery_icon_invert" type="bool">
 		<_short>Battery Icon Invert Color</_short>
@@ -149,8 +167,8 @@
 	</option>
 	<option name="network_icon_size" type="int">
 		<_short>Network Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	<option name="network_icon_invert_color" type="bool">
 		<_short>Network Icon Invert Color</_short>
@@ -175,6 +193,11 @@
 		<_short>Menu Icon</_short>
 		<hint>file</hint>
 		<default></default>
+	</option>
+	<option name="menu_icon_size" type="int">
+		<_short>Menu Icon Size</_short>
+		<default>42</default>
+		<min>0</min>
 	</option>
 	<option name="menu_min_category_width" type="int">
 		<_short>Menu Minimum Category Width</_short>
@@ -240,12 +263,126 @@
 	</option>
 	<option name="volume_icon_size" type="int">
 		<_short>Volume Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	<option name="volume_scroll_sensitivity" type="double">
 		<_short>Volume Scroll Sensitivity</_short>
 		<default>0.05</default>
+	</option>
+	</group>
+	<group>
+	<_short>Audio mixer (wireplumber)</_short>
+	<option name="wp_quick_target_choice" type="string">
+		<_short>Quick action target</_short>
+		<_long>Which audio control will be the target of the quick actions (scrolling and muting on the widget)</_long>
+		<default>default_sink</default>
+		<desc>
+			<value>default_sink</value>
+			<_name>Default sink</_name>
+		</desc>
+		<desc>
+			<value>default_source</value>
+			<_name>Default source</_name>
+		</desc>
+		<desc>
+			<value>last_change</value>
+			<_name>Last changed volume</_name>
+		</desc>
+	</option>
+	<option name="wp_popup_on_change" type="bool">
+		<_short>Pop up on change</_short>
+		<_long>Whether to show a popup with the new values upon a change to the quick action target</_long>
+		<default>true</default>
+	</option>
+	<option name="wp_popup_timeout" type="double">
+		<_short>Popup timeout</_short>
+		<default>2.5</default>
+		<min>0</min>
+	</option>
+	<option name="wp_slider_length" type="int">
+		<_short>Slider length</_short>
+		<default>300</default>
+		<min>1</min>
+	</option>
+	<option name="wp_scroll_sensitivity" type="double">
+		<_short>Scroll sensitivity</_short>
+		<default>1</default>
+		<min>0</min>
+	</option>
+	<option name="wp_invert_scroll" type="bool">
+		<_short>Invert scroll</_short>
+		<_long>Inverts which scroll direction raises and lowers volume</_long>
+		<default>false</default>
+	</option>
+	<option name="wp_icons_on_left" type="bool">
+		<_short>Icons on left</_short>
+		<_long>Displays the mute and set default icon on the left</_long>
+		<default>false</default>
+	</option>
+	<option name="wp_stack_categories" type="bool">
+		<_short>Stack categories</_short>
+		<_long>Displays the outputs, inputs and streams stacked on top of each other instead of side by side</_long>
+		<default>false</default>
+	</option>
+	<option name="wp_spacing" type="int">
+		<_short>Spacing between controls</_short>
+		<default>8</default>
+		<min>0</min>
+	</option>
+	<option name="wp_left_click_action" type="string">
+		<_short>Left click action</_short>
+		<default>show_mixer</default>
+		<desc>
+			<value>show_mixer</value>
+			<_name>Show full mixer</_name>
+		</desc>
+		<desc>
+			<value>show_quick_target</value>
+			<_name>Show quick action target</_name>
+		</desc>
+	</option>
+	<option name="wp_middle_click_action" type="string">
+		<_short>Middle click action</_short>
+		<default>mute_quick_target</default>
+		<desc>
+			<value>show_mixer</value>
+			<_name>Show full mixer</_name>
+		</desc>
+		<desc>
+			<value>show_quick_target</value>
+			<_name>Show quick action target</_name>
+		</desc>
+		<desc>
+			<value>mute_quick_target</value>
+			<_name>Mute quick action target</_name>
+		</desc>
+	</option>
+	<option name="wp_right_click_action" type="string">
+		<_short>Right click action</_short>
+		<default>show_quick_target</default>
+		<desc>
+			<value>show_mixer</value>
+			<_name>Show full mixer</_name>
+		</desc>
+		<desc>
+			<value>show_quick_target</value>
+			<_name>Show quick action target</_name>
+		</desc>
+		<desc>
+			<value>mute_quick_target</value>
+			<_name>Mute quick action target</_name>
+		</desc>
+	</option>
+	<option name="wp_icon_size" type="int">
+		<_short>Icon size</_short>
+		<default>0</default>
+		<min>0</min>
+	</option>
+	<option name="wp_popup_icon_size" type="int">
+		<_short>Size of the icons in the popups</_short>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	</group>
 	<group>
@@ -262,8 +399,8 @@
 	</option>
 	<option name="notifications_icon_size" type="int">
 		<_short>Notifications Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
 	</option>
 	</group>
 	<group>
@@ -275,8 +412,13 @@
 	</option>
 	<option name="tray_icon_size" type="int">
 		<_short>Default Icon Size</_short>
-		<default>32</default>
-		<min>1</min>
+		<default>0</default>
+		<min>0</min>
+	</option>
+	<option name="tray_spacing" type="int">
+		<_short>Space between tray icons</_short>
+		<default>5</default>
+		<min>0</min>
 	</option>
 	<option name="tray_menu_on_middle_click" type="bool">
 		<_short>Middle Button Activates Menu</_short>
@@ -320,8 +462,8 @@ Set to -1 to only run it by clicking the button.
 		</entry>
 		<entry prefix="command_output_icon_size_" type="int" name="icon_size">
 			<_short>Icon Size</_short>
-			<default>32</default>
-			<min>1</min>
+			<default>0</default>
+			<min>0</min>
 		</entry>
 		<entry prefix="command_output_icon_position_" type="string" name="icon_position">
 			<_short>Icon Position</_short>
@@ -350,6 +492,43 @@ Set to -1 to only run it by clicking the button.
 	<option name="middle_click_close" type="bool">
 		<_short>Middle Click Closes Windows</_short>
 		<default>false</default>
+	</option>
+	<option name="window_list_size" type="int">
+		<_short>Window List Size</_short>
+		<default>192</default>
+		<min>1</min>
+	</option>
+	<option name="live_window_previews" type="bool">
+		<_short>Live Window Previews</_short>
+		<_long>Enable live window previews when hovering over application buttons in the window list instead of the title tooltip.</_long>
+		<default>false</default>
+	</option>
+	</group>
+	<group>
+	<_short>Workspace Switcher</_short>
+	<option name="workspace_switcher_mode" type="string">
+		<_short>Workspace switcher widget mode</_short>
+		<desc>
+			<value>row</value>
+			<_name>Current row</_name>
+		</desc>
+		<desc>
+			<value>grid</value>
+			<_name>Whole grid (small)</_name>
+		</desc>
+		<desc>
+			<value>grid_popover</value>
+			<_name>Whole grid (popover)</_name>
+		</desc>
+		<default>row</default>
+	</option>
+	<option name="workspace_switcher_target_height" type="double">
+		<_short>Target height for workspace switcher widget in pixels</_short>
+		<default>0</default>
+	</option>
+	<option name="workspace_switcher_render_views" type="bool">
+		<_short>Render rectangles for each window</_short>
+		<default>true</default>
 	</option>
 	</group>
 	</plugin>

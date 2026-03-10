@@ -62,56 +62,13 @@ void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff)
     }
 }
 
-void set_image_pixbuf(Gtk::Image & image, Glib::RefPtr<Gdk::Pixbuf> pixbuf, int scale)
+void image_set_icon(Gtk::Image *image, std::string path)
 {
-    auto pbuff = pixbuf->gobj();
-    auto cairo_surface = gdk_cairo_surface_create_from_pixbuf(pbuff, scale, NULL);
-
-    gtk_image_set_from_surface(image.gobj(), cairo_surface);
-    cairo_surface_destroy(cairo_surface);
-}
-
-void set_image_icon(Gtk::Image& image, std::string icon_name, int size,
-    const WfIconLoadOptions& options,
-    const Glib::RefPtr<Gtk::IconTheme>& icon_theme)
-{
-    int scale = ((options.user_scale == -1) ?
-        image.get_scale_factor() : options.user_scale);
-
-    /* Create surface above necessary scale to allow zoom effects */
-    scale = scale * 2;
-    int scaled_size = size * scale;
-
-    Glib::RefPtr<Gdk::Pixbuf> pbuff = {};
-    /* Get from theme if possible */
-    if (icon_theme->lookup_icon(icon_name, scaled_size))
+    if ((path.rfind("/", 0) == 0) || (path.rfind("~", 0) == 0))
     {
-        pbuff = icon_theme->load_icon(icon_name, scaled_size, Gtk::ICON_LOOKUP_FORCE_SIZE)
-            ->scale_simple(scaled_size, scaled_size, Gdk::INTERP_BILINEAR);
-    }
-
-    /* Get from filesystem if necessary */
-    if (!pbuff)
+        image->set(path);
+    } else
     {
-        pbuff = load_icon_pixbuf_safe(icon_name, scaled_size);
+        image->set_from_icon_name(path);
     }
-
-    if (!pbuff)
-    {
-        if (icon_theme->lookup_icon("image-missing", scaled_size))
-        {
-            pbuff = icon_theme->load_icon("image-missing", scaled_size, Gtk::ICON_LOOKUP_FORCE_SIZE)
-                ->scale_simple(scaled_size, scaled_size, Gdk::INTERP_BILINEAR);
-        } else
-        {
-            return;
-        }
-    }
-
-    if (options.invert)
-    {
-        invert_pixbuf(pbuff);
-    }
-
-    set_image_pixbuf(image, pbuff, scale);
 }

@@ -1,11 +1,11 @@
-#ifndef WIDGETS_NETWORK_HPP
-#define WIDGETS_NETWORK_HPP
+#pragma once
 
 #include <giomm/dbusproxy.h>
 #include <giomm/dbusconnection.h>
 #include <gtkmm/button.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
+#include <sigc++/connection.h>
 
 #include "../widget.hpp"
 
@@ -39,6 +39,7 @@ struct WfNetworkConnectionInfo
     virtual std::string get_icon_name(WfConnectionState state) = 0;
     virtual int get_connection_strength() = 0;
     virtual std::string get_ip() = 0;
+    virtual std::string get_strength_str() = 0;
 
     virtual ~WfNetworkConnectionInfo()
     {}
@@ -55,15 +56,15 @@ class WayfireNetworkInfo : public WayfireWidget
 
     std::unique_ptr<WfNetworkConnectionInfo> info;
 
+    std::vector<sigc::connection> signals;
+
     Gtk::Button button;
-    Gtk::HBox button_content;
+    Gtk::Box button_content;
     Gtk::Image icon;
     Gtk::Label status;
 
     bool enabled = true;
     WfOption<std::string> status_opt{"panel/network_status"};
-    WfOption<int> icon_size_opt{"panel/network_icon_size"};
-    WfOption<bool> icon_invert_opt{"panel/network_icon_invert_color"};
     WfOption<bool> status_color_opt{"panel/network_status_use_color"};
     WfOption<std::string> status_font_opt{"panel/network_status_font"};
     WfOption<std::string> click_command_opt{"panel/network_onclick_command"};
@@ -79,9 +80,7 @@ class WayfireNetworkInfo : public WayfireWidget
     void update_icon();
     void update_status();
 
-    void init(Gtk::HBox *container);
+    void init(Gtk::Box *container);
     void handle_config_reload();
     virtual ~WayfireNetworkInfo();
 };
-
-#endif /* end of include guard: WIDGETS_NETWORK_HPP */

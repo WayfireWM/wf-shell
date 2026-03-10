@@ -3,7 +3,7 @@
 #include "watcher.hpp"
 
 StatusNotifierHost::StatusNotifierHost(WayfireStatusNotifier *tray) :
-    dbus_name_id(Gio::DBus::own_name(Gio::DBus::BUS_TYPE_SESSION,
+    dbus_name_id(Gio::DBus::own_name(Gio::DBus::BusType::SESSION,
         "org.kde.StatusNotifierHost-" + std::to_string(getpid()) + "-" +
         std::to_string(++hosts_counter),
         sigc::mem_fun(*this, &StatusNotifierHost::on_bus_acquired))),
@@ -26,9 +26,10 @@ void StatusNotifierHost::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connectio
             watcher_proxy = Gio::DBus::Proxy::create_finish(result);
             watcher_proxy->call("RegisterStatusNotifierHost",
                 Glib::Variant<std::tuple<Glib::ustring>>::create({host_name}));
-            watcher_proxy->signal_signal().connect([this] (const Glib::ustring & sender_name,
-                                                           const Glib::ustring & signal_name,
-                                                           const Glib::VariantContainerBase & params)
+            watch_sig = watcher_proxy->signal_signal().connect([this] (const Glib::ustring & sender_name,
+                                                                       const Glib::ustring & signal_name,
+                                                                       const Glib::VariantContainerBase &
+                                                                       params)
             {
                 if (!params.is_of_type(Glib::VariantType("(s)")))
                 {
@@ -63,4 +64,5 @@ StatusNotifierHost::~StatusNotifierHost()
 {
     Gio::DBus::unwatch_name(watcher_id);
     Gio::DBus::unown_name(dbus_name_id);
+    watch_sig.disconnect();
 }

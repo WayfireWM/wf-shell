@@ -1,0 +1,4 @@
+[wrap-git]
+url = https://github.com/Secret-chest/open-weather-fetch
+revision = 18d282873cfcad7670f3d44edd870f560ca5735c
+depth = 1

@@ -1,2 +1,30 @@
-option('pulse', type: 'feature', value: 'auto', description: 'Build pulseaudio volume widget')
-option('wayland-logout', type: 'boolean', value: 'true', description: 'Install wayland-logout')
+option(
+    'volume-widget',
+    type: 'feature',
+    value: 'auto',
+    description: 'Build pulseaudio volume widget',
+)
+option(
+    'wp-mixer-widget',
+    type: 'feature',
+    value: 'auto',
+    description: 'Build wireplumber mixer widget',
+)
+option(
+    'wayland-logout',
+    type: 'boolean',
+    value: true,
+    description: 'Install wayland-logout',
+)
+option(
+    'weather',
+    type: 'boolean',
+    value: false,
+    description: 'Install weather widgets and open-weather-fetch systemd service',
+)
+option(
+    'live-previews-dmabuf',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable live window preview tooltips when hovering over window-list buttons in wf-panel'
+)

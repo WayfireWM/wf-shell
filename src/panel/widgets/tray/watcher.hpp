@@ -1,5 +1,4 @@
-#ifndef TRAY_WATCHER_HPP
-#define TRAY_WATCHER_HPP
+#pragma once
 
 #include <memory>
 
@@ -35,8 +34,8 @@ class Watcher
   private:
     inline static std::weak_ptr<Watcher> instance;
 
-    guint dbus_name_id;
-    guint dbus_object_id;
+    guint dbus_name_id   = 0;
+    guint dbus_object_id = 0;
     Glib::RefPtr<Gio::DBus::Connection> watcher_connection;
 
     std::map<Glib::ustring, guint> sn_items_id;
@@ -82,5 +81,3 @@ class Watcher
         watcher_connection->emit_signal(SNW_PATH, SNW_IFACE, name);
     }
 }; // namespace Watcher
-
-#endif

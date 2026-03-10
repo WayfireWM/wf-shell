@@ -4,7 +4,7 @@
 #include <glibmm/main.h>
 #include <glibmm/markup.h>
 #include <gtk-utils.hpp>
-#include <gtkmm/icontheme.h>
+#include <gtkmm.h>
 
 #include <ctime>
 #include <string>
@@ -50,50 +50,54 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
 {
     if (is_file_uri(notification.app_icon))
     {
-        auto file_name = path_from_uri(notification.app_icon);
-        int height     = Gtk::IconSize(Gtk::ICON_SIZE_LARGE_TOOLBAR);
-        auto pixbuf    = load_icon_pixbuf_safe(file_name, height);
-        app_icon.set(pixbuf);
-    } else if (Gtk::IconTheme::get_default()->has_icon(notification.app_icon))
-    {
-        app_icon.set_from_icon_name(notification.app_icon, Gtk::ICON_SIZE_LARGE_TOOLBAR);
+        app_icon.set(path_from_uri(notification.app_icon));
     } else
     {
-        app_icon.set_from_icon_name("dialog-information", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+        app_icon.set_from_icon_name(notification.app_icon);
     }
 
-    top_bar.pack_start(app_icon, false, true);
+    add_css_class("notification");
+
+    app_icon.add_css_class("app-icon");
+
+    top_bar.add_css_class("top-bar");
+    top_bar.append(app_icon);
 
     app_name.set_label(notification.app_name);
-    app_name.set_halign(Gtk::ALIGN_START);
-    app_name.set_ellipsize(Pango::ELLIPSIZE_END);
-    top_bar.pack_start(app_name);
+    app_name.set_halign(Gtk::Align::START);
+    app_name.set_ellipsize(Pango::EllipsizeMode::END);
+    app_name.add_css_class("app-name");
+    top_bar.append(app_name);
+
 
     time_label.set_sensitive(false);
     time_label.set_label(format_recv_time(notification.additional_info.recv_time));
-    time_label_update = Glib::signal_timeout().connect(
+    time_label.add_css_class("time");
+    signals.push_back(Glib::signal_timeout().connect(
         [=]
     {
         time_label.set_label(format_recv_time(notification.additional_info.recv_time));
         return true;
     },
         // updating once a day doesn't work with system suspending/hybernating
-        10000, Glib::PRIORITY_LOW);
-    top_bar.pack_start(time_label, false, true);
+        10000, Glib::PRIORITY_LOW));
+    top_bar.append(time_label);
 
-    close_image.set_from_icon_name("window-close", Gtk::ICON_SIZE_LARGE_TOOLBAR);
-    close_button.add(close_image);
-    close_button.get_style_context()->add_class("flat");
-    close_button.signal_clicked().connect(
-        [=] { Daemon::Instance()->closeNotification(notification.id, Daemon::CloseReason::Dismissed); });
-    top_bar.pack_start(close_button, false, true);
+    close_image.set_from_icon_name("window-close");
+    close_button.set_child(close_image);
+    close_button.add_css_class("flat");
+    close_button.add_css_class("close");
+    signals.push_back(close_button.signal_clicked().connect(
+        [=] { Daemon::Instance()->closeNotification(notification.id, Daemon::CloseReason::Dismissed); }));
     top_bar.set_spacing(5);
 
-    child.add(top_bar);
+    child.append(top_bar);
 
     if (notification.hints.image_data)
     {
-        image.set(notification.hints.image_data);
+        auto image_pixbuf = notification.hints.image_data;
+
+        image.set(image_pixbuf);
     } else if (!notification.hints.image_path.empty())
     {
         if (is_file_uri(notification.hints.image_path))
@@ -101,15 +105,16 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
             image.set(path_from_uri(notification.hints.image_path));
         } else
         {
-            image.set_from_icon_name(notification.hints.image_path, Gtk::ICON_SIZE_DIALOG);
+            image.set_from_icon_name(notification.hints.image_path);
         }
     }
 
-    content.pack_end(image);
+    content.add_css_class("notification-contents");
+    content.append(image);
 
-    text.set_halign(Gtk::ALIGN_START);
-    text.set_line_wrap();
-    text.set_line_wrap_mode(Pango::WRAP_CHAR);
+    text.set_halign(Gtk::Align::START);
+    text.set_wrap();
+    text.set_wrap_mode(Pango::WrapMode::CHAR);
     if (notification.body.empty())
     {
         text.set_markup(Glib::Markup::escape_text(notification.summary));
@@ -120,9 +125,11 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
             notification.summary) + "</b>" + "\n" + Glib::Markup::escape_text(notification.body));
     }
 
-    content.pack_start(text);
+    content.append(text);
 
-    child.add(content);
+    child.append(content);
+
+    actions.add_css_class("actions");
 
     if (!notification.actions.empty())
     {
@@ -131,39 +138,47 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
             if (const auto action_key = notification.actions[i];action_key != "default")
             {
                 auto action_button = Glib::RefPtr<Gtk::Button>(new Gtk::Button(notification.actions[i + 1]));
-                action_button->signal_clicked().connect(
-                    [id = notification.id, action_key] { Daemon::Instance()->invokeAction(id, action_key); });
-                actions.add(*action_button.get());
+                signals.push_back(action_button->signal_clicked().connect(
+                    [id = notification.id, action_key]
+                {
+                    Daemon::Instance()->invokeAction(id, action_key);
+                }));
+                actions.append(*action_button.get());
             } else
             {
-                default_action_ev_box.signal_button_press_event().connect(
-                    [id = notification.id, action_key] (GdkEventButton *ev)
+                auto click_gesture = Gtk::GestureClick::create();
+                signals.push_back(click_gesture->signal_pressed().connect(
+                    [id = notification.id, action_key, click_gesture] (int count, double x, double y)
                 {
-                    if (ev->button == GDK_BUTTON_PRIMARY)
-                    {
-                        Daemon::Instance()->invokeAction(id, action_key);
-                        return false;
-                    }
-
-                    return true;
-                });
+                    click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+                }));
+                signals.push_back(click_gesture->signal_released().connect(
+                    [id = notification.id, action_key, click_gesture] (int count, double x, double y)
+                {
+                    Daemon::Instance()->invokeAction(id, action_key);
+                }));
+                default_action_ev_box.add_controller(click_gesture);
             }
         }
 
         if (!actions.get_children().empty())
         {
-            actions.set_spacing(5);
             actions.set_homogeneous();
-            child.add(actions);
+            child.append(actions);
         }
     }
 
-    default_action_ev_box.add(child);
-    add(default_action_ev_box);
-    set_transition_type(Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
+    default_action_ev_box.set_child(child);
+    outer_box.append(default_action_ev_box);
+    outer_box.append(close_button);
+    set_child(outer_box);
+    set_transition_type(Gtk::RevealerTransitionType::SLIDE_UP);
 }
 
 WfSingleNotification::~WfSingleNotification()
 {
-    time_label_update.disconnect();
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
 }

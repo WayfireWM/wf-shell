@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Exec=wf-locker-pin
+Icon=lock-symbolic
+Terminal=false
+Name=Wf Shell Change PIN
+Categories=Utility;Settings;DesktopSettings;
+NotShowIn=GNOME;KDE;

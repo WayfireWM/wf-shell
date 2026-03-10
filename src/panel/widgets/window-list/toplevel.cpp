@@ -1,21 +1,18 @@
-#include <gtkmm/menu.h>
-#include <gtkmm/image.h>
-#include <gtkmm/label.h>
-#include <gtkmm/button.h>
-#include <gtkmm/icontheme.h>
-#include <gtkmm/gesturedrag.h>
-#include <giomm/desktopappinfo.h>
 #include <iostream>
+#include <gtkmm.h>
+#include <giomm/desktopappinfo.h>
 
 #include <gdkmm/seat.h>
-#include <gdk/gdkwayland.h>
+#include <gdk/wayland/gdkwayland.h>
 #include <cmath>
 
 #include <glibmm.h>
-#include "toplevel.hpp"
-#include "gtk-utils.hpp"
-#include "panel.hpp"
 #include <cassert>
+#include <sys/mman.h>
+
+#include "toplevel.hpp"
+#include "window-list.hpp"
+#include "gtk-utils.hpp"
 
 namespace
 {
@@ -28,20 +25,397 @@ void set_image_from_icon(Gtk::Image& image,
     std::string app_id_list, int size, int scale);
 }
 
+static int create_anon_file(off_t size)
+{
+    int fd = memfd_create("wf-live-preview", MFD_CLOEXEC);
+
+    if (fd == -1)
+    {
+        perror("memfd_create");
+        return 1;
+    }
+
+    if (ftruncate(fd, size) == -1)
+    {
+        perror("ftruncate");
+        close(fd);
+        return 1;
+    }
+
+    return fd;
+}
+
+#ifdef HAVE_DMABUF
+static void dmabuf_created(void *data, struct zwp_linux_buffer_params_v1*,
+    struct wl_buffer *wl_buffer)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    tooltip_media->buffer = wl_buffer;
+    zwlr_screencopy_frame_v1_copy(tooltip_media->frame, tooltip_media->buffer);
+}
+
+static void dmabuf_failed(void *data, struct zwp_linux_buffer_params_v1*)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    std::cerr << "Failed to create dmabuf, trying shm" << std::endl;
+    tooltip_media->window_list->live_previews_dmabuf = false;
+}
+
+static const struct zwp_linux_buffer_params_v1_listener params_listener =
+{
+    .created = dmabuf_created,
+    .failed  = dmabuf_failed,
+};
+#endif // HAVE_DMABUF
+
+void handle_frame_buffer(void *data,
+    struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t format,
+    uint32_t width,
+    uint32_t height,
+    uint32_t stride)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    if (tooltip_media->window_list->live_previews_dmabuf)
+    {
+        tooltip_media->shm_data = nullptr;
+        return;
+    }
+
+    size_t size = width * height * int(stride / width);
+
+    if (tooltip_media->size != size)
+    {
+        if (tooltip_media->shm_data && tooltip_media->size)
+        {
+            if (munmap(tooltip_media->shm_data, tooltip_media->size) < 0)
+            {
+                perror("munmap failed");
+            }
+        }
+
+        tooltip_media->size = size;
+        auto anon_file = create_anon_file(size);
+        if (anon_file < 0)
+        {
+            perror("anon_file < 0");
+            return;
+        }
+
+        void *data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, anon_file, 0);
+        if (data == MAP_FAILED)
+        {
+            perror("data == MAP_FAILED");
+            close(anon_file);
+            return;
+        }
+
+        wl_shm_pool *pool = wl_shm_create_pool(tooltip_media->window_list->shm, anon_file, size);
+        tooltip_media->buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, format);
+        wl_shm_pool_destroy(pool);
+        close(anon_file);
+        tooltip_media->buffer_width  = width;
+        tooltip_media->buffer_height = height;
+        tooltip_media->buffer_stride = stride;
+        tooltip_media->shm_data = data;
+    }
+
+    zwlr_screencopy_frame_v1_copy(tooltip_media->frame, tooltip_media->buffer);
+}
+
+void handle_frame_flags(void*,
+    struct zwlr_screencopy_frame_v1*,
+    uint32_t)
+{}
+
+void handle_frame_ready(void *data,
+    struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t tv_sec_hi,
+    uint32_t tv_sec_lo,
+    uint32_t tv_nsec)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    tooltip_media->request_next_frame();
+
+#ifdef HAVE_DMABUF
+    if (tooltip_media->window_list->live_previews_dmabuf && tooltip_media->bo)
+    {
+        uint32_t stride = 0;
+        tooltip_media->map_data    = nullptr;
+        tooltip_media->dmabuf_data = gbm_bo_map(tooltip_media->bo,
+            0, 0, tooltip_media->buffer_width, tooltip_media->buffer_height,
+            GBM_BO_TRANSFER_READ, &stride, &tooltip_media->map_data);
+
+        if (!tooltip_media->dmabuf_data)
+        {
+            perror("Failed to map bo");
+            std::cerr << "Trying shm" << std::endl;
+            tooltip_media->window_list->live_previews_dmabuf = false;
+            return;
+        }
+
+        if (tooltip_media->bo && tooltip_media->map_data)
+        {
+            gbm_bo_unmap(tooltip_media->bo, tooltip_media->map_data);
+            tooltip_media->map_data = nullptr;
+        }
+
+        tooltip_media->buffer_stride = stride;
+        tooltip_media->size = tooltip_media->buffer_height * tooltip_media->buffer_stride;
+    }
+
+#endif // HAVE_DMABUF
+
+    if ((!tooltip_media->shm_data
+#ifdef HAVE_DMABUF
+         && !tooltip_media->dmabuf_data
+#endif // HAVE_DMABUF
+        ) || !tooltip_media->size)
+    {
+        return;
+    }
+
+    std::shared_ptr<Glib::Bytes> bytes = 0;
+    size_t size = tooltip_media->buffer_height * tooltip_media->buffer_stride;
+    if (tooltip_media->shm_data)
+    {
+        bytes = Glib::Bytes::create(tooltip_media->shm_data, size);
+    }
+
+#ifdef HAVE_DMABUF
+    else if (tooltip_media->dmabuf_data)
+    {
+        bytes = Glib::Bytes::create(tooltip_media->dmabuf_data, size);
+        tooltip_media->dmabuf_data = nullptr;
+    }
+#endif // HAVE_DMABUF
+
+    if (!bytes)
+    {
+        return;
+    }
+
+    auto builder = Gdk::MemoryTextureBuilder::create();
+    builder->set_bytes(bytes);
+    builder->set_width(tooltip_media->buffer_width);
+    builder->set_height(tooltip_media->buffer_height);
+    builder->set_stride(tooltip_media->buffer_stride);
+    builder->set_format(Gdk::MemoryFormat::R8G8B8A8);
+
+    auto texture = builder->build();
+
+    tooltip_media->set_paintable(texture);
+}
+
+void handle_frame_failed(void*, struct zwlr_screencopy_frame_v1*)
+{}
+
+void handle_frame_damage(void*,
+    struct zwlr_screencopy_frame_v1*,
+    uint32_t,
+    uint32_t,
+    uint32_t,
+    uint32_t)
+{}
+
+void handle_frame_linux_dmabuf(void *data,
+    struct zwlr_screencopy_frame_v1 *frame,
+    uint32_t format,
+    uint32_t width,
+    uint32_t height)
+{
+#ifdef HAVE_DMABUF
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    if (!tooltip_media->window_list->live_previews_dmabuf)
+    {
+        return;
+    }
+
+    tooltip_media->buffer_width  = width;
+    tooltip_media->buffer_height = height;
+
+    if (!tooltip_media->buffer)
+    {
+        if (tooltip_media->bo)
+        {
+            if (tooltip_media->buffer)
+            {
+                wl_buffer_destroy(tooltip_media->buffer);
+                tooltip_media->buffer = nullptr;
+            }
+
+            if (tooltip_media->params)
+            {
+                zwp_linux_buffer_params_v1_destroy(tooltip_media->params);
+                tooltip_media->params = nullptr;
+            }
+
+            if (tooltip_media->bo)
+            {
+                gbm_bo_destroy(tooltip_media->bo);
+                tooltip_media->bo = nullptr;
+            }
+        }
+
+        const uint64_t modifier = 0; // DRM_FORMAT_MOD_LINEAR
+        tooltip_media->bo = gbm_bo_create_with_modifiers(tooltip_media->window_list->dmabuf_device,
+            tooltip_media->buffer_width,
+            tooltip_media->buffer_height, format, &modifier, 1);
+        if (!tooltip_media->bo)
+        {
+            tooltip_media->bo = gbm_bo_create(tooltip_media->window_list->dmabuf_device,
+                tooltip_media->buffer_width,
+                tooltip_media->buffer_height, format, GBM_BO_USE_LINEAR | GBM_BO_USE_RENDERING);
+        }
+
+        if (!tooltip_media->bo)
+        {
+            perror("Failed to create gbm bo");
+            std::cerr << "Trying shm" << std::endl;
+            tooltip_media->window_list->live_previews_dmabuf = false;
+            return;
+        }
+
+        tooltip_media->buffer_stride = gbm_bo_get_stride(tooltip_media->bo);
+
+        tooltip_media->params = zwp_linux_dmabuf_v1_create_params(tooltip_media->window_list->dmabuf);
+
+        uint64_t mod = gbm_bo_get_modifier(tooltip_media->bo);
+        zwp_linux_buffer_params_v1_add(tooltip_media->params,
+            gbm_bo_get_fd(tooltip_media->bo), 0,
+            gbm_bo_get_offset(tooltip_media->bo, 0),
+            gbm_bo_get_stride(tooltip_media->bo),
+            mod >> 32, mod & 0xffffffff);
+
+        zwp_linux_buffer_params_v1_add_listener(tooltip_media->params, &params_listener, tooltip_media);
+        zwp_linux_buffer_params_v1_create(tooltip_media->params, tooltip_media->buffer_width,
+            tooltip_media->buffer_height, format, 0);
+    } else
+    {
+        zwlr_screencopy_frame_v1_copy(frame, tooltip_media->buffer);
+    }
+
+#endif // HAVE_DMABUF
+}
+
+void handle_frame_buffer_done(void*, struct zwlr_screencopy_frame_v1*)
+{}
+
+static struct zwlr_screencopy_frame_v1_listener screencopy_frame_listener =
+{
+    handle_frame_buffer,
+    handle_frame_flags,
+    handle_frame_ready,
+    handle_frame_failed,
+    handle_frame_damage,
+    handle_frame_linux_dmabuf,
+    handle_frame_buffer_done,
+};
+
+bool TooltipMedia::request_next_frame()
+{
+    if (this->frame)
+    {
+        zwlr_screencopy_frame_v1_destroy(this->frame);
+        this->frame = NULL;
+    }
+
+    if (!this->window_list->window_list_live_preview_output ||
+        !this->window_list->window_list_live_preview_output->output)
+    {
+        return false;
+    }
+
+    this->frame = zwlr_screencopy_manager_v1_capture_output(this->window_list->screencopy_manager, 0,
+        this->window_list->window_list_live_preview_output->output);
+    zwlr_screencopy_frame_v1_add_listener(this->frame, &screencopy_frame_listener, this);
+
+    return true;
+}
+
+TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
+{
+    this->window_list = window_list;
+    this->shm = window_list->shm;
+
+    this->add_tick_callback([=] (const Glib::RefPtr<Gdk::FrameClock>& clock)
+    {
+        return !this->request_next_frame();
+    });
+}
+
+TooltipMedia::~TooltipMedia()
+{
+    if (this->frame)
+    {
+        zwlr_screencopy_frame_v1_destroy(this->frame);
+    }
+
+    if (
+#ifdef HAVE_DMABUF
+        !this->window_list->live_previews_dmabuf &&
+#endif // HAVE_DMABUF
+        this->shm_data && this->size)
+    {
+        if (munmap(this->shm_data, this->size) < 0)
+        {
+            perror("munmap failed");
+        }
+    }
+
+    if (this->buffer)
+    {
+        wl_buffer_destroy(this->buffer);
+    }
+
+#ifdef HAVE_DMABUF
+    if (this->params)
+    {
+        zwp_linux_buffer_params_v1_destroy(this->params);
+    }
+
+    if (this->bo && this->map_data)
+    {
+        gbm_bo_unmap(this->bo, this->map_data);
+    }
+
+    if (this->bo)
+    {
+        gbm_bo_destroy(this->bo);
+    }
+
+#endif // HAVE_DMABUF
+}
+
 class WayfireToplevel::impl
 {
     zwlr_foreign_toplevel_handle_v1 *handle, *parent;
     std::vector<zwlr_foreign_toplevel_handle_v1*> children;
     uint32_t state;
+    uint64_t view_id;
 
     Gtk::Button button;
-    Gtk::HBox button_contents;
+    Gtk::Box custom_tooltip_content;
+    TooltipMedia *tooltip_media;
+    Glib::RefPtr<Gio::SimpleActionGroup> actions;
+
+    Gtk::PopoverMenu popover;
+    Glib::RefPtr<Gio::Menu> menu;
+    Glib::RefPtr<Gio::MenuItem> minimize, maximize, close;
+    Glib::RefPtr<Gio::SimpleAction> minimize_action, maximize_action, close_action;
+    // Gtk::Box menu_box;
+    Gtk::Box button_contents;
     Gtk::Image image;
     Gtk::Label label;
-    Gtk::Menu menu;
-    Gtk::MenuItem minimize, maximize, close;
+    // Gtk::PopoverMenu menu;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
-    sigc::connection m_drag_timeout;
+    std::vector<sigc::connection> signals;
+    sigc::connection button_leave_signal;
 
     Glib::ustring app_id, title;
 
@@ -52,75 +426,254 @@ class WayfireToplevel::impl
 
     impl(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle)
     {
+        this->window_list = window_list;
         this->handle = handle;
         this->parent = nullptr;
         zwlr_foreign_toplevel_handle_v1_add_listener(handle,
             &toplevel_handle_v1_impl, this);
 
-        button.get_style_context()->add_class("window-button");
-        button_contents.add(image);
-        button_contents.add(label);
-        button_contents.set_halign(Gtk::ALIGN_START);
+        button.add_css_class("window-button");
+        button.add_css_class("flat");
+        button.remove_css_class("activated");
+        button_contents.append(image);
+        button_contents.append(label);
+        button_contents.set_halign(Gtk::Align::START);
+        button_contents.set_hexpand(true);
         button_contents.set_spacing(5);
-        button.add(button_contents);
-        button.set_tooltip_text("none");
+        button.set_child(button_contents);
 
-        button.signal_clicked().connect_notify(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_clicked));
-        button.signal_size_allocate().connect_notify(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_allocation_changed));
+        label.set_ellipsize(Pango::EllipsizeMode::END);
+        label.set_hexpand(true);
+
         button.property_scale_factor().signal_changed()
-            .connect(sigc::mem_fun(this, &WayfireToplevel::impl::on_scale_update));
-        button.signal_button_press_event().connect(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_button_press_event));
+            .connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_scale_update));
 
-        minimize.set_label("Minimize");
-        maximize.set_label("Maximize");
-        close.set_label("Close");
-        minimize.signal_activate().connect(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_minimize));
-        maximize.signal_activate().connect(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_maximize));
-        close.signal_activate().connect(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_menu_close));
-        menu.attach(minimize, 0, 1, 0, 1);
-        menu.attach(maximize, 0, 1, 1, 2);
-        menu.attach(close, 0, 1, 2, 3);
-        menu.attach_to_widget(button);
-        menu.show_all();
+        actions = Gio::SimpleActionGroup::create();
 
-        button.drag_dest_set(Gtk::DEST_DEFAULT_MOTION & Gtk::DEST_DEFAULT_HIGHLIGHT, Gdk::DragAction(0));
+        close_action    = Gio::SimpleAction::create("close");
+        minimize_action = Gio::SimpleAction::create_bool("minimize", false);
+        maximize_action = Gio::SimpleAction::create_bool("maximize", false);
+        signals.push_back(close_action->signal_activate().connect(sigc::mem_fun(*this,
+            &WayfireToplevel::impl::on_menu_close)));
+        signals.push_back(minimize_action->signal_change_state().connect(sigc::mem_fun(*this,
+            &WayfireToplevel::impl::on_menu_minimize)));
+        signals.push_back(maximize_action->signal_change_state().connect(sigc::mem_fun(*this,
+            &WayfireToplevel::impl::on_menu_maximize)));
 
-        button.signal_drag_motion().connect(
-            [this] (const Glib::RefPtr<Gdk::DragContext>, gint x, gint y, guint time) -> bool
+        actions->add_action(close_action);
+        actions->add_action(minimize_action);
+        actions->add_action(maximize_action);
+
+        // Hey Kids, want to see a really stupid idea?
+        // Button can only have one child! But setting the parent of a popover still works fine...
+        gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(button.gobj()));
+
+        popover.insert_action_group("windowaction", actions);
+        menu     = Gio::Menu::create();
+        minimize = Gio::MenuItem::create("Minimize", "windowaction.minimize");
+        maximize = Gio::MenuItem::create("Maximize", "windowaction.maximize");
+        close    = Gio::MenuItem::create("Close", "windowaction.close");
+
+        menu->append_item(minimize);
+        menu->append_item(maximize);
+        menu->append_item(close);
+        popover.set_menu_model(menu);
+
+        drag_gesture = Gtk::GestureDrag::create();
+        signals.push_back(drag_gesture->signal_drag_begin().connect(
+            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_begin)));
+        signals.push_back(drag_gesture->signal_drag_update().connect(
+            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_update)));
+        signals.push_back(drag_gesture->signal_drag_end().connect(
+            sigc::mem_fun(*this, &WayfireToplevel::impl::on_drag_end)));
+        button.add_controller(drag_gesture);
+
+        auto click_gesture = Gtk::GestureClick::create();
+        auto long_press    = Gtk::GestureLongPress::create();
+        long_press->set_touch_only(true);
+        signals.push_back(long_press->signal_pressed().connect(
+            [=] (double x, double y)
         {
-            if (!m_drag_timeout)
+            popover.popup();
+            long_press->set_state(Gtk::EventSequenceState::CLAIMED);
+            click_gesture->set_state(Gtk::EventSequenceState::DENIED);
+        }));
+        click_gesture->set_button(0);
+        signals.push_back(click_gesture->signal_pressed().connect(
+            [=] (int count, double x, double y)
+        {
+            click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+        }));
+
+        signals.push_back(click_gesture->signal_released().connect(
+            [=] (int count, double x, double y)
+        {
+            int butt = click_gesture->get_current_button();
+            if ((butt == 2) && middle_click_close.value())
             {
-                m_drag_timeout = Glib::signal_timeout().connect(sigc::mem_fun(this,
-                    &WayfireToplevel::impl::drag_paused), 700);
+                zwlr_foreign_toplevel_handle_v1_close(handle);
+            } else if (butt == 3)
+            {
+                popover.popup();
+            }
+        }));
+        button.add_controller(long_press);
+        button.add_controller(click_gesture);
+
+        auto motion_controller = Gtk::EventControllerMotion::create();
+        button_leave_signal = motion_controller->signal_leave().connect([=] ()
+        {
+            wf::json_t live_window_release_output_request;
+            live_window_release_output_request["method"] = "live_previews/release_output";
+            this->window_list->ipc_client->send(live_window_release_output_request.serialize(),
+                [=] (wf::json_t data)
+            {
+                unset_tooltip_media();
+                this->window_list->live_window_preview_view_id = 0;
+                if (data.serialize().find("error") != std::string::npos)
+                {
+                    if (this->window_list->live_window_preview_tooltips)
+                    {
+                        std::cerr <<
+                            "Error releasing output for live preview stream! (is live-previews plugin disabled?)"
+                                  <<
+                            std::endl;
+                    }
+
+                    this->window_list->enable_normal_tooltips_flag(true);
+                    return;
+                }
+            });
+        });
+        button.add_controller(motion_controller);
+        motion_controller = Gtk::EventControllerMotion::create();
+        signals.push_back(motion_controller->signal_enter().connect([=] (double x, double y)
+        {
+            wf::json_t live_window_preview_stream_request;
+            live_window_preview_stream_request["method"] = "live_previews/request_stream";
+            wf::json_t view_id_int;
+            view_id_int["id"] = this->view_id;
+            live_window_preview_stream_request["data"] = view_id_int;
+            this->window_list->ipc_client->send(live_window_preview_stream_request.serialize(),
+                [=] (wf::json_t data)
+            {
+                if ((data.serialize().find("error") != std::string::npos) &&
+                    this->window_list->live_window_preview_tooltips)
+                {
+                    std::cerr << data.serialize() << std::endl;
+                    std::cerr <<
+                        "Error acquiring live preview stream. (is live-previews wayfire plugin enabled?)" <<
+                        std::endl;
+                    this->window_list->enable_normal_tooltips_flag(true);
+                    button.set_tooltip_text(title);
+
+                    return;
+                }
+
+                set_tooltip_media();
+                update_tooltip();
+            });
+        }));
+        button.add_controller(motion_controller);
+        button.set_tooltip_text("none");
+        this->tooltip_media = nullptr;
+        signals.push_back(button.signal_query_tooltip().connect([=] (int x, int y, bool keyboard_mode,
+                                                                     const Glib::RefPtr<Gtk::Tooltip>
+                                                                     & tooltip)
+        {
+            return query_tooltip(x, y, keyboard_mode, tooltip);
+        }, false));
+        button.set_has_tooltip(true);
+        update_tooltip();
+
+        send_rectangle_hints();
+        set_state(0); // will set the appropriate button style
+    }
+
+    void set_tooltip_media()
+    {
+        if (this->tooltip_media)
+        {
+            return;
+        }
+
+        this->tooltip_media = Gtk::make_managed<TooltipMedia>(this->window_list);
+        this->custom_tooltip_content.append(*this->tooltip_media);
+    }
+
+    void unset_tooltip_media()
+    {
+        if (!this->tooltip_media)
+        {
+            return;
+        }
+
+        this->tooltip_media->unparent();
+        this->tooltip_media = nullptr;
+    }
+
+    void update_tooltip()
+    {
+        wf::json_t ipc_methods_request;
+        ipc_methods_request["method"] = "list-methods";
+        this->window_list->ipc_client->send(ipc_methods_request.serialize(), [=] (wf::json_t data)
+        {
+            if (data.serialize().find("error") != std::string::npos)
+            {
+                std::cerr << "Error getting ipc methods list!" << std::endl;
+                this->window_list->enable_normal_tooltips_flag(true);
+                return;
             }
 
-            return true;
-        });
-
-        button.signal_drag_leave().connect(
-            [this] (const Glib::RefPtr<Gdk::DragContext>, guint time)
-        {
-            if (m_drag_timeout)
+            if ((data.serialize().find("live_previews/request_stream") == std::string::npos) ||
+                (data.serialize().find("live_previews/release_output") == std::string::npos))
             {
-                m_drag_timeout.disconnect();
+                unset_tooltip_media();
+                if (this->window_list->live_window_preview_tooltips)
+                {
+                    if (this->window_list->live_window_previews_opt)
+                    {
+                        std::cout << "wf-shell configuration [panel] option 'live_window_previews' is set to 'true' but live-previews wayfire plugin is disabled." << std::endl;
+                        this->window_list->enable_normal_tooltips_flag(true);
+                    }
+
+                    for (const auto& toplevel_button : this->window_list->toplevels)
+                    {
+                        if (toplevel_button.second && toplevel_button.second->pimpl)
+                        {
+                            toplevel_button.second->unset_tooltip_media();
+                        }
+                    }
+                }
+            } else
+            {
+                set_tooltip_media();
+                if (!this->window_list->live_window_preview_tooltips)
+                {
+                    if (!this->window_list->live_window_previews_opt)
+                    {
+                        std::cout << "Detected live-previews plugin is enabled but wf-shell configuration [panel] option 'live_window_previews' is set to 'false'." << std::endl;
+                    } else
+                    {
+                        std::cout << "Enabling live window preview tooltips." << std::endl;
+                    }
+
+                    this->window_list->enable_normal_tooltips_flag(false);
+                    for (const auto& toplevel_button : this->window_list->toplevels)
+                    {
+                        if (toplevel_button.second && toplevel_button.second->pimpl)
+                        {
+                            toplevel_button.second->set_tooltip_media();
+                        }
+                    }
+                }
             }
         });
-
-        drag_gesture = Gtk::GestureDrag::create(button);
-        drag_gesture->signal_drag_begin().connect_notify(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_begin));
-        drag_gesture->signal_drag_update().connect_notify(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_update));
-        drag_gesture->signal_drag_end().connect_notify(
-            sigc::mem_fun(this, &WayfireToplevel::impl::on_drag_end));
-
-        this->window_list = window_list;
+        if (!this->window_list->live_window_previews_enabled())
+        {
+            this->window_list->normal_title_tooltips = true;
+            button.set_tooltip_text(title);
+        }
     }
 
     int grab_off_x;
@@ -130,167 +683,132 @@ class WayfireToplevel::impl
 
     bool drag_paused()
     {
-        auto gseat = Gdk::Display::get_default()->get_default_seat();
-        auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
-        zwlr_foreign_toplevel_handle_v1_activate(handle, seat);
+        /*
+         *  auto gseat = Gdk::Display::get_default()->get_default_seat()->get_wl_seat();
+         *  //auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
+         *  zwlr_foreign_toplevel_handle_v1_activate(handle, gseat);
+         */
         return false;
     }
 
     void on_drag_begin(double _x, double _y)
     {
-        auto& container = window_list->box;
-        /* Set grab start, before transforming it to absolute position */
+        // Set grab start, before transforming it to absolute position
         grab_start_x = _x;
         grab_start_y = _y;
 
         set_classes(state);
-        window_list->box.set_top_widget(&button);
+        window_list->set_top_widget(&button);
 
-        /* Find the distance between pointer X and button origin */
-        int x = container.get_absolute_position(_x, button);
+        // Find the distance between pointer X and button origin
+        int x = window_list->get_absolute_position(_x, button);
         grab_abs_start_x = x;
 
-        /* Find button corner in window-relative coords */
-        int loc_x = container.get_absolute_position(0, button);
+        // Find button corner in window-relative coords
+        int loc_x = window_list->get_absolute_position(0, button);
         grab_off_x = x - loc_x;
 
         drag_exceeds_threshold = false;
     }
 
     static constexpr int DRAG_THRESHOLD = 3;
-    void on_drag_update(double _x, double)
+    void on_drag_update(double _x, double y)
     {
-        auto& container = window_list->box;
-        /* Window was not just clicked, but also dragged. Ignore the next click,
-         * which is the one that happens when the drag gesture ends. */
-        set_ignore_next_click();
-
         int x = _x + grab_start_x;
-        x = container.get_absolute_position(x, button);
+        x = window_list->get_absolute_position(x, button);
         if (std::abs(x - grab_abs_start_x) > DRAG_THRESHOLD)
         {
             drag_exceeds_threshold = true;
         }
 
-        auto hovered_button = container.get_widget_at(x);
+        auto hovered_button = window_list->get_widget_at(x);
+        Gtk::Widget *before = window_list->get_widget_before(x);
 
-        if ((hovered_button != &button) && hovered_button)
+        if (hovered_button)
         {
-            auto children = container.get_unsorted_widgets();
-            auto it = std::find(children.begin(), children.end(), hovered_button);
-            container.reorder_child(button, it - children.begin());
+            // Where are we in the button?
+            auto allocation = hovered_button->get_allocation();
+            int half_width  = allocation.get_width() / 2;
+            int x_in_button = x - allocation.get_x();
+            if (x_in_button < half_width) // Left Half
+            {
+                if (before == nullptr)
+                {
+                    gtk_box_reorder_child_after(window_list->gobj(), GTK_WIDGET(button.gobj()), nullptr);
+                } else
+                {
+                    window_list->reorder_child_after(button, *before);
+                }
+            } else if (x_in_button > half_width) // Right Half
+            {
+                window_list->reorder_child_after(button, *hovered_button);
+            }
         }
 
         /* Make sure the grabbed button always stays at the same relative position
          * to the DnD position */
         int target_x = x - grab_off_x;
-        window_list->box.set_top_x(target_x);
+        window_list->set_top_x(target_x);
     }
 
     void on_drag_end(double _x, double _y)
     {
-        int x     = _x + grab_start_x;
-        int y     = _y + grab_start_y;
-        int width = button.get_allocated_width();
-        int height = button.get_allocated_height();
-
-        window_list->box.set_top_widget(nullptr);
+        window_list->set_top_widget(nullptr);
         set_classes(state);
 
-        /* When a button is dropped after dnd, we ignore the unclick
-         * event so action doesn't happen in addition to dropping.
-         * If the drag ends and the unclick event happens outside
-         * the button, unset ignore_next_click or else the next
-         * click on the button won't cause action. */
-        if ((x < 0) || (x > width) || (y < 0) || (y > height))
-        {
-            unset_ignore_next_click();
-        }
-
-        /* When dragging with touch or pen, we allow some small movement while
-         * still counting the action as button press as opposed to only dragging. */
         if (!drag_exceeds_threshold)
         {
-            unset_ignore_next_click();
+            this->on_clicked();
         }
+
+        drag_gesture->set_state(Gtk::EventSequenceState::DENIED);
+
+        send_rectangle_hints();
     }
 
-    bool on_button_press_event(GdkEventButton *event)
+    void set_hide_text(bool hide_text)
     {
-        if (event->type == GDK_BUTTON_PRESS)
+        if (hide_text)
         {
-            if (event->button == 3)
-            {
-                menu.popup_at_widget(&button, Gdk::GRAVITY_NORTH, Gdk::GRAVITY_SOUTH, NULL);
-                return true; // It has been handled.
-            } else if ((event->button == 2) && middle_click_close)
-            {
-                zwlr_foreign_toplevel_handle_v1_close(handle);
-                return true;
-            }
+            label.hide();
+        } else
+        {
+            label.show();
         }
-
-        return false;
     }
 
-    void on_menu_minimize()
+    void on_menu_minimize(Glib::VariantBase vb)
     {
-        menu.popdown();
-        if (state & WF_TOPLEVEL_STATE_MINIMIZED)
+        bool val = g_variant_get_boolean(vb.gobj());
+        send_rectangle_hint();
+        if (!val)
         {
             zwlr_foreign_toplevel_handle_v1_unset_minimized(handle);
-        } else
-        {
-            zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
+            return;
         }
+
+        zwlr_foreign_toplevel_handle_v1_set_minimized(handle);
     }
 
-    void on_menu_maximize()
+    void on_menu_maximize(Glib::VariantBase vb)
     {
-        menu.popdown();
-        if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
+        bool val = g_variant_get_boolean(vb.gobj());
+        if (!val)
         {
             zwlr_foreign_toplevel_handle_v1_unset_maximized(handle);
-        } else
-        {
-            zwlr_foreign_toplevel_handle_v1_set_maximized(handle);
+            return;
         }
+
+        zwlr_foreign_toplevel_handle_v1_set_maximized(handle);
     }
 
-    void on_menu_close()
+    void on_menu_close(Glib::VariantBase vb)
     {
-        menu.popdown();
         zwlr_foreign_toplevel_handle_v1_close(handle);
-    }
-
-    bool ignore_next_click = false;
-    void set_ignore_next_click()
-    {
-        ignore_next_click = true;
-
-        /* Make sure that the view doesn't show clicked on animations while
-         * dragging (this happens only on some themes) */
-        button.set_state_flags(Gtk::STATE_FLAG_SELECTED |
-            Gtk::STATE_FLAG_DROP_ACTIVE | Gtk::STATE_FLAG_PRELIGHT);
-    }
-
-    void unset_ignore_next_click()
-    {
-        ignore_next_click = false;
-        button.unset_state_flags(Gtk::STATE_FLAG_SELECTED |
-            Gtk::STATE_FLAG_DROP_ACTIVE | Gtk::STATE_FLAG_PRELIGHT);
     }
 
     void on_clicked()
     {
-        /* If the button was dragged, we don't want to register the click.
-         * Subsequent clicks should be handled though. */
-        if (ignore_next_click)
-        {
-            unset_ignore_next_click();
-            return;
-        }
-
         bool child_activated = false;
         for (auto c : get_children())
         {
@@ -319,15 +837,64 @@ class WayfireToplevel::impl
         }
     }
 
-    void on_allocation_changed(Gtk::Allocation& alloc)
-    {
-        send_rectangle_hint();
-        window_list->scrolled_window.queue_allocate();
-    }
-
     void on_scale_update()
     {
         set_app_id(app_id);
+    }
+
+    bool query_tooltip(int x, int y, bool keyboard_mode, const Glib::RefPtr<Gtk::Tooltip>& tooltip)
+    {
+        if (this->popover.is_visible())
+        {
+            return false;
+        }
+
+        if (!this->window_list->live_window_previews_enabled())
+        {
+            if (!this->window_list->normal_title_tooltips)
+            {
+                std::cerr <<
+                    "Normal title tooltips enabled. To enable live window preview tooltips, make sure to set [panel] option 'live_window_previews = true' in wf-shell configuration and enable wayfire plugin live-previews"
+                          <<
+                    std::endl;
+                this->window_list->enable_normal_tooltips_flag(true);
+            }
+
+            tooltip->set_text(title);
+            return true;
+        }
+
+        this->window_list->live_window_preview_view_id = this->view_id;
+        tooltip->set_custom(this->custom_tooltip_content);
+
+        return true;
+    }
+
+    uint64_t get_view_id_from_full_app_id(const std::string& app_id)
+    {
+        const std::string sub_str = "wf-ipc-";
+        size_t pos = app_id.find(sub_str);
+
+        if (pos != std::string::npos)
+        {
+            size_t suffix_start_index = pos + sub_str.length();
+            if (suffix_start_index < app_id.length())
+            {
+                try {
+                    uint64_t view_id = std::stoi(app_id.substr(suffix_start_index, std::string::npos));
+                    return view_id;
+                } catch (...)
+                {
+                    return 0;
+                }
+            } else
+            {
+                return 0;
+            }
+        } else
+        {
+            return 0;
+        }
     }
 
     void set_app_id(std::string app_id)
@@ -336,84 +903,50 @@ class WayfireToplevel::impl
         this->app_id = app_id;
         IconProvider::set_image_from_icon(image, app_id,
             std::min(int(minimal_panel_height), 24), button.get_scale_factor());
+        this->view_id = get_view_id_from_full_app_id(app_id);
+        if (this->view_id == 0)
+        {
+            std::cerr << "Failed to get view id from app_id. " <<
+                "(Ensure 'app_id_mode' set to 'full' in wayfire " <<
+                "[workarounds] and restart wf-panel or the applications " <<
+                "in the window list)" << std::endl;
+        }
+    }
+
+    void send_rectangle_hints()
+    {
+        for (const auto& toplevel_button : window_list->toplevels)
+        {
+            if (toplevel_button.second && toplevel_button.second->pimpl)
+            {
+                toplevel_button.second->pimpl->send_rectangle_hint();
+            }
+        }
     }
 
     void send_rectangle_hint()
     {
-        Gtk::Widget *widget = &this->button;
         auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
-        if (panel)
+        auto w     = button.get_width();
+        auto h     = button.get_height();
+        if (panel && (w > 0) && (h > 0))
         {
-            int x, y;
-            widget->translate_coordinates(panel->get_window(), 0, 0, x, y);
-
-            int width  = button.get_allocated_width();
-            int height = button.get_allocated_height();
-            zwlr_foreign_toplevel_handle_v1_set_rectangle(handle,
-                panel->get_wl_surface(), x, y, width, height);
+            double x, y;
+            button.translate_coordinates(panel->get_window(), 0, 0, x, y);
+            zwlr_foreign_toplevel_handle_v1_set_rectangle(handle, panel->get_wl_surface(),
+                x, y, w, h);
         }
     }
 
-    int32_t max_width = 0;
     void set_title(std::string title)
     {
         this->title = title;
-        button.set_tooltip_text(title);
-
-        set_max_width(max_width);
-    }
-
-    Glib::ustring shorten_title(int show_chars)
-    {
-        if (show_chars == 0)
+        if (!this->window_list->live_window_previews_enabled())
         {
-            return "";
+            button.set_tooltip_text(title);
         }
 
-        int title_len = title.length();
-        Glib::ustring short_title = title.substr(0, show_chars);
-        if (title_len - show_chars >= 2)
-        {
-            short_title += "..";
-        } else if (title_len != show_chars)
-        {
-            short_title += ".";
-        }
-
-        return short_title;
-    }
-
-    int get_button_preferred_width()
-    {
-        int min_width, preferred_width;
-        button.get_preferred_width(min_width, preferred_width);
-
-        return preferred_width;
-    }
-
-    void set_max_width(int width)
-    {
-        this->max_width = width;
-        if (max_width == 0)
-        {
-            this->button.set_size_request(-1, -1);
-            this->label.set_label(title);
-            return;
-        }
-
-        this->button.set_size_request(width, -1);
-
-        int show_chars = 0;
-        for (show_chars = title.length(); show_chars > 0; show_chars--)
-        {
-            this->label.set_text(shorten_title(show_chars));
-            if (get_button_preferred_width() <= max_width)
-            {
-                break;
-            }
-        }
-
-        label.set_text(shorten_title(show_chars));
+        label.set_text(title);
     }
 
     uint32_t get_state()
@@ -438,55 +971,41 @@ class WayfireToplevel::impl
 
     void remove_button()
     {
-        auto& container = window_list->box;
-        container.remove(button);
-    }
-
-    void update_menu_item_text()
-    {
-        if (state & WF_TOPLEVEL_STATE_MINIMIZED)
-        {
-            minimize.set_label("Unminimize");
-        } else
-        {
-            minimize.set_label("Minimize");
-        }
-
-        if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
-        {
-            maximize.set_label("Unmaximize");
-        } else
-        {
-            maximize.set_label("Maximize");
-        }
+        button_leave_signal.disconnect();
+        window_list->remove(button);
+        send_rectangle_hints();
     }
 
     void set_classes(uint32_t state)
     {
         if (state & WF_TOPLEVEL_STATE_ACTIVATED)
         {
-            button.get_style_context()->add_class("activated");
-            button.get_style_context()->remove_class("flat");
+            button.add_css_class("activated");
+            button.remove_css_class("flat");
         } else
         {
-            button.get_style_context()->add_class("flat");
-            button.get_style_context()->remove_class("activated");
+            button.add_css_class("flat");
+            button.remove_css_class("activated");
         }
 
         if (state & WF_TOPLEVEL_STATE_MINIMIZED)
         {
-            button.get_style_context()->add_class("minimized");
+            button.add_css_class("minimized");
+            minimize_action->set_state(Glib::wrap(g_variant_new_boolean(true)));
         } else
         {
-            button.get_style_context()->remove_class("minimized");
+            button.remove_css_class("minimized");
+            minimize_action->set_state(Glib::wrap(g_variant_new_boolean(false)));
         }
 
         if (state & WF_TOPLEVEL_STATE_MAXIMIZED)
         {
-            button.get_style_context()->add_class("maximized");
+            button.add_css_class("maximized");
+            maximize_action->set_state(Glib::wrap(g_variant_new_boolean(true)));
         } else
         {
-            button.get_style_context()->remove_class("maximized");
+            button.remove_css_class("maximized");
+            maximize_action->set_state(Glib::wrap(g_variant_new_boolean(false)));
         }
     }
 
@@ -494,14 +1013,19 @@ class WayfireToplevel::impl
     {
         this->state = state;
         set_classes(state);
-        update_menu_item_text();
     }
 
     ~impl()
     {
-        if (m_drag_timeout)
+        unset_tooltip_media();
+
+        gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
+
+        button_leave_signal.disconnect();
+
+        for (auto signal : signals)
         {
-            m_drag_timeout.disconnect();
+            signal.disconnect();
         }
 
         zwlr_foreign_toplevel_handle_v1_destroy(handle);
@@ -514,22 +1038,19 @@ class WayfireToplevel::impl
             return;
         }
 
-        auto& container = window_list->box;
         if (window_list->output->wo == output)
         {
-            container.add(button);
-            container.show_all();
+            window_list->append(button);
+            send_rectangle_hints();
         }
-
-        update_menu_item_text();
     }
 
     void handle_output_leave(wl_output *output)
     {
-        auto& container = window_list->box;
         if (window_list->output->wo == output)
         {
-            container.remove(button);
+            window_list->remove(button);
+            send_rectangle_hints();
         }
     }
 };
@@ -540,24 +1061,9 @@ WayfireToplevel::WayfireToplevel(WayfireWindowList *window_list,
     pimpl(new WayfireToplevel::impl(window_list, handle))
 {}
 
-void WayfireToplevel::set_width(int pixels)
-{
-    return pimpl->set_max_width(pixels);
-}
-
 std::vector<zwlr_foreign_toplevel_handle_v1*>& WayfireToplevel::get_children()
 {
     return pimpl->get_children();
-}
-
-zwlr_foreign_toplevel_handle_v1*WayfireToplevel::get_parent()
-{
-    return pimpl->get_parent();
-}
-
-void WayfireToplevel::set_parent(zwlr_foreign_toplevel_handle_v1 *parent)
-{
-    return pimpl->set_parent(parent);
 }
 
 uint32_t WayfireToplevel::get_state()
@@ -565,7 +1071,13 @@ uint32_t WayfireToplevel::get_state()
     return pimpl->get_state();
 }
 
-WayfireToplevel::~WayfireToplevel() = default;
+void WayfireToplevel::send_rectangle_hint()
+{
+    return pimpl->send_rectangle_hint();
+}
+
+WayfireToplevel::~WayfireToplevel()
+{}
 
 using toplevel_t = zwlr_foreign_toplevel_handle_v1*;
 static void handle_toplevel_title(void *data, toplevel_t, const char *title)
@@ -590,6 +1102,16 @@ static void handle_toplevel_output_leave(void *data, toplevel_t, wl_output *outp
 {
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     impl->handle_output_leave(output);
+}
+
+void WayfireToplevel::set_tooltip_media()
+{
+    pimpl->set_tooltip_media();
+}
+
+void WayfireToplevel::unset_tooltip_media()
+{
+    pimpl->unset_tooltip_media();
 }
 
 /* wl_array_for_each isn't supported in C++, so we have to manually
@@ -632,9 +1154,7 @@ static void handle_toplevel_state(void *data, toplevel_t, wl_array *state)
 }
 
 static void handle_toplevel_done(void *data, toplevel_t)
-{
-// auto impl = static_cast<WayfireToplevel::impl*> (data);
-}
+{}
 
 static void remove_child_from_parent(WayfireToplevel::impl *impl, toplevel_t child)
 {
@@ -649,8 +1169,8 @@ static void remove_child_from_parent(WayfireToplevel::impl *impl, toplevel_t chi
 
 static void handle_toplevel_closed(void *data, toplevel_t handle)
 {
-    // WayfirePanelApp::get().handle_toplevel_closed(handle);
     auto impl = static_cast<WayfireToplevel::impl*>(data);
+    impl->remove_button();
     remove_child_from_parent(impl, handle);
     impl->window_list->handle_toplevel_closed(handle);
 }
@@ -768,16 +1288,16 @@ void set_image_from_icon(Gtk::Image& image,
 
     /* Wayfire sends a list of app-id's in space separated format, other compositors
      * send a single app-id, but in any case this works fine */
+    auto display = image.get_display();
     while (stream >> app_id)
     {
         auto icon = get_from_desktop_app_info(app_id);
         std::string icon_name = "unknown";
-
         if (!icon)
         {
             /* Perhaps no desktop app info, but we might still be able to
              * get an icon directly from the icon theme */
-            if (Gtk::IconTheme::get_default()->lookup_icon(app_id, size))
+            if (Gtk::IconTheme::get_for_display(display)->lookup_icon(app_id, size))
             {
                 icon_name = app_id;
             }
@@ -786,9 +1306,7 @@ void set_image_from_icon(Gtk::Image& image,
             icon_name = icon->to_string();
         }
 
-        WfIconLoadOptions options;
-        options.user_scale = scale;
-        set_image_icon(image, icon_name, size, options);
+        image_set_icon(&image, icon_name);
 
         /* finally found some icon */
         if (icon_name != "unknown")

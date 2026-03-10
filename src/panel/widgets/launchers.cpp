@@ -1,13 +1,14 @@
 #include "launchers.hpp"
+
 #include <giomm/file.h>
 #include <glibmm/spawn.h>
 #include <glibmm/keyfile.h>
 #include <gtkmm/icontheme.h>
 #include <gdk/gdkcairo.h>
 #include <cassert>
-#include <iostream>
 #include <gtk-utils.hpp>
-#include <wf-shell-app.hpp>
+
+#include "wf-shell-app.hpp"
 
 bool WfLauncherButton::initialize(std::string name, std::string icon, std::string label)
 {
@@ -23,16 +24,16 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
     } else
     {
         // Generate a .desktop file in memory
-        auto keyfile = Glib::KeyFile();
-        keyfile.set_string("Desktop Entry", "Type", "Application");
-        keyfile.set_string("Desktop Entry", "Exec", "/bin/sh -c \"" + name + "\"");
-        keyfile.set_string("Desktop Entry", "Icon", icon);
+        auto keyfile = Glib::KeyFile::create();
+        keyfile->set_string("Desktop Entry", "Type", "Application");
+        keyfile->set_string("Desktop Entry", "Exec", "/bin/sh -c \"" + name + "\"");
+        keyfile->set_string("Desktop Entry", "Icon", icon);
         if (label == "")
         {
             label = name;
         }
 
-        keyfile.set_string("Desktop Entry", "Name", label);
+        keyfile->set_string("Desktop Entry", "Name", label);
 
         // Hand off to have a custom launcher
         app_info = Gio::DesktopAppInfo::create_from_keyfile(keyfile);
@@ -44,15 +45,12 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         return false;
     }
 
-    button.set_image(m_icon);
-    auto style = button.get_style_context();
-    style->add_class("flat");
-    style->add_class("launcher");
+    button.set_child(m_icon);
+    button.add_css_class("widget-icon");
+    button.add_css_class("flat");
+    button.add_css_class("launcher");
 
-    button.signal_clicked().connect([=] () { launch(); });
-    button.property_scale_factor().signal_changed()
-        .connect([=] () {update_icon(); });
-    icon_size.set_callback([=] () { update_icon(); });
+    btn_sig = button.signal_clicked().connect([=] () { launch(); });
 
     update_icon();
 
@@ -62,21 +60,24 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
 
 void WfLauncherButton::update_icon()
 {
-    set_image_icon(m_icon, app_info->get_icon()->to_string(), icon_size);
+    image_set_icon(&m_icon, app_info->get_icon()->to_string());
 }
 
 void WfLauncherButton::launch()
 {
     if (app_info)
     {
-        app_info->launch(std::vector<Glib::RefPtr<Gio::File>>());
+        auto ctx = Gdk::Display::get_default()->get_app_launch_context();
+        app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
     }
 }
 
 WfLauncherButton::WfLauncherButton()
 {}
 WfLauncherButton::~WfLauncherButton()
-{}
+{
+    btn_sig.disconnect();
+}
 
 static bool begins_with(const std::string& string, const std::string& prefix)
 {
@@ -146,22 +147,31 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
     return launchers;
 }
 
-void WayfireLaunchers::init(Gtk::HBox *container)
+void WayfireLaunchers::init(Gtk::Box *container)
 {
-    box.get_style_context()->add_class("launchers");
-    container->pack_start(box, false, false);
+    box.add_css_class("widget-icon");
+    box.add_css_class("launchers");
+    container->append(box);
     handle_config_reload();
+}
+
+void WayfireLaunchers::update_layout()
+{
+    box.set_spacing(spacing);
 }
 
 void WayfireLaunchers::handle_config_reload()
 {
-    box.set_spacing(WfOption<int>{"panel/launchers_spacing"});
+    for (auto child : box.get_children())
+    {
+        box.remove(*child);
+    }
 
     launchers = get_launchers_from_config();
     for (auto& l : launchers)
     {
-        box.pack_start(l->button, false, false);
+        box.append(l->button);
     }
 
-    box.show_all();
+    update_layout();
 }
