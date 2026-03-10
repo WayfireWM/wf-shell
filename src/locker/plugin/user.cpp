@@ -40,7 +40,7 @@ void WayfireLockerUserPlugin::init()
             return;
         }
     }
-    
+
     std::cout << "No user image .face... no image in lockscreen" << std::endl;
 }
 
