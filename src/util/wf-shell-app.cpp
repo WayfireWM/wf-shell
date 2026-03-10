@@ -289,6 +289,11 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
 
         if (monitor->get_connector() == live_preview_output_name)
         {
+            live_preview_output = gdk_wayland_monitor_get_wl_output(monitor->gobj());
+            monitor->signal_invalidate().connect([=]
+            {
+                live_preview_output = nullptr;
+            });
             continue;
         }
 
@@ -342,6 +347,7 @@ std::vector<std::unique_ptr<WayfireOutput>>*WayfireShellApp::get_wayfire_outputs
 
 WayfireShellApp::WayfireShellApp()
 {
+    live_preview_output = nullptr;
     live_preview_output_name = "live-preview";
 }
 
