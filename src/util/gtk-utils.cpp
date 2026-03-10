@@ -86,14 +86,10 @@ bool is_markup(std::string input)
     int count_amp   = std::count(input.begin(), input.end(), '&');
     int count_semi  = std::count(input.begin(), input.end(), ';');
 
-    if (count_left || count_right || count_amp || count_semi)
+    if ((count_left == count_right) && (count_amp == count_semi))
     {
-        /* It has some markup characters */
-        if ((count_left == count_right) && (count_amp == count_semi))
-        {
-            /* And they pair up */
-            return true;
-        }
+        /* And they pair up */
+        return true;
     }
 
     return false;
