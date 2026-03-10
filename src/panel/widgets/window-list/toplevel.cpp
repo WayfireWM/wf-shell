@@ -322,17 +322,16 @@ bool TooltipMedia::request_next_frame()
     if (this->frame)
     {
         zwlr_screencopy_frame_v1_destroy(this->frame);
-        this->frame = NULL;
+        this->frame = nullptr;
     }
 
-    if (!this->window_list->window_list_live_preview_output ||
-        !this->window_list->window_list_live_preview_output->output)
+    if (!WayfireShellApp::get().live_preview_output)
     {
         return false;
     }
 
     this->frame = zwlr_screencopy_manager_v1_capture_output(this->window_list->screencopy_manager, 0,
-        this->window_list->window_list_live_preview_output->output);
+        WayfireShellApp::get().live_preview_output);
     zwlr_screencopy_frame_v1_add_listener(this->frame, &screencopy_frame_listener, this);
 
     return true;

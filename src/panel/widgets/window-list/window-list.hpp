@@ -11,13 +11,6 @@
     #include <gbm.h>
 #endif // HAVE_DMABUF
 
-class WayfireWindowListOutput
-{
-  public:
-    wl_output *output;
-    std::string name;
-};
-
 class WayfireToplevel;
 
 class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubscriber
@@ -30,7 +23,6 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
         std::unique_ptr<WayfireToplevel>> toplevels;
 
     wl_display *display;
-    wl_registry *registry;
     wl_shm *shm = nullptr;
     zwlr_foreign_toplevel_manager_v1 *manager = nullptr;
     zwlr_screencopy_manager_v1 *screencopy_manager = nullptr;
@@ -82,8 +74,6 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
 
     WfOption<bool> live_window_previews_opt{"panel/live_window_previews"};
     void handle_new_wl_output(wl_output *output);
-    void destroy_window_list_live_preview_output();
-    std::unique_ptr<WayfireWindowListOutput> window_list_live_preview_output = nullptr;
     void on_event(wf::json_t data) override;
     std::shared_ptr<IPCClient> ipc_client;
     bool live_window_preview_tooltips = false;

@@ -28,61 +28,6 @@ zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
     .finished = handle_manager_finished,
 };
 
-void handle_output_geometry(void*,
-    struct wl_output*,
-    int32_t,
-    int32_t,
-    int32_t,
-    int32_t,
-    int32_t,
-    const char*,
-    const char*,
-    int32_t)
-{}
-
-void handle_output_mode(void*,
-    struct wl_output*,
-    uint32_t,
-    int32_t,
-    int32_t,
-    int32_t)
-{}
-
-void handle_output_done(void *data, struct wl_output*)
-{}
-
-void handle_output_scale(void*, struct wl_output*, int32_t)
-{}
-
-void handle_output_name(void *data,
-    struct wl_output *output,
-    const char *name)
-{
-    std::string live_preview_output_name = WayfireShellApp::get().live_preview_output_name;
-    WayfireWindowList *window_list = (WayfireWindowList*)data;
-    std::string output_name = name;
-
-    if (output_name == live_preview_output_name)
-    {
-        window_list->window_list_live_preview_output = std::make_unique<WayfireWindowListOutput>();
-        window_list->window_list_live_preview_output->output = output;
-        window_list->window_list_live_preview_output->name   = output_name;
-    }
-}
-
-void handle_output_description(void*, struct wl_output*, const char*)
-{}
-
-static struct wl_output_listener output_listener =
-{
-    handle_output_geometry,
-    handle_output_mode,
-    handle_output_done,
-    handle_output_scale,
-    handle_output_name,
-    handle_output_description,
-};
-
 #ifdef HAVE_DMABUF
 static void dmabuf_feedback_done(void *data, struct zwp_linux_dmabuf_feedback_v1 *feedback)
 {
@@ -181,11 +126,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
 {
     WayfireWindowList *window_list = (WayfireWindowList*)data;
 
-    if (strcmp(interface, wl_output_interface.name) == 0)
-    {
-        wl_output *output = (wl_output*)wl_registry_bind(registry, name, &wl_output_interface, version);
-        window_list->handle_new_wl_output(output);
-    } else if (strcmp(interface, wl_shm_interface.name) == 0)
+    if (strcmp(interface, wl_shm_interface.name) == 0)
     {
         window_list->shm = (wl_shm*)wl_registry_bind(registry, name, &wl_shm_interface, version);
     } else if (strcmp(interface, zwlr_foreign_toplevel_manager_v1_interface.name) == 0)
@@ -228,23 +169,6 @@ static struct wl_registry_listener registry_listener =
     &registry_add_object,
     &registry_remove_object
 };
-
-void WayfireWindowList::destroy_window_list_live_preview_output()
-{
-    if (this->window_list_live_preview_output)
-    {
-        wl_output_destroy(this->window_list_live_preview_output->output);
-        this->window_list_live_preview_output.reset();
-        this->window_list_live_preview_output = nullptr;
-    }
-}
-
-void WayfireWindowList::handle_new_wl_output(wl_output *output)
-{
-    std::string live_preview_output_name = WayfireShellApp::get().live_preview_output_name;
-
-    wl_output_add_listener(output, &output_listener, this);
-}
 
 void WayfireWindowList::live_window_previews_plugin_check()
 {
@@ -329,7 +253,7 @@ void WayfireWindowList::init(Gtk::Box *container)
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
 
-    this->registry = registry;
+    wl_registry_destroy(registry);
 
     if (!this->manager)
     {
@@ -492,7 +416,6 @@ WayfireWindowList::~WayfireWindowList()
      * when the window-list widget is unloaded. */
     toplevels.clear();
 
-    destroy_window_list_live_preview_output();
     wl_shm_destroy(this->shm);
     zwlr_foreign_toplevel_manager_v1_destroy(this->manager);
     zwlr_screencopy_manager_v1_destroy(this->screencopy_manager);
@@ -513,5 +436,4 @@ WayfireWindowList::~WayfireWindowList()
     }
 
 #endif
-    wl_registry_destroy(this->registry);
 }
