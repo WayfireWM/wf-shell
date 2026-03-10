@@ -201,7 +201,9 @@ void WayfireWindowList::live_window_previews_plugin_check()
             } else
             {
                 std::cout << "Enabling live window preview tooltips using " <<
-                    std::string(live_previews_dmabuf ? "dmabuf" : "shm") << " transfers." << std::endl;
+                    std::string(live_previews_dmabuf ? "dmabuf" : "shm") <<
+                    " transfers on output " << this->output->monitor->get_connector() <<
+                    std::endl;
                 this->enable_normal_tooltips_flag(false);
             }
         }
