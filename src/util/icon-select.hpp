@@ -10,8 +10,8 @@ std::string icon_from_range(std::map<double, std::string> icons, double value);
 const std::map<double, std::string> volume_icons = {
     {std::numeric_limits<double>::min(), "emblem-unreadable"},
     {0.0, "audio-volume-muted"},
-    {1.0 / 3, "audio-volume-low"},
-    {(1.0 / 3) * 2, "audio-volume-medium"},
+    {0.33, "audio-volume-low"},
+    {0.66, "audio-volume-medium"},
     {1.0, "audio-volume-high"},
-    {std::numeric_limits<double>::max(), "audio-volume-high-danger-symbolic"}
+    {std::numeric_limits<double>::max(), "dialog-warning"}
 };
