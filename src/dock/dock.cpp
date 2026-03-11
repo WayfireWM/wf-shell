@@ -21,8 +21,11 @@ class WfDock::impl
     Gtk::FlowBox box;
 
     WfOption<std::string> css_path{"dock/css_path"};
-    WfOption<int> dock_height{"dock/dock_height"};
     WfOption<int> entries_per_line{"dock/max_per_line"};
+
+    // needed as a workaround to shrink down when removing items
+    WfOption<int> height{"dock/minimal_height"};
+    WfOption<int> width{"dock/minimal_width"};
 
   public:
     impl(WayfireOutput *output)
@@ -82,7 +85,7 @@ class WfDock::impl
     void rem_child(Gtk::Widget& widget)
     {
         box.remove(widget);
-        window->set_default_size(-1, dock_height);
+        window->set_default_size(width, height);
     }
 
     wl_surface *get_wl_surface()

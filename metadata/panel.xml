@@ -22,7 +22,13 @@
 		<default>volume network battery clock</default>
 	</option>
 	<option name="minimal_height" type="int">
-		<_short>Minimal Height</_short>
+		<_short>Minimal height</_short>
+		<_long>Minimum height the panel takes.</_long>
+		<default>32</default>
+	</option>
+	<option name="minimal_width" type="int">
+		<_short>Minimal width</_short>
+		<_long>Minimum width the panel takes.</_long>
 		<default>32</default>
 	</option>
 	<option name="autohide" type="bool">
@@ -30,7 +36,7 @@
 		<default>false</default>
 	</option>
 	<option name="autohide_duration" type="int">
-		<_short>Autohide Duration</_short>
+		<_short>Autohide duration</_short>
 		<default>300</default>
 	</option>
 	<option name="outputs" type="string">

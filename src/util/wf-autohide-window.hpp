@@ -27,9 +27,11 @@ class WayfireAutohidingWindow : public Gtk::Window
      * file options:
      *
      * 1. section/position
-     * 2. section/autohide_duration
-     * 3. section/edge_offset
+     * 2. section/minimal_height
+     * 3. section/minimal_width
      * 4. section/autohide
+     * 5. section/edge_offset
+     * 6. section/autohide_duration
      */
     WayfireAutohidingWindow(WayfireOutput *output, const std::string& section);
     WayfireAutohidingWindow(WayfireAutohidingWindow&&) = delete;
@@ -83,6 +85,9 @@ class WayfireAutohidingWindow : public Gtk::Window
 
     WfOption<std::string> position;
     void update_position();
+
+    WfOption<int> minimal_width;
+    WfOption<int> minimal_height;
 
     wf::animation::simple_animation_t y_position;
     bool update_margin();
