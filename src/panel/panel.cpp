@@ -52,6 +52,7 @@ class WayfirePanel::impl
 
     WayfireOutput *output;
 
+    WfOption<std::string> panel_position{"panel/position"};
     WfOption<std::string> panel_layer{"panel/layer"};
     std::function<void()> set_panel_layer = [=] ()
     {
@@ -76,6 +77,37 @@ class WayfirePanel::impl
         }
     };
 
+    void set_boxes_orientation(Gtk::Orientation orientation)
+    {
+        content_box.set_orientation(orientation);
+        left_box.set_orientation(orientation);
+        center_box.set_orientation(orientation);
+        right_box.set_orientation(orientation);
+    }
+
+    void update_orientation()
+    {
+        bool is_horizontal = !(panel_position.value() == "left" or panel_position.value() ==
+            "right"); // checking like this also works with the fallback being the top
+
+        auto orientation = is_horizontal ? Gtk::Orientation::HORIZONTAL : Gtk::Orientation::VERTICAL;
+        set_boxes_orientation(orientation);
+
+        if (is_horizontal)
+        {
+            left_box.set_halign(Gtk::Align::START);
+            right_box.set_halign(Gtk::Align::END);
+            left_box.set_valign(Gtk::Align::CENTER);
+            right_box.set_valign(Gtk::Align::CENTER);
+        } else
+        {
+            left_box.set_valign(Gtk::Align::START);
+            right_box.set_valign(Gtk::Align::END);
+            left_box.set_halign(Gtk::Align::CENTER);
+            right_box.set_halign(Gtk::Align::CENTER);
+        }
+    }
+
     void create_window()
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
@@ -83,13 +115,10 @@ class WayfirePanel::impl
         window->add_css_class("wf-panel");
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
 
         window->present();
         init_layout();
+        update_orientation();
     }
 
     void init_layout()
@@ -106,10 +135,9 @@ class WayfirePanel::impl
         content_box.set_end_widget(right_box);
 
         content_box.set_hexpand(true);
-
-        left_box.set_halign(Gtk::Align::START);
+        content_box.set_vexpand(true);
         center_box.set_halign(Gtk::Align::CENTER);
-        right_box.set_halign(Gtk::Align::END);
+        center_box.set_valign(Gtk::Align::CENTER);
 
         window->set_child(content_box);
     }

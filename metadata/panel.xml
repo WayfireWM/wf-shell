@@ -66,6 +66,14 @@
 			<value>bottom</value>
 			<_name>Bottom</_name>
 		</desc>
+		<desc>
+			<value>left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>right</value>
+			<_name>Right</_name>
+		</desc>
 	</option>
 	<option name="edge_offset" type="int">
 		<_short>Edge offset</_short>
@@ -544,8 +552,8 @@ Set to -1 to only run it by clicking the button.
 		</desc>
 		<default>row</default>
 	</option>
-	<option name="workspace_switcher_target_height" type="double">
-		<_short>Target height for workspace switcher widget in pixels</_short>
+	<option name="workspace_switcher_target_size" type="double">
+		<_short>Target size for workspace switcher widget in pixels</_short>
 		<default>0</default>
 	</option>
 	<option name="workspace_switcher_render_views" type="bool">
