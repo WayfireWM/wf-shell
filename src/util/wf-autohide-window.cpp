@@ -11,11 +11,13 @@
 #include <assert.h>
 
 #define AUTOHIDE_SHOW_DELAY 300
-#define AUTOHIDE_HIDE_DELAY 500
+#define AUTOHIDE_HIDE_DELAY 300
 
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     const std::string& section) :
     position{section + "/position"},
+    minimal_width{section + "/minimal_width"},
+    minimal_height{section + "/minimal_height"},
     y_position{WfOption<int>{section + "/autohide_duration"}},
     edge_offset{section + "/edge_offset"},
     autohide_opt{section + "/autohide"}
@@ -30,6 +32,11 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     this->position.set_callback([=] () { this->update_position(); });
     this->update_position();
 
+    const auto set_size = [=] () { this->set_size_request(minimal_width, minimal_height); };
+    this->minimal_height.set_callback(set_size);
+    this->minimal_width.set_callback(set_size);
+    set_size();
+
     auto pointer_gesture = Gtk::EventControllerMotion::create();
     signals.push_back(pointer_gesture->signal_enter().connect([=] (double x, double y)
     {
@@ -39,7 +46,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         }
 
         this->input_inside_panel = true;
-        y_position.animate(0);
+        autohide_animation.animate(0);
         start_draw_timer();
     }));
     signals.push_back(pointer_gesture->signal_leave().connect([=]
@@ -47,7 +54,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         this->input_inside_panel = false;
         if (this->should_autohide())
         {
-            this->schedule_hide(AUTOHIDE_HIDE_DELAY);
+            this->schedule_hide(autohide_hide_delay);
         }
     }));
     this->add_controller(pointer_gesture);
@@ -146,7 +153,7 @@ void WayfireAutohidingWindow::m_show_uncertain()
         {
             schedule_hide(0);
             return false;
-        }, AUTOHIDE_HIDE_DELAY);
+        }, autohide_hide_delay);
     }
 }
 
@@ -166,7 +173,7 @@ void WayfireAutohidingWindow::update_position()
     }
 
     /* When the position changes, show an animation from the new edge. */
-    y_position.animate(-this->get_allocated_height(), 0);
+    autohide_animation.animate(-this->get_allocated_height(), 0);
     start_draw_timer();
     m_show_uncertain();
     setup_hotspot();
@@ -230,7 +237,7 @@ void WayfireAutohidingWindow::setup_hotspot()
         ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP : ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
 
     this->edge_hotspot = zwf_output_v2_create_hotspot(output->output,
-        edge, edge_offset, AUTOHIDE_SHOW_DELAY);
+        edge, edge_offset, autohide_show_delay);
 
     this->panel_hotspot = zwf_output_v2_create_hotspot(output->output,
         edge, this->get_allocated_height(), 0); // immediate
@@ -266,7 +273,7 @@ void WayfireAutohidingWindow::setup_hotspot()
         this->input_inside_panel = false;
         if (this->should_autohide())
         {
-            this->schedule_hide(AUTOHIDE_HIDE_DELAY);
+            this->schedule_hide(autohide_hide_delay);
         }
     };
 
@@ -335,7 +342,7 @@ bool WayfireAutohidingWindow::should_autohide() const
 
 bool WayfireAutohidingWindow::m_do_hide()
 {
-    y_position.animate(-get_allocated_height());
+    autohide_animation.animate(-get_allocated_height());
     start_draw_timer();
     update_margin();
     return false; // disconnect
@@ -351,7 +358,7 @@ gboolean WayfireAutohidingWindow::update_animation(Glib::RefPtr<Gdk::FrameClock>
     update_margin();
     // this->queue_draw();
     // Once we've finished fading, stop this callback
-    return y_position.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+    return autohide_animation.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 
 void WayfireAutohidingWindow::schedule_hide(int delay)
@@ -372,7 +379,7 @@ void WayfireAutohidingWindow::schedule_hide(int delay)
 
 bool WayfireAutohidingWindow::m_do_show()
 {
-    y_position.animate(0);
+    autohide_animation.animate(0);
     start_draw_timer();
     update_margin();
     return false; // disconnect
@@ -396,10 +403,10 @@ void WayfireAutohidingWindow::schedule_show(int delay)
 
 bool WayfireAutohidingWindow::update_margin()
 {
-    if (y_position.running())
+    if (autohide_animation.running())
     {
         gtk_layer_set_margin(this->gobj(),
-            get_anchor_edge(position), y_position);
+            get_anchor_edge(position), autohide_animation);
         // queue_draw does not work when the panel is hidden
         // so calling wl_surface_commit to make WM show the panel back
         if (get_surface())
@@ -466,7 +473,7 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
 
     if (should_autohide())
     {
-        schedule_hide(AUTOHIDE_HIDE_DELAY);
+        schedule_hide(autohide_hide_delay);
     }
 }
 

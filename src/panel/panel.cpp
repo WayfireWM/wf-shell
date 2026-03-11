@@ -76,13 +76,10 @@ class WayfirePanel::impl
         }
     };
 
-    WfOption<int> minimal_panel_height{"panel/minimal_height"};
-
     void create_window()
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
 
-        window->set_default_size(0, minimal_panel_height);
         window->add_css_class("wf-panel");
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
