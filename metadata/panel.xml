@@ -26,6 +26,13 @@
 		<_long>Wether the pannel should extend all the way to the left and right; or top and bottom depending on orientation.</_long>
 		<default>true</default>
 	</option>
+	<option name="center" type="bool">
+		<_short>Center panel contents</_short>
+		<_long>Ensure the panel’s contents are centered. Effectively:
+If full_span is on, it will put the left and right widgets next to the center ones.
+If full_span is off, both sides of the panel will take the same amount of space, so that the center widgets are at the middle of the screen. This will lead to unused space on the side that has the least space taken up by the widgets.</_long>
+		<default>false</default>
+	</option>
 	<option name="minimal_height" type="int">
 		<_short>Minimal height</_short>
 		<_long>Minimum height the panel takes.</_long>
