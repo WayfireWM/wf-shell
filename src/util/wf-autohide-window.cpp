@@ -122,6 +122,16 @@ static std::string check_position(std::string position)
         return WF_WINDOW_POSITION_BOTTOM;
     }
 
+    if (position == WF_WINDOW_POSITION_LEFT)
+    {
+        return WF_WINDOW_POSITION_LEFT;
+    }
+
+    if (position == WF_WINDOW_POSITION_RIGHT)
+    {
+        return WF_WINDOW_POSITION_RIGHT;
+    }
+
     std::cerr << "Bad position in config file, defaulting to top" << std::endl;
     return WF_WINDOW_POSITION_TOP;
 }
@@ -137,6 +147,16 @@ static GtkLayerShellEdge get_anchor_edge(std::string position)
     if (position == WF_WINDOW_POSITION_BOTTOM)
     {
         return GTK_LAYER_SHELL_EDGE_BOTTOM;
+    }
+
+    if (position == WF_WINDOW_POSITION_LEFT)
+    {
+        return GTK_LAYER_SHELL_EDGE_LEFT;
+    }
+
+    if (position == WF_WINDOW_POSITION_RIGHT)
+    {
+        return GTK_LAYER_SHELL_EDGE_RIGHT;
     }
 
     assert(false); // not reached because check_position()
@@ -161,18 +181,29 @@ void WayfireAutohidingWindow::update_position()
     /* Reset old anchors */
     gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_TOP, false);
     gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, false);
+    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, false);
+    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, false);
 
     /* Set new anchor */
-    GtkLayerShellEdge anchor = get_anchor_edge(position);
-    gtk_layer_set_anchor(this->gobj(), anchor, true);
+    GtkLayerShellEdge edge = get_anchor_edge(position);
+    gtk_layer_set_anchor(this->gobj(), edge, true);
 
     if (!output->output)
     {
         return;
     }
 
+    // need different measurements depending on position
+    if ((edge == GTK_LAYER_SHELL_EDGE_LEFT) || (edge == GTK_LAYER_SHELL_EDGE_RIGHT))
+    {
+        get_allocated_height_or_width = &Gtk::Widget::get_allocated_width;
+    } else
+    {
+        get_allocated_height_or_width = &Gtk::Widget::get_allocated_height;
+    }
+
     /* When the position changes, show an animation from the new edge. */
-    autohide_animation.animate(-this->get_allocated_height(), 0);
+    autohide_animation.animate(-(this->*get_allocated_height_or_width)(), 0);
     start_draw_timer();
     m_show_uncertain();
     setup_hotspot();
@@ -212,15 +243,6 @@ static zwf_hotspot_v2_listener hotspot_listener = {
 
 void WayfireAutohidingWindow::setup_hotspot()
 {
-    /* No need to recreate hotspots if the height didn't change */
-    if ((this->get_allocated_height() == last_hotspot_height) && (edge_offset == last_edge_offset))
-    {
-        return;
-    }
-
-    this->last_hotspot_height = get_allocated_height();
-    this->last_edge_offset    = edge_offset;
-
     if (this->edge_hotspot)
     {
         zwf_hotspot_v2_destroy(edge_hotspot);
@@ -232,14 +254,26 @@ void WayfireAutohidingWindow::setup_hotspot()
     }
 
     auto position = check_position(this->position);
-    uint32_t edge = (position == WF_WINDOW_POSITION_TOP) ?
-        ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP : ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
+    uint32_t edge;
+    if (position == WF_WINDOW_POSITION_TOP)
+    {
+        edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP;
+    } else if (position == WF_WINDOW_POSITION_BOTTOM)
+    {
+        edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
+    } else if (position == WF_WINDOW_POSITION_LEFT)
+    {
+        edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_LEFT;
+    } else if (position == WF_WINDOW_POSITION_RIGHT)
+    {
+        edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_RIGHT;
+    }
 
     this->edge_hotspot = zwf_output_v2_create_hotspot(output->output,
         edge, edge_offset, autohide_show_delay);
 
     this->panel_hotspot = zwf_output_v2_create_hotspot(output->output,
-        edge, this->get_allocated_height(), 0); // immediate
+        edge, (this->*get_allocated_height_or_width)(), 0); // immediate
 
     this->edge_callbacks =
         std::make_unique<WayfireAutohidingWindowHotspotCallbacks>();
@@ -341,7 +375,7 @@ bool WayfireAutohidingWindow::should_autohide() const
 
 bool WayfireAutohidingWindow::m_do_hide()
 {
-    autohide_animation.animate(-get_allocated_height());
+    autohide_animation.animate(-(this->*get_allocated_height_or_width)());
     start_draw_timer();
     update_margin();
     return false; // disconnect

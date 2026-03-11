@@ -12,6 +12,8 @@ struct zwf_hotspot_v2;
 
 #define WF_WINDOW_POSITION_TOP    "top"
 #define WF_WINDOW_POSITION_BOTTOM "bottom"
+#define WF_WINDOW_POSITION_LEFT   "left"
+#define WF_WINDOW_POSITION_RIGHT  "right"
 
 struct WayfireAutohidingWindowHotspotCallbacks;
 /**
@@ -92,6 +94,7 @@ class WayfireAutohidingWindow : public Gtk::Window
     WfOption<int> minimal_height;
 
     wf::animation::simple_animation_t autohide_animation;
+    int (Gtk::Widget::*get_allocated_height_or_width)() const;
     bool update_margin();
 
     WfOption<bool> autohide_opt;

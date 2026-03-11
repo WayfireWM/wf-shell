@@ -37,6 +37,14 @@
 			<value>bottom</value>
 			<_name>Bottom</_name>
 		</desc>
+		<desc>
+			<value>left</value>
+			<_name>Left</_name>
+		</desc>
+		<desc>
+			<value>right</value>
+			<_name>Right</_name>
+		</desc>
 	</option>
 	<option name="max_per_line" type="int">
 		<_short>Max icons per line</_short>
