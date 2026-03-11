@@ -29,9 +29,11 @@ class WayfireAutohidingWindow : public Gtk::Window
      * 1. section/position
      * 2. section/minimal_height
      * 3. section/minimal_width
-     * 4. section/autohide
-     * 5. section/edge_offset
+     * 4. section/edge_offset
+     * 5. section/autohide
      * 6. section/autohide_duration
+     * 7. section/autohide_show_delay
+     * 8. section/autohide_hide_delay
      */
     WayfireAutohidingWindow(WayfireOutput *output, const std::string& section);
     WayfireAutohidingWindow(WayfireAutohidingWindow&&) = delete;
@@ -89,11 +91,8 @@ class WayfireAutohidingWindow : public Gtk::Window
     WfOption<int> minimal_width;
     WfOption<int> minimal_height;
 
-    wf::animation::simple_animation_t y_position;
+    wf::animation::simple_animation_t autohide_animation;
     bool update_margin();
-
-    WfOption<int> edge_offset;
-    int last_edge_offset = -1;
 
     WfOption<bool> autohide_opt;
     bool last_autohide_value = autohide_opt;
@@ -104,6 +103,12 @@ class WayfireAutohidingWindow : public Gtk::Window
     int auto_exclusive_zone_size = 0;
     void setup_auto_exclusive_zone();
     void update_auto_exclusive_zone();
+
+    WfOption<int> autohide_show_delay;
+    WfOption<int> autohide_hide_delay;
+
+    WfOption<int> edge_offset;
+    int last_edge_offset = -1;
 
     sigc::connection pending_show, pending_hide;
     bool m_do_show();
