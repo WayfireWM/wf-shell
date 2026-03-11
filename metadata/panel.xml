@@ -21,6 +21,11 @@
 		<_short>Widgets Right</_short>
 		<default>volume network battery clock</default>
 	</option>
+	<option name="full_span" type="bool">
+		<_short>Anchor to edges</_short>
+		<_long>Wether the pannel should extend all the way to the left and right; or top and bottom depending on orientation.</_long>
+		<default>true</default>
+	</option>
 	<option name="minimal_height" type="int">
 		<_short>Minimal height</_short>
 		<_long>Minimum height the panel takes.</_long>
