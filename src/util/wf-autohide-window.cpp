@@ -10,17 +10,16 @@
 #include <iostream>
 #include <assert.h>
 
-#define AUTOHIDE_SHOW_DELAY 300
-#define AUTOHIDE_HIDE_DELAY 300
-
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     const std::string& section) :
     position{section + "/position"},
     minimal_width{section + "/minimal_width"},
     minimal_height{section + "/minimal_height"},
-    y_position{WfOption<int>{section + "/autohide_duration"}},
-    edge_offset{section + "/edge_offset"},
-    autohide_opt{section + "/autohide"}
+    autohide_animation{WfOption<int>{section + "/autohide_duration"}},
+    autohide_opt{section + "/autohide"},
+    autohide_show_delay{section + "/autohide_show_delay"},
+    autohide_hide_delay{section + "/autohide_hide_delay"},
+    edge_offset{section + "/edge_offset"}
 {
     this->output = output;
     this->set_decorated(false);
