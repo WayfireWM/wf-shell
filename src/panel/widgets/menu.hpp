@@ -123,13 +123,13 @@ class WayfireMenu : public WayfireWidget
 {
     WayfireOutput *output;
 
-    std::string search_contents = "";
+    int vfocus_x = 0, vfocus_y = 0, vfocus_cat = 0;
 
     Gtk::Box flowbox_container;
     Gtk::Box box, box_bottom, scroll_pair;
     Gtk::Box bottom_pad;
     Gtk::Box popover_layout_box;
-    Gtk::Box category_box;
+    Gtk::ListBox category_box;
     Gtk::Separator separator;
     Gtk::Image main_image;
     Gtk::SearchEntry search_entry;
@@ -151,8 +151,8 @@ class WayfireMenu : public WayfireWidget
 
     bool update_icon();
 
-    bool m_sort_names     = true;
-    bool fuzzy_filter     = false;
+    bool m_sort_names = true;
+    bool fuzzy_filter = false;
     int32_t count_matches = 0;
 
     bool on_sort(Gtk::FlowBoxChild*, Gtk::FlowBoxChild*);
