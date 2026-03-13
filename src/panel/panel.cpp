@@ -14,6 +14,7 @@
 #include <css-config.hpp>
 #include "panel.hpp"
 
+#include "network/manager.hpp"
 #include "widgets/battery.hpp"
 #include "widgets/command-output.hpp"
 #include "widgets/language.hpp"
@@ -275,6 +276,7 @@ class WayfirePanel::impl
     {
         const auto lock_sn_watcher = Watcher::Instance();
         const auto lock_notification_daemon = Daemon::Instance();
+        const auto lock_network_manager     = NetworkManager::getInstanceIfExists();
         for (auto child : box.get_children())
         {
             box.remove(*child);
