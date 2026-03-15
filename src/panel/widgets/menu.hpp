@@ -137,6 +137,7 @@ class WayfireMenu : public WayfireWidget
     Gtk::Button logout_button;
     Gtk::Image logout_image;
     Gtk::ScrolledWindow app_scrolled_window, category_scrolled_window;
+    Gtk::Window fullscreen;
     std::unique_ptr<WayfireMenuButton> button;
     std::unique_ptr<WayfireLogoutUI> logout_ui;
 
@@ -180,6 +181,7 @@ class WayfireMenu : public WayfireWidget
     WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     WfOption<bool> menu_show_categories{"panel/menu_show_categories"};
+    WfOption<bool> menu_fullscreen{"panel/menu_fullscreen"};
     void setup_popover_layout();
     void update_popover_layout();
     void update_category_width();
