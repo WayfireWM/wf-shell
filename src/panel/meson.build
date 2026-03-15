@@ -38,7 +38,6 @@ deps = [
 if libpulse.found()
   widget_sources += [
     'widgets/volume.cpp',
-    'widgets/volume-level.cpp',
   ]
   deps += [libpulse, libgvc]
 else
@@ -50,7 +49,6 @@ if wireplumber.found()
     'widgets/wp-mixer/wp-mixer.cpp',
     'widgets/wp-mixer/wf-wp-control.cpp',
     'widgets/wp-mixer/wp-common.cpp',
-    'widgets/volume-level.cpp',
   ]
   deps += [pipewire, wireplumber]
 else
@@ -63,6 +61,12 @@ if get_option('weather') == true
   ]
 else
   message('Weather disabled, weather widgets and owf service not included.')
+endif
+
+if gbm.found() and drm.found() and not get_option('live-previews-dmabuf').disabled()
+  deps += [gbm, drm]
+else
+  message('Development packages for gbm and drm are required to enable live window preview tooltips in wf-panel.')
 endif
 
 executable(

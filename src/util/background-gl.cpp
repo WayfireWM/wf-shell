@@ -1,10 +1,10 @@
 #include <memory>
+#include <gdkmm/pixbuf.h>
+#include <glib.h>
+#include <glibmm/main.h>
+#include <glibmm/refptr.h>
 
 #include "background-gl.hpp"
-#include "gdkmm/pixbuf.h"
-#include "glib.h"
-#include "glibmm/main.h"
-#include "glibmm/refptr.h"
 
 static const char *vertex_shader =
     R"(

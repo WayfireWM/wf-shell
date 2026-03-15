@@ -233,32 +233,71 @@ void WayfireShellApp::on_activate()
     if (!alternative_monitors)
     {
         // Hook up monitor tracking
-        auto display  = Gdk::Display::get_default();
-        auto monitors = display->get_monitors();
-        monitors->signal_items_changed().connect(sigc::mem_fun(*this, &WayfireShellApp::output_list_updated));
+        auto display = Gdk::Display::get_default();
+        auto monitor_list = display->get_monitors();
+        monitor_list->signal_items_changed().connect(sigc::mem_fun(*this,
+            &WayfireShellApp::output_list_updated));
 
         // initial monitors
-        int num_monitors = monitors->get_n_items();
+        int num_monitors = monitor_list->get_n_items();
         for (int i = 0; i < num_monitors; i++)
         {
-            auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
-            add_output(obj);
+            auto monitor = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
+            add_output(monitor);
         }
     }
 }
 
 void WayfireShellApp::output_list_updated(const int pos, const int rem, const int add)
 {
-    auto display     = Gdk::Display::get_default();
-    auto monitors    = display->get_monitors();
-    int num_monitors = monitors->get_n_items();
-    for (int i = 0; i < num_monitors; i++)
+    auto display = Gdk::Display::get_default();
+    auto monitor_list = display->get_monitors();
+    auto context = g_main_context_default();
+
+    for (int i = pos; i < pos + add; i++)
     {
-        auto obj = std::dynamic_pointer_cast<Gdk::Monitor>(monitors->get_object(i));
-        if (obj && !obj->get_connector().empty())
+        auto monitor = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
+
+        /* XXX: Workaround bug that causes a new output to have
+         * no name. We use the name for various reasons so we need
+         * it to be valid when signaling new output to the apps.
+         * We set a timer for 100ms, then print a warning if the
+         * timeout fired. */
+        std::string output_name = monitor->get_connector();
+
+        bool cancel_wait    = false;
+        auto timeout_signal = Glib::signal_timeout().connect([&cancel_wait] ()
         {
-            add_output(obj);
+            cancel_wait = true;
+            return G_SOURCE_REMOVE;
+        }, 100);
+
+        while (output_name.empty() && !cancel_wait)
+        {
+            g_main_context_iteration(context, true);
+            output_name = monitor->get_connector();
         }
+
+        timeout_signal.disconnect();
+        if (cancel_wait)
+        {
+            std::cerr << "Timeout reached while waiting for output name." <<
+                    (output_name.empty() ?
+                " Our local output object does not have a name at this point." :
+                "") << std::endl;
+        } /* XXX: End workaround. */
+
+        if (monitor->get_connector() == live_preview_output_name)
+        {
+            live_preview_output = gdk_wayland_monitor_get_wl_output(monitor->gobj());
+            monitor->signal_invalidate().connect([=]
+            {
+                live_preview_output = nullptr;
+            });
+            continue;
+        }
+
+        add_output(monitor);
     }
 }
 
@@ -308,6 +347,7 @@ std::vector<std::unique_ptr<WayfireOutput>>*WayfireShellApp::get_wayfire_outputs
 
 WayfireShellApp::WayfireShellApp()
 {
+    live_preview_output = nullptr;
     live_preview_output_name = "live-preview";
 }
 

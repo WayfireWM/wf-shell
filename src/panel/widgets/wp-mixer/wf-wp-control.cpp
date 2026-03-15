@@ -2,7 +2,9 @@
 #include <gtkmm.h>
 
 #include "wf-wp-control.hpp"
-#include "../volume-level.hpp"
+#include "icon-select.hpp"
+
+#define ICON(volume) icon_from_range(volume_icons, volume)
 
 WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
 {
@@ -27,10 +29,10 @@ void WfWpControl::init()
 
     // build layout
 
+    add_css_class("wp-mixer-control");
     button.set_child(volume_icon);
     button.add_css_class("mute-toggle");
     button.add_css_class("widget-icon");
-    button.add_css_class("wireplumber");
     button.add_css_class("flat");
 
     scale.set_range(0.0, 1.0);
@@ -143,12 +145,12 @@ void WfWpControl::update_icon()
     if (button.get_active())
     {
         add_css_class("muted");
-        volume_icon.set_from_icon_name(volume_icon_for(0)); // mute
+        volume_icon.set_from_icon_name(ICON(0)); // mute
         return;
     }
 
     remove_css_class("muted");
-    volume_icon.set_from_icon_name(volume_icon_for(get_scale_target_value()));
+    volume_icon.set_from_icon_name(ICON(get_scale_target_value()));
 }
 
 double WfWpControl::get_scale_target_value()
@@ -222,9 +224,9 @@ WfWpControlDevice::~WfWpControlDevice()
 
 void WfWpControlDevice::init()
 {
+    add_css_class("wp-mixer-control");
     default_btn.add_css_class("default-button");
     default_btn.add_css_class("widget-icon");
-    default_btn.add_css_class("wireplumber");
     default_btn.add_css_class("flat");
 
     is_def_icon.set_from_icon_name("emblem-default");

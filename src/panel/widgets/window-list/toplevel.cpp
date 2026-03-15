@@ -45,6 +45,31 @@ static int create_anon_file(off_t size)
     return fd;
 }
 
+#ifdef HAVE_DMABUF
+static void dmabuf_created(void *data, struct zwp_linux_buffer_params_v1*,
+    struct wl_buffer *wl_buffer)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    tooltip_media->buffer = wl_buffer;
+    zwlr_screencopy_frame_v1_copy(tooltip_media->frame, tooltip_media->buffer);
+}
+
+static void dmabuf_failed(void *data, struct zwp_linux_buffer_params_v1*)
+{
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    std::cerr << "Failed to create dmabuf, trying shm" << std::endl;
+    tooltip_media->window_list->live_previews_dmabuf = false;
+}
+
+static const struct zwp_linux_buffer_params_v1_listener params_listener =
+{
+    .created = dmabuf_created,
+    .failed  = dmabuf_failed,
+};
+#endif // HAVE_DMABUF
+
 void handle_frame_buffer(void *data,
     struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
     uint32_t format,
@@ -53,6 +78,12 @@ void handle_frame_buffer(void *data,
     uint32_t stride)
 {
     TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    if (tooltip_media->window_list->live_previews_dmabuf)
+    {
+        tooltip_media->shm_data = nullptr;
+        return;
+    }
 
     size_t size = width * height * int(stride / width);
 
@@ -108,12 +139,65 @@ void handle_frame_ready(void *data,
 {
     TooltipMedia *tooltip_media = (TooltipMedia*)data;
 
-    if (!tooltip_media->shm_data || !tooltip_media->size)
+    tooltip_media->request_next_frame();
+
+#ifdef HAVE_DMABUF
+    if (tooltip_media->window_list->live_previews_dmabuf && tooltip_media->bo)
+    {
+        uint32_t stride = 0;
+        tooltip_media->map_data    = nullptr;
+        tooltip_media->dmabuf_data = gbm_bo_map(tooltip_media->bo,
+            0, 0, tooltip_media->buffer_width, tooltip_media->buffer_height,
+            GBM_BO_TRANSFER_READ, &stride, &tooltip_media->map_data);
+
+        if (!tooltip_media->dmabuf_data)
+        {
+            perror("Failed to map bo");
+            std::cerr << "Trying shm" << std::endl;
+            tooltip_media->window_list->live_previews_dmabuf = false;
+            return;
+        }
+
+        if (tooltip_media->bo && tooltip_media->map_data)
+        {
+            gbm_bo_unmap(tooltip_media->bo, tooltip_media->map_data);
+            tooltip_media->map_data = nullptr;
+        }
+
+        tooltip_media->buffer_stride = stride;
+        tooltip_media->size = tooltip_media->buffer_height * tooltip_media->buffer_stride;
+    }
+
+#endif // HAVE_DMABUF
+
+    if ((!tooltip_media->shm_data
+#ifdef HAVE_DMABUF
+         && !tooltip_media->dmabuf_data
+#endif // HAVE_DMABUF
+        ) || !tooltip_media->size)
     {
         return;
     }
 
-    auto bytes = Glib::Bytes::create(tooltip_media->shm_data, tooltip_media->size);
+    std::shared_ptr<Glib::Bytes> bytes = 0;
+    size_t size = tooltip_media->buffer_height * tooltip_media->buffer_stride;
+    if (tooltip_media->shm_data)
+    {
+        bytes = Glib::Bytes::create(tooltip_media->shm_data, size);
+    }
+
+#ifdef HAVE_DMABUF
+    else if (tooltip_media->dmabuf_data)
+    {
+        bytes = Glib::Bytes::create(tooltip_media->dmabuf_data, size);
+        tooltip_media->dmabuf_data = nullptr;
+    }
+#endif // HAVE_DMABUF
+
+    if (!bytes)
+    {
+        return;
+    }
 
     auto builder = Gdk::MemoryTextureBuilder::create();
     builder->set_bytes(bytes);
@@ -138,12 +222,86 @@ void handle_frame_damage(void*,
     uint32_t)
 {}
 
-void handle_frame_linux_dmabuf(void*,
-    struct zwlr_screencopy_frame_v1*,
-    uint32_t,
-    uint32_t,
-    uint32_t)
-{}
+void handle_frame_linux_dmabuf(void *data,
+    struct zwlr_screencopy_frame_v1 *frame,
+    uint32_t format,
+    uint32_t width,
+    uint32_t height)
+{
+#ifdef HAVE_DMABUF
+    TooltipMedia *tooltip_media = (TooltipMedia*)data;
+
+    if (!tooltip_media->window_list->live_previews_dmabuf)
+    {
+        return;
+    }
+
+    tooltip_media->buffer_width  = width;
+    tooltip_media->buffer_height = height;
+
+    if (!tooltip_media->buffer)
+    {
+        if (tooltip_media->bo)
+        {
+            if (tooltip_media->buffer)
+            {
+                wl_buffer_destroy(tooltip_media->buffer);
+                tooltip_media->buffer = nullptr;
+            }
+
+            if (tooltip_media->params)
+            {
+                zwp_linux_buffer_params_v1_destroy(tooltip_media->params);
+                tooltip_media->params = nullptr;
+            }
+
+            if (tooltip_media->bo)
+            {
+                gbm_bo_destroy(tooltip_media->bo);
+                tooltip_media->bo = nullptr;
+            }
+        }
+
+        const uint64_t modifier = 0; // DRM_FORMAT_MOD_LINEAR
+        tooltip_media->bo = gbm_bo_create_with_modifiers(tooltip_media->window_list->dmabuf_device,
+            tooltip_media->buffer_width,
+            tooltip_media->buffer_height, format, &modifier, 1);
+        if (!tooltip_media->bo)
+        {
+            tooltip_media->bo = gbm_bo_create(tooltip_media->window_list->dmabuf_device,
+                tooltip_media->buffer_width,
+                tooltip_media->buffer_height, format, GBM_BO_USE_LINEAR | GBM_BO_USE_RENDERING);
+        }
+
+        if (!tooltip_media->bo)
+        {
+            perror("Failed to create gbm bo");
+            std::cerr << "Trying shm" << std::endl;
+            tooltip_media->window_list->live_previews_dmabuf = false;
+            return;
+        }
+
+        tooltip_media->buffer_stride = gbm_bo_get_stride(tooltip_media->bo);
+
+        tooltip_media->params = zwp_linux_dmabuf_v1_create_params(tooltip_media->window_list->dmabuf);
+
+        uint64_t mod = gbm_bo_get_modifier(tooltip_media->bo);
+        zwp_linux_buffer_params_v1_add(tooltip_media->params,
+            gbm_bo_get_fd(tooltip_media->bo), 0,
+            gbm_bo_get_offset(tooltip_media->bo, 0),
+            gbm_bo_get_stride(tooltip_media->bo),
+            mod >> 32, mod & 0xffffffff);
+
+        zwp_linux_buffer_params_v1_add_listener(tooltip_media->params, &params_listener, tooltip_media);
+        zwp_linux_buffer_params_v1_create(tooltip_media->params, tooltip_media->buffer_width,
+            tooltip_media->buffer_height, format, 0);
+    } else
+    {
+        zwlr_screencopy_frame_v1_copy(frame, tooltip_media->buffer);
+    }
+
+#endif // HAVE_DMABUF
+}
 
 void handle_frame_buffer_done(void*, struct zwlr_screencopy_frame_v1*)
 {}
@@ -159,23 +317,24 @@ static struct zwlr_screencopy_frame_v1_listener screencopy_frame_listener =
     handle_frame_buffer_done,
 };
 
-void TooltipMedia::request_next_frame()
+bool TooltipMedia::request_next_frame()
 {
     if (this->frame)
     {
         zwlr_screencopy_frame_v1_destroy(this->frame);
-        this->frame = NULL;
+        this->frame = nullptr;
     }
 
-    if (!this->window_list->window_list_live_preview_output ||
-        !this->window_list->window_list_live_preview_output->output)
+    if (!WayfireShellApp::get().live_preview_output)
     {
-        return;
+        return false;
     }
 
     this->frame = zwlr_screencopy_manager_v1_capture_output(this->window_list->screencopy_manager, 0,
-        this->window_list->window_list_live_preview_output->output);
+        WayfireShellApp::get().live_preview_output);
     zwlr_screencopy_frame_v1_add_listener(this->frame, &screencopy_frame_listener, this);
+
+    return true;
 }
 
 TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
@@ -185,10 +344,8 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list)
 
     this->add_tick_callback([=] (const Glib::RefPtr<Gdk::FrameClock>& clock)
     {
-        return this->on_tick(clock);
+        return !this->request_next_frame();
     });
-
-    request_next_frame();
 }
 
 TooltipMedia::~TooltipMedia()
@@ -196,10 +353,13 @@ TooltipMedia::~TooltipMedia()
     if (this->frame)
     {
         zwlr_screencopy_frame_v1_destroy(this->frame);
-        this->frame = NULL;
     }
 
-    if (this->shm_data && this->size)
+    if (
+#ifdef HAVE_DMABUF
+        !this->window_list->live_previews_dmabuf &&
+#endif // HAVE_DMABUF
+        this->shm_data && this->size)
     {
         if (munmap(this->shm_data, this->size) < 0)
         {
@@ -207,14 +367,28 @@ TooltipMedia::~TooltipMedia()
         }
     }
 
-    this->shm_data = NULL;
-    this->size     = 0;
-}
+    if (this->buffer)
+    {
+        wl_buffer_destroy(this->buffer);
+    }
 
-bool TooltipMedia::on_tick(const Glib::RefPtr<Gdk::FrameClock>& clock)
-{
-    this->request_next_frame();
-    return G_SOURCE_CONTINUE;
+#ifdef HAVE_DMABUF
+    if (this->params)
+    {
+        zwp_linux_buffer_params_v1_destroy(this->params);
+    }
+
+    if (this->bo && this->map_data)
+    {
+        gbm_bo_unmap(this->bo, this->map_data);
+    }
+
+    if (this->bo)
+    {
+        gbm_bo_destroy(this->bo);
+    }
+
+#endif // HAVE_DMABUF
 }
 
 class WayfireToplevel::impl
@@ -334,16 +508,7 @@ class WayfireToplevel::impl
             [=] (int count, double x, double y)
         {
             int butt = click_gesture->get_current_button();
-            if (butt == 1)
-            {
-                // Ah, it was a press after all!
-                if (!ignore_next_click)
-                {
-                    this->on_clicked();
-                }
-
-                ignore_next_click = false;
-            } else if ((butt == 2) && middle_click_close.value())
+            if ((butt == 2) && middle_click_close.value())
             {
                 zwlr_foreign_toplevel_handle_v1_close(handle);
             } else if (butt == 3)
@@ -405,6 +570,7 @@ class WayfireToplevel::impl
                 }
 
                 set_tooltip_media();
+                update_tooltip();
             });
         }));
         button.add_controller(motion_controller);
@@ -547,10 +713,6 @@ class WayfireToplevel::impl
     static constexpr int DRAG_THRESHOLD = 3;
     void on_drag_update(double _x, double y)
     {
-        /* Window was not just clicked, but also dragged. Ignore the next click,
-         * which is the one that happens when the drag gesture ends. */
-        set_ignore_next_click();
-
         int x = _x + grab_start_x;
         x = window_list->get_absolute_position(x, button);
         if (std::abs(x - grab_abs_start_x) > DRAG_THRESHOLD)
@@ -590,29 +752,11 @@ class WayfireToplevel::impl
 
     void on_drag_end(double _x, double _y)
     {
-        int x     = _x + grab_start_x;
-        int y     = _y + grab_start_y;
-        int width = button.get_allocated_width();
-        int height = button.get_allocated_height();
-
         window_list->set_top_widget(nullptr);
         set_classes(state);
 
-        /* When a button is dropped after dnd, we ignore the unclick
-         * event so action doesn't happen in addition to dropping.
-         * If the drag ends and the unclick event happens outside
-         * the button, unset ignore_next_click or else the next
-         * click on the button won't cause action. */
-        if ((x < 0) || (x > width) || (y < 0) || (y > height))
-        {
-            unset_ignore_next_click();
-        }
-
-        /* When dragging with touch or pen, we allow some small movement while
-         * still counting the action as button press as opposed to only dragging. */
         if (!drag_exceeds_threshold)
         {
-            unset_ignore_next_click();
             this->on_clicked();
         }
 
@@ -662,34 +806,8 @@ class WayfireToplevel::impl
         zwlr_foreign_toplevel_handle_v1_close(handle);
     }
 
-    bool ignore_next_click = false;
-    void set_ignore_next_click()
-    {
-        ignore_next_click = true;
-
-        /* Make sure that the view doesn't show clicked on animations while
-         * dragging (this happens only on some themes) */
-        button.set_state_flags(Gtk::StateFlags::SELECTED |
-            Gtk::StateFlags::DROP_ACTIVE | Gtk::StateFlags::PRELIGHT);
-    }
-
-    void unset_ignore_next_click()
-    {
-        ignore_next_click = false;
-        button.unset_state_flags(Gtk::StateFlags::SELECTED |
-            Gtk::StateFlags::DROP_ACTIVE | Gtk::StateFlags::PRELIGHT);
-    }
-
     void on_clicked()
     {
-        /* If the button was dragged, we don't want to register the click.
-         * Subsequent clicks should be handled though. */
-        if (ignore_next_click)
-        {
-            unset_ignore_next_click();
-            return;
-        }
-
         bool child_activated = false;
         for (auto c : get_children())
         {
@@ -729,8 +847,6 @@ class WayfireToplevel::impl
         {
             return false;
         }
-
-        update_tooltip();
 
         if (!this->window_list->live_window_previews_enabled())
         {
@@ -900,6 +1016,8 @@ class WayfireToplevel::impl
 
     ~impl()
     {
+        unset_tooltip_media();
+
         gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
 
         button_leave_signal.disconnect();

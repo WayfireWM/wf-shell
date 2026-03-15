@@ -518,9 +518,11 @@ void WayfireMenu::on_popover_shown()
     set_category("All");
     flowbox.unselect_all();
 
-    Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
-
-    gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    if (force_show_popup.value())
+    {
+        Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
+        gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    }
 }
 
 bool WayfireMenu::update_icon()
@@ -628,6 +630,11 @@ void WayfireMenu::setup_popover_layout()
     popover_layout_box.add_controller(typing_gesture);
     signals.push_back(button->get_popover()->signal_closed().connect([=] ()
     {
+        if (!force_show_popup.value())
+        {
+            return;
+        }
+
         Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
         WfOption<std::string> panel_layer{"panel/layer"};
 
@@ -657,10 +664,26 @@ void WayfireMenu::update_popover_layout()
 {
     /* Layout was already initialized, make sure to remove widgets before
      * adding them again */
-    popover_layout_box.remove(search_entry);
-    popover_layout_box.remove(scroll_pair);
-    popover_layout_box.remove(separator);
-    popover_layout_box.remove(box_bottom);
+    auto children = popover_layout_box.get_children();
+    if (std::count(children.begin(), children.end(), &search_entry))
+    {
+        popover_layout_box.remove(search_entry);
+    }
+
+    if (std::count(children.begin(), children.end(), &scroll_pair))
+    {
+        popover_layout_box.remove(scroll_pair);
+    }
+
+    if (std::count(children.begin(), children.end(), &separator))
+    {
+        popover_layout_box.remove(separator);
+    }
+
+    if (std::count(children.begin(), children.end(), &box_bottom))
+    {
+        popover_layout_box.remove(box_bottom);
+    }
 
     if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
     {

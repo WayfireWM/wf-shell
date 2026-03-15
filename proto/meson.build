@@ -20,6 +20,10 @@ client_protocols = [
     wayfire.get_pkgconfig_variable('pkgdatadir') / 'unstable' / 'wayfire-shell-unstable-v2.xml',
 ]
 
+if gbm.found() and drm.found() and not get_option('live-previews-dmabuf').disabled()
+    client_protocols += [join_paths(wl_protocol_dir, 'unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml')]
+endif
+
 wl_protos_src = []
 wl_protos_headers = []
 

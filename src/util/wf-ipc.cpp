@@ -82,6 +82,11 @@ void WayfireIPC::send(const std::string& message)
 
 void WayfireIPC::send(const std::string& message, int response_handler)
 {
+    if (!connected)
+    {
+        return;
+    }
+
     send_message(message);
     response_handlers.push(response_handler);
 }
@@ -316,7 +321,7 @@ std::shared_ptr<IPCClient> WayfireIPC::create_client()
     if (!connected)
     {
         std::cerr << "Failed to create ipc client" << std::endl;
-        return nullptr;
+        return std::shared_ptr<IPCClient>(new IPCClient(0, shared_from_this()));
     }
 
     auto client = new IPCClient(next_client_id, shared_from_this());

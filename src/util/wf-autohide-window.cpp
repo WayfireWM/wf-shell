@@ -31,7 +31,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     this->update_position();
 
     auto pointer_gesture = Gtk::EventControllerMotion::create();
-    pointer_gesture->signal_enter().connect([=] (double x, double y)
+    signals.push_back(pointer_gesture->signal_enter().connect([=] (double x, double y)
     {
         if (this->pending_hide.connected())
         {
@@ -41,15 +41,15 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         this->input_inside_panel = true;
         y_position.animate(0);
         start_draw_timer();
-    });
-    pointer_gesture->signal_leave().connect([=]
+    }));
+    signals.push_back(pointer_gesture->signal_leave().connect([=]
     {
         this->input_inside_panel = false;
         if (this->should_autohide())
         {
             this->schedule_hide(AUTOHIDE_HIDE_DELAY);
         }
-    });
+    }));
     this->add_controller(pointer_gesture);
 
     this->setup_autohide();
@@ -89,6 +89,11 @@ WayfireAutohidingWindow::~WayfireAutohidingWindow()
     if (this->panel_hotspot)
     {
         zwf_hotspot_v2_destroy(this->panel_hotspot);
+    }
+
+    for (auto handler : signals)
+    {
+        handler.disconnect();
     }
 }
 

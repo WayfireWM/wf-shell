@@ -31,6 +31,19 @@
     padding-left: 5px;
 }
 
+.wf-panel .battery overlay label {
+--bcol: rgb(from currentcolor calc(255 - r) calc(255 - g) calc(255 - b) );
+text-shadow: 1px  1px 0 var(--bcol),
+            -1px -1px 0 var(--bcol),
+            -1px  1px 0 var(--bcol),
+             1px -1px 0 var(--bcol),
+             0px  1px 0 var(--bcol),
+             0px -1px 0 var(--bcol),
+            -1px  0px 0 var(--bcol),
+             1px  0px 0 var(--bcol);
+	font-weight:bold;
+}
+
 .wf-panel .notification .time {
     padding-left: 5px;
     padding-right: 5px;
@@ -198,9 +211,6 @@
     border-radius: 10px;
     background: #0004;
 }
-.wf-locker .fingerprint-overlay-image {
-    -gtk-icon-size: 64px;
-}
 .wf-locker .fingerprint-overlay-image.good {
     color: #0f0;
 }
@@ -211,34 +221,52 @@
     color: #88f;
 }
 
-.wf-locker .mpris image.albumart {
-    -gtk-icon-size:96px;
-}
 .wf-locker .user label {
-    font-size: 70px;
     font-weight: bold;
     text-transform: capitalize;
 }
-.wf-locker .user image {
-    -gtk-icon-size:256px;
-}
 .wf-locker image.weather {
-    -gtk-icon-size:128px;
     padding-left: 25px;
     padding-right: 25px;
     padding-bottom: 100px;
 }
 .wf-locker label.weather {
-    font-size: 128px;
     font-weight: bold;
     padding-left: 100px;
     padding-bottom: 75px;
 }
 .wf-locker label.clock {
-    font-size: 128px;
     font-weight: bold;
     padding-right: 100px;
     padding-bottom: 75px;
+}
+
+.wf-locker .failure {
+    animation-name: shake;
+    animation-duration:0.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+
+.wf-locker.sized-480 {
+    font-size:6px;
+}
+
+.wf-locker.sized-720 {
+    font-size:7px;
+}
+
+.wf-locker.sized-1080 {
+    font-size:10px;
+}
+
+.wf-locker.sized-1440 {
+    font-size:14px;
+}
+
+.wf-locker.sized-2160 {
+    font-size:18px;
 }
 
 @keyframes embiggen {
@@ -272,3 +300,25 @@
         padding-right: 0rem;
     }
 }
+
+@keyframes shake {
+  0% {
+    transform: translateX(0px);
+  }
+  20% {
+    transform: translateX(20px);
+  }
+  40% {
+    transform: translateX(-20px);
+  }
+  60% {
+    transform: translateX(20px);
+  }
+  80% {
+    transform: translateX(-20px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+}
+
