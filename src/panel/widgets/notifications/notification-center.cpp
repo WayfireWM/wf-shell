@@ -9,23 +9,21 @@
 
 void WayfireNotificationCenter::init(Gtk::Box *container)
 {
-    button = std::make_unique<WayfireMenuButton>("panel");
+    button = std::make_unique<WayfireMenuButton>("panel", "notification");
     icon.add_css_class("widget-icon");
     button->add_css_class("notification-center");
     button->get_children()[0]->add_css_class("flat");
 
     updateIcon();
-    button->set_child(icon);
+    button->set_popover_child(icon);
     container->append(*button);
 
-    auto *popover = button->get_popover();
-    popover->set_size_request(WIDTH, HEIGHT);
-    popover->add_css_class("notification-popover");
+    scrolled_window.set_size_request(WIDTH, HEIGHT);
 
     box.set_valign(Gtk::Align::START);
     box.set_orientation(Gtk::Orientation::VERTICAL);
     scrolled_window.set_child(box);
-    popover->set_child(scrolled_window);
+    button->set_popover_child(scrolled_window);
 
     button->set_tooltip_text("Middle click to toggle DND mode.");
 
@@ -79,14 +77,13 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id, bool s
     widget->set_reveal_child();
     if (show_popup && !dnd_enabled || (show_critical_in_dnd && (notification.hints.urgency == 2)))
     {
-        auto *popover = button->get_popover();
-        if ((timeout > 0) && (!popover_timeout.empty() || !popover->is_visible()))
+        if ((timeout > 0) && (!popover_timeout.empty() || !button->is_popup_visible()))
         {
             popover_timeout.disconnect();
             popover_timeout = Glib::signal_timeout().connect(
                 [=]
             {
-                popover->popdown();
+                button->popdown();
                 button->set_keyboard_interactive();
                 popover_timeout.disconnect();
                 return true;
@@ -95,7 +92,7 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id, bool s
         }
 
         button->set_keyboard_interactive(false);
-        popover->popup();
+        button->popup();
     }
 }
 
