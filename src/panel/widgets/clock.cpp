@@ -3,7 +3,7 @@
 
 void WayfireClock::init(Gtk::Box *container)
 {
-    button = std::make_unique<WayfireMenuButton>("panel", "clock");
+    button = std::make_unique<WayfireMenuWidget>("panel", "clock");
     button->add_css_class("clock");
     button->append(label);
     button->show();
@@ -13,7 +13,7 @@ void WayfireClock::init(Gtk::Box *container)
     update_label();
 
     calendar.show();
-    button->set_popover_child(calendar);
+    button->set_popup_child(calendar);
     btn_sig = button->signal_popup().connect(
         sigc::mem_fun(*this, &WayfireClock::on_calendar_shown));
 

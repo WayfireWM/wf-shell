@@ -176,10 +176,10 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *wi
     {
         widget->set_quick_target_from(control);
         // if the full mixer is not shown, change the popover child
-        if ((widget->button->get_popover_child() !=
+        if ((widget->button->get_popup_child() !=
              &(widget->master_box)) && widget->button->is_popup_visible())
         {
-            widget->button->set_popover_child(*widget->quick_target);
+            widget->button->set_popup_child(*widget->quick_target);
         }
 
         widget->update_icon();
@@ -275,7 +275,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
         update_icons();
 
         // if the mixer is currently being displayed, stop there
-        if ((widget->button->get_popover_child() ==
+        if ((widget->button->get_popup_child() ==
              &(widget->master_box)) && widget->button->is_popup_visible())
         {
             continue;
@@ -283,10 +283,10 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         if (widget->quick_target &&
             (!widget->button->is_popup_visible() ||
-             (widget->button->get_popover_child() != (WfWpControl*)&widget->quick_target)))
+             (widget->button->get_popup_child() != (WfWpControl*)&widget->quick_target)))
         {
             // put the quick_target in the popover and show
-            widget->button->set_popover_child(*widget->quick_target);
+            widget->button->set_popup_child(*widget->quick_target);
             if (widget->popup_on_change && change)
             {
                 widget->button->popup();

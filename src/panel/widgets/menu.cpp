@@ -11,6 +11,7 @@
 #include "menu.hpp"
 #include "gtk-utils.hpp"
 #include "wf-autohide-window.hpp"
+#include "wf-popover.hpp"
 
 const std::string default_icon = "wayfire";
 
@@ -542,7 +543,7 @@ bool WayfireMenu::update_icon()
 
 void WayfireMenu::setup_popover_layout()
 {
-    button->set_popover_child(popover_layout_box);
+    button->set_popup_child(popover_layout_box);
 
     flowbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
     flowbox.set_activate_on_single_click(true);
@@ -913,12 +914,13 @@ void WayfireMenu::init(Gtk::Box *container)
     menu_show_categories.set_callback([=] () { update_popover_layout(); });
     menu_list.set_callback([=] () { update_popover_layout(); });
 
-    button = std::make_unique<WayfireMenuButton>("panel", "menu");
+    button = std::make_unique<WayfireMenuWidget>("panel", "menu");
     fullscreen.add_css_class("menu-fullscreen");
     button->append(main_image);
     button->add_css_class("menu-button");
     button->add_css_class("flat");
     button->get_children()[0]->add_css_class("flat");
+    button->open_on(1); /* Open menu on left click */
     signals.push_back(button->signal_popup().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown)));
 
@@ -941,7 +943,7 @@ void WayfireMenu::init(Gtk::Box *container)
     signals.push_back(button->property_scale_factor().signal_changed().connect(
         [=] () {update_icon(); }));
 
-    button->set_popover_child(popover_layout_box);
+    button->set_popup_child(popover_layout_box);
 
     container->append(box);
     box.append(*button);

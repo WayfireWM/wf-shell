@@ -19,7 +19,7 @@ class WayfireNotificationCenter : public WayfireWidget
     sigc::connection notification_close_conn;
 
     Gtk::Image icon;
-    std::unique_ptr<WayfireMenuButton> button;
+    std::unique_ptr<WayfireMenuWidget> button;
     Gtk::ScrolledWindow scrolled_window;
     Gtk::Box box;
 

@@ -3,6 +3,7 @@
 
 #include "volume.hpp"
 #include "icon-select.hpp"
+#include "wf-popover.hpp"
 
 #define ICON(volume) icon_from_range(volume_icons, volume)
 
@@ -137,7 +138,7 @@ void WayfireVolume::on_volume_value_changed()
 
 void WayfireVolume::init(Gtk::Box *container)
 {
-    button = std::make_unique<WayfireMenuButton>("panel", "volume");
+    button = std::make_unique<WayfireMenuWidget>("panel", "volume");
 
     /* Setup button */
     button->add_css_class("widget-icon");
@@ -168,7 +169,7 @@ void WayfireVolume::init(Gtk::Box *container)
     button->add_controller(scroll_gesture);
 
     /* Setup popover */
-    button->set_popover_child(volume_scale);
+    button->set_popup_child(volume_scale);
 
     auto scroll_gesture2 = Gtk::EventControllerScroll::create();
     signals.push_back(scroll_gesture2->signal_scroll().connect([=] (double dx, double dy)
@@ -255,7 +256,7 @@ void WayfireVolume::init(Gtk::Box *container)
 
     /* Setup layout */
     container->append(*button);
-    button->set_popover_child(main_image);
+    button->set_popup_child(main_image);
 }
 
 WayfireVolume::~WayfireVolume()
