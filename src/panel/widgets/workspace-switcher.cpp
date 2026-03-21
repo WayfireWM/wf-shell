@@ -5,6 +5,7 @@
 #include <wf-option-wrap.hpp>
 
 #include "panel.hpp"
+#include "wf-popover.hpp"
 #include "workspace-switcher.hpp"
 
 void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
@@ -20,7 +21,7 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     box.add_css_class("workspace-switcher");
     box.add_css_class("flat");
 
-    button = std::make_unique<WayfireMenuButton>("panel", "workspace-switcher", "workspace_switcher");
+    button = std::make_unique<WayfireMenuWidget>("panel", "workspace-switcher", "workspace_switcher");
 
     ipc_client->subscribe(this, {"view-mapped"});
     ipc_client->subscribe(this, {"view-focused"});
@@ -49,7 +50,7 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
             switcher_box.append(overlay);
         } else // "grid_popover"
         {
-            button->set_popover_child(overlay);
+            button->set_popup_child(overlay);
             button->append(mini_grid);
             switcher_box.append(*button);
         }
@@ -472,7 +473,7 @@ void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data
                 }
 
                 clear_box();
-                button->set_popover_child(overlay);
+                button->set_popup_child(overlay);
                 overlay.set_child(switch_grid);
                 overlay.add_css_class("workspace");
                 overlay.signal_get_child_position().connect(sigc::mem_fun(*this,
