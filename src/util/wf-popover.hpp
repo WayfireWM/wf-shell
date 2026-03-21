@@ -1,14 +1,41 @@
 #pragma once
 
-#include <gtkmm/menubutton.h>
+#include "gtkmm/widget.h"
+#include "sigc++/connection.h"
+#include "sigc++/signal.h"
+#include <gtkmm/box.h>
 #include <gtkmm/popover.h>
+#include <memory>
 #include <wf-option-wrap.hpp>
+
+using type_signal_simple = sigc::signal<void (void)>;
+
+/**
+ * A Popover subclass for WayfireMenuButton
+ */
+class WayfirePopover
+{
+  private:
+    Gtk::Popover popover;
+
+  public:
+    WayfirePopover(std::string class_name, std::string option_name);
+
+    void set_child(Gtk::Widget & widget);
+    Gtk::Widget *get_child();
+
+    void popup();
+    void popdown();
+
+    void set_parent(Gtk::Widget & widget);
+    void unset_parent();
+};
 
 /**
  * A button which shows a popover on click. It adjusts the popup position
  * automatically based on panel position (valid values are "top" and "bottom")
  */
-class WayfireMenuButton : public Gtk::MenuButton
+class WayfireMenuButton : public Gtk::Box
 {
     bool interactive = true;
     bool has_focus   = false;
@@ -21,12 +48,36 @@ class WayfireMenuButton : public Gtk::MenuButton
     /* Set the has_focus property */
     void set_has_focus(bool focus);
 
-  public:
-    Gtk::Popover m_popover;
+    std::shared_ptr<WayfirePopover> m_popover;
 
-    WayfireMenuButton(const std::string& config_section);
-    virtual ~WayfireMenuButton()
-    {}
+    std::vector<sigc::connection> signals;
+
+    type_signal_simple popup_signal, popdown_signal;
+
+  public:
+    WayfireMenuButton(const std::string& config_section,
+        const std::string name);
+    WayfireMenuButton(const std::string& config_section,
+        const std::string css_name,
+        const std::string option_name);
+    ~WayfireMenuButton();
+
+    type_signal_simple signal_popup()
+    {
+        return popup_signal;
+    }
+
+    type_signal_simple signal_popdown()
+    {
+        return popdown_signal;
+    }
+
+    /**
+     * Set popover child
+     */
+    void set_popover_child(Gtk::Widget & child);
+
+    Gtk::Widget *get_popover_child();
 
     /**
      * Set whether the popup should grab input focus when opened
@@ -47,4 +98,8 @@ class WayfireMenuButton : public Gtk::MenuButton
      * NOTE: this works only if the popover was already opened.
      */
     void grab_focus();
+    void popup();
+    void popdown();
+    void toggle();
+    bool is_popup_visible();
 };
