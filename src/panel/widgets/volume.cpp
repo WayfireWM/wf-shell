@@ -19,7 +19,7 @@ void WayfireVolume::update_icon()
 
 bool WayfireVolume::on_popover_timeout(int timer)
 {
-    popover->popdown();
+    button->popdown();
     return false;
 }
 
@@ -42,9 +42,9 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
 
     if (flags & VOLUME_FLAG_SHOW_POPOVER)
     {
-        if (!popover->is_visible())
+        if (!button->is_popup_visible())
         {
-            popover->popup();
+            button->popup();
         } else
         {
             check_set_popover_timeout();
@@ -137,7 +137,7 @@ void WayfireVolume::on_volume_value_changed()
 
 void WayfireVolume::init(Gtk::Box *container)
 {
-    button = std::make_unique<WayfireMenuButton>("panel");
+    button = std::make_unique<WayfireMenuButton>("panel", "volume");
 
     /* Setup button */
     button->add_css_class("widget-icon");
@@ -168,10 +168,7 @@ void WayfireVolume::init(Gtk::Box *container)
     button->add_controller(scroll_gesture);
 
     /* Setup popover */
-    popover = button->get_popover();
-    popover->set_autohide(false);
-    popover->set_child(volume_scale);
-    popover->add_css_class("volume-popover");
+    button->set_popover_child(volume_scale);
 
     auto scroll_gesture2 = Gtk::EventControllerScroll::create();
     signals.push_back(scroll_gesture2->signal_scroll().connect([=] (double dx, double dy)
@@ -217,13 +214,13 @@ void WayfireVolume::init(Gtk::Box *container)
     });
     left_click_gesture->signal_released().connect([=] (int count, double x, double y)
     {
-        if (popover->is_visible())
+        if (button->is_popup_visible())
         {
-            popover->popdown();
+            button->popdown();
             popover_timeout.disconnect();
         } else
         {
-            popover->popup();
+            button->popup();
             check_set_popover_timeout();
         }
     });
@@ -258,12 +255,11 @@ void WayfireVolume::init(Gtk::Box *container)
 
     /* Setup layout */
     container->append(*button);
-    button->set_child(main_image);
+    button->set_popover_child(main_image);
 }
 
 WayfireVolume::~WayfireVolume()
 {
-    gtk_widget_unparent(GTK_WIDGET(popover->gobj()));
     disconnect_gvc_stream_signals();
 
     if (notify_default_sink_changed)
