@@ -1,7 +1,6 @@
 #pragma once
 #include <memory>
 #include <gtkmm/button.h>
-#include <gtkmm/popover.h>
 #include <gtkmm/scale.h>
 #include <pulse/pulseaudio.h>
 

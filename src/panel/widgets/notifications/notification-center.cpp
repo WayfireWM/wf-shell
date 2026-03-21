@@ -6,16 +6,17 @@
 #include <gtk-utils.hpp>
 
 #include "single-notification.hpp"
+#include "wf-popover.hpp"
 
 void WayfireNotificationCenter::init(Gtk::Box *container)
 {
-    button = std::make_unique<WayfireMenuButton>("panel", "notification");
+    button = std::make_unique<WayfireMenuWidget>("panel", "notification");
     icon.add_css_class("widget-icon");
     button->add_css_class("notification-center");
     button->get_children()[0]->add_css_class("flat");
 
     updateIcon();
-    button->set_popover_child(icon);
+    button->set_popup_child(icon);
     container->append(*button);
 
     scrolled_window.set_size_request(WIDTH, HEIGHT);
@@ -23,7 +24,7 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
     box.set_valign(Gtk::Align::START);
     box.set_orientation(Gtk::Orientation::VERTICAL);
     scrolled_window.set_child(box);
-    button->set_popover_child(scrolled_window);
+    button->set_popup_child(scrolled_window);
 
     button->set_tooltip_text("Middle click to toggle DND mode.");
 

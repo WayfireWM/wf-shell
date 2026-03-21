@@ -75,7 +75,7 @@ class WayfireAutohidingWindow : public Gtk::Window
      * In addition, if the window has an active popover, it will grab the
      * keyboard input and deactivate the popover when the focus is lost.
      */
-    void set_active_popover(WayfireMenuButton& button);
+    void set_active_popover(WayfireMenuWidget& button);
 
     /**
      * No-op if the given popover is not the currently active popover.
@@ -83,12 +83,14 @@ class WayfireAutohidingWindow : public Gtk::Window
      * Unsets the currently active popover and reverses the effects of setting
      * making it active with set_active_popover()
      */
-    void unset_active_popover(WayfireMenuButton& popover);
+    void unset_active_popover(WayfireMenuWidget& popover);
+
+    void unset_active_popover();
 
     /*
      * Get Active popover or null
      */
-    WayfireMenuButton *get_active_popover();
+    WayfireMenuWidget *get_active_popover();
 
   private:
     WayfireOutput *output;
@@ -145,7 +147,7 @@ class WayfireAutohidingWindow : public Gtk::Window
     void setup_hotspot();
 
     sigc::connection popover_hide;
-    WayfireMenuButton *active_button = nullptr;
+    WayfireMenuWidget *active_button = nullptr;
 };
 
 

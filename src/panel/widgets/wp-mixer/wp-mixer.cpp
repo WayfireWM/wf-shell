@@ -3,6 +3,7 @@
 #include <wp/proxy.h>
 
 #include "wp-mixer.hpp"
+#include "wf-popover.hpp"
 #include "wf-wp-control.hpp"
 #include "icon-select.hpp"
 
@@ -73,7 +74,7 @@ void WayfireWpMixer::reload_config()
         // unschedule hiding
         cancel_popover_timeout();
 
-        if ((button->get_popover_child() == (Gtk::Widget*)&master_box) && button->is_popup_visible())
+        if ((button->get_popup_child() == (Gtk::Widget*)&master_box) && button->is_popup_visible())
         {
             button->popdown();
             return;
@@ -84,9 +85,9 @@ void WayfireWpMixer::reload_config()
             button->popup();
         }
 
-        if (button->get_popover_child() != (Gtk::Widget*)&master_box)
+        if (button->get_popup_child() != (Gtk::Widget*)&master_box)
         {
-            button->set_popover_child(master_box);
+            button->set_popup_child(master_box);
             popover_timeout.disconnect();
         }
     };
@@ -100,7 +101,7 @@ void WayfireWpMixer::reload_config()
             return; // no quick_target means we have nothing to show
         }
 
-        if ((button->get_popover_child() == quick_target.get()) && button->is_popup_visible())
+        if ((button->get_popup_child() == quick_target.get()) && button->is_popup_visible())
         {
             button->popdown();
             return;
@@ -111,9 +112,9 @@ void WayfireWpMixer::reload_config()
             button->popup();
         }
 
-        if (button->get_popover_child() != quick_target.get())
+        if (button->get_popup_child() != quick_target.get())
         {
-            button->set_popover_child(*quick_target);
+            button->set_popup_child(*quick_target);
             popover_timeout.disconnect();
         }
     };
@@ -137,9 +138,9 @@ void WayfireWpMixer::reload_config()
         {
             // unschedule hiding
             cancel_popover_timeout();
-            if (button->get_popover_child() != (Gtk::Widget*)&master_box)
+            if (button->get_popup_child() != (Gtk::Widget*)&master_box)
             {
-                button->set_popover_child(master_box);
+                button->set_popup_child(master_box);
                 // popdown so that when the click is processed, the popover is down, and thus pops up
                 // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
                 // how to make it better
@@ -160,9 +161,9 @@ void WayfireWpMixer::reload_config()
                 return;
             }
 
-            if (button->get_popover_child() != quick_target.get())
+            if (button->get_popup_child() != quick_target.get())
             {
-                button->set_popover_child(*quick_target);
+                button->set_popup_child(*quick_target);
                 // same as above
                 button->popdown();
             }
@@ -219,17 +220,18 @@ void WayfireWpMixer::init(Gtk::Box *container)
 {
     // sets up the "widget part"
 
-    button = std::make_unique<WayfireMenuButton>("panel", "wp-mixer", "wp_mixer");
+    button = std::make_unique<WayfireMenuWidget>("panel", "wp-mixer", "wp_mixer");
     button->add_css_class("widget-icon");
     button->append(main_image);
     button->show();
+    button->open_on(1);
     sinks_box.add_css_class("outputs");
     sources_box.add_css_class("inputs");
     streams_box.add_css_class("streams");
     out_in_wall.add_css_class("out-in");
     in_streams_wall.add_css_class("in-streams");
 
-    button->set_popover_child(master_box);
+    button->set_popup_child(master_box);
 
     // scroll to change volume of the object targetted by the quick_target widget
     auto scroll_gesture = Gtk::EventControllerScroll::create();

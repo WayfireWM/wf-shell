@@ -587,7 +587,7 @@ bool WayfireAutohidingWindow::update_margin()
     return false;
 }
 
-void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
+void WayfireAutohidingWindow::set_active_popover(WayfireMenuWidget& button)
 {
     if (&button != this->active_button)
     {
@@ -621,7 +621,7 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
     schedule_show(0);
 }
 
-void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
+void WayfireAutohidingWindow::unset_active_popover(WayfireMenuWidget& button)
 {
     if (!this->active_button || (&button != this->active_button))
     {
@@ -640,7 +640,24 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
     }
 }
 
-WayfireMenuButton*WayfireAutohidingWindow::get_active_popover()
+void WayfireAutohidingWindow::unset_active_popover()
+{
+    if (this->active_button)
+    {
+        this->active_button->set_has_focus(false);
+        this->active_button = nullptr;
+        this->popover_hide.disconnect();
+    }
+
+    gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
+
+    if (should_autohide())
+    {
+        schedule_hide(AUTOHIDE_HIDE_DELAY);
+    }
+}
+
+WayfireMenuWidget*WayfireAutohidingWindow::get_active_popover()
 {
     return this->active_button;
 }
