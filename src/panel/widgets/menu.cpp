@@ -540,13 +540,7 @@ bool WayfireMenu::update_icon()
 
 void WayfireMenu::setup_popover_layout()
 {
-    if (menu_fullscreen)
-    {
-        fullscreen.set_child(popover_layout_box);
-    } else
-    {
-        button->get_popover()->set_child(popover_layout_box);
-    }
+    button->set_popover_child(popover_layout_box);
 
     flowbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
     flowbox.set_activate_on_single_click(true);
@@ -613,7 +607,7 @@ void WayfireMenu::setup_popover_layout()
             return true;
         } else if (keyval == GDK_KEY_Escape)
         {
-            button->get_popover()->hide();
+            button->popdown();
             fullscreen.hide();
             return true;
         } else if ((keyval == GDK_KEY_Up) ||
@@ -649,7 +643,7 @@ void WayfireMenu::setup_popover_layout()
         }
     }, false));
     popover_layout_box.add_controller(typing_gesture);
-    signals.push_back(button->get_popover()->signal_closed().connect([=] ()
+    signals.push_back(button->signal_popdown().connect([=] ()
     {
         if (!force_show_popup.value())
         {
@@ -857,7 +851,7 @@ WayfireLogoutUI::~WayfireLogoutUI()
 
 void WayfireMenu::on_logout_click()
 {
-    button->get_popover()->hide();
+    button->popdown();
     fullscreen.hide();
     if (!std::string(menu_logout_command).empty())
     {
@@ -940,14 +934,13 @@ void WayfireMenu::init(Gtk::Box *container)
     menu_show_categories.set_callback([=] () { update_popover_layout(); });
     menu_list.set_callback([=] () { update_popover_layout(); });
 
-    button = std::make_unique<WayfireMenuButton>("panel");
+    button = std::make_unique<WayfireMenuButton>("panel", "menu");
     fullscreen.add_css_class("menu-fullscreen");
-    button->set_child(main_image);
+    button->append(main_image);
     button->add_css_class("menu-button");
     button->add_css_class("flat");
-    button->get_popover()->add_css_class("menu-popover");
     button->get_children()[0]->add_css_class("flat");
-    signals.push_back(button->get_popover()->signal_show().connect(
+    signals.push_back(button->signal_popup().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown)));
 
     /* Prepare fullscreen layer */
@@ -969,20 +962,7 @@ void WayfireMenu::init(Gtk::Box *container)
     signals.push_back(button->property_scale_factor().signal_changed().connect(
         [=] () {update_icon(); }));
 
-    menu_fullscreen.set_callback([=] ()
-    {
-        fullscreen.hide();
-        button->set_active(false);
-        if (menu_fullscreen)
-        {
-            gtk_popover_set_child(button->get_popover()->gobj(), nullptr);
-            fullscreen.set_child(popover_layout_box);
-        } else
-        {
-            gtk_window_set_child(fullscreen.gobj(), nullptr);
-            button->get_popover()->set_child(popover_layout_box);
-        }
-    });
+    button->set_popover_child(popover_layout_box);
 
     container->append(box);
     box.append(*button);
@@ -1046,27 +1026,13 @@ void WayfireMenu::update_content_width()
 void WayfireMenu::toggle_menu()
 {
     search_entry.set_text("");
-    if (menu_fullscreen)
-    {
-        if (fullscreen.is_visible())
-        {
-            fullscreen.hide();
-        } else
-        {
-            fullscreen.show();
-            on_popover_shown();
-        }
 
-        return;
-    }
-
-    button->set_active(!button->get_active());
+    button->toggle();
 }
 
 void WayfireMenu::hide_menu()
 {
-    button->set_active(false);
-    fullscreen.hide();
+    button->popdown();
 }
 
 void WayfireMenu::set_category(std::string in_category)

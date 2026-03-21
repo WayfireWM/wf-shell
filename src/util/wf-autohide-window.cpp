@@ -1,5 +1,6 @@
 #include "wf-autohide-window.hpp"
 #include "wayfire-shell-unstable-v2-client-protocol.h"
+#include "wf-popover.hpp"
 
 #include <gtk4-layer-shell.h>
 #include <wf-shell-app.hpp>
@@ -593,13 +594,11 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
         if (this->active_button)
         {
             this->popover_hide.disconnect();
-            this->active_button->set_active(false);
-            this->active_button->get_popover()->popdown();
         }
 
         this->active_button = &button;
         this->popover_hide  =
-            this->active_button->m_popover.signal_hide().connect(
+            this->active_button->signal_popdown().connect(
                 [this, &button] () { unset_active_popover(button); });
     }
 
@@ -630,7 +629,6 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
     }
 
     this->active_button->set_has_focus(false);
-    this->active_button->set_active(false);
     this->active_button = nullptr;
     this->popover_hide.disconnect();
 
@@ -640,6 +638,11 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
     {
         schedule_hide(autohide_hide_delay);
     }
+}
+
+WayfireMenuButton*WayfireAutohidingWindow::get_active_popover()
+{
+    return this->active_button;
 }
 
 void WayfireAutohidingWindow::setup_autohide()
