@@ -2,6 +2,7 @@
 
 #include "giomm/menumodel.h"
 #include "glibmm/refptr.h"
+#include "gtkmm/scrolledwindow.h"
 #include <gtkmm/widget.h>
 #include <sigc++/connection.h>
 #include <sigc++/signal.h>
@@ -20,6 +21,7 @@ using type_signal_simple = sigc::signal<void (void)>;
 class WayfirePopup
 {
   private:
+    Gtk::ScrolledWindow scroll;
     Gtk::Popover popover;
     Gtk::PopoverMenu menu;
     bool use_menu;

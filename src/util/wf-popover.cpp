@@ -1,10 +1,8 @@
 #include "wf-popover.hpp"
-#include "giomm/menu.h"
 #include "giomm/menumodel.h"
 #include "glibmm/refptr.h"
 #include "gtk/gtk.h"
 #include "gtkmm/eventcontrollermotion.h"
-#include "gtkmm/gesture.h"
 #include "gtkmm/gestureclick.h"
 #include "gtkmm/widget.h"
 #include "wf-autohide-window.hpp"
@@ -51,7 +49,11 @@ void WayfirePopup::set_child(Gtk::Widget & widget)
 {
     menu.popdown();
     use_menu = false;
-    popover.set_child(widget);
+    popover.set_child(scroll);
+    scroll.set_child(widget);
+    scroll.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+    scroll.set_propagate_natural_height(true);
+    scroll.set_propagate_natural_width(true);
 }
 
 void WayfirePopup::set_menu_model(Glib::RefPtr<Gio::MenuModel> new_menu)
