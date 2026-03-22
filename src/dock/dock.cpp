@@ -14,6 +14,7 @@
 #include "network/manager.hpp"
 #include "network/network-widget.hpp"
 #include "network/network.hpp"
+#include "wf-popover.hpp"
 #include <css-config.hpp>
 
 

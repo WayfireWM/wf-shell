@@ -560,12 +560,6 @@ void WayfireMenu::on_popover_shown()
     on_search_changed();
     set_category("All");
     flowbox.unselect_all();
-
-    if (force_show_popup.value())
-    {
-        Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
-        gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
-    }
 }
 
 bool WayfireMenu::update_icon()
@@ -688,36 +682,6 @@ void WayfireMenu::setup_popover_layout()
         }
     }, false));
     popover_layout_box.add_controller(typing_gesture);
-    signals.push_back(button->signal_popdown().connect([=] ()
-    {
-        if (!force_show_popup.value())
-        {
-            return;
-        }
-
-        Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
-        WfOption<std::string> panel_layer{"panel/layer"};
-
-        if (panel_layer.value() == "overlay")
-        {
-            gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
-        }
-
-        if (panel_layer.value() == "top")
-        {
-            gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
-        }
-
-        if (panel_layer.value() == "bottom")
-        {
-            gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
-        }
-
-        if (panel_layer.value() == "background")
-        {
-            gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
-        }
-    }));
 }
 
 void WayfireMenu::update_popover_layout()
@@ -1057,7 +1021,7 @@ void WayfireMenu::init(Gtk::Box *container)
     update_popover_layout();
     populate_menu_categories();
     populate_menu_items("All");
-
+    app_info_monitor = g_app_info_monitor_get();
     app_info_monitor_changed_handler_id =
         g_signal_connect(app_info_monitor, "changed", G_CALLBACK(app_info_changed), this);
 
@@ -1115,7 +1079,11 @@ void WayfireMenu::select_first_flowbox_item()
 
 WayfireMenu::~WayfireMenu()
 {
-    g_signal_handler_disconnect(app_info_monitor, app_info_monitor_changed_handler_id);
+    if (app_info_monitor)
+    {
+        g_signal_handler_disconnect(app_info_monitor, app_info_monitor_changed_handler_id);
+    }
+
     for (auto signal : signals)
     {
         signal.disconnect();

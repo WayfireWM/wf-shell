@@ -147,6 +147,11 @@ WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::stri
     signals.push_back(motion_gesture->signal_enter().connect(
         [=] (double, double)
     {
+        if (!menus_motion.value())
+        {
+            return;
+        }
+
         auto panel = get_panel(this);
         if (panel)
         {
