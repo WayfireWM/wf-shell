@@ -6,7 +6,7 @@ void WayfireClock::init(Gtk::Box *container)
     button = std::make_unique<WayfireMenuWidget>("panel", "clock");
     button->add_css_class("clock");
     button->append(label);
-    button->show();
+    button->open_on(1);
     label.set_justify(Gtk::Justification::CENTER);
     label.show();
 

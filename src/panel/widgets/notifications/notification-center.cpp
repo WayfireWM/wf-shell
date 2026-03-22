@@ -16,7 +16,8 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
     button->get_children()[0]->add_css_class("flat");
 
     updateIcon();
-    button->set_popup_child(icon);
+    button->append(icon);
+    button->open_on(1);
     container->append(*button);
 
     scrolled_window.set_size_request(WIDTH, HEIGHT);
