@@ -45,14 +45,17 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
         if (workspace_switcher_mode.value() == "row")
         {
             switcher_box.append(box);
+            button->open_on(-1);
         } else if (workspace_switcher_mode.value() == "grid")
         {
             switcher_box.append(overlay);
+            button->open_on(-1);
         } else // "grid_popover"
         {
             button->set_popup_child(overlay);
             button->append(mini_grid);
             switcher_box.append(*button);
+            button->open_on(1);
         }
 
         get_wsets();
