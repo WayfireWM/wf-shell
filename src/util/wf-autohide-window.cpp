@@ -13,6 +13,7 @@
 
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     const std::string& section) :
+    force_show_popup{"panel/force_show_popup"},
     position{section + "/position"},
     full_span{section + "/full_span"},
     minimal_width{section + "/minimal_width"},
@@ -603,6 +604,12 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuWidget& button)
                 [this, &button] () { unset_active_popover(button); });
     }
 
+    /* Set this panel to forcibly show over fullscreen apps */
+    if (force_show_popup.value())
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    }
+
     const bool should_grab_focus = this->active_button->is_keyboard_interactive();
 
     if (should_grab_focus)
@@ -626,16 +633,7 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuWidget& button)
         return;
     }
 
-    this->active_button->set_has_focus(false);
-    this->active_button = nullptr;
-    this->popover_hide.disconnect();
-
-    gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
-
-    if (should_autohide())
-    {
-        schedule_hide(autohide_hide_delay);
-    }
+    unset_active_popover();
 }
 
 void WayfireAutohidingWindow::unset_active_popover()
@@ -652,6 +650,28 @@ void WayfireAutohidingWindow::unset_active_popover()
     if (should_autohide())
     {
         schedule_hide(autohide_hide_delay);
+    }
+
+    WfOption<std::string> panel_layer{"panel/layer"};
+
+    if ((std::string)panel_layer == "overlay")
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    }
+
+    if ((std::string)panel_layer == "top")
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_TOP);
+    }
+
+    if ((std::string)panel_layer == "bottom")
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
+    }
+
+    if ((std::string)panel_layer == "background")
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
     }
 }
 

@@ -66,6 +66,7 @@ class WayfireMenuWidget : public Gtk::Box
     sigc::connection click_signal;
 
     type_signal_simple popup_signal, popdown_signal;
+    WfOption<bool> menus_motion{"panel/menus_change_motion"};
 
   public:
     WayfireMenuWidget(const std::string& config_section,
