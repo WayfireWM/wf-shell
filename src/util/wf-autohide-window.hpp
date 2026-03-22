@@ -46,6 +46,8 @@ class WayfireAutohidingWindow : public Gtk::Window
     WayfireAutohidingWindow& operator =(const WayfireAutohidingWindow&) = delete;
     WayfireAutohidingWindow& operator =(WayfireAutohidingWindow&&) = delete;
 
+    WfOption<bool> force_show_popup;
+
     ~WayfireAutohidingWindow();
     wl_surface *get_wl_surface() const;
 
