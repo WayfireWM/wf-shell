@@ -139,7 +139,7 @@ class WayfireMenu : public WayfireWidget
     std::unique_ptr<WayfireMenuWidget> button;
     std::unique_ptr<WayfireLogoutUI> logout_ui;
 
-    GAppInfoMonitor *app_info_monitor = g_app_info_monitor_get();
+    GAppInfoMonitor *app_info_monitor = nullptr;
     guint app_info_monitor_changed_handler_id;
 
     void load_menu_item(AppInfo app_info);
@@ -175,7 +175,6 @@ class WayfireMenu : public WayfireWidget
     WfOption<bool> fuzzy_search_enabled{"panel/menu_fuzzy_search"};
     WfOption<std::string> panel_position{"panel/position"};
     WfOption<std::string> menu_icon{"panel/menu_icon"};
-    WfOption<bool> force_show_popup{"panel/menu_force_show_popup"};
     WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     WfOption<bool> menu_show_categories{"panel/menu_show_categories"};
