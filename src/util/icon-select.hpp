@@ -22,8 +22,8 @@ const std::map<double, std::vector<std::string>> volume_icons = {
 
 const std::map<double, std::vector<std::string>> brightness_display_icons = {
     {std::numeric_limits<double>::min(), {"display-brightness-invalid", "emblem-unreadable"}},
-    {0.33, {"display-brightness-low"}},
-    {0.66, {"display-brightness-medium"}},
-    {1.0, {"display-brightness-high"}},
+    {0, {"display-brightness-low-symbolic", "display-brightness-low"}},
+    {0.5, {"display-brightness-medium-symbolic", "display-medium-low"}},
+    {1, {"display-brightness-high-symbolic", "display-brightness-high"}},
     {std::numeric_limits<double>::max(), {"display-brightness-invalid", "emblem-unreadable"}},
 };
