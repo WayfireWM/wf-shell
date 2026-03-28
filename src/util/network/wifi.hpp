@@ -34,7 +34,6 @@ class WifiNetwork : public Network
     std::vector<std::string> get_css_classes() override;
     std::string get_icon_name() override;
     std::string get_friendly_name() override;
-    std::string get_secure_variant() override;
     std::string get_current_access_point_path();
     std::shared_ptr<AccessPoint> get_current_access_point();
 };

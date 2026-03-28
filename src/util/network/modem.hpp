@@ -32,6 +32,5 @@ class ModemNetwork : public Network
     std::string get_connection_type_string();
     std::string get_icon_name() override;
     std::string get_friendly_name() override;
-    std::string get_secure_variant() override;
     std::vector<std::string> get_css_classes() override;
 };

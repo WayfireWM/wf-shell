@@ -15,16 +15,17 @@
 
 using type_signal_network = sigc::signal<void (std::shared_ptr<Network>)>;
 using type_signal_device_list_changed = sigc::signal<void (std::map<std::string, std::shared_ptr<Network>>)>;
-using type_signal_simple = sigc::signal<void (void)>;
-using type_signal_path   = sigc::signal<void (std::string)>;
-
+using type_signal_simple  = sigc::signal<void (void)>;
+using type_signal_path    = sigc::signal<void (std::string)>;
+using type_signal_setting = sigc::signal<void (std::shared_ptr<VpnConfig>)>;
 class NetworkManager
 {
   private:
     type_signal_network default_changed, device_added, device_removed;
     type_signal_device_list_changed device_list_changed;
     type_signal_simple global_change, nm_start, nm_stop, mm_start, mm_stop;
-    type_signal_path vpn_added, vpn_removed;
+    type_signal_path vpn_removed;
+    type_signal_setting vpn_added;
 
 
     Glib::RefPtr<Gio::DBus::Connection> connection;
@@ -94,7 +95,7 @@ class NetworkManager
         return global_change;
     }
 
-    type_signal_path signal_vpn_added()
+    type_signal_setting signal_vpn_added()
     {
         return vpn_added;
     }

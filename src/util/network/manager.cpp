@@ -231,7 +231,6 @@ void NetworkManager::connect_nm()
     {
         setting_added(it);
         check_add_vpn(it);
-        vpn_added.emit(it);
     }
 
     nm_dbus_signals.push_back(settings_proxy->signal_signal().connect(
@@ -251,7 +250,6 @@ void NetworkManager::connect_nm()
                 Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(container.get_child()).get();
             setting_added(var);
             check_add_vpn(var);
-            vpn_added.emit(var);
         }
     }));
 
@@ -285,7 +283,6 @@ void NetworkManager::check_add_vpn(std::string path)
 
     auto values = Glib::VariantBase::cast_dynamic<Glib::Variant<std::map<std::string, std::map<std::string,
         Glib::VariantBase>>>>(proxy->call_sync("GetSettings").get_child());
-
     auto hash = values.get();
     if ((hash.count("connection") == 1) && (hash["connection"].count("id") == 1) &&
         (hash["connection"].count("type") == 1))
@@ -300,6 +297,7 @@ void NetworkManager::check_add_vpn(std::string path)
             if ((contype_str == "vpn") || (contype_str == "wireguard"))
             {
                 all_vpns[path] = std::make_shared<VpnConfig>(path, proxy, name);
+                vpn_added.emit(all_vpns[path]);
             }
         } else
         {

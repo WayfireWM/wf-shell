@@ -28,8 +28,3 @@ std::string WiredNetwork::get_friendly_name()
 {
     return "Ethernet";
 }
-
-std::string WiredNetwork::get_secure_variant()
-{
-    return "-secure";
-}

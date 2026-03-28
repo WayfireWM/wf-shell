@@ -361,6 +361,10 @@ NetworkControlWidget::NetworkControlWidget()
         sigc::mem_fun(*this, &NetworkControlWidget::add_device)));
     signals.push_back(network_manager->signal_device_removed().connect(
         sigc::mem_fun(*this, &NetworkControlWidget::remove_device)));
+    signals.push_back(network_manager->signal_vpn_added().connect(
+        sigc::mem_fun(*this, &NetworkControlWidget::add_vpn)));
+    signals.push_back(network_manager->signal_vpn_removed().connect(
+        sigc::mem_fun(*this, &NetworkControlWidget::remove_vpn)));
 
     top.append(global_networking);
     top.append(wifi_networking);
@@ -451,6 +455,11 @@ void NetworkControlWidget::update_globals()
 
 void NetworkControlWidget::add_vpn(std::shared_ptr<VpnConfig> config)
 {
+    if (vpn_widgets.count(config->path) > 0)
+    {
+        return;
+    }
+
     auto widget = std::make_shared<VPNControlWidget>(config);
     vpn_widgets.emplace(config->path, widget);
 
@@ -473,6 +482,12 @@ void NetworkControlWidget::add_vpn(std::shared_ptr<VpnConfig> config)
 
 void NetworkControlWidget::remove_vpn(std::string path)
 {
+    if (vpn_widgets.count(path) == 0)
+    {
+        std::cerr << "Removing non-existant VPN " << path << std::endl;
+        return;
+    }
+
     auto widget = vpn_widgets[path];
     vpn_box.remove(*widget);
     vpn_widgets.erase(path);

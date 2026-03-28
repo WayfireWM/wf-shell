@@ -189,8 +189,3 @@ WifiNetwork::~WifiNetwork()
         signal.disconnect();
     }
 }
-
-std::string WifiNetwork::get_secure_variant()
-{
-    return "-secure";
-}

@@ -203,11 +203,6 @@ std::string ModemNetwork::get_icon_name()
     return "network-mobile-" + get_signal_band() + "-" + get_connection_type_string();
 }
 
-std::string ModemNetwork::get_secure_variant()
-{
-    return "-locked";
-}
-
 std::vector<std::string> ModemNetwork::get_css_classes()
 {
     return {"modem", get_connection_type_string(), strength_string(), "carrier-" + get_name()};

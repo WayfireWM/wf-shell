@@ -68,13 +68,7 @@ std::string Connection::get_icon_name()
         return "network-disconnected";
     }
 
-    std::string secure = "";
-    if (has_vpn || has_wireguard)
-    {
-        secure = devices[0]->get_secure_variant();
-    }
-
-    return devices[0]->get_icon_name() + secure;
+    return devices[0]->get_icon_name();
 }
 
 std::vector<std::string> Connection::get_css_classes()
