@@ -442,11 +442,9 @@ void WayfireMenu::load_menu_items_all()
 
 void WayfireMenu::on_search_changed()
 {
-    search_entry.set_text(search_contents);
-    search_entry.set_position(search_contents.length());
     if (menu_show_categories)
     {
-        if (search_contents.length() == 0)
+        if (search_entry.get_text().length() == 0)
         {
             /* Text has been unset, show categories again */
             populate_menu_items(category);
@@ -459,7 +457,7 @@ void WayfireMenu::on_search_changed()
         }
     }
 
-    m_sort_names  = search_contents.length() == 0;
+    m_sort_names  = search_entry.get_text().length() == 0;
     fuzzy_filter  = false;
     count_matches = 0;
     flowbox.unselect_all();
@@ -483,7 +481,7 @@ bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
     auto button = dynamic_cast<WfMenuMenuItem*>(child);
     assert(button);
 
-    auto text = search_contents;
+    auto text = search_entry.get_text();
     uint32_t match_score = this->fuzzy_filter ?
         button->fuzzy_match(text) : button->matches(text);
 
@@ -513,7 +511,7 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild *a, Gtk::FlowBoxChild *b)
 
 void WayfireMenu::on_popover_shown()
 {
-    search_contents = "";
+    search_entry.delete_text(0, search_entry.get_text().length());
     on_search_changed();
     set_category("All");
     flowbox.unselect_all();
@@ -586,21 +584,24 @@ void WayfireMenu::setup_popover_layout()
 
     search_entry.add_css_class("app-search");
 
+    signals.push_back((search_entry.signal_changed().connect(
+        [this] ()
+    {
+        on_search_changed();
+    })));
     auto typing_gesture = Gtk::EventControllerKey::create();
     typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
     signals.push_back(typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
                                                                         Gdk::ModifierType state)
     {
-        if (keyval == GDK_KEY_BackSpace)
+        Gtk::Widget *focused = nullptr;
+        auto root = popover_layout_box.get_root();
+        if (root)
         {
-            if (search_contents.length() > 0)
-            {
-                search_contents.pop_back();
-            }
+            focused = root->get_focus();
+        }
 
-            on_search_changed();
-            return true;
-        } else if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
+        if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
         {
             auto children = flowbox.get_selected_children();
             if (children.size() == 1)
@@ -614,18 +615,38 @@ void WayfireMenu::setup_popover_layout()
         {
             button->get_popover()->hide();
             fullscreen.hide();
+            return true;
+        } else if ((keyval == GDK_KEY_Up) ||
+                   (keyval == GDK_KEY_Down) ||
+                   (keyval == GDK_KEY_Left) ||
+                   (keyval == GDK_KEY_Right))
+        {
+            return false;
+        } else if (focused && focused->is_ancestor(search_entry))
+        {
+            return false;
         } else
         {
+            if (!search_entry.grab_focus())
+            {
+                std::cerr << "Unable to steal focus to entry" << std::endl;
+            }
+
+            // this is a hack to still try to get the key propersly to resume
+            // search, as we can’t focus the entry and have the key be used by
+            // it. Better than nothing, but it fails to account for keys other
+            // than simple letters, and still focuses on other keys.
             std::string input = gdk_keyval_name(keyval);
             if (input.length() == 1)
             {
-                search_contents = search_contents + input;
-                on_search_changed();
-                return true;
+                search_entry.set_text(search_entry.get_text() + input);
             }
-        }
 
-        return false;
+            auto pos = search_entry.get_text().length();
+            search_entry.select_region(pos, pos);
+            on_search_changed();
+            return false;
+        }
     }, false));
     popover_layout_box.add_controller(typing_gesture);
     signals.push_back(button->get_popover()->signal_closed().connect([=] ()
@@ -1024,7 +1045,6 @@ void WayfireMenu::update_content_width()
 
 void WayfireMenu::toggle_menu()
 {
-    search_contents = "";
     search_entry.set_text("");
     if (menu_fullscreen)
     {
