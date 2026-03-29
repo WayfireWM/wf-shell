@@ -116,33 +116,35 @@ NetworkManager::NetworkManager()
 
 void NetworkManager::setting_added(std::string path)
 {
-    auto proxy = Gio::DBus::Proxy::create_sync(
+    Gio::DBus::Proxy::create(
         connection,
         NM_DBUS_NAME,
         path,
-        "org.freedesktop.NetworkManager.Settings.Connection");
-
-    all_settings.emplace(path,
-        new NetworkSettings(path, proxy));
-    auto setting = all_settings[path];
-
-    if (setting->get_ssid() != "")
+        "org.freedesktop.NetworkManager.Settings.Connection", [=] (Glib::RefPtr<Gio::AsyncResult> & result)
     {
-        for (auto & device : all_devices)
+        auto proxy = Gio::DBus::Proxy::create_finish(result);
+        all_settings.emplace(path,
+            new NetworkSettings(path, proxy));
+        auto setting = all_settings[path];
+
+        if (setting->get_ssid() != "")
         {
-            auto wifi = std::dynamic_pointer_cast<WifiNetwork>(device.second);
-            if (wifi)
+            for (auto & device : all_devices)
             {
-                for (auto & ap : wifi->all_access_points)
+                auto wifi = std::dynamic_pointer_cast<WifiNetwork>(device.second);
+                if (wifi)
                 {
-                    if (ap.second && (ap.second->get_ssid() == setting->get_ssid()))
+                    for (auto & ap : wifi->all_access_points)
                     {
-                        ap.second->set_has_saved_password(true);
+                        if (ap.second && (ap.second->get_ssid() == setting->get_ssid()))
+                        {
+                            ap.second->set_has_saved_password(true);
+                        }
                     }
                 }
             }
         }
-    }
+    });
 }
 
 void NetworkManager::setting_removed(std::string path)
@@ -337,30 +339,43 @@ void NetworkManager::add_network(std::string path)
     uint connection_type = type.get();
     if (connection_type == WIFI_TYPE)
     {
-        auto wifi_proxy = Gio::DBus::Proxy::create_sync(connection,
+        Gio::DBus::Proxy::create(connection,
             NM_DBUS_NAME,
             path,
-            "org.freedesktop.NetworkManager.Device.Wireless");
-        all_devices.emplace(path, new WifiNetwork(path, device_proxy, wifi_proxy));
-        device_added.emit(all_devices[path]);
+            "org.freedesktop.NetworkManager.Device.Wireless",
+            [=] (Glib::RefPtr<Gio::AsyncResult> & result)
+        {
+            auto wifi_proxy = Gio::DBus::Proxy::create_finish(result);
+            all_devices.emplace(path, new WifiNetwork(path, device_proxy, wifi_proxy));
+            device_added.emit(all_devices[path]);
+        });
+
         return;
     } else if (connection_type == MODEM_TYPE)
     {
-        auto modem_proxy = Gio::DBus::Proxy::create_sync(connection,
+        Gio::DBus::Proxy::create(connection,
             NM_DBUS_NAME,
             path,
-            "org.freedesktop.NetworkManager.Device.Modem");
-        all_devices.emplace(path, new ModemNetwork(path, device_proxy, modem_proxy));
-        device_added.emit(all_devices[path]);
+            "org.freedesktop.NetworkManager.Device.Modem",
+            [=] (Glib::RefPtr<Gio::AsyncResult> & result)
+        {
+            auto modem_proxy = Gio::DBus::Proxy::create_finish(result);
+            all_devices.emplace(path, new ModemNetwork(path, device_proxy, modem_proxy));
+            device_added.emit(all_devices[path]);
+        });
+
         return;
     } else if (connection_type == BLUETOOTH_TYPE)
     {
-        auto bluetooth_proxy = Gio::DBus::Proxy::create_sync(connection,
+        Gio::DBus::Proxy::create(connection,
             NM_DBUS_NAME,
             path,
-            "org.freedesktop.NetworkManager.Device.Bluetooth");
-        all_devices.emplace(path, new BluetoothNetwork(path, device_proxy, bluetooth_proxy));
-        device_added.emit(all_devices[path]);
+            "org.freedesktop.NetworkManager.Device.Bluetooth", [=] (Glib::RefPtr<Gio::AsyncResult> & result)
+        {
+            auto bluetooth_proxy = Gio::DBus::Proxy::create_finish(result);
+            all_devices.emplace(path, new BluetoothNetwork(path, device_proxy, bluetooth_proxy));
+            device_added.emit(all_devices[path]);
+        });
         return;
     } else if (connection_type == ETHERNET_TYPE)
     {
@@ -554,7 +569,7 @@ void NetworkManager::activate_connection(std::string p1, std::string p2, std::st
     // auto data = Glib::VariantContainerBase::create_tuple(paths);
 
     try {
-        nm_proxy->call_sync("ActivateConnection", paths);
+        nm_proxy->call("ActivateConnection", paths);
     } catch (...)
     {
         /* It's most likely a WIFI AP with no password set. Let's ask */
@@ -585,7 +600,7 @@ void NetworkManager::deactivate_connection(std::string p1)
     // auto data = Glib::VariantContainerBase::create_tuple(paths);
 
     try {
-        manager->call_sync("DeactivateConnection", paths);
+        manager->call("DeactivateConnection", paths);
     } catch (...)
     {}
 }
@@ -633,35 +648,41 @@ bool NetworkManager::networking_global_enabled()
 
 void NetworkManager::wifi_global_set(bool value)
 {
-    auto another_proxy = Gio::DBus::Proxy::create_sync(nm_proxy->get_connection(),
+    Gio::DBus::Proxy::create(nm_proxy->get_connection(),
         NM_DBUS_NAME,
         NM_PATH,
-        DBUS_PROPERTIES_INTERFACE);
-
-    auto params = Glib::VariantContainerBase::create_tuple(
+        DBUS_PROPERTIES_INTERFACE,
+        [=] (Glib::RefPtr<Gio::AsyncResult>& result)
     {
-        Glib::Variant<Glib::ustring>::create(NM_INTERFACE),
-        Glib::Variant<Glib::ustring>::create("WirelessEnabled"),
-        Glib::Variant<Glib::VariantBase>::create(Glib::Variant<bool>::create(value))
+        auto another_proxy = Gio::DBus::Proxy::create_finish(result);
+        auto params = Glib::VariantContainerBase::create_tuple(
+        {
+            Glib::Variant<Glib::ustring>::create(NM_INTERFACE),
+            Glib::Variant<Glib::ustring>::create("WirelessEnabled"),
+            Glib::Variant<Glib::VariantBase>::create(Glib::Variant<bool>::create(value))
+        });
+        another_proxy->call("Set", params);
     });
-    another_proxy->call_sync("Set", params);
 }
 
 void NetworkManager::mobile_global_set(bool value)
 {
-    auto another_proxy = Gio::DBus::Proxy::create_sync(nm_proxy->get_connection(),
+    Gio::DBus::Proxy::create(nm_proxy->get_connection(),
         NM_DBUS_NAME,
         NM_PATH,
-        DBUS_PROPERTIES_INTERFACE);
-
-    auto params = Glib::VariantContainerBase::create_tuple(
+        DBUS_PROPERTIES_INTERFACE,
+        [=] (Glib::RefPtr<Gio::AsyncResult> & result)
     {
-        Glib::Variant<Glib::ustring>::create(NM_INTERFACE),
-        Glib::Variant<Glib::ustring>::create("WwanEnabled"),
+        auto another_proxy = Gio::DBus::Proxy::create_finish(result);
+        auto params = Glib::VariantContainerBase::create_tuple(
+        {
+            Glib::Variant<Glib::ustring>::create(NM_INTERFACE),
+            Glib::Variant<Glib::ustring>::create("WwanEnabled"),
 
-        Glib::Variant<Glib::VariantBase>::create(Glib::Variant<bool>::create(value))
+            Glib::Variant<Glib::VariantBase>::create(Glib::Variant<bool>::create(value))
+        });
+        another_proxy->call("Set", params);
     });
-    another_proxy->call_sync("Set", params);
 }
 
 std::shared_ptr<NetworkSettings> NetworkManager::get_setting_for_ssid(std::string ssid)
@@ -780,13 +801,13 @@ void NetworkManager::submit_password()
     // ------------------------
     // CALL NetworkManager
     // ------------------------
-    nm_proxy->call_sync("AddAndActivateConnection", args);
+    nm_proxy->call("AddAndActivateConnection", args);
 }
 
 void NetworkManager::networking_global_set(bool value)
 {
     auto params = Glib::VariantContainerBase::create_tuple(Glib::Variant<bool>::create(value));
-    nm_proxy->call_sync("Enable", params);
+    nm_proxy->call("Enable", params);
 }
 
 NetworkManager::~NetworkManager()

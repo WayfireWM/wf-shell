@@ -107,7 +107,7 @@ void Network::toggle()
 
 void Network::disconnect()
 {
-    device_proxy->call_sync("Disconnect");
+    device_proxy->call("Disconnect");
 }
 
 bool Network::is_active()
