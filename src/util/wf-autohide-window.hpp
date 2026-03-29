@@ -79,6 +79,8 @@ class WayfireAutohidingWindow : public Gtk::Window
   private:
     WayfireOutput *output;
 
+    std::vector<sigc::connection> signals;
+
     WfOption<std::string> position;
     void update_position();
 

@@ -90,6 +90,7 @@ class WayfireShellApp
     virtual Gio::Application::Flags get_extra_application_flags();
     virtual std::string get_application_name() = 0;
     std::vector<std::unique_ptr<WayfireOutput>> *get_wayfire_outputs();
+    wl_output *live_preview_output;
     std::string live_preview_output_name;
 
     /**

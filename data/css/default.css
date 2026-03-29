@@ -278,6 +278,14 @@ text-shadow: 1px  1px 0 var(--bcol),
     padding-bottom: 75px;
 }
 
+.wf-locker .failure {
+    animation-name: shake;
+    animation-duration:0.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+
 .wf-locker.sized-480 {
     font-size:6px;
 }
@@ -329,3 +337,25 @@ text-shadow: 1px  1px 0 var(--bcol),
         padding-right: 0rem;
     }
 }
+
+@keyframes shake {
+  0% {
+    transform: translateX(0px);
+  }
+  20% {
+    transform: translateX(20px);
+  }
+  40% {
+    transform: translateX(-20px);
+  }
+  60% {
+    transform: translateX(20px);
+  }
+  80% {
+    transform: translateX(-20px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+}
+

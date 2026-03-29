@@ -439,13 +439,6 @@ void WayfirePanelApp::on_config_reload()
 
 bool WayfirePanelApp::panel_allowed_by_config(bool allowed, std::string output_name)
 {
-    std::string prefix = WayfireShellApp::get().live_preview_output_name;
-
-    if (output_name.compare(0, prefix.length(), prefix) == 0)
-    {
-        return false;
-    }
-
     if (allowed)
     {
         return std::string(*priv->panel_outputs).find("*") != std::string::npos ||
@@ -539,8 +532,8 @@ void WayfirePanelApp::on_activate()
         {"panel/battery_icon_size", ".battery image"},
         {"panel/network_icon_size", ".network"},
         {"panel/volume_icon_size", ".volume"},
-        {"panel/wp_icon_size", ".wireplumber"},
-        {"panel/wp_popup_icon_size", ".wireplumber-popup"},
+        {"panel/wp_icon_size", ".wp-mixer"},
+        {"panel/wp_popup_icon_size", ".mute-toggle, .default-button"},
         {"panel/notifications_icon_size", ".notification-center "},
         {"panel/tray_icon_size", ".tray-button"}
     };

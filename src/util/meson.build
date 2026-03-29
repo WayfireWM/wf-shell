@@ -2,6 +2,7 @@ util = static_library(
     'util',
     [
         'gtk-utils.cpp',
+        'icon-select.cpp',
         'wf-shell-app.cpp',
         'wf-autohide-window.cpp',
         'wf-popover.cpp',
@@ -18,6 +19,7 @@ util = static_library(
         'network/settings.cpp',
         'network/connection.cpp',
         'background-gl.cpp',
+        'icon-select.cpp'
     ],
     dependencies: [
         wf_protos,

@@ -18,10 +18,14 @@ class WayfireLockerPasswordPluginWidget : public WayfireLockerTimedRevealer
     ~WayfireLockerPasswordPluginWidget();
     Gtk::Box box;
     Gtk::Entry entry;
-    Gtk::Label label;
-    WayfireLockerPasswordPluginWidget(std::string label_contents);
+    Gtk::Box replies;
+    WayfireLockerPasswordPluginWidget();
 
     sigc::connection entry_updated, entry_submitted;
+    std::vector<sigc::connection> replies_signals;
+
+    void add_reply(std::string message);
+    void lockout_changed(bool lockout);
 };
 
 class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
@@ -35,11 +39,12 @@ class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
     void submit_user_password(std::string password);
     void blank_passwords();
     void update_passwords(std::string password);
+    void lockout_changed(bool lockout) override;
+    void failure() override;
 
     sigc::connection timeout;
-    void update_labels(std::string text);
+    void add_reply(std::string text);
 
     std::unordered_map<int, std::shared_ptr<WayfireLockerPasswordPluginWidget>> widgets;
-    std::string label_contents     = "";
     std::string submitted_password = "";
 };
