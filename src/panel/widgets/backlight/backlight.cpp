@@ -149,12 +149,12 @@ void WayfireBacklight::init(Gtk::Box *container)
     display_label.set_text("This monitor");
     display_box.append(display_label);
     display_box.set_orientation(Gtk::Orientation::VERTICAL);
-    display_label.add_css_class("this-monitor");
+    display_box.add_css_class("this-monitor");
 
     other_label.set_text("Other monitors");
     other_box.append(other_label);
     other_box.set_orientation(Gtk::Orientation::VERTICAL);
-    display_label.add_css_class("other-monitors");
+    other_box.add_css_class("other-monitors");
 
     // scroll to brighten and dim the monitor the panel is on
     auto scroll_gesture = Gtk::EventControllerScroll::create();
