@@ -422,6 +422,11 @@
 		</_long>
 		<default>false</default>
 	</option>
+	<option name="light_spacing" type="int">
+		<_short>Spacing between controls</_short>
+		<default>8</default>
+		<min>0</min>
+	</option>
 	<option name="light_icon_size" type="int">
 		<_short>Light icon size</_short>
 		<default>0</default>

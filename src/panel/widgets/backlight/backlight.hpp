@@ -138,6 +138,7 @@ class WayfireBacklight : public WayfireWidget
     sigc::connection popover_timeout;
 
     WfOption<double> popup_timeout{"panel/light_popup_timeout"};
+    WfOption<int> spacing{"panel/light_spacing"};
 
     bool on_popover_timeout(int timer);
 
