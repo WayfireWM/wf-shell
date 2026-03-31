@@ -132,12 +132,10 @@ void WayfireBacklight::init(Gtk::Box *container)
     popover->set_autohide(false);
 
     // layout
-    box.append(display_box);
     box.set_orientation(Gtk::Orientation::VERTICAL);
 
     disp_othr_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     box.append(disp_othr_sep);
-    box.append(other_box);
 
     display_label.set_text("This monitor");
     display_box.append(display_label);
@@ -207,12 +205,18 @@ void WayfireBacklight::add_control(std::shared_ptr<WfLightControl> control)
     {
         if (!ctrl_this_display)
         {
+            box.prepend(display_box);
             ctrl_this_display = std::shared_ptr(control);
             display_box.append(*control);
             update_icon();
         }
     } else
     {
+        if (!(other_box.get_children().size() > 1))
+        {
+            box.append(other_box);
+        }
+
         other_box.append(*control);
     }
 
@@ -224,11 +228,17 @@ void WayfireBacklight::rem_control(WfLightControl *control)
     if (control == ctrl_this_display.get())
     {
         display_box.remove(*control);
+        box.remove(display_box);
         ctrl_this_display = nullptr;
         update_icon();
     } else
     {
         other_box.remove(*control);
+
+        if (!(other_box.get_children().size() > 1))
+        {
+            box.remove(other_box);
+        }
     }
 
     controls.erase(std::remove_if(controls.begin(), controls.end(),
