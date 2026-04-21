@@ -48,9 +48,12 @@ void StatusNotifierHost::on_bus_acquired(const Glib::RefPtr<Gio::DBus::Connectio
             });
             Glib::Variant<std::vector<Glib::ustring>> registred_items_var;
             watcher_proxy->get_cached_property(registred_items_var, "RegisteredStatusNotifierItems");
-            for (const auto & service : registred_items_var.get())
+            if (registred_items_var)
             {
-                tray->add_item(service);
+                for (const auto & service : registred_items_var.get())
+                {
+                    tray->add_item(service);
+                }
             }
         });
     },
