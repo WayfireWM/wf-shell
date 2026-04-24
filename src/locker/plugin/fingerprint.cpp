@@ -90,6 +90,11 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
     device_proxy->call("ListEnrolledFingers", [=] (Glib::RefPtr<Gio::AsyncResult>& result)
     {
         auto reply = device_proxy->call_finish(result);
+        if (!reply)
+        {
+            return;
+        }
+
         Glib::Variant<std::vector<Glib::ustring>> array;
         reply.get_child(array, 0);
 
