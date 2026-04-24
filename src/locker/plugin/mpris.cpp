@@ -272,6 +272,11 @@ void WayfireLockerMPRISPlugin::init()
         manager_proxy->call("ListNames", [=] (Glib::RefPtr<Gio::AsyncResult> & result)
         {
             auto val = manager_proxy->call_finish(result);
+            if (!val)
+            {
+                return;
+            }
+
             Glib::Variant<std::vector<std::string>> list;
             val.get_child(list, 0);
             auto l2 = list.get();
