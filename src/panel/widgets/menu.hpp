@@ -135,7 +135,6 @@ class WayfireMenu : public WayfireWidget
     Gtk::Button logout_button;
     Gtk::Image logout_image;
     Gtk::ScrolledWindow app_scrolled_window, category_scrolled_window;
-    Gtk::Window fullscreen;
     std::unique_ptr<WayfireMenuWidget> button;
     std::unique_ptr<WayfireLogoutUI> logout_ui;
 
