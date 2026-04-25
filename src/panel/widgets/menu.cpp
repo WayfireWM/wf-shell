@@ -647,7 +647,6 @@ void WayfireMenu::setup_popover_layout()
         } else if (keyval == GDK_KEY_Escape)
         {
             button->popdown();
-            fullscreen.hide();
             return true;
         } else if ((keyval == GDK_KEY_Up) ||
                    (keyval == GDK_KEY_Down) ||
@@ -869,7 +868,6 @@ WayfireLogoutUI::~WayfireLogoutUI()
 void WayfireMenu::on_logout_click()
 {
     button->popdown();
-    fullscreen.hide();
     if (!menu_logout_command.value().empty())
     {
         g_spawn_command_line_async(menu_logout_command.value().c_str(), NULL);
@@ -957,7 +955,6 @@ void WayfireMenu::init(Gtk::Box *container)
     menu_list.set_callback([=] () { update_popover_layout(); });
 
     button = std::make_unique<WayfireMenuWidget>("panel", "menu");
-    fullscreen.add_css_class("menu-fullscreen");
     button->append(main_image);
     button->add_css_class("menu-button");
     button->add_css_class("flat");
@@ -965,17 +962,6 @@ void WayfireMenu::init(Gtk::Box *container)
     button->open_on(1); /* Open menu on left click */
     signals.push_back(button->signal_popup().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown)));
-
-    /* Prepare fullscreen layer */
-    gtk_layer_init_for_window(fullscreen.gobj());
-    gtk_layer_set_monitor(fullscreen.gobj(), output->monitor->gobj());
-    gtk_layer_set_namespace(fullscreen.gobj(), "panelmenu");
-    gtk_layer_set_anchor(fullscreen.gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
-    gtk_layer_set_anchor(fullscreen.gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
-    gtk_layer_set_anchor(fullscreen.gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-    gtk_layer_set_anchor(fullscreen.gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-    gtk_layer_set_layer(fullscreen.gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
-    gtk_layer_set_keyboard_mode(fullscreen.gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
 
     if (!update_icon())
     {
@@ -1001,6 +987,13 @@ void WayfireMenu::init(Gtk::Box *container)
         toggle_menu();
     }));
     box.add_controller(click_gesture);
+
+    auto menu_fs_changed = [=]
+    {
+        button->set_fullscreen(menu_fullscreen.value());
+    };
+    menu_fullscreen.set_callback(menu_fs_changed);
+    menu_fs_changed();
 
     logout_image.set_icon_size(Gtk::IconSize::LARGE);
     logout_image.set_from_icon_name("system-shutdown");
