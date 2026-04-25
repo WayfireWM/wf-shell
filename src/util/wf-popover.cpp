@@ -1,13 +1,17 @@
 #include "wf-popover.hpp"
 #include "giomm/menumodel.h"
-#include "glibmm/refptr.h"
+#include "glib.h"
+#include "glibmm.h"
+#include "glibmm/main.h"
 #include "gtk/gtk.h"
 #include "gtkmm/eventcontrollermotion.h"
 #include "gtkmm/gestureclick.h"
 #include "gtkmm/widget.h"
 #include "wf-autohide-window.hpp"
 #include <cstddef>
+#include <iostream>
 #include <memory>
+#include <gtk4-layer-shell.h>
 
 /* Helper to get panel from button. NULL if not added to one */
 WayfireAutohidingWindow *get_panel(Gtk::Widget *button)
@@ -22,90 +26,115 @@ WayfireAutohidingWindow *get_panel(Gtk::Widget *button)
     return autohide_window;
 }
 
-WayfirePopup::WayfirePopup(std::string class_name, std::string option_name)
+void WayfireMenuWidget::set_no_child()
 {
-    popover.add_css_class(class_name + "-popover");
-
-    signals.push_back(popover.signal_closed().connect([=] ()
-    {
-        popdown();
-    }));
-
-    signals.push_back(menu.signal_closed().connect([=] ()
-    {
-        popdown();
-    }));
-}
-
-WayfirePopup::~WayfirePopup()
-{
-    for (auto signal : signals)
-    {
-        signal.disconnect();
-    }
-}
-
-void WayfirePopup::set_child(Gtk::Widget & widget)
-{
-    menu.popdown();
-    use_menu = false;
-    popover.set_child(scroll);
-    scroll.set_child(widget);
-    scroll.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
-    scroll.set_propagate_natural_height(true);
-    scroll.set_propagate_natural_width(true);
-}
-
-void WayfirePopup::set_menu_model(Glib::RefPtr<Gio::MenuModel> new_menu)
-{
+    remove_css_class("with-content");
     popover.popdown();
-    use_menu = true;
+    menu.popdown();
+    use_menu   = false;
+    use_widget = false;
+}
+
+void WayfireMenuWidget::set_menu_model(Glib::RefPtr<Gio::MenuModel> new_menu)
+{
+    add_css_class("with-content");
+    popover.popdown();
+    use_menu   = true;
+    use_widget = false;
     menu.set_menu_model(new_menu);
 }
 
-Gtk::Widget*WayfirePopup::get_child()
+void WayfireMenuWidget::popup()
 {
-    return popover.get_child();
-}
+    cancel_timer();
+    auto panel = get_panel(this);
+    if (!panel)
+    {
+        return;
+    }
 
-void WayfirePopup::set_parent(Gtk::Widget & parent)
-{
-    gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(parent.gobj()));
-    gtk_widget_set_parent(GTK_WIDGET(menu.gobj()), GTK_WIDGET(parent.gobj()));
-}
+    if (panel->is_active_popover(*this))
+    {
+        return;
+    }
 
-void WayfirePopup::unset_parent()
-{
-    gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
-    gtk_widget_unparent(GTK_WIDGET(menu.gobj()));
-}
-
-void WayfirePopup::popup()
-{
     if (use_menu)
     {
         menu.popup();
+    } else if (use_widget)
+    {
+        if (fullscreen)
+        {
+            fullscreen->show();
+        } else
+        {
+            popover.popup();
+        }
     } else
     {
-        popover.popup();
+        return;
     }
+
+    add_css_class("selected");
+
+    panel->set_active_popover(*this);
+    popup_signal.emit();
 }
 
-void WayfirePopup::popdown()
+void WayfireMenuWidget::popup_timed(int millis)
 {
-    if (use_menu)
+    /* Timed popup is assumed to not be a user action. Do not popup if a popup is already shown */
+    auto panel = get_panel(this);
+    if (!panel)
     {
-        menu.popdown();
-    } else
-    {
-        popover.popdown();
+        return;
     }
 
-    auto panel = get_panel(&popover);
-    if (panel)
+    if (panel->is_active_popover(*this))
     {
-        panel->unset_active_popover();
+        /* If it is us and we've got a timer, reset timer */
+
+        if (timer_signal.connected())
+        {
+            set_timer(millis);
+        }
+
+        return;
     }
+
+    if (panel->has_active_popover())
+    {
+        return;
+    }
+
+    popup();
+    set_timer(millis);
+}
+
+void WayfireMenuWidget::popdown()
+{
+    cancel_timer();
+    auto panel = get_panel(this);
+    if (!panel)
+    {
+        return;
+    }
+
+    remove_css_class("selected");
+    menu.popdown();
+    popover.popdown();
+    if (fullscreen)
+    {
+        fullscreen->hide();
+    }
+
+    if (!use_menu && !use_widget)
+    {
+        return;
+    }
+
+    popdown_signal.emit();
+    panel->unset_active_popover();
 }
 
 void WayfireMenuWidget::open_on(int button)
@@ -133,15 +162,26 @@ void WayfireMenuWidget::open_on(int button)
 
 WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::string class_name,
     const std::string option_name) :
-    panel_position{section + "/position"}
+    panel_position{section + "/position"}, class_name(class_name)
 {
+    /* WayfireMenuWidget gets class name directly */
     add_css_class(class_name);
+    add_css_class("wf-menu");
+    /* Add generic popover class to both */
+    popover.add_css_class("popover");
+    menu.add_css_class("popover");
+    /* Add specific popover class to both */
+    popover.add_css_class(class_name + "-popover");
+    menu.add_css_class(class_name + "-popover");
 
-    m_popup = std::make_shared<WayfirePopup>(class_name, option_name);
-    m_popup->set_parent(*this);
+    /* Scroller around widget popover for small screens */
+    popover.set_child(scroll);
+    scroll.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+    scroll.set_propagate_natural_height(true);
+    scroll.set_propagate_natural_width(true);
 
-
-
+    gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(this->gobj()));
+    gtk_widget_set_parent(GTK_WIDGET(menu.gobj()), GTK_WIDGET(this->gobj()));
     /* Moved to another menu */
     auto motion_gesture = Gtk::EventControllerMotion::create();
     signals.push_back(motion_gesture->signal_enter().connect(
@@ -155,17 +195,37 @@ WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::stri
         auto panel = get_panel(this);
         if (panel)
         {
-            auto current = panel->get_active_popover();
-            if ((current != nullptr) && (current != this))
+            /* Without contents, don't switch */
+            if (!use_menu && !use_widget)
             {
+                return;
+            }
+
+            if (panel->has_active_popover() && !panel->is_active_popover(*this))
+            {
+                if (panel->get_active_popover()->timer_signal.connected())
+                {
+                    return;
+                }
+
                 panel->get_active_popover()->popdown();
                 popup();
             }
         }
     }));
     add_controller(motion_gesture);
+    signals.push_back(popover.signal_closed().connect([=] ()
+    {
+        popdown();
+    }));
+
+    signals.push_back(menu.signal_closed().connect([=] ()
+    {
+        popdown();
+    }));
 }
 
+/* Most cases use class and option named the same. But not all */
 WayfireMenuWidget::WayfireMenuWidget(const std::string& section, std::string name) :
     WayfireMenuWidget(section, name, name)
 {}
@@ -177,8 +237,11 @@ WayfireMenuWidget::~WayfireMenuWidget()
         signal.disconnect();
     }
 
+    timer_signal.disconnect();
     click_signal.disconnect();
-    m_popup->unset_parent();
+
+    gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
+    gtk_widget_unparent(GTK_WIDGET(menu.gobj()));
 }
 
 void WayfireMenuWidget::set_keyboard_interactive(bool interactive)
@@ -191,16 +254,6 @@ bool WayfireMenuWidget::is_keyboard_interactive() const
     return this->interactive;
 }
 
-void WayfireMenuWidget::set_has_focus(bool focus)
-{
-    this->has_focus = focus;
-}
-
-bool WayfireMenuWidget::is_popup_focused() const
-{
-    return this->has_focus;
-}
-
 void WayfireMenuWidget::set_active_on_window()
 {
     auto panel = get_panel(this);
@@ -210,57 +263,39 @@ void WayfireMenuWidget::set_active_on_window()
     }
 }
 
-void WayfireMenuWidget::grab_focus()
-{
-    set_keyboard_interactive();
-    set_active_on_window(); // actually grab focus
-}
-
 void WayfireMenuWidget::set_popup_child(Gtk::Widget & widget)
 {
-    m_popup->set_child(widget);
+    add_css_class("with-content");
+    menu.popdown();
+    use_menu   = false;
+    use_widget = true;
+    scroll.set_child(widget);
 }
 
 Gtk::Widget*WayfireMenuWidget::get_popup_child()
 {
-    return m_popup->get_child();
-}
-
-void WayfireMenuWidget::popup()
-{
-    m_popup->popup();
-    popup_signal.emit();
-    auto panel = get_panel(this);
-    if (panel)
-    {
-        panel->set_active_popover(*this);
-    }
-}
-
-void WayfireMenuWidget::popdown()
-{
-    m_popup->popdown();
-    popdown_signal.emit();
-    auto panel = get_panel(this);
-    if (panel)
-    {
-        panel->unset_active_popover(*this);
-    }
+    return popover.get_child();
 }
 
 void WayfireMenuWidget::toggle()
 {
-    auto panel = get_panel(this);
-    if (panel)
+    Glib::signal_idle().connect([=] ()
     {
-        if (panel->get_active_popover() == NULL)
+        auto panel = get_panel(this);
+        if (panel)
         {
-            popup();
-        } else
-        {
-            popdown();
+            WayfireMenuWidget *popover = panel->get_active_popover();
+            if (popover == NULL)
+            {
+                popup();
+            } else
+            {
+                popover->popdown();
+            }
         }
-    }
+
+        return G_SOURCE_REMOVE;
+    });
 }
 
 bool WayfireMenuWidget::is_popup_visible()
@@ -274,7 +309,54 @@ bool WayfireMenuWidget::is_popup_visible()
     return false;
 }
 
-void WayfireMenuWidget::set_menu_model(Glib::RefPtr<Gio::MenuModel> menu)
+void WayfireMenuWidget::set_fullscreen(bool fs)
 {
-    m_popup->set_menu_model(menu);
+    auto panel = get_panel(this);
+    if (!panel)
+    {
+        return;
+    }
+
+    if (fs && (fullscreen == nullptr))
+    {
+        gtk_popover_set_child(popover.gobj(), nullptr);
+
+        /* Prepare fullscreen layer */
+        fullscreen = std::make_shared<Gtk::Window>();
+        fullscreen->add_css_class(class_name + "-fullscreen-popover");
+        fullscreen->add_css_class(class_name + "-popover");
+        fullscreen->add_css_class("fullscreen-popover");
+        gtk_layer_init_for_window(fullscreen->gobj());
+        gtk_layer_set_namespace(fullscreen->gobj(), "panelmenu");
+        gtk_layer_set_anchor(fullscreen->gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
+        gtk_layer_set_anchor(fullscreen->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+        gtk_layer_set_anchor(fullscreen->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+        gtk_layer_set_anchor(fullscreen->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+        gtk_layer_set_layer(fullscreen->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+        gtk_layer_set_keyboard_mode(fullscreen->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+        gtk_layer_set_monitor(fullscreen->gobj(), panel->get_output()->monitor->gobj());
+
+        fullscreen->set_child(scroll);
+    } else if (!fs && fullscreen)
+    {
+        gtk_window_set_child(fullscreen->gobj(), nullptr);
+        popover.set_child(scroll);
+        fullscreen->close();
+        fullscreen = nullptr;
+    }
+}
+
+void WayfireMenuWidget::cancel_timer()
+{
+    timer_signal.disconnect();
+}
+
+void WayfireMenuWidget::set_timer(int millis)
+{
+    timer_signal.disconnect();
+    timer_signal = Glib::signal_timeout().connect([=]
+    {
+        popdown();
+        return G_SOURCE_REMOVE;
+    }, millis);
 }

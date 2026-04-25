@@ -19,7 +19,6 @@ class WayfireVolume : public WayfireWidget
     WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
 
     void on_volume_value_changed();
-    bool on_popover_timeout(int timer);
 
     GvcMixerControl *gvc_control;
     GvcMixerStream *gvc_stream = NULL;
@@ -28,7 +27,6 @@ class WayfireVolume : public WayfireWidget
     gulong notify_volume_signal   = 0;
     gulong notify_is_muted_signal = 0;
     gulong notify_default_sink_changed = 0;
-    sigc::connection popover_timeout;
     std::vector<sigc::connection> signals;
     void disconnect_gvc_stream_signals();
 
@@ -65,9 +63,4 @@ class WayfireVolume : public WayfireWidget
 
     /** Called when the default sink changes */
     void on_default_sink_changed();
-
-    /**
-     * Check whether the popover should be auto-hidden, and if yes, start a timer to hide it
-     */
-    void check_set_popover_timeout();
 };
