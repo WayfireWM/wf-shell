@@ -416,19 +416,21 @@ bool WayfireAutohidingWindow::update_margin()
     return false;
 }
 
+bool WayfireAutohidingWindow::is_active_popover(WayfireMenuWidget& button)
+{
+    return this->active_button == &button;
+}
+
+bool WayfireAutohidingWindow::has_active_popover()
+{
+    return this->active_button != nullptr;
+}
+
 void WayfireAutohidingWindow::set_active_popover(WayfireMenuWidget& button)
 {
-    if (&button != this->active_button)
+    if (!is_active_popover(button))
     {
-        if (this->active_button)
-        {
-            this->popover_hide.disconnect();
-        }
-
         this->active_button = &button;
-        this->popover_hide  =
-            this->active_button->signal_popdown().connect(
-                [this, &button] () { unset_active_popover(button); });
     }
 
     /* Set this panel to forcibly show over fullscreen apps */
@@ -438,39 +440,21 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuWidget& button)
     }
 
     const bool should_grab_focus = this->active_button->is_keyboard_interactive();
-
-    /*
-     *  if (should_grab_focus)
-     *  {
-     *   // First, set exclusive mode to grab input
-     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
-     *   wl_surface_commit(get_wl_surface());
-     *
-     *   // Next, allow releasing of focus when clicking outside of the panel
-     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
-     *  }
-     */
-    // TODO come back for intentional focus steal
-
-    this->active_button->set_has_focus(should_grab_focus);
-    schedule_show(0);
-}
-
-void WayfireAutohidingWindow::unset_active_popover(WayfireMenuWidget& button)
-{
-    if (!this->active_button || (&button != this->active_button))
+    if (should_grab_focus)
     {
-        return;
+        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+    } else
+    {
+        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
     }
 
-    unset_active_popover();
+    schedule_show(0);
 }
 
 void WayfireAutohidingWindow::unset_active_popover()
 {
     if (this->active_button)
     {
-        this->active_button->set_has_focus(false);
         this->active_button = nullptr;
         this->popover_hide.disconnect();
     }

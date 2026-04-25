@@ -24,11 +24,21 @@
 .wf-panel .battery label,
 .wf-panel .battery:hover label,
 .wf-panel .window-button label,
+.wf-panel .window-button image,
 .wf-panel .window-button:hover label,
 .wf-panel .tray-button,
 .wf-panel .tray-button:hover,
 .wf-panel .notification button {
     padding-left: 5px;
+}
+
+
+.wf-panel .window-button.activated {
+    background-color: #8883;
+}
+
+.wf-panel .window-button:hover {
+    background-color: #8882;
 }
 
 .wf-panel .battery overlay label {
@@ -94,7 +104,7 @@ text-shadow: 1px  1px 0 var(--bcol),
     background-color: #24283B;
     padding: 5px;
     margin: 5px;
-    border-radius: 3px; 
+    border-radius: 3px;
     color: #41A6B5;
 }
 
@@ -132,6 +142,15 @@ text-shadow: 1px  1px 0 var(--bcol),
     background-color: #00FFAA77;
     border: 1px solid #222;
 }
+
+.wf-panel .wf-menu.selected {
+    background-color:#8883;
+}
+
+.wf-panel .wf-menu:hover {
+    background-color: #8882;
+}
+
 .excellent {
     color: #00ff00;
 }
