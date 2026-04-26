@@ -53,6 +53,8 @@ class WayfirePanel::impl
 
     WayfireOutput *output;
 
+    WfOption<std::string> panel_position{"panel/position"};
+    WfOption<bool> center{"panel/center"};
     WfOption<std::string> panel_layer{"panel/layer"};
     std::function<void()> set_panel_layer = [=] ()
     {
@@ -77,23 +79,83 @@ class WayfirePanel::impl
         }
     };
 
-    WfOption<int> minimal_panel_height{"panel/minimal_height"};
+    void set_boxes_orientation(Gtk::Orientation orientation)
+    {
+        content_box.set_orientation(orientation);
+        left_box.set_orientation(orientation);
+        center_box.set_orientation(orientation);
+        right_box.set_orientation(orientation);
+    }
+
+    void update_orientation()
+    {
+        bool is_horizontal = !(panel_position.value() == "left" or panel_position.value() ==
+            "right"); // checking like this also works with the fallback being the top
+
+        auto orientation = is_horizontal ? Gtk::Orientation::HORIZONTAL : Gtk::Orientation::VERTICAL;
+        set_boxes_orientation(orientation);
+
+        if (center)
+        {
+            left_box.set_expand(true);
+            right_box.set_expand(true);
+
+            int lmin, lnat, lminb, lnatb, rmin, rnat, rminb, rnatb, mmin, mnat, mminb, mnatb;
+            left_box.measure(orientation, -1, lmin, lnat, lminb, lnatb);
+            right_box.measure(orientation, -1, rmin, rnat, rminb, rnatb);
+            center_box.measure(orientation, -1, mmin, mnat, mminb, mnatb);
+
+            if (is_horizontal)
+            {
+                content_box.set_size_request((std::max(lnat, rnat) * 2) + mnat, -1);
+
+                left_box.set_halign(Gtk::Align::END);
+                right_box.set_halign(Gtk::Align::START);
+                left_box.set_valign(Gtk::Align::CENTER);
+                right_box.set_valign(Gtk::Align::CENTER);
+            } else
+            {
+                content_box.set_size_request(-1, (std::max(lnat, rnat) * 2) + mnat);
+
+                left_box.set_halign(Gtk::Align::CENTER);
+                right_box.set_halign(Gtk::Align::CENTER);
+                left_box.set_valign(Gtk::Align::END);
+                right_box.set_valign(Gtk::Align::START);
+            }
+        } else
+        {
+            left_box.set_expand(false);
+            right_box.set_expand(false);
+
+            content_box.set_size_request(-1, -1);
+
+            if (is_horizontal)
+            {
+                left_box.set_halign(Gtk::Align::START);
+                right_box.set_halign(Gtk::Align::END);
+                left_box.set_valign(Gtk::Align::CENTER);
+                right_box.set_valign(Gtk::Align::CENTER);
+            } else
+            {
+                left_box.set_valign(Gtk::Align::START);
+                right_box.set_valign(Gtk::Align::END);
+                left_box.set_halign(Gtk::Align::CENTER);
+                right_box.set_halign(Gtk::Align::CENTER);
+            }
+        }
+    }
 
     void create_window()
     {
         window = std::make_unique<WayfireAutohidingWindow>(output, "panel");
 
-        window->set_default_size(0, minimal_panel_height);
         window->add_css_class("wf-panel");
         panel_layer.set_callback(set_panel_layer);
         set_panel_layer(); // initial setting
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-        gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, 0);
-        gtk_layer_set_margin(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, 0);
 
         window->present();
         init_layout();
+        update_orientation();
     }
 
     void init_layout()
@@ -110,10 +172,9 @@ class WayfirePanel::impl
         content_box.set_end_widget(right_box);
 
         content_box.set_hexpand(true);
-
-        left_box.set_halign(Gtk::Align::START);
+        content_box.set_vexpand(true);
         center_box.set_halign(Gtk::Align::CENTER);
-        right_box.set_halign(Gtk::Align::END);
+        center_box.set_valign(Gtk::Align::CENTER);
 
         window->set_child(content_box);
     }
@@ -326,6 +387,8 @@ class WayfirePanel::impl
 
     void handle_config_reload()
     {
+        update_orientation();
+
         for (auto& w : left_widgets)
         {
             w->handle_config_reload();
