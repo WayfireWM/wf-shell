@@ -1,0 +1,166 @@
+#include <gtkmm.h>
+#include <memory>
+#include <sigc++/connection.h>
+#include <filesystem>
+#include <thread>
+
+#ifdef HAVE_DDCUTIL
+extern "C" {
+    #include <ddcutil_types.h>
+    #include <ddcutil_c_api.h>
+    #include <ddcutil_status_codes.h>
+}
+#endif
+
+#include "wf-shell-app.hpp"
+#include "widget.hpp"
+#include "animated-scale.hpp"
+
+class WayfireBacklight;
+
+class WfLightControl : public Gtk::Box
+{
+  protected:
+    WayfireAnimatedScale scale;
+    Gtk::Label label;
+    WayfireBacklight *parent;
+    std::vector<sigc::connection> signals;
+
+    void update_parent_icon();
+
+    WfOption<int> slider_length{"panel/light_slider_length"};
+
+  public:
+    WfLightControl(WayfireBacklight *parent);
+
+    virtual std::string get_connector() = 0;
+    virtual std::string get_name() = 0;
+    WayfireBacklight *get_parent();
+
+    void set_scale_target_value(double value);
+    double get_scale_target_value();
+    // a double from 0 to 1 for min to max
+    virtual void set_brightness(double brightness) = 0;
+    virtual double get_brightness() = 0;
+};
+
+class LightManager
+{
+  protected:
+    LightManager()
+    {}
+    // managed widgets
+    std::vector<WayfireBacklight*> widgets;
+
+    virtual void catch_up_widget(WayfireBacklight *widget) = 0;
+    virtual void strip_widget(WayfireBacklight *widget)    = 0;
+
+  public:
+    void add_widget(WayfireBacklight *widget);
+    void rem_widget(WayfireBacklight *widget);
+};
+
+// singleton that monitors sysfs and calls the necessary functions
+// monitors appearance and deletion of backlight devices
+// and the brightness of each of them
+class SysfsSurveillor : public LightManager
+{
+  private:
+    SysfsSurveillor();
+    void handle_inotify_events();
+    bool check_perms(std::filesystem::path);
+    void add_dev(std::filesystem::path);
+    void rem_dev(std::filesystem::path);
+    void catch_up_widget(WayfireBacklight *widget);
+    void strip_widget(WayfireBacklight *widget);
+
+    static inline std::unique_ptr<SysfsSurveillor> instance;
+
+    int fd; // inotify file descriptor
+
+    // stores the data that goes with the inotify watch descriptor (the int)
+    // the controls are all the controls which represent this device, to be updated
+    std::map<
+        int,
+        std::pair<
+            std::filesystem::path,
+            std::vector<std::shared_ptr<WfLightControl>>
+        >
+    > wd_to_path_controls;
+
+    // watch descriptors for files (so, a device) being added or removed
+    int wd_additions, wd_removal;
+
+    // managed widgets
+    std::vector<WayfireBacklight*> widgets;
+
+    // thread on which to run handle_inotify_event on loop
+    std::thread inotify_thread;
+
+  public:
+    ~SysfsSurveillor();
+
+    static SysfsSurveillor& get();
+};
+
+#ifdef HAVE_DDCUTIL
+class DdcaSurveillor : public LightManager
+{
+  private:
+    DdcaSurveillor();
+    void catch_up_widget(WayfireBacklight *widget);
+    void strip_widget(WayfireBacklight *widget);
+    static void on_display_change(DDCA_Display_Status_Event event);
+
+    static inline std::unique_ptr<DdcaSurveillor> instance;
+
+  public:
+    ~DdcaSurveillor();
+
+    std::map<DDCA_Display_Ref, std::vector<std::shared_ptr<WfLightControl>>> ref_to_controls;
+
+    static DdcaSurveillor& get();
+};
+#endif
+
+class WayfireBacklight : public WayfireWidget
+{
+  private:
+    void init(Gtk::Box *container) override;
+
+    WayfireOutput *output;
+
+    Gtk::Image icon;
+    Gtk::Popover *popover;
+    Gtk::Box box, display_box, other_box;
+    Gtk::Label display_label, other_label;
+    Gtk::Separator disp_othr_sep;
+    sigc::connection popover_timeout;
+
+    WfOption<double> popup_timeout{"panel/light_popup_timeout"};
+    WfOption<int> spacing{"panel/light_spacing"};
+
+    bool on_popover_timeout(int timer);
+
+  public:
+    WayfireBacklight(WayfireOutput *output);
+    ~WayfireBacklight();
+
+    std::unique_ptr<WayfireMenuButton> button;
+
+    WfOption<double> scroll_sensitivity{"panel/light_scroll_sensitivity"};
+    WfOption<bool> invert_scroll{"panel/light_invert_scroll"};
+    WfOption<bool> popup_on_change{"panel/light_popup_on_change"};
+
+    std::shared_ptr<WfLightControl> ctrl_this_display;
+
+    std::vector<std::shared_ptr<WfLightControl>> controls;
+
+    void check_set_popover_timeout();
+    void cancel_popover_timeout();
+
+    void add_control(std::shared_ptr<WfLightControl> control);
+    void rem_control(WfLightControl *control);
+
+    void update_icon();
+};
