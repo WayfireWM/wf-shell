@@ -15,4 +15,6 @@ install_data(join_paths('icons', 'scalable', 'wayfire.svg'), install_dir: join_p
 
 install_data('wf-locker', install_dir:'/etc/pam.d/')
 
+install_data('xdpw/wayfire', install_dir: '/etc/xdg/xdg-desktop-portal-wlr/')
+
 subdir('css')
