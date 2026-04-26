@@ -134,7 +134,7 @@ void WayfireBacklight::init(Gtk::Box *container)
     // layout
     box.set_orientation(Gtk::Orientation::VERTICAL);
 
-    auto set_spacing = [=]()
+    auto set_spacing = [=] ()
     {
         box.set_spacing(spacing);
         display_box.set_spacing(spacing);
