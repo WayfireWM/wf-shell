@@ -71,8 +71,9 @@ void WayfireBackgroundApp::create(int argc, char **argv)
 void WayfireBackgroundApp::on_activate()
 {
     WayfireShellApp::on_activate();
-
     prep_cache();
+    // Initial setup of timer etc.
+    change_background();
 }
 
 void WayfireBackgroundApp::prep_cache()
@@ -92,7 +93,10 @@ void WayfireBackgroundApp::handle_new_output(WayfireOutput *output)
 {
     backgrounds[output] = std::unique_ptr<WayfireBackground>(
         new WayfireBackground(output));
-    change_background();
+    if (!current_background.empty())
+    {
+        backgrounds[output]->gl_area->show_image(current_background);
+    }
 }
 
 void WayfireBackgroundApp::handle_output_removed(WayfireOutput *output)
@@ -108,7 +112,8 @@ std::string WayfireBackgroundApp::get_application_name()
 std::vector<std::string> WayfireBackgroundApp::get_background_list(std::string path)
 {
     wordexp_t exp;
-    std::cout << "Looking in " << path << std::endl;
+    LOGD("Looking for background images in ", path);
+
     /* Expand path */
     if (wordexp(path.c_str(), &exp, 0))
     {
@@ -187,18 +192,20 @@ void WayfireBackgroundApp::change_background()
     std::string background_path = WfOption<std::string>{"background/image"};
     auto list = get_background_list(background_path);
     auto idx  = find(list.begin(), list.end(), current_background) - list.begin();
-
-    std::cout << current_background << "  " << idx << std::endl;
     idx = (idx + 1) % list.size();
-    // gl_area->show_image(list[idx]);
-    for (auto & it : backgrounds)
+
+    if (current_background != list[idx])
     {
-        it.second->gl_area->show_image(list[idx]);
+        for (auto & it : backgrounds)
+        {
+            it.second->gl_area->show_image(list[idx]);
+        }
+
+        current_background = list[idx];
+        write_cache(list[idx]);
     }
 
-    write_cache(list[idx]);
     reset_cycle_timeout();
-    current_background = list[idx];
 }
 
 gboolean WayfireBackgroundApp::sigusr1_handler(void *instance)

@@ -4,7 +4,9 @@
 
 #include "wp-mixer.hpp"
 #include "wf-wp-control.hpp"
-#include "../volume-level.hpp"
+#include "icon-select.hpp"
+
+#define ICON(volume) icon_from_range(volume_icons, volume)
 
 bool WayfireWpMixer::on_popover_timeout(int timer)
 {
@@ -219,7 +221,7 @@ void WayfireWpMixer::init(Gtk::Box *container)
 
     button = std::make_unique<WayfireMenuButton>("panel");
     button->add_css_class("widget-icon");
-    button->add_css_class("wireplumber");
+    button->add_css_class("wp-mixer");
     button->add_css_class("flat");
     button->get_children()[0]->add_css_class("flat");
     button->set_child(main_image);
@@ -228,12 +230,12 @@ void WayfireWpMixer::init(Gtk::Box *container)
     sources_box.add_css_class("inputs");
     streams_box.add_css_class("streams");
     out_in_wall.add_css_class("out-in");
-    in_streams_wall.add_css_class("in_streams");
+    in_streams_wall.add_css_class("in-streams");
 
     popover = button->get_popover();
     popover->set_child(master_box);
     popover->set_autohide(false);
-    popover->add_css_class("wireplumber-popover");
+    popover->add_css_class("wp-mixer-popover");
 
     // scroll to change volume of the object targetted by the quick_target widget
     auto scroll_gesture = Gtk::EventControllerScroll::create();
@@ -332,17 +334,17 @@ void WayfireWpMixer::update_icon()
     // depends on quick_target widget
     if (!quick_target)
     {
-        main_image.set_from_icon_name(volume_icon_for(-1)); // OOR
+        main_image.set_from_icon_name(ICON(-1)); // OOR
         return;
     }
 
     if (quick_target->button.get_active())
     {
-        main_image.set_from_icon_name(volume_icon_for(0)); // mute
+        main_image.set_from_icon_name(ICON(0)); // mute
         return;
     }
 
-    main_image.set_from_icon_name(volume_icon_for(quick_target->get_scale_target_value()));
+    main_image.set_from_icon_name(ICON(quick_target->get_scale_target_value()));
 }
 
 void WayfireWpMixer::set_quick_target_from(WfWpControl *from)

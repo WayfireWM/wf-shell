@@ -442,11 +442,9 @@ void WayfireMenu::load_menu_items_all()
 
 void WayfireMenu::on_search_changed()
 {
-    search_entry.set_text(search_contents);
-    search_entry.set_position(search_contents.length());
     if (menu_show_categories)
     {
-        if (search_contents.length() == 0)
+        if (search_entry.get_text().length() == 0)
         {
             /* Text has been unset, show categories again */
             populate_menu_items(category);
@@ -459,7 +457,7 @@ void WayfireMenu::on_search_changed()
         }
     }
 
-    m_sort_names  = search_contents.length() == 0;
+    m_sort_names  = search_entry.get_text().length() == 0;
     fuzzy_filter  = false;
     count_matches = 0;
     flowbox.unselect_all();
@@ -483,7 +481,7 @@ bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
     auto button = dynamic_cast<WfMenuMenuItem*>(child);
     assert(button);
 
-    auto text = search_contents;
+    auto text = search_entry.get_text();
     uint32_t match_score = this->fuzzy_filter ?
         button->fuzzy_match(text) : button->matches(text);
 
@@ -513,14 +511,16 @@ bool WayfireMenu::on_sort(Gtk::FlowBoxChild *a, Gtk::FlowBoxChild *b)
 
 void WayfireMenu::on_popover_shown()
 {
-    search_contents = "";
+    search_entry.delete_text(0, search_entry.get_text().length());
     on_search_changed();
     set_category("All");
     flowbox.unselect_all();
 
-    Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
-
-    gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    if (force_show_popup.value())
+    {
+        Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
+        gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    }
 }
 
 bool WayfireMenu::update_icon()
@@ -540,7 +540,13 @@ bool WayfireMenu::update_icon()
 
 void WayfireMenu::setup_popover_layout()
 {
-    button->get_popover()->set_child(popover_layout_box);
+    if (menu_fullscreen)
+    {
+        fullscreen.set_child(popover_layout_box);
+    } else
+    {
+        button->get_popover()->set_child(popover_layout_box);
+    }
 
     flowbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
     flowbox.set_activate_on_single_click(true);
@@ -550,18 +556,21 @@ void WayfireMenu::setup_popover_layout()
     flowbox.set_filter_func(sigc::mem_fun(*this, &WayfireMenu::on_filter));
     flowbox.add_css_class("app-list");
     flowbox.set_size_request(int(menu_min_content_width), int(menu_min_content_height));
+    flowbox.set_vexpand(true);
 
     flowbox_container.append(flowbox);
 
     scroll_pair.append(category_scrolled_window);
     scroll_pair.append(app_scrolled_window);
     scroll_pair.set_homogeneous(false);
+    scroll_pair.set_vexpand(true);
 
     app_scrolled_window.set_min_content_width(int(menu_min_content_width));
     app_scrolled_window.set_min_content_height(int(menu_min_content_height));
     app_scrolled_window.set_child(flowbox_container);
     app_scrolled_window.add_css_class("app-list-scroll");
     app_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
+    app_scrolled_window.set_vexpand(true);
 
     category_box.add_css_class("category-list");
     category_box.set_orientation(Gtk::Orientation::VERTICAL);
@@ -571,24 +580,28 @@ void WayfireMenu::setup_popover_layout()
     category_scrolled_window.set_child(category_box);
     category_scrolled_window.add_css_class("categtory-list-scroll");
     category_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
+    category_scrolled_window.set_vexpand(true);
 
     search_entry.add_css_class("app-search");
 
+    signals.push_back((search_entry.signal_changed().connect(
+        [this] ()
+    {
+        on_search_changed();
+    })));
     auto typing_gesture = Gtk::EventControllerKey::create();
     typing_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
     signals.push_back(typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
                                                                         Gdk::ModifierType state)
     {
-        if (keyval == GDK_KEY_BackSpace)
+        Gtk::Widget *focused = nullptr;
+        auto root = popover_layout_box.get_root();
+        if (root)
         {
-            if (search_contents.length() > 0)
-            {
-                search_contents.pop_back();
-            }
+            focused = root->get_focus();
+        }
 
-            on_search_changed();
-            return true;
-        } else if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
+        if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter))
         {
             auto children = flowbox.get_selected_children();
             if (children.size() == 1)
@@ -601,22 +614,48 @@ void WayfireMenu::setup_popover_layout()
         } else if (keyval == GDK_KEY_Escape)
         {
             button->get_popover()->hide();
+            fullscreen.hide();
+            return true;
+        } else if ((keyval == GDK_KEY_Up) ||
+                   (keyval == GDK_KEY_Down) ||
+                   (keyval == GDK_KEY_Left) ||
+                   (keyval == GDK_KEY_Right))
+        {
+            return false;
+        } else if (focused && focused->is_ancestor(search_entry))
+        {
+            return false;
         } else
         {
+            if (!search_entry.grab_focus())
+            {
+                std::cerr << "Unable to steal focus to entry" << std::endl;
+            }
+
+            // this is a hack to still try to get the key propersly to resume
+            // search, as we can’t focus the entry and have the key be used by
+            // it. Better than nothing, but it fails to account for keys other
+            // than simple letters, and still focuses on other keys.
             std::string input = gdk_keyval_name(keyval);
             if (input.length() == 1)
             {
-                search_contents = search_contents + input;
-                on_search_changed();
-                return true;
+                search_entry.set_text(search_entry.get_text() + input);
             }
-        }
 
-        return false;
+            auto pos = search_entry.get_text().length();
+            search_entry.select_region(pos, pos);
+            on_search_changed();
+            return false;
+        }
     }, false));
-    button->get_popover()->add_controller(typing_gesture);
+    popover_layout_box.add_controller(typing_gesture);
     signals.push_back(button->get_popover()->signal_closed().connect([=] ()
     {
+        if (!force_show_popup.value())
+        {
+            return;
+        }
+
         Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
         WfOption<std::string> panel_layer{"panel/layer"};
 
@@ -819,6 +858,7 @@ WayfireLogoutUI::~WayfireLogoutUI()
 void WayfireMenu::on_logout_click()
 {
     button->get_popover()->hide();
+    fullscreen.hide();
     if (!std::string(menu_logout_command).empty())
     {
         g_spawn_command_line_async(std::string(menu_logout_command).c_str(), NULL);
@@ -901,6 +941,7 @@ void WayfireMenu::init(Gtk::Box *container)
     menu_list.set_callback([=] () { update_popover_layout(); });
 
     button = std::make_unique<WayfireMenuButton>("panel");
+    fullscreen.add_css_class("menu-fullscreen");
     button->set_child(main_image);
     button->add_css_class("menu-button");
     button->add_css_class("flat");
@@ -908,6 +949,17 @@ void WayfireMenu::init(Gtk::Box *container)
     button->get_children()[0]->add_css_class("flat");
     signals.push_back(button->get_popover()->signal_show().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown)));
+
+    /* Prepare fullscreen layer */
+    gtk_layer_init_for_window(fullscreen.gobj());
+    gtk_layer_set_monitor(fullscreen.gobj(), output->monitor->gobj());
+    gtk_layer_set_namespace(fullscreen.gobj(), "panelmenu");
+    gtk_layer_set_anchor(fullscreen.gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
+    gtk_layer_set_anchor(fullscreen.gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+    gtk_layer_set_anchor(fullscreen.gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+    gtk_layer_set_anchor(fullscreen.gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+    gtk_layer_set_layer(fullscreen.gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    gtk_layer_set_keyboard_mode(fullscreen.gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
 
     if (!update_icon())
     {
@@ -917,11 +969,31 @@ void WayfireMenu::init(Gtk::Box *container)
     signals.push_back(button->property_scale_factor().signal_changed().connect(
         [=] () {update_icon(); }));
 
+    menu_fullscreen.set_callback([=] ()
+    {
+        fullscreen.hide();
+        button->set_active(false);
+        if (menu_fullscreen)
+        {
+            gtk_popover_set_child(button->get_popover()->gobj(), nullptr);
+            fullscreen.set_child(popover_layout_box);
+        } else
+        {
+            gtk_window_set_child(fullscreen.gobj(), nullptr);
+            button->get_popover()->set_child(popover_layout_box);
+        }
+    });
+
     container->append(box);
     box.append(*button);
 
     auto click_gesture = Gtk::GestureClick::create();
+    click_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
     signals.push_back(click_gesture->signal_pressed().connect([=] (int count, double x, double y)
+    {
+        click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
+    signals.push_back(click_gesture->signal_released().connect([=] (int count, double x, double y)
     {
         toggle_menu();
     }));
@@ -973,20 +1045,28 @@ void WayfireMenu::update_content_width()
 
 void WayfireMenu::toggle_menu()
 {
-    search_contents = "";
     search_entry.set_text("");
-    if (button->get_active())
+    if (menu_fullscreen)
     {
-        button->set_active(false);
-    } else
-    {
-        button->set_active(true);
+        if (fullscreen.is_visible())
+        {
+            fullscreen.hide();
+        } else
+        {
+            fullscreen.show();
+            on_popover_shown();
+        }
+
+        return;
     }
+
+    button->set_active(!button->get_active());
 }
 
 void WayfireMenu::hide_menu()
 {
     button->set_active(false);
+    fullscreen.hide();
 }
 
 void WayfireMenu::set_category(std::string in_category)

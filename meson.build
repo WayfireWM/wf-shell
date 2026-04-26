@@ -65,11 +65,11 @@ add_project_arguments(
 	language: 'cpp',
 )
 
-resource_dir = join_paths(get_option('prefix'), 'share', 'wayfire')
-metadata_dir = join_paths(resource_dir, 'metadata', 'wf-shell')
+resource_dir = join_paths(get_option('prefix'), 'share', 'wf-shell')
+metadata_dir = join_paths(resource_dir, 'metadata')
 sysconf_dir = join_paths(get_option('prefix'), get_option('sysconfdir'))
 
-icon_dir = join_paths(get_option('prefix'), 'share', 'wayfire', 'icons')
+icon_dir = join_paths(get_option('prefix'), 'share', 'wf-shell', 'icons')
 add_project_arguments('-DICONDIR="' + icon_dir + '"', language: 'cpp')
 add_project_arguments('-DRESOURCEDIR="' + resource_dir + '"', language: 'cpp')
 add_project_arguments('-DMETADATA_DIR="' + metadata_dir + '"', language: 'cpp')
