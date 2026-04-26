@@ -4,6 +4,7 @@
 #include <ext-foreign-toplevel-list-v1-client-protocol.h>
 
 #include "stream-chooser.hpp"
+#include "gtkmm/enums.h"
 #include "outputwidget.hpp"
 #include "toplevelwidget.hpp"
 
@@ -67,12 +68,22 @@ WayfireStreamChooserApp::WayfireStreamChooserApp() : Gtk::Application("org.wayfi
 
 void WayfireStreamChooserApp::activate()
 {
-    window.set_size_request(300, 300);
+    window.add_css_class("stream-chooser");
+    main.set_size_request(300, 300);
     add_window(window);
     window.set_child(main);
+    main.set_valign(Gtk::Align::CENTER);
+    main.set_halign(Gtk::Align::CENTER);
+    main.set_vexpand(false);
+    main.set_hexpand(false);
     main.append(header);
     main.append(notebook);
     main.append(buttons);
+    auto window_display = window.get_display();
+    auto css_provider   = Gtk::CssProvider::create();
+    css_provider->load_from_data("window.stream-chooser { background-color: rgba(0, 0, 0, 0.5); }");
+    Gtk::StyleContext::add_provider_for_display(window_display,
+        css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
 
     notebook.set_expand(true);
     notebook.append_page(window_list, window_label);
@@ -175,7 +186,11 @@ void WayfireStreamChooserApp::activate()
     gtk_layer_init_for_window(window.gobj());
     gtk_layer_set_namespace(window.gobj(), "chooser");
     gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
-    gtk_layer_set_keyboard_mode(window.gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+
+    gtk_layer_set_keyboard_mode(window.gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
     gtk_layer_set_exclusive_zone(window.gobj(), 0);
     window.present();
 }
