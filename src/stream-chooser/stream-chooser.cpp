@@ -40,7 +40,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
             wl_registry_bind(registry, name,
             &ext_foreign_toplevel_list_v1_interface,
             version);
-
+        WayfireStreamChooserApp::getInstance().has_foreign_toplevel_list = true;
         WayfireStreamChooserApp::getInstance().set_toplevel_list(list);
         ext_foreign_toplevel_list_v1_add_listener(list,
             &toplevel_list_v1_impl, NULL);
@@ -148,12 +148,21 @@ void WayfireStreamChooserApp::activate()
     this->registry = registry;
     wl_display_roundtrip(display);
 
-    if (this->list && has_image_copy_capture)
-    {} else
+    bool failed = false;
+    if (!has_image_copy_capture)
     {
-        std::cerr << "Compositor doesn't support" <<
-            " ext-foreign-toplevel-list and/or ext-image-copy-capture-v1." <<
-            " Only screens can be cast currently." << std::endl;
+        failed = true;
+        std::cerr << "Compositor has not advertised ext-image-copy-capture-v1" << std::endl;
+    }
+
+    if (!has_foreign_toplevel_list)
+    {
+        failed = true;
+        std::cerr << "Compositor has not advertised ext-foreign-toplevel-list-v1" << std::endl;
+    }
+
+    if (failed)
+    {
         window_label.set_sensitive(false);
         window_label.set_tooltip_text("This compositor does not currently support sharing individual windows");
         notebook.set_current_page(1);

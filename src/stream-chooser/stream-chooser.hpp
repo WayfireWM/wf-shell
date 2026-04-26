@@ -26,7 +26,8 @@ class WayfireStreamChooserApp : public Gtk::Application
     ext_foreign_toplevel_list_v1 *list;
 
   public:
-    bool has_image_copy_capture = false;
+    bool has_foreign_toplevel_list = false;
+    bool has_image_copy_capture    = false;
 
     std::map<ext_foreign_toplevel_handle_v1*, std::unique_ptr<WayfireChooserTopLevel>> toplevels;
     std::map<std::string, std::unique_ptr<WayfireChooserOutput>> outputs;
