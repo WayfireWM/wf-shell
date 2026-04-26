@@ -132,24 +132,32 @@ text-shadow: 1px  1px 0 var(--bcol),
     background-color: #00FFAA77;
     border: 1px solid #222;
 }
-.excellent {
+.excellent>label {
     color: #00ff00;
 }
 
-.good {
+.good>label
+{
     color: #88ff00;
 }
 
-.ok {
+.ok>label
+{
     color: #ffff00;
 }
 
-.weak {
+.weak>label
+{
     color: #ff8800;
 }
 
-.none {
+.none>label
+{
     color: #ff0000;
+}
+.bluetooth>label
+{
+    color: #8888ff;
 }
 
 .wf-dock,
@@ -191,7 +199,7 @@ text-shadow: 1px  1px 0 var(--bcol),
     -gtk-icon-transform: scale(1.0);
 }
 
-.wf-dock image {
+.wf-dock image.toplevel-icon {
     animation-name: embiggen;
     animation-duration: 1000ms;
     animation-timing-function: linear;
@@ -204,6 +212,35 @@ text-shadow: 1px  1px 0 var(--bcol),
     animation-timing-function: linear;
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
+}
+
+.network-control-center image.access-point {
+    -gtk-icon-size: 40px;
+}
+
+.network-control-center .access-point.secure .security {
+    -gtk-icon-size:20px;
+    color:red;
+}
+
+
+.network-control-center .access-point.secure.has-password .security {
+    color:green;
+}
+
+.network-control-center .access-point.has-password{
+  font-weight: bold;
+  background: #8f83;
+}
+
+.network-control-center .vpn.active{
+  font-weight: bold;
+  background: #8f83;
+}
+
+.network-control-center .access-point .band {
+    font-size: 1em;
+    font-weight: bolder;
 }
 
 .wf-locker .password{
@@ -220,7 +257,6 @@ text-shadow: 1px  1px 0 var(--bcol),
 .wf-locker .fingerprint-overlay-image.info {
     color: #88f;
 }
-
 .wf-locker .user label {
     font-weight: bold;
     text-transform: capitalize;
@@ -230,6 +266,7 @@ text-shadow: 1px  1px 0 var(--bcol),
     padding-right: 25px;
     padding-bottom: 100px;
 }
+
 .wf-locker label.weather {
     font-weight: bold;
     padding-left: 100px;

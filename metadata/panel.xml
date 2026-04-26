@@ -229,6 +229,10 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<_short>On Click Command</_short>
 		<default>default</default>
 	</option>
+	<option name="network_no_label" type="bool">
+		<_short>No text</_short>
+		<default>false</default>
+	</option>
 	</group>
 	<group>
 	<_short>Menu</_short>

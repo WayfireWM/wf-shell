@@ -10,6 +10,10 @@
 
 #include "dock.hpp"
 #include "../util/gtk-utils.hpp"
+#include "gtkmm/flowbox.h"
+#include "network/manager.hpp"
+#include "network/network-widget.hpp"
+#include "network/network.hpp"
 #include <css-config.hpp>
 
 
@@ -19,6 +23,9 @@ class WfDock::impl
     std::unique_ptr<WayfireAutohidingWindow> window;
     wl_surface *_wl_surface;
     Gtk::FlowBox box;
+    std::unique_ptr<WayfireMenuButton> network_image;
+    std::unique_ptr<NetworkControlWidget> network_control;
+    std::shared_ptr<NetworkManager> network_manager;
 
     WfOption<std::string> css_path{"dock/css_path"};
     WfOption<int> entries_per_line{"dock/max_per_line"};
