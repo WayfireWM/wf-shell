@@ -54,8 +54,7 @@ class WayfireWpMixer : public WayfireWidget
     WfOption<bool> invert_scroll{"panel/wp_invert_scroll"};
     WfOption<bool> popup_on_change{"panel/wp_popup_on_change"};
 
-    std::unique_ptr<WayfireMenuButton> button;
-    Gtk::Popover *popover;
+    std::unique_ptr<WayfireMenuWidget> button;
 
     /*
      * the "quick_target" is the representation of the audio channel that shows it’s volume

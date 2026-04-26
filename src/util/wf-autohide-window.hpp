@@ -37,6 +37,8 @@ class WayfireAutohidingWindow : public Gtk::Window
     WayfireAutohidingWindow& operator =(const WayfireAutohidingWindow&) = delete;
     WayfireAutohidingWindow& operator =(WayfireAutohidingWindow&&) = delete;
 
+    WfOption<bool> force_show_popup;
+
     ~WayfireAutohidingWindow();
     wl_surface *get_wl_surface() const;
 
@@ -58,23 +60,20 @@ class WayfireAutohidingWindow : public Gtk::Window
      * Note that autohide margin isn't taken into account. */
     void set_auto_exclusive_zone(bool has_zone = false);
 
-    /**
-     * Set the currently active popover button.
-     * The lastly activated popover, if any, will be closed, in order to
-     * show this new one.
-     *
-     * In addition, if the window has an active popover, it will grab the
-     * keyboard input and deactivate the popover when the focus is lost.
-     */
-    void set_active_popover(WayfireMenuButton& button);
+    void set_active_popover(WayfireMenuWidget& button);
+    bool is_active_popover(WayfireMenuWidget& button);
+    bool has_active_popover();
+    void unset_active_popover();
 
-    /**
-     * No-op if the given popover is not the currently active popover.
-     *
-     * Unsets the currently active popover and reverses the effects of setting
-     * making it active with set_active_popover()
+    /*
+     * Get Active popover or null
      */
-    void unset_active_popover(WayfireMenuButton& popover);
+    WayfireMenuWidget *get_active_popover();
+
+    WayfireOutput *get_output()
+    {
+        return output;
+    }
 
   private:
     WayfireOutput *output;
@@ -120,7 +119,7 @@ class WayfireAutohidingWindow : public Gtk::Window
     void setup_hotspot();
 
     sigc::connection popover_hide;
-    WayfireMenuButton *active_button = nullptr;
+    WayfireMenuWidget *active_button = nullptr;
 };
 
 

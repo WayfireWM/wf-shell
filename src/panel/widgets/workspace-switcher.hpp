@@ -51,7 +51,7 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
     Gtk::Grid switch_grid;
     Gtk::Overlay overlay;
     double get_scaled_width();
-    std::unique_ptr<WayfireMenuButton> button;
+    std::unique_ptr<WayfireMenuWidget> button;
     int output_width, output_height;
     void init(Gtk::Box *container) override;
     WayfireWorkspaceSwitcher(WayfireOutput *output);

@@ -11,6 +11,8 @@
 #include <sys/mman.h>
 
 #include "toplevel.hpp"
+#include "gtkmm/enums.h"
+#include "gtkmm/gesture.h"
 #include "window-list.hpp"
 #include "gtk-utils.hpp"
 
@@ -398,7 +400,6 @@ class WayfireToplevel::impl
     uint32_t state;
     uint64_t view_id;
 
-    Gtk::Button button;
     Gtk::Box custom_tooltip_content;
     TooltipMedia *tooltip_media;
     Glib::RefPtr<Gio::SimpleActionGroup> actions;
@@ -408,7 +409,7 @@ class WayfireToplevel::impl
     Glib::RefPtr<Gio::MenuItem> minimize, maximize, close;
     Glib::RefPtr<Gio::SimpleAction> minimize_action, maximize_action, close_action;
     // Gtk::Box menu_box;
-    Gtk::Box button_contents;
+    Gtk::Box button;
     Gtk::Image image;
     Gtk::Label label;
     // Gtk::PopoverMenu menu;
@@ -432,17 +433,16 @@ class WayfireToplevel::impl
             &toplevel_handle_v1_impl, this);
 
         button.add_css_class("window-button");
-        button.add_css_class("flat");
         button.remove_css_class("activated");
-        button_contents.append(image);
-        button_contents.append(label);
-        button_contents.set_halign(Gtk::Align::START);
-        button_contents.set_hexpand(true);
-        button_contents.set_spacing(5);
-        button.set_child(button_contents);
+        button.append(image);
+        button.append(label);
+        button.set_halign(Gtk::Align::FILL);
+        button.set_hexpand(true);
+        button.set_spacing(5);
 
         label.set_ellipsize(Pango::EllipsizeMode::END);
         label.set_hexpand(true);
+        label.set_halign(Gtk::Align::START);
 
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_scale_update));
@@ -463,8 +463,6 @@ class WayfireToplevel::impl
         actions->add_action(minimize_action);
         actions->add_action(maximize_action);
 
-        // Hey Kids, want to see a really stupid idea?
-        // Button can only have one child! But setting the parent of a popover still works fine...
         gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(button.gobj()));
 
         popover.insert_action_group("windowaction", actions);
@@ -493,16 +491,16 @@ class WayfireToplevel::impl
         signals.push_back(long_press->signal_pressed().connect(
             [=] (double x, double y)
         {
-            popover.popup();
+            drag_exceeds_threshold = true; /* A lie, but fixes long touch again */
             long_press->set_state(Gtk::EventSequenceState::CLAIMED);
             click_gesture->set_state(Gtk::EventSequenceState::DENIED);
+            drag_gesture->set_state(Gtk::EventSequenceState::DENIED);
+            popover.popup();
         }));
         click_gesture->set_button(0);
         signals.push_back(click_gesture->signal_pressed().connect(
             [=] (int count, double x, double y)
-        {
-            click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-        }));
+        {}));
 
         signals.push_back(click_gesture->signal_released().connect(
             [=] (int count, double x, double y)
@@ -980,10 +978,8 @@ class WayfireToplevel::impl
         if (state & WF_TOPLEVEL_STATE_ACTIVATED)
         {
             button.add_css_class("activated");
-            button.remove_css_class("flat");
         } else
         {
-            button.add_css_class("flat");
             button.remove_css_class("activated");
         }
 

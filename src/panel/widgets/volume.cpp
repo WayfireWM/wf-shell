@@ -1,8 +1,11 @@
 #include <gtkmm.h>
 #include <glibmm.h>
-
 #include "volume.hpp"
+#include "glib.h"
+#include "glibmm/main.h"
+#include "gtkmm/gesture.h"
 #include "icon-select.hpp"
+#include "wf-popover.hpp"
 
 #define ICON(volume) icon_from_range(volume_icons, volume)
 
@@ -17,20 +20,6 @@ void WayfireVolume::update_icon()
     main_image.set_from_icon_name(ICON(volume_scale.get_target_value() / (double)max_norm));
 }
 
-bool WayfireVolume::on_popover_timeout(int timer)
-{
-    popover->popdown();
-    return false;
-}
-
-void WayfireVolume::check_set_popover_timeout()
-{
-    popover_timeout.disconnect();
-
-    popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireVolume::on_popover_timeout), 0), timeout * 1000);
-}
-
 void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
 {
     volume_scale.set_target_value(volume);
@@ -38,17 +27,6 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
     {
         gvc_mixer_stream_set_volume(gvc_stream, volume);
         gvc_mixer_stream_push_volume(gvc_stream);
-    }
-
-    if (flags & VOLUME_FLAG_SHOW_POPOVER)
-    {
-        if (!popover->is_visible())
-        {
-            popover->popup();
-        } else
-        {
-            check_set_popover_timeout();
-        }
     }
 
     update_icon();
@@ -62,7 +40,11 @@ void WayfireVolume::on_volume_changed_external()
         set_volume(volume, VOLUME_FLAG_SHOW_POPOVER);
     }
 
-    check_set_popover_timeout();
+    Glib::signal_idle().connect([=] ()
+    {
+        button->popup_timed(timeout * 1000);
+        return G_SOURCE_REMOVE;
+    });
 }
 
 static void notify_volume(GvcMixerControl *gvc_control,
@@ -137,16 +119,30 @@ void WayfireVolume::on_volume_value_changed()
 
 void WayfireVolume::init(Gtk::Box *container)
 {
-    button = std::make_unique<WayfireMenuButton>("panel");
+    main_image.add_css_class("widget-icon");
+    button = std::make_unique<WayfireMenuWidget>("panel", "volume");
+    button->set_keyboard_interactive(false);
 
-    /* Setup button */
-    button->add_css_class("widget-icon");
-    button->add_css_class("volume");
-    button->add_css_class("flat");
-    button->get_children()[0]->add_css_class("flat");
-
+    auto middle_click_gesture = Gtk::GestureClick::create();
+    auto long_press     = Gtk::GestureLongPress::create();
     auto scroll_gesture = Gtk::EventControllerScroll::create();
-    scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
+    auto scroll_gesture2 = Gtk::EventControllerScroll::create();
+
+    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    scroll_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
+    scroll_gesture2->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
+    scroll_gesture2->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
+
+    long_press->set_touch_only(true);
+    middle_click_gesture->set_button(2);
+
+    /* Setup gvc control */
+    gvc_control = gvc_mixer_control_new("Wayfire Volume Control");
+    notify_default_sink_changed = g_signal_connect(gvc_control,
+        "default-sink-changed", G_CALLBACK(default_sink_changed), this);
+    gvc_mixer_control_open(gvc_control);
+
+    signals.push_back(scroll_gesture->signal_scroll().connect([=] (double dx, double dy)
     {
         int change = 0;
         if (scroll_gesture->get_unit() == Gdk::ScrollUnit::WHEEL)
@@ -162,18 +158,7 @@ void WayfireVolume::init(Gtk::Box *container)
         set_volume(std::clamp(volume_scale.get_target_value() - change,
             0.0, max_norm));
         return true;
-    }, true);
-    scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
-    scroll_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
-    button->add_controller(scroll_gesture);
-
-    /* Setup popover */
-    popover = button->get_popover();
-    popover->set_autohide(false);
-    popover->set_child(volume_scale);
-    popover->add_css_class("volume-popover");
-
-    auto scroll_gesture2 = Gtk::EventControllerScroll::create();
+    }, true));
     signals.push_back(scroll_gesture2->signal_scroll().connect([=] (double dx, double dy)
     {
         int change = 0;
@@ -191,48 +176,7 @@ void WayfireVolume::init(Gtk::Box *container)
             0.0, max_norm));
         return true;
     }, false));
-    scroll_gesture2->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
-    scroll_gesture2->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
-    volume_scale.add_controller(scroll_gesture2);
-
-    volume_scale.set_draw_value(false);
-    volume_scale.set_size_request(300, 0);
-    volume_scale.set_user_changed_callback([=] () { on_volume_value_changed(); });
-
-    signals.push_back(volume_scale.signal_state_flags_changed().connect(
-        [=] (Gtk::StateFlags) { check_set_popover_timeout(); }));
-
-    /* Setup gvc control */
-    gvc_control = gvc_mixer_control_new("Wayfire Volume Control");
-    notify_default_sink_changed = g_signal_connect(gvc_control,
-        "default-sink-changed", G_CALLBACK(default_sink_changed), this);
-    gvc_mixer_control_open(gvc_control);
-
-    /* Ensure left click reliably toggles scale popover */
-    auto left_click_gesture = Gtk::GestureClick::create();
-    left_click_gesture->set_button(1);
-    left_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
-    {
-        left_click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-    });
-    left_click_gesture->signal_released().connect([=] (int count, double x, double y)
-    {
-        if (popover->is_visible())
-        {
-            popover->popdown();
-            popover_timeout.disconnect();
-        } else
-        {
-            popover->popup();
-            check_set_popover_timeout();
-        }
-    });
-
-    /* Middle click toggle mute */
-    auto middle_click_gesture = Gtk::GestureClick::create();
-    auto long_press = Gtk::GestureLongPress::create();
-    long_press->set_touch_only(true);
-    long_press->signal_pressed().connect(
+    signals.push_back(long_press->signal_pressed().connect(
         [=] (double x, double y)
     {
         bool muted = !(gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream));
@@ -240,8 +184,7 @@ void WayfireVolume::init(Gtk::Box *container)
         gvc_mixer_stream_push_volume(gvc_stream);
         long_press->set_state(Gtk::EventSequenceState::CLAIMED);
         middle_click_gesture->set_state(Gtk::EventSequenceState::DENIED);
-    });
-    middle_click_gesture->set_button(2);
+    }));
     signals.push_back(middle_click_gesture->signal_pressed().connect([=] (int count, double x, double y)
     {
         middle_click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
@@ -252,18 +195,24 @@ void WayfireVolume::init(Gtk::Box *container)
         gvc_mixer_stream_change_is_muted(gvc_stream, muted);
         gvc_mixer_stream_push_volume(gvc_stream);
     }));
+
+    volume_scale.set_draw_value(false);
+    volume_scale.set_size_request(300, 0);
+    volume_scale.set_user_changed_callback([=] () { on_volume_value_changed(); });
+    volume_scale.add_controller(scroll_gesture2);
+    // button->add_controller(scroll_gesture);
     button->add_controller(long_press);
-    button->add_controller(left_click_gesture);
     button->add_controller(middle_click_gesture);
+    button->open_on(1);
 
     /* Setup layout */
     container->append(*button);
-    button->set_child(main_image);
+    button->append(main_image);
+    button->set_popup_child(volume_scale);
 }
 
 WayfireVolume::~WayfireVolume()
 {
-    gtk_widget_unparent(GTK_WIDGET(popover->gobj()));
     disconnect_gvc_stream_signals();
 
     if (notify_default_sink_changed)
@@ -273,6 +222,4 @@ WayfireVolume::~WayfireVolume()
 
     gvc_mixer_control_close(gvc_control);
     g_object_unref(gvc_control);
-
-    popover_timeout.disconnect();
 }

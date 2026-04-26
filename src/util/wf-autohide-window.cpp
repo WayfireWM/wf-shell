@@ -1,5 +1,6 @@
 #include "wf-autohide-window.hpp"
 #include "wayfire-shell-unstable-v2-client-protocol.h"
+#include "wf-popover.hpp"
 
 #include <gtk4-layer-shell.h>
 #include <wf-shell-app.hpp>
@@ -15,6 +16,7 @@
 
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     const std::string& section) :
+    force_show_popup{"panel/force_show_popup"},
     position{section + "/position"},
     y_position{WfOption<int>{section + "/autohide_duration"}},
     edge_offset{section + "/edge_offset"},
@@ -414,53 +416,48 @@ bool WayfireAutohidingWindow::update_margin()
     return false;
 }
 
-void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
+bool WayfireAutohidingWindow::is_active_popover(WayfireMenuWidget& button)
 {
-    if (&button != this->active_button)
-    {
-        if (this->active_button)
-        {
-            this->popover_hide.disconnect();
-            this->active_button->set_active(false);
-            this->active_button->get_popover()->popdown();
-        }
+    return this->active_button == &button;
+}
 
+bool WayfireAutohidingWindow::has_active_popover()
+{
+    return this->active_button != nullptr;
+}
+
+void WayfireAutohidingWindow::set_active_popover(WayfireMenuWidget& button)
+{
+    if (!is_active_popover(button))
+    {
         this->active_button = &button;
-        this->popover_hide  =
-            this->active_button->m_popover.signal_hide().connect(
-                [this, &button] () { unset_active_popover(button); });
+    }
+
+    /* Set this panel to forcibly show over fullscreen apps */
+    if (force_show_popup.value())
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
     }
 
     const bool should_grab_focus = this->active_button->is_keyboard_interactive();
+    if (should_grab_focus)
+    {
+        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+    } else
+    {
+        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
+    }
 
-    /*
-     *  if (should_grab_focus)
-     *  {
-     *   // First, set exclusive mode to grab input
-     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
-     *   wl_surface_commit(get_wl_surface());
-     *
-     *   // Next, allow releasing of focus when clicking outside of the panel
-     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
-     *  }
-     */
-    // TODO come back for intentional focus steal
-
-    this->active_button->set_has_focus(should_grab_focus);
     schedule_show(0);
 }
 
-void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
+void WayfireAutohidingWindow::unset_active_popover()
 {
-    if (!this->active_button || (&button != this->active_button))
+    if (this->active_button)
     {
-        return;
+        this->active_button = nullptr;
+        this->popover_hide.disconnect();
     }
-
-    this->active_button->set_has_focus(false);
-    this->active_button->set_active(false);
-    this->active_button = nullptr;
-    this->popover_hide.disconnect();
 
     gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
 
@@ -468,6 +465,33 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
     {
         schedule_hide(AUTOHIDE_HIDE_DELAY);
     }
+
+    WfOption<std::string> panel_layer{"panel/layer"};
+
+    if ((std::string)panel_layer == "overlay")
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    }
+
+    if ((std::string)panel_layer == "top")
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_TOP);
+    }
+
+    if ((std::string)panel_layer == "bottom")
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
+    }
+
+    if ((std::string)panel_layer == "background")
+    {
+        gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
+    }
+}
+
+WayfireMenuWidget*WayfireAutohidingWindow::get_active_popover()
+{
+    return this->active_button;
 }
 
 void WayfireAutohidingWindow::setup_autohide()
