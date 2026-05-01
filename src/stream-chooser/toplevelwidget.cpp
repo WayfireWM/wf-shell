@@ -1,6 +1,8 @@
 #include <iostream>
 
+#include "gtkmm/enums.h"
 #include "stream-chooser.hpp"
+#include "toplevellayout.hpp"
 #include "toplevelwidget.hpp"
 
 static void handle_closed(void *data,
@@ -55,12 +57,19 @@ ext_foreign_toplevel_handle_v1_listener listener =
 /* Gtk Overlay showing information about a window */
 WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *handle)
 {
+    set_size_request(150, 150);
+    set_valign(Gtk::Align::FILL);
+    set_halign(Gtk::Align::FILL);
+    layout = std::make_shared<ToplevelLayout>();
+    set_layout_manager(layout);
     append(overlay);
     append(label);
     overlay.set_child(screenshot);
     overlay.add_overlay(icon);
     icon.set_halign(Gtk::Align::START);
     icon.set_valign(Gtk::Align::END);
+    screenshot.set_halign(Gtk::Align::FILL);
+    screenshot.set_valign(Gtk::Align::FILL);
     label.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
     label.set_max_width_chars(40);
 

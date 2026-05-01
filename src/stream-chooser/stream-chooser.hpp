@@ -3,6 +3,7 @@
 #include <gdkmm.h>
 #include <ext-foreign-toplevel-list-v1-client-protocol.h>
 
+#include "mainlayout.hpp"
 #include "outputwidget.hpp"
 #include "toplevelwidget.hpp"
 
@@ -19,15 +20,18 @@ class WayfireStreamChooserApp : public Gtk::Application
 
     Gtk::FlowBox window_list, screen_list;
     Gtk::Button done, cancel;
+    Gtk::ScrolledWindow scroll_window, scroll_screen;
     WayfireStreamChooserApp();
 
     wl_display *display;
     wl_registry *registry;
     ext_foreign_toplevel_list_v1 *list;
+    Glib::RefPtr<MainLayout> layout;
 
   public:
     bool has_foreign_toplevel_list = false;
     bool has_image_copy_capture    = false;
+    bool has_image_capture_source  = false;
 
     std::map<ext_foreign_toplevel_handle_v1*, std::unique_ptr<WayfireChooserTopLevel>> toplevels;
     std::map<std::string, std::unique_ptr<WayfireChooserOutput>> outputs;

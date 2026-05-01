@@ -1,18 +1,21 @@
 #pragma once
 #include <gtkmm.h>
 #include "ext-foreign-toplevel-list-v1-client-protocol.h"
+#include "glibmm/refptr.h"
+#include "toplevellayout.hpp"
 
 class WayfireChooserTopLevel : public Gtk::Box
 {
   private:
     Gtk::Overlay overlay;
     Gtk::Image icon;
-    Gtk::Image screenshot;
+    Gtk::Picture screenshot;
     Gtk::Label label;
 
     std::string buffered_title = "", title = "";
     std::string buffered_app_id = "", app_id = "";
     std::string buffered_identifier = "", identifier = "";
+    Glib::RefPtr<ToplevelLayout> layout;
 
   public:
     ext_foreign_toplevel_handle_v1 *handle;

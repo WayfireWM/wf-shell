@@ -8,6 +8,9 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
     append(contents);
     append(model);
     append(connector);
+    set_size_request(150, 150);
+    set_valign(Gtk::Align::FILL);
+    set_halign(Gtk::Align::FILL);
 
     /* TODO Contents. We should probably grab screenshots of each output and display them */
 

@@ -16,6 +16,8 @@ wayland_scanner_client = generator(
 
 client_protocols = [
 	'ext-foreign-toplevel-list-v1.xml',
+	'ext-image-capture-source-v1.xml',
+	'ext-image-copy-capture-v1.xml',
 	'wlr-foreign-toplevel-management-unstable-v1.xml',
 	'wlr-screencopy.xml',
 	wayfire.get_pkgconfig_variable('pkgdatadir') / 'unstable' / 'wayfire-shell-unstable-v2.xml',
