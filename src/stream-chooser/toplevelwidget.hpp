@@ -7,7 +7,7 @@ class WayfireChooserTopLevel : public Gtk::Box
   private:
     Gtk::Overlay overlay;
     Gtk::Image icon;
-    Gtk::Image screenshot;
+    Gtk::Picture screenshot;
     Gtk::Label label;
 
     std::string buffered_title = "", title = "";
@@ -22,5 +22,6 @@ class WayfireChooserTopLevel : public Gtk::Box
     void set_app_id(std::string app_id);
     void set_title(std::string title);
     void set_identifier(std::string identifier);
+    void grab_toplevel_screenshot(ext_foreign_toplevel_handle_v1 *toplevel);
     void print();
 };

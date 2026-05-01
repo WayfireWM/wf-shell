@@ -44,10 +44,22 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
         WayfireStreamChooserApp::getInstance().set_toplevel_list(list);
         ext_foreign_toplevel_list_v1_add_listener(list,
             &toplevel_list_v1_impl, NULL);
-    } else if (strcmp(interface, EXT_IMAGE_COPY_CAPTURE_V1) == 0)
+    } else if (strcmp(interface, ext_image_copy_capture_manager_v1_interface.name) == 0)
     {
         /* We need this to exist, but we're not using it directly */
+        auto manager = (ext_image_copy_capture_manager_v1*) wl_registry_bind(registry, name,
+            &ext_image_copy_capture_manager_v1_interface, version);
         WayfireStreamChooserApp::getInstance().has_image_copy_capture = true;
+        WayfireStreamChooserApp::getInstance().set_copy_capture_manager(manager);
+    } else if (strcmp(interface, wl_shm_interface.name) == 0)
+    {
+        auto shm = (wl_shm*) wl_registry_bind(registry, name, &wl_shm_interface, 1);
+        WayfireStreamChooserApp::getInstance().set_shm(shm);
+    } else if (strcmp(interface, ext_foreign_toplevel_image_capture_source_manager_v1_interface.name) == 0)
+    {
+        auto toplevel_capture_manager = (ext_foreign_toplevel_image_capture_source_manager_v1*) wl_registry_bind(registry, name,
+            &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
+        WayfireStreamChooserApp::getInstance().set_toplevel_capture_manager(toplevel_capture_manager);
     }
 }
 
@@ -233,6 +245,11 @@ void WayfireStreamChooserApp::add_output(std::shared_ptr<Gdk::Monitor> monitor)
     }
 }
 
+void WayfireStreamChooserApp::set_shm(wl_shm *shm)
+{
+    this->shm = shm;
+}
+
 void WayfireStreamChooserApp::remove_output(std::string connector)
 {
     screen_list.remove(*outputs[connector]);
@@ -242,6 +259,16 @@ void WayfireStreamChooserApp::remove_output(std::string connector)
 void WayfireStreamChooserApp::set_toplevel_list(ext_foreign_toplevel_list_v1 *list)
 {
     this->list = list;
+}
+
+void WayfireStreamChooserApp::set_copy_capture_manager(ext_image_copy_capture_manager_v1 *manager)
+{
+    this->manager = manager;
+}
+
+void WayfireStreamChooserApp::set_toplevel_capture_manager(ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager)
+{
+    this->toplevel_capture_manager = toplevel_capture_manager;
 }
 
 /* Starting point */
