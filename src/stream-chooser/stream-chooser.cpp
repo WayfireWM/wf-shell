@@ -5,10 +5,9 @@
 
 #include "stream-chooser.hpp"
 #include "gtkmm/enums.h"
+#include "mainlayout.hpp"
 #include "outputwidget.hpp"
 #include "toplevelwidget.hpp"
-
-#define EXT_IMAGE_COPY_CAPTURE_V1 "ext-image-copy-capture-v1"
 
 /* Static callbacks for toplevel list object */
 static void handle_toplevel(void *data,
@@ -36,6 +35,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
 {
     if (strcmp(interface, ext_foreign_toplevel_list_v1_interface.name) == 0)
     {
+        std::cout << "Got Toplevel list" << std::endl;
         auto list = (ext_foreign_toplevel_list_v1*)
             wl_registry_bind(registry, name,
             &ext_foreign_toplevel_list_v1_interface,
@@ -46,19 +46,22 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
             &toplevel_list_v1_impl, NULL);
     } else if (strcmp(interface, ext_image_copy_capture_manager_v1_interface.name) == 0)
     {
-        /* We need this to exist, but we're not using it directly */
-        auto manager = (ext_image_copy_capture_manager_v1*) wl_registry_bind(registry, name,
+        std::cout << "Got Copy Capture Manager" << std::endl;
+        auto manager = (ext_image_copy_capture_manager_v1*)wl_registry_bind(registry, name,
             &ext_image_copy_capture_manager_v1_interface, version);
         WayfireStreamChooserApp::getInstance().has_image_copy_capture = true;
         WayfireStreamChooserApp::getInstance().set_copy_capture_manager(manager);
     } else if (strcmp(interface, wl_shm_interface.name) == 0)
     {
-        auto shm = (wl_shm*) wl_registry_bind(registry, name, &wl_shm_interface, 1);
+        std::cout << "Got SHM" << std::endl;
+        auto shm = (wl_shm*)wl_registry_bind(registry, name, &wl_shm_interface, 1);
         WayfireStreamChooserApp::getInstance().set_shm(shm);
     } else if (strcmp(interface, ext_foreign_toplevel_image_capture_source_manager_v1_interface.name) == 0)
     {
-        auto toplevel_capture_manager = (ext_foreign_toplevel_image_capture_source_manager_v1*) wl_registry_bind(registry, name,
-            &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
+        std::cout << "Got Capture Source Manager" << std::endl;
+        auto toplevel_capture_manager =
+            (ext_foreign_toplevel_image_capture_source_manager_v1*)wl_registry_bind(registry, name,
+                &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
         WayfireStreamChooserApp::getInstance().set_toplevel_capture_manager(toplevel_capture_manager);
     }
 }
@@ -81,13 +84,14 @@ WayfireStreamChooserApp::WayfireStreamChooserApp() : Gtk::Application("org.wayfi
 void WayfireStreamChooserApp::activate()
 {
     window.add_css_class("stream-chooser");
-    main.set_size_request(300, 300);
+    window.set_size_request(300, 300);
     add_window(window);
     window.set_child(main);
-    main.set_valign(Gtk::Align::CENTER);
-    main.set_halign(Gtk::Align::CENTER);
-    main.set_vexpand(false);
-    main.set_hexpand(false);
+    layout = std::make_shared<MainLayout>();
+    window.set_layout_manager(layout);
+    main.add_css_class("main-chooser");
+    main.set_valign(Gtk::Align::FILL);
+    main.set_halign(Gtk::Align::FILL);
     main.append(header);
     main.append(notebook);
     main.append(buttons);
@@ -97,9 +101,23 @@ void WayfireStreamChooserApp::activate()
     Gtk::StyleContext::add_provider_for_display(window_display,
         css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
 
+    scroll_window.set_child(window_list);
+    scroll_screen.set_child(screen_list);
+
+    scroll_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
+    scroll_screen.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
+
+    window_list.set_homogeneous(true);
+    screen_list.set_homogeneous(true);
+
+    window_list.set_halign(Gtk::Align::START);
+    window_list.set_valign(Gtk::Align::START);
+    screen_list.set_halign(Gtk::Align::START);
+    screen_list.set_valign(Gtk::Align::START);
+
     notebook.set_expand(true);
-    notebook.append_page(window_list, window_label);
-    notebook.append_page(screen_list, screen_label);
+    notebook.append_page(scroll_window, window_label);
+    notebook.append_page(scroll_screen, screen_label);
 
     main.set_orientation(Gtk::Orientation::VERTICAL);
 
@@ -173,6 +191,12 @@ void WayfireStreamChooserApp::activate()
         std::cerr << "Compositor has not advertised ext-foreign-toplevel-list-v1" << std::endl;
     }
 
+    if (!has_image_capture_source)
+    {
+        failed = true;
+        std::cerr << "Compositor has not advertised ext-image-capture-source-v1" << std::endl;
+    }
+
     if (failed)
     {
         window_label.set_sensitive(false);
@@ -204,15 +228,20 @@ void WayfireStreamChooserApp::activate()
         add_output(obj);
     }
 
-    gtk_layer_init_for_window(window.gobj());
-    gtk_layer_set_namespace(window.gobj(), "chooser");
-    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
-    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
-    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-    gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+    auto debug = Glib::getenv("WF_CHOOSER_DEBUG");
+    if (debug != "1")
+    {
+        gtk_layer_init_for_window(window.gobj());
+        gtk_layer_set_namespace(window.gobj(), "chooser");
+        gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
+        gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+        gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+        gtk_layer_set_anchor(window.gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
 
-    gtk_layer_set_keyboard_mode(window.gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
-    gtk_layer_set_exclusive_zone(window.gobj(), 0);
+        gtk_layer_set_keyboard_mode(window.gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+        gtk_layer_set_exclusive_zone(window.gobj(), 0);
+    }
+
     window.present();
 }
 
@@ -266,7 +295,8 @@ void WayfireStreamChooserApp::set_copy_capture_manager(ext_image_copy_capture_ma
     this->manager = manager;
 }
 
-void WayfireStreamChooserApp::set_toplevel_capture_manager(ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager)
+void WayfireStreamChooserApp::set_toplevel_capture_manager(
+    ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager)
 {
     this->toplevel_capture_manager = toplevel_capture_manager;
 }

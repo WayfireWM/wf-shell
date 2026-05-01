@@ -5,6 +5,7 @@
 #include <ext-image-capture-source-v1-client-protocol.h>
 #include <ext-image-copy-capture-v1-client-protocol.h>
 
+#include "mainlayout.hpp"
 #include "outputwidget.hpp"
 #include "toplevelwidget.hpp"
 
@@ -21,15 +22,19 @@ class WayfireStreamChooserApp : public Gtk::Application
 
     Gtk::FlowBox window_list, screen_list;
     Gtk::Button done, cancel;
+    Gtk::ScrolledWindow scroll_window, scroll_screen;
     WayfireStreamChooserApp();
 
     wl_display *display;
     wl_registry *registry;
     ext_foreign_toplevel_list_v1 *list;
+    Glib::RefPtr<MainLayout> layout;
 
   public:
     bool has_foreign_toplevel_list = false;
     bool has_image_copy_capture    = false;
+    bool has_image_capture_source  = false;
+
     wl_shm *shm;
     ext_image_copy_capture_manager_v1 *manager;
     ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager;
@@ -46,7 +51,8 @@ class WayfireStreamChooserApp : public Gtk::Application
     void set_shm(wl_shm *shm);
     void set_toplevel_list(ext_foreign_toplevel_list_v1 *list);
     void set_copy_capture_manager(ext_image_copy_capture_manager_v1 *manager);
-    void set_toplevel_capture_manager(ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager);
+    void set_toplevel_capture_manager(
+        ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager);
     void add_toplevel(ext_foreign_toplevel_handle_v1 *handle);
     void remove_toplevel(WayfireChooserTopLevel *widget);
 
