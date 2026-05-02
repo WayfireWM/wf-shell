@@ -442,6 +442,44 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	</option>
 	</group>
 	<group>
+	<group>
+	<_short>Backlight</_short>
+	<option name="light_popup_on_change" type="bool">
+		<_short>Popup on change</_short>
+		<default>true</default>
+	</option>
+	<option name="light_popup_timeout" type="double">
+		<_short>Popup timeout</_short>
+		<default>2.5</default>
+		<min>0</min>
+	</option>
+	<option name="light_slider_length" type="int">
+		<_short>Slider length</_short>
+		<default>300</default>
+		<min>1</min>
+	</option>
+	<option name="light_scroll_sensitivity" type="double">
+		<_short>Scroll sensitivity</_short>
+		<default>1</default>
+	</option>
+	<option name="light_invert_scroll" type="bool">
+		<_short>Invert scroll</_short>
+		<_long>
+			Inverts which scroll direction raises and lowers display brightness
+		</_long>
+		<default>false</default>
+	</option>
+	<option name="light_spacing" type="int">
+		<_short>Spacing between controls</_short>
+		<default>8</default>
+		<min>0</min>
+	</option>
+	<option name="light_icon_size" type="int">
+		<_short>Light icon size</_short>
+		<default>0</default>
+		<min>0</min>
+	</option>
+	</group>
 	<_short>Notifications</_short>
 	<option name="notifications_autohide_timeout" type="double">
 		<_short>Notifications Display Timeout</_short>
