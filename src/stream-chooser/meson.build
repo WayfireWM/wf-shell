@@ -1,6 +1,7 @@
 deps = [
   gtkmm,
   wf_protos,
+  wfconfig,
   libutil,
   gtklayershell,
 ]
