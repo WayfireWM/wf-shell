@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glibmm/ustring.h"
 #include <gtkmm/image.h>
 #include <gtkmm/icontheme.h>
 #include <gtkmm/cssprovider.h>
@@ -17,6 +18,9 @@ struct WfIconLoadOptions
     bool invert    = false;
 };
 
+namespace IconProvider
+{
 void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff);
-
-void image_set_icon(Gtk::Image *image, std::string path);
+bool image_set_icon(Gtk::Image & image, Glib::ustring path);
+void load_custom_icons(std::string section_name);
+}

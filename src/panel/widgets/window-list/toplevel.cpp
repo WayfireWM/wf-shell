@@ -1,6 +1,5 @@
 #include <iostream>
 #include <gtkmm.h>
-#include <giomm/desktopappinfo.h>
 
 #include <gdkmm/seat.h>
 #include <gdk/wayland/gdkwayland.h>
@@ -17,12 +16,6 @@
 namespace
 {
 extern zwlr_foreign_toplevel_handle_v1_listener toplevel_handle_v1_impl;
-}
-
-namespace IconProvider
-{
-void set_image_from_icon(Gtk::Image& image,
-    std::string app_id_list, int size, int scale);
 }
 
 static int create_anon_file(off_t size)
@@ -900,8 +893,7 @@ class WayfireToplevel::impl
     {
         WfOption<int> minimal_panel_height{"panel/minimal_height"};
         this->app_id = app_id;
-        IconProvider::set_image_from_icon(image, app_id,
-            std::min(int(minimal_panel_height), 24), button.get_scale_factor());
+        IconProvider::image_set_icon(image, app_id);
         this->view_id = get_view_id_from_full_app_id(app_id);
         if (this->view_id == 0)
         {
@@ -1211,107 +1203,4 @@ struct zwlr_foreign_toplevel_handle_v1_listener toplevel_handle_v1_impl = {
     .closed = handle_toplevel_closed,
     .parent = handle_toplevel_parent
 };
-}
-
-/* Icon loading functions */
-namespace IconProvider
-{
-using Icon = Glib::RefPtr<Gio::Icon>;
-
-namespace
-{
-std::string tolower(std::string str)
-{
-    for (auto& c : str)
-    {
-        c = std::tolower(c);
-    }
-
-    return str;
-}
-}
-
-/* Gio::DesktopAppInfo
- *
- * Usually knowing the app_id, we can get a desktop app info from Gio
- * The filename is either the app_id + ".desktop" or lower_app_id + ".desktop" */
-Icon get_from_desktop_app_info(std::string app_id)
-{
-    Glib::RefPtr<Gio::DesktopAppInfo> app_info;
-
-    std::vector<std::string> prefixes = {
-        "",
-        "org.kde.",
-    };
-
-    std::vector<std::string> app_id_variations = {
-        app_id,
-        tolower(app_id),
-    };
-
-    std::vector<std::string> suffixes = {
-        "",
-        ".desktop"
-    };
-
-    for (auto& prefix : prefixes)
-    {
-        for (auto& id : app_id_variations)
-        {
-            for (auto& suffix : suffixes)
-            {
-                if (!app_info)
-                {
-                    app_info = Gio::DesktopAppInfo::create(prefix + id + suffix);
-                }
-            }
-        }
-    }
-
-    if (app_info) // success
-    {
-        return app_info->get_icon();
-    }
-
-    return Icon{};
-}
-
-/* Second method: Just look up the built-in icon theme,
- * perhaps some icon can be found there */
-
-void set_image_from_icon(Gtk::Image& image,
-    std::string app_id_list, int size, int scale)
-{
-    std::string app_id;
-    std::istringstream stream(app_id_list);
-
-    /* Wayfire sends a list of app-id's in space separated format, other compositors
-     * send a single app-id, but in any case this works fine */
-    auto display = image.get_display();
-    while (stream >> app_id)
-    {
-        auto icon = get_from_desktop_app_info(app_id);
-        std::string icon_name = "unknown";
-        if (!icon)
-        {
-            /* Perhaps no desktop app info, but we might still be able to
-             * get an icon directly from the icon theme */
-            if (Gtk::IconTheme::get_for_display(display)->lookup_icon(app_id, size))
-            {
-                icon_name = app_id;
-            }
-        } else
-        {
-            icon_name = icon->to_string();
-        }
-
-        image_set_icon(&image, icon_name);
-
-        /* finally found some icon */
-        if (icon_name != "unknown")
-        {
-            break;
-        }
-    }
-}
 }

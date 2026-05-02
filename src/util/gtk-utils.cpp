@@ -1,8 +1,11 @@
+#include "glibmm/ustring.h"
 #include <gtk-utils.hpp>
 #include <glibmm.h>
 #include <gtkmm/icontheme.h>
 #include <gdk/gdkcairo.h>
 #include <iostream>
+#include <giomm/desktopappinfo.h>
+#include "wf-shell-app.hpp"
 
 Glib::RefPtr<Gdk::Pixbuf> load_icon_pixbuf_safe(std::string icon_path, int size)
 {
@@ -62,13 +65,118 @@ void invert_pixbuf(Glib::RefPtr<Gdk::Pixbuf>& pbuff)
     }
 }
 
-void image_set_icon(Gtk::Image *image, std::string path)
+namespace IconProvider
 {
+std::map<std::string, std::string> custom_icons;
+
+std::string tolower(std::string str)
+{
+    for (auto& c : str)
+    {
+        c = std::tolower(c);
+    }
+
+    return str;
+}
+
+/* Gio::DesktopAppInfo
+ *
+ * Usually knowing the app_id, we can get a desktop app info from Gio
+ * The filename is either the app_id + ".desktop" or lower_app_id + ".desktop" */
+Glib::RefPtr<Gio::Icon> get_from_desktop_app_info(std::string app_id)
+{
+    std::vector<std::string> prefixes = {
+        "",
+        "org.kde.",
+    };
+
+    std::vector<std::string> app_id_variations = {
+        app_id,
+        tolower(app_id),
+    };
+
+    std::vector<std::string> suffixes = {
+        "",
+        ".desktop"
+    };
+
+    for (auto& prefix : prefixes)
+    {
+        for (auto& id : app_id_variations)
+        {
+            for (auto& suffix : suffixes)
+            {
+                auto app_info = Gio::DesktopAppInfo::create(prefix + id + suffix);
+                if (app_info)
+                {
+                    return app_info->get_icon();
+                }
+            }
+        }
+    }
+
+    return {};
+}
+
+bool image_set_icon(Gtk::Image & image, Glib::ustring path)
+{
+    if (path.empty())
+    {
+        return false;
+    }
+
     if ((path.rfind("/", 0) == 0) || (path.rfind("~", 0) == 0))
     {
-        image->set(path);
+        image.set(path);
+        return true;
     } else
     {
-        image->set_from_icon_name(path);
+        /* It might be a space delimited list */
+        std::istringstream stream(path);
+        std::string app_id;
+        auto theme = Gtk::IconTheme::get_for_display(Gdk::Display::get_default());
+        while (stream >> app_id)
+        {
+            if (custom_icons.count(app_id) > 0)
+            {
+                image.set_from_icon_name(custom_icons[app_id]);
+                return true;
+            }
+
+            /* If the icon theme has this, use it */
+            if (theme && theme->has_icon(app_id))
+            {
+                image.set_from_icon_name(app_id);
+                return true;
+            }
+
+            /* Might be appid, get the .desktop file */
+            auto icon = get_from_desktop_app_info(app_id);
+            if (icon)
+            {
+                image.set_from_icon_name(icon->to_string());
+                return true;
+            }
+        }
     }
+
+    return false;
+}
+
+void load_custom_icons(std::string section_name)
+{
+    static const std::string prefix = "icon_mapping_";
+    auto section = WayfireShellApp::get().config.get_section(section_name);
+
+    for (auto option : section->get_registered_options())
+    {
+        if (option->get_name().compare(0, prefix.length(), prefix) != 0)
+        {
+            continue;
+        }
+
+        auto app_id = option->get_name().substr(prefix.length());
+        custom_icons[app_id] = option->get_value_str();
+    }
+}
 }
