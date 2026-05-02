@@ -3,6 +3,7 @@
 #include <sys/mman.h>
 #include <gdk/wayland/gdkwayland.h>
 #include "ext-foreign-toplevel-list-v1-client-protocol.h"
+#include "ext-image-capture-source-v1-client-protocol.h"
 #include "ext-image-copy-capture-v1-client-protocol.h"
 #include "glib.h"
 #include "glibmm/main.h"
@@ -137,9 +138,6 @@ static void session_handle_buffer_size(void *data,
     uint32_t width, uint32_t height)
 {
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
-
-    printf("%s : %d %d\n", __func__, width, height);
-
     toplevel->current_buffer_width  = width;
     toplevel->current_buffer_height = height;
 }
@@ -149,9 +147,6 @@ static void session_handle_shm_format(void *data,
     uint32_t format)
 {
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
-
-    printf("%s : %d\n", __func__, format);
-
     toplevel->current_buffer_format = format;
 }
 
@@ -171,8 +166,6 @@ static void session_handle_done(void *data,
 {
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     toplevel->size();
-
-    printf("%s\n", __func__);
 }
 
 static void session_handle_stopped(void*,
@@ -236,11 +229,14 @@ void WayfireChooserTopLevel::grab_toplevel_screenshot()
     printf("%s: %p : %p\n", __func__, handle,
         WayfireStreamChooserApp::getInstance().toplevel_capture_manager);
     auto copy_capture_source = ext_foreign_toplevel_image_capture_source_manager_v1_create_source(
-        WayfireStreamChooserApp::getInstance().toplevel_capture_manager, handle);
+        WayfireStreamChooserApp::getInstance().toplevel_capture_manager,
+        handle);
     recording_session = ext_image_copy_capture_manager_v1_create_session(
-        WayfireStreamChooserApp::getInstance().manager, copy_capture_source,
-        EXT_IMAGE_COPY_CAPTURE_MANAGER_V1_OPTIONS_PAINT_CURSORS);
+        WayfireStreamChooserApp::getInstance().manager,
+        copy_capture_source,
+        0);
     ext_image_copy_capture_session_v1_add_listener(recording_session, &recording_session_listener, this);
+    ext_image_capture_source_v1_destroy(copy_capture_source);
 }
 
 void WayfireChooserTopLevel::size()
@@ -256,6 +252,7 @@ void WayfireChooserTopLevel::size()
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
+        frame = NULL;
     }
 
     buffer->width  = current_buffer_width;
@@ -313,7 +310,9 @@ void WayfireChooserTopLevel::buffer_ready()
 
     screenshot.set_paintable(texture);
     ext_image_copy_capture_frame_v1_destroy(frame);
+    frame = NULL;
     ext_image_copy_capture_session_v1_destroy(recording_session);
+    recording_session = NULL;
 }
 
 /* Gtk Overlay showing information about a window */
