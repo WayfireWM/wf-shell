@@ -31,6 +31,7 @@ class WayfireStreamChooserApp : public Gtk::Application
     Glib::RefPtr<MainLayout> layout;
 
   public:
+    bool is_in_use = false;
     bool has_foreign_toplevel_list = false;
     bool has_image_copy_capture    = false;
     bool has_image_capture_source  = false;

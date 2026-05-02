@@ -173,6 +173,7 @@ static void session_handle_stopped(void*,
 {
     printf("%s\n", __func__);
     ext_image_copy_capture_session_v1_destroy(session);
+    session = NULL;
 }
 
 static const struct ext_image_copy_capture_session_v1_listener recording_session_listener = {
@@ -226,6 +227,19 @@ static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
 
 void WayfireChooserTopLevel::grab_toplevel_screenshot()
 {
+    if (WayfireStreamChooserApp::getInstance().is_in_use)
+    {
+        Glib::signal_timeout().connect(
+            [this] ()
+        {
+            grab_toplevel_screenshot();
+            return G_SOURCE_REMOVE;
+        }, 100);
+        return;
+    }
+
+    WayfireStreamChooserApp::getInstance().is_in_use = true;
+
     printf("%s: %p : %p\n", __func__, handle,
         WayfireStreamChooserApp::getInstance().toplevel_capture_manager);
     auto copy_capture_source = ext_foreign_toplevel_image_capture_source_manager_v1_create_source(
@@ -313,6 +327,7 @@ void WayfireChooserTopLevel::buffer_ready()
     frame = NULL;
     ext_image_copy_capture_session_v1_destroy(recording_session);
     recording_session = NULL;
+    WayfireStreamChooserApp::getInstance().is_in_use = false;
 }
 
 /* Gtk Overlay showing information about a window */
