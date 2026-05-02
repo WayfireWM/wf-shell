@@ -26,6 +26,11 @@ WayfireAutohidingWindow *get_panel(Gtk::Widget *button)
     return autohide_window;
 }
 
+void WayfireMenuWidget::set_child(Gtk::Widget & widget)
+{
+    append(widget);
+}
+
 void WayfireMenuWidget::set_no_child()
 {
     remove_css_class("with-content");
