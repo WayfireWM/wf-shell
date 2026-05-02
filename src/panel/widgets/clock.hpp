@@ -9,7 +9,7 @@ class WayfireClock : public WayfireWidget
 {
     Gtk::Label label;
     Gtk::Calendar calendar;
-    std::unique_ptr<WayfireMenuButton> button;
+    std::unique_ptr<WayfireMenuWidget> button;
 
     sigc::connection timeout, btn_sig;
     WfOption<std::string> format{"panel/clock_format"};

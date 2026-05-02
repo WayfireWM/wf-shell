@@ -9,8 +9,9 @@
 #include <string>
 
 #include "dbusmenu.hpp"
+#include "wf-popover.hpp"
 
-class StatusNotifierItem : public Gtk::Button
+class StatusNotifierItem : public WayfireMenuWidget
 {
     guint menu_handler_id;
 
@@ -21,7 +22,6 @@ class StatusNotifierItem : public Gtk::Button
 
     Glib::RefPtr<Gio::DBus::Proxy> item_proxy;
 
-    Gtk::PopoverMenu popover;
     std::shared_ptr<DbusMenuModel> menu;
 
     bool has_menu = false;
@@ -60,6 +60,5 @@ class StatusNotifierItem : public Gtk::Button
   public:
     void menu_update(DbusmenuClient *client);
     explicit StatusNotifierItem(const Glib::ustring & service);
-    ~StatusNotifierItem();
     std::string get_unique_name();
 };

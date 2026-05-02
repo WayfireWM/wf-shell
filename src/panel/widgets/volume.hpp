@@ -13,8 +13,7 @@ class WayfireVolume : public WayfireWidget
 {
     Gtk::Image main_image;
     WayfireAnimatedScale volume_scale;
-    std::unique_ptr<WayfireMenuButton> button;
-    Gtk::Popover *popover;
+    std::unique_ptr<WayfireMenuWidget> button;
 
     WfOption<double> timeout{"panel/volume_display_timeout"};
     WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
@@ -22,7 +21,6 @@ class WayfireVolume : public WayfireWidget
     // void on_volume_scroll(GdkEventScroll *event);
     // void on_volume_button_press(GdkEventButton *event);
     void on_volume_value_changed();
-    bool on_popover_timeout(int timer);
 
     GvcMixerControl *gvc_control;
     GvcMixerStream *gvc_stream = NULL;
@@ -31,7 +29,6 @@ class WayfireVolume : public WayfireWidget
     gulong notify_volume_signal   = 0;
     gulong notify_is_muted_signal = 0;
     gulong notify_default_sink_changed = 0;
-    sigc::connection popover_timeout;
     std::vector<sigc::connection> signals;
     void disconnect_gvc_stream_signals();
 
@@ -68,9 +65,4 @@ class WayfireVolume : public WayfireWidget
 
     /** Called when the default sink changes */
     void on_default_sink_changed();
-
-    /**
-     * Check whether the popover should be auto-hidden, and if yes, start a timer to hide it
-     */
-    void check_set_popover_timeout();
 };

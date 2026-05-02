@@ -1,4 +1,5 @@
 #include "item.hpp"
+#include "wf-popover.hpp"
 
 #include <gtk-utils.hpp>
 
@@ -49,9 +50,12 @@ static Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(IconData && pixbuf_data)
         4 * width, [data_ptr] (auto*) { delete data_ptr; });
 }
 
-StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
+StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service) :
+    WayfireMenuWidget("panel",
+        "tray-button",
+        "tray_button")
 {
-    set_child(icon);
+    append(icon);
     menu = std::make_shared<DbusMenuModel>();
 
     const auto & [name, path] = name_and_obj_path(service);
@@ -68,15 +72,6 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service)
     });
 }
 
-StatusNotifierItem::~StatusNotifierItem()
-{
-    gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
-    for (auto signal : signals)
-    {
-        signal.disconnect();
-    }
-}
-
 void StatusNotifierItem::init_widget()
 {
     update_icon();
@@ -84,8 +79,6 @@ void StatusNotifierItem::init_widget()
     init_menu();
     add_css_class("widget-icon");
     add_css_class("tray-button");
-    add_css_class("flat");
-    gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(gobj()));
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::BOTH_AXES);
@@ -103,7 +96,7 @@ void StatusNotifierItem::init_widget()
     long_press->signal_pressed().connect(
         [=] (double x, double y)
     {
-        popover.popup();
+        popup();
         long_press->set_state(Gtk::EventSequenceState::CLAIMED);
         click_gesture->set_state(Gtk::EventSequenceState::DENIED);
     });
@@ -127,7 +120,7 @@ void StatusNotifierItem::init_widget()
             {
                 if (has_menu)
                 {
-                    popover.popup();
+                    popup();
                 } else
                 {
                     item_proxy->call("ContextMenu", ev_coords);
@@ -140,7 +133,7 @@ void StatusNotifierItem::init_widget()
         {
             if (has_menu)
             {
-                popover.popup();
+                popup();
             } else
             {
                 item_proxy->call("ContextMenu", ev_coords);
@@ -238,7 +231,7 @@ void StatusNotifierItem::init_menu()
     {
         auto action_group = menu->get_action_group();
         insert_action_group(action_prefix, action_group);
-        popover.set_menu_model(menu->get_menu());
+        set_menu_model(menu->get_menu());
     }));
     has_menu = true;
 }
