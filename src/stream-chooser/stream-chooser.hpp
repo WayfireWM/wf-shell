@@ -39,6 +39,7 @@ class WayfireStreamChooserApp : public Gtk::Application
     wl_shm *shm;
     ext_image_copy_capture_manager_v1 *manager;
     ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager;
+    ext_output_image_capture_source_manager_v1 *output_capture_manager;
 
     std::map<ext_foreign_toplevel_handle_v1*, std::unique_ptr<WayfireChooserTopLevel>> toplevels;
     std::map<std::string, std::unique_ptr<WayfireChooserOutput>> outputs;
@@ -54,6 +55,7 @@ class WayfireStreamChooserApp : public Gtk::Application
     void set_copy_capture_manager(ext_image_copy_capture_manager_v1 *manager);
     void set_toplevel_capture_manager(
         ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager);
+    void set_output_capture_manager(ext_output_image_capture_source_manager_v1 *output_capture_manager);
     void add_toplevel(ext_foreign_toplevel_handle_v1 *handle);
     void remove_toplevel(WayfireChooserTopLevel *widget);
 

@@ -4,6 +4,7 @@
 #include <ext-foreign-toplevel-list-v1-client-protocol.h>
 #include <ext-image-capture-source-v1-client-protocol.h>
 #include <ext-image-copy-capture-v1-client-protocol.h>
+#include <wayland-client-protocol.h>
 
 #include "stream-chooser.hpp"
 #include "gtkmm/enums.h"
@@ -62,6 +63,13 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
                 &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
         WayfireStreamChooserApp::getInstance().has_image_capture_source = true;
         WayfireStreamChooserApp::getInstance().set_toplevel_capture_manager(toplevel_capture_manager);
+    } else if (strcmp(interface, ext_output_image_capture_source_manager_v1_interface.name) == 0)
+    {
+        auto output_capture_manager =
+            (ext_output_image_capture_source_manager_v1*)wl_registry_bind(registry, name,
+                &ext_output_image_capture_source_manager_v1_interface,
+                version);
+        WayfireStreamChooserApp::getInstance().set_output_capture_manager(output_capture_manager);
     }
 }
 
@@ -299,6 +307,12 @@ void WayfireStreamChooserApp::set_toplevel_capture_manager(
     ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager)
 {
     this->toplevel_capture_manager = toplevel_capture_manager;
+}
+
+void WayfireStreamChooserApp::set_output_capture_manager(
+    ext_output_image_capture_source_manager_v1 *output_capture_manager)
+{
+    this->output_capture_manager = output_capture_manager;
 }
 
 /* Starting point */

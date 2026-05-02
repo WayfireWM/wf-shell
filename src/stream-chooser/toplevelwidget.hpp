@@ -29,7 +29,6 @@ class WayfireChooserTopLevel : public Gtk::Box
     Glib::RefPtr<ToplevelLayout> layout;
 
     std::shared_ptr<toplevel_buffer> buffer = nullptr;
-    void request_frame();
     ext_image_copy_capture_frame_v1 *frame = NULL;
     ext_image_copy_capture_session_v1 *recording_session = NULL;
 

@@ -89,7 +89,7 @@ static int backingfile(off_t size)
     return fd;
 }
 
-static struct wl_buffer *create_shm_buffer(int width, int height, void **data_out, size_t *size)
+static struct wl_buffer *toplevel_create_shm_buffer(int width, int height, void **data_out, size_t *size)
 {
     *size = width * 4 * height;
 
@@ -118,7 +118,7 @@ static struct wl_buffer *create_shm_buffer(int width, int height, void **data_ou
     return buffer;
 }
 
-void free_shm_buffer(std::shared_ptr<toplevel_buffer>& buffer)
+void toplevel_free_shm_buffer(std::shared_ptr<toplevel_buffer>& buffer)
 {
     if (buffer->buffer == NULL)
     {
@@ -270,9 +270,9 @@ void WayfireChooserTopLevel::size()
     buffer->frame = frame;
     ext_image_copy_capture_frame_v1_add_listener(buffer->frame, &frame_listener, this);
 
-    free_shm_buffer(buffer);
+    toplevel_free_shm_buffer(buffer);
     buffer->buffer =
-        create_shm_buffer(buffer->width, buffer->height, &buffer->data, &buffer->size);
+        toplevel_create_shm_buffer(buffer->width, buffer->height, &buffer->data, &buffer->size);
 
     if (buffer->buffer == NULL)
     {
