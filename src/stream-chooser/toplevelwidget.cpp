@@ -7,6 +7,7 @@
 #include "ext-image-copy-capture-v1-client-protocol.h"
 #include "glib.h"
 #include "glibmm/main.h"
+#include "gtk-utils.hpp"
 #include "stream-chooser.hpp"
 #include "toplevellayout.hpp"
 #include "toplevelwidget.hpp"
@@ -366,7 +367,7 @@ void WayfireChooserTopLevel::commit()
     if (buffered_app_id != "")
     {
         app_id = buffered_app_id;
-        icon.set_from_icon_name(app_id);
+        IconProvider::image_set_icon(icon, app_id);
         buffered_app_id = "";
     }
 
