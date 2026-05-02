@@ -30,6 +30,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     button_content.append(icon);
     button_content.append(status);
     button_content.set_spacing(6);
+    button->open_on(1);
 
     icon.set_valign(Gtk::Align::CENTER);
 
