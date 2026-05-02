@@ -1,8 +1,19 @@
 #pragma once
 #include <gtkmm.h>
+#include <memory>
 #include "ext-foreign-toplevel-list-v1-client-protocol.h"
-#include "glibmm/refptr.h"
+#include "ext-image-copy-capture-v1-client-protocol.h"
 #include "toplevellayout.hpp"
+
+struct toplevel_buffer
+{
+    int width  = 0;
+    int height = 0;
+    void *data;
+    wl_buffer *buffer;
+    size_t size = 0;
+    ext_image_copy_capture_frame_v1 *frame = NULL;
+};
 
 class WayfireChooserTopLevel : public Gtk::Box
 {
@@ -17,13 +28,22 @@ class WayfireChooserTopLevel : public Gtk::Box
     std::string buffered_identifier = "", identifier = "";
     Glib::RefPtr<ToplevelLayout> layout;
 
+    std::shared_ptr<toplevel_buffer> buffer = nullptr;
+    void request_frame();
+    ext_image_copy_capture_frame_v1 *frame = NULL;
+    ext_image_copy_capture_session_v1 *recording_session = NULL;
+
   public:
-    ext_foreign_toplevel_handle_v1 *handle;
+    int current_buffer_width = 0, current_buffer_height = 0, current_buffer_format = 0;
+    ext_foreign_toplevel_handle_v1 *handle = nullptr;
     WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *handle);
     ~WayfireChooserTopLevel();
     void commit();
     void set_app_id(std::string app_id);
     void set_title(std::string title);
     void set_identifier(std::string identifier);
+    void grab_toplevel_screenshot();
+    void size();
+    void buffer_ready();
     void print();
 };

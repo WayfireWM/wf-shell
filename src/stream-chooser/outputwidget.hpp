@@ -1,4 +1,5 @@
 #pragma once
+#include "gtkmm/picture.h"
 #include <gtkmm.h>
 #include <gdkmm.h>
 
