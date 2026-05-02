@@ -534,7 +534,7 @@ bool WayfireMenu::update_icon()
         icon = menu_icon;
     }
 
-    image_set_icon(&main_image, icon);
+    IconProvider::image_set_icon(main_image, icon);
     return true;
 }
 
