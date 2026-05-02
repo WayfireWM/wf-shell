@@ -23,7 +23,7 @@ class WfDock::impl
     std::unique_ptr<WayfireAutohidingWindow> window;
     wl_surface *_wl_surface;
     Gtk::FlowBox box;
-    std::unique_ptr<WayfireMenuButton> network_image;
+    std::unique_ptr<WayfireMenuWidget> network_image;
     std::unique_ptr<NetworkControlWidget> network_control;
     std::shared_ptr<NetworkManager> network_manager;
 

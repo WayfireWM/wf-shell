@@ -18,7 +18,7 @@ class WayfireNetworkInfo : public WayfireWidget
     void on_click();
     std::vector<sigc::connection> signals;
     std::shared_ptr<NetworkManager> network_manager;
-    std::unique_ptr<WayfireMenuButton> button;
+    std::unique_ptr<WayfireMenuWidget> button;
     Gtk::Box button_content;
     Gtk::Image icon;
     Gtk::Label status;

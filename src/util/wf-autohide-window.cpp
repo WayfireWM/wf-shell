@@ -635,7 +635,7 @@ void WayfireAutohidingWindow::unset_active_popover()
 
     if (should_autohide())
     {
-        schedule_hide(AUTOHIDE_HIDE_DELAY);
+        schedule_hide(autohide_hide_delay);
     }
 
     WfOption<std::string> panel_layer{"panel/layer"};
