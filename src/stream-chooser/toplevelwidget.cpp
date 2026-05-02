@@ -19,7 +19,6 @@ static void toplevel_handle_closed(void *data,
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     WayfireStreamChooserApp::getInstance().remove_toplevel(toplevel);
     ext_foreign_toplevel_handle_v1_destroy(handle);
-    printf("%s\n", __func__);
 }
 
 static void toplevel_handle_done(void *data,
@@ -27,7 +26,6 @@ static void toplevel_handle_done(void *data,
 {
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     toplevel->commit();
-    printf("%s\n", __func__);
 }
 
 static void toplevel_handle_title(void *data,
@@ -94,7 +92,6 @@ static int backingfile(off_t size)
 static struct wl_buffer *create_shm_buffer(int width, int height, void **data_out, size_t *size)
 {
     *size = width * 4 * height;
-    printf("size: %ld\n", *size);
 
     int fd = backingfile(*size);
     if (fd < 0)
@@ -171,7 +168,6 @@ static void session_handle_done(void *data,
 static void session_handle_stopped(void*,
     struct ext_image_copy_capture_session_v1 *session)
 {
-    printf("%s\n", __func__);
     ext_image_copy_capture_session_v1_destroy(session);
     session = NULL;
 }
@@ -240,8 +236,6 @@ void WayfireChooserTopLevel::grab_toplevel_screenshot()
 
     WayfireStreamChooserApp::getInstance().is_in_use = true;
 
-    printf("%s: %p : %p\n", __func__, handle,
-        WayfireStreamChooserApp::getInstance().toplevel_capture_manager);
     auto copy_capture_source = ext_foreign_toplevel_image_capture_source_manager_v1_create_source(
         WayfireStreamChooserApp::getInstance().toplevel_capture_manager,
         handle);

@@ -35,7 +35,6 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
 {
     if (strcmp(interface, ext_foreign_toplevel_list_v1_interface.name) == 0)
     {
-        std::cout << "Got Toplevel list" << std::endl;
         auto list = (ext_foreign_toplevel_list_v1*)
             wl_registry_bind(registry, name,
             &ext_foreign_toplevel_list_v1_interface,
@@ -46,22 +45,20 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
             &toplevel_list_v1_impl, NULL);
     } else if (strcmp(interface, ext_image_copy_capture_manager_v1_interface.name) == 0)
     {
-        std::cout << "Got Copy Capture Manager" << std::endl;
         auto manager = (ext_image_copy_capture_manager_v1*)wl_registry_bind(registry, name,
             &ext_image_copy_capture_manager_v1_interface, version);
         WayfireStreamChooserApp::getInstance().has_image_copy_capture = true;
         WayfireStreamChooserApp::getInstance().set_copy_capture_manager(manager);
     } else if (strcmp(interface, wl_shm_interface.name) == 0)
     {
-        std::cout << "Got SHM" << std::endl;
         auto shm = (wl_shm*)wl_registry_bind(registry, name, &wl_shm_interface, 1);
         WayfireStreamChooserApp::getInstance().set_shm(shm);
     } else if (strcmp(interface, ext_foreign_toplevel_image_capture_source_manager_v1_interface.name) == 0)
     {
-        std::cout << "Got Capture Source Manager" << std::endl;
         auto toplevel_capture_manager =
             (ext_foreign_toplevel_image_capture_source_manager_v1*)wl_registry_bind(registry, name,
                 &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
+        WayfireStreamChooserApp::getInstance().has_image_capture_source = true;
         WayfireStreamChooserApp::getInstance().set_toplevel_capture_manager(toplevel_capture_manager);
     }
 }
