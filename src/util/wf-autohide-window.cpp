@@ -70,6 +70,15 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
 
     this->autohide_opt.set_callback([=] { setup_autohide(); });
 
+
+    if (!output->output)
+    {
+        std::cerr << "WARNING: Compositor does not support zwf_shell_manager_v2 " << \
+            "disabling hotspot and autohide features " << \
+            "(is wayfire-shell plugin enabled?)" << std::endl;
+        return;
+    }
+
     auto display  = Gdk::Display::get_default();
     auto monitors = display->get_monitors();
     signals.push_back(monitors->signal_items_changed().connect([=] (auto, auto, auto)
@@ -80,13 +89,6 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     // wait for idle, so once everything is initialised. Else, things depend on loading order.
     Glib::signal_idle().connect_once([=] () { this->reinit_ext_hotspots(); });
 
-    if (!output->output)
-    {
-        std::cerr << "WARNING: Compositor does not support zwf_shell_manager_v2 " << \
-            "disabling hotspot and autohide features " << \
-            "(is wayfire-shell plugin enabled?)" << std::endl;
-        return;
-    }
 
     static const zwf_output_v2_listener listener = {
         .enter_fullscreen = [] (void *data, zwf_output_v2*)
