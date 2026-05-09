@@ -10,12 +10,12 @@
 }
 
 .wf-panel .tray-button image,
-.wf-panel .launcher image {
+.wf-panel image.launcher{
     transition: 500ms linear;
     -gtk-icon-transform: scale(0.8);
 }
 
-.wf-panel .launcher:hover image,
+.wf-panel image.launcher:hover,
 .wf-panel .tray-button:hover image {
     transition: 500ms linear;
     -gtk-icon-transform: scale(1.2);
