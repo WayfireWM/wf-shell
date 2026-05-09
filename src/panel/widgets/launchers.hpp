@@ -11,7 +11,6 @@
 struct WfLauncherButton
 {
     Gtk::Image m_icon;
-    Gtk::Button button;
     sigc::connection btn_sig;
     Glib::RefPtr<Gio::DesktopAppInfo> app_info;
 

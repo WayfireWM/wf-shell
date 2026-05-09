@@ -111,16 +111,20 @@ class WayfirePanel::impl
 
                 left_box.set_halign(Gtk::Align::END);
                 right_box.set_halign(Gtk::Align::START);
-                left_box.set_valign(Gtk::Align::CENTER);
-                right_box.set_valign(Gtk::Align::CENTER);
+                center_box.set_halign(Gtk::Align::CENTER);
+                left_box.set_valign(Gtk::Align::FILL);
+                right_box.set_valign(Gtk::Align::FILL);
+                center_box.set_valign(Gtk::Align::FILL);
             } else
             {
                 content_box.set_size_request(-1, (std::max(lnat, rnat) * 2) + mnat);
 
-                left_box.set_halign(Gtk::Align::CENTER);
-                right_box.set_halign(Gtk::Align::CENTER);
+                left_box.set_halign(Gtk::Align::FILL);
+                right_box.set_halign(Gtk::Align::FILL);
+                center_box.set_halign(Gtk::Align::FILL);
                 left_box.set_valign(Gtk::Align::END);
                 right_box.set_valign(Gtk::Align::START);
+                center_box.set_valign(Gtk::Align::CENTER);
             }
         } else
         {
@@ -133,14 +137,14 @@ class WayfirePanel::impl
             {
                 left_box.set_halign(Gtk::Align::START);
                 right_box.set_halign(Gtk::Align::END);
-                left_box.set_valign(Gtk::Align::CENTER);
-                right_box.set_valign(Gtk::Align::CENTER);
+                left_box.set_valign(Gtk::Align::FILL);
+                right_box.set_valign(Gtk::Align::FILL);
             } else
             {
                 left_box.set_valign(Gtk::Align::START);
                 right_box.set_valign(Gtk::Align::END);
-                left_box.set_halign(Gtk::Align::CENTER);
-                right_box.set_halign(Gtk::Align::CENTER);
+                left_box.set_halign(Gtk::Align::FILL);
+                right_box.set_halign(Gtk::Align::FILL);
             }
         }
     }
@@ -173,8 +177,6 @@ class WayfirePanel::impl
 
         content_box.set_hexpand(true);
         content_box.set_vexpand(true);
-        center_box.set_halign(Gtk::Align::CENTER);
-        center_box.set_valign(Gtk::Align::CENTER);
 
         window->set_child(content_box);
     }

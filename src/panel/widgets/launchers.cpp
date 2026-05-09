@@ -4,6 +4,7 @@
 #include <glibmm/spawn.h>
 #include <glibmm/keyfile.h>
 #include <gtkmm/icontheme.h>
+#include "gtkmm/gestureclick.h"
 #include <gdk/gdkcairo.h>
 #include <cassert>
 #include <gtk-utils.hpp>
@@ -45,19 +46,25 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         return false;
     }
 
-    m_icon.set_halign(Gtk::Align::CENTER);
-    m_icon.set_valign(Gtk::Align::CENTER);
+    m_icon.set_halign(Gtk::Align::FILL);
+    m_icon.set_valign(Gtk::Align::FILL);
+    m_icon.add_css_class("widget-icon");
+    m_icon.add_css_class("launcher");
+    m_icon.set_halign(Gtk::Align::FILL);
+    m_icon.set_valign(Gtk::Align::FILL);
 
-    button.set_child(m_icon);
-    button.add_css_class("widget-icon");
-    button.add_css_class("flat");
-    button.add_css_class("launcher");
-
-    btn_sig = button.signal_clicked().connect([=] () { launch(); });
+    auto click = Gtk::GestureClick::create();
+    click->set_button(1);
+    btn_sig = click->signal_released().connect(
+        [this] (int, double, double)
+    {
+        launch();
+    });
+    m_icon.add_controller(click);
 
     update_icon();
 
-    button.set_tooltip_text(app_info->get_name());
+    m_icon.set_tooltip_text(app_info->get_name());
     return true;
 }
 
@@ -157,8 +164,8 @@ void WayfireLaunchers::init(Gtk::Box *container)
 
     container->append(box);
 
-    box.set_halign(Gtk::Align::CENTER);
-    box.set_valign(Gtk::Align::CENTER);
+    box.set_halign(Gtk::Align::FILL);
+    box.set_valign(Gtk::Align::FILL);
 
     handle_config_reload();
 }
@@ -190,7 +197,7 @@ void WayfireLaunchers::handle_config_reload()
     launchers = get_launchers_from_config();
     for (auto& l : launchers)
     {
-        box.append(l->button);
+        box.append(l->m_icon);
     }
 
     update_layout();
