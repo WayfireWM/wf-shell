@@ -33,6 +33,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     gtk_layer_init_for_window(this->gobj());
     gtk_layer_set_monitor(this->gobj(), output->monitor->gobj());
     gtk_layer_set_namespace(this->gobj(), "panel");
+    gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
 
 
     this->position.set_callback([=] () { this->update_position(); });

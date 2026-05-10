@@ -27,7 +27,7 @@ class WayfireMenuWidget : public Gtk::Box
     Gtk::PopoverMenu menu;
     Glib::RefPtr<Gtk::Window> fullscreen;
     bool use_menu = false, use_widget = false;
-    bool interactive = true;
+    bool interactive = false;
     WfOption<std::string> panel_position;
 
     /* Make the menu button active on its AutohideWindow */
@@ -86,7 +86,7 @@ class WayfireMenuWidget : public Gtk::Box
      * Set whether the popup should grab input focus when opened
      * By default, the menu button interacts with the keyboard.
      */
-    void set_keyboard_interactive(bool interactive = true);
+    void set_keyboard_interactive(bool interactive);
 
     /** @return Whether the menu button interacts with the keyboard */
     bool is_keyboard_interactive() const;
