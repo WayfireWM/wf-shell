@@ -139,14 +139,14 @@ void WayfireBatteryInfo::update_details()
         description += ", " + uint_to_time(time_to_empty.get()) + " remaining";
     }
 
-    button.set_tooltip_text(
+    box.set_tooltip_text(
         get_device_type_description(type.get()) + description);
 
     if (status_opt.value() == BATTERY_STATUS_PERCENT)
     {
         label.set_text(percentage_string);
         overlay.remove_overlay(label);
-        button_box.append(label);
+        box.append(label);
     } else if (status_opt.value() == BATTERY_STATUS_FULL)
     {
         label.set_text(description);
@@ -156,14 +156,14 @@ void WayfireBatteryInfo::update_details()
             overlay.remove_overlay(label);
         }
 
-        button_box.append(label);
+        box.append(label);
     } else if (status_opt.value() == BATTERY_STATUS_OVERLAY)
     {
         label.set_text(percentage_string);
-        auto children = button_box.get_children();
+        auto children = box.get_children();
         if (std::count(children.begin(), children.end(), &label))
         {
-            button_box.remove(label);
+            box.remove(label);
         }
 
         overlay.add_overlay(label);
@@ -231,10 +231,10 @@ void WayfireBatteryInfo::update_layout()
 
     if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
     {
-        button_box.set_orientation(Gtk::Orientation::VERTICAL);
+        box.set_orientation(Gtk::Orientation::VERTICAL);
     } else
     {
-        button_box.set_orientation(Gtk::Orientation::HORIZONTAL);
+        box.set_orientation(Gtk::Orientation::HORIZONTAL);
     }
 }
 
@@ -252,22 +252,20 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
         return;
     }
 
-    button_box.append(overlay);
+    box.append(overlay);
     overlay.set_child(icon);
     icon.add_css_class("widget-icon");
-    button.add_css_class("battery");
-    button.add_css_class("flat");
+    box.add_css_class("battery");
 
     status_opt.set_callback([=] () { update_details(); });
 
     update_details();
     update_icon();
 
-    container->append(button);
-    button_box.set_spacing(5);
+    container->append(box);
+    box.set_spacing(5);
 
-    button.set_child(button_box);
-    button.property_scale_factor().signal_changed()
+    icon.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(*this, &WayfireBatteryInfo::update_icon));
 
     update_layout();
