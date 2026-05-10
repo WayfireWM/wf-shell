@@ -1,5 +1,6 @@
 #include "dock.hpp"
 #include "giomm/application.h"
+#include "gtk-utils.hpp"
 #include "toplevel.hpp"
 #include "toplevel-icon.hpp"
 #include <iostream>
@@ -49,7 +50,7 @@ void WfDockApp::on_activate()
 {
     WayfireShellApp::on_activate();
     new CssFromConfigInt("dock/icon_height", ".toplevel-icon {-gtk-icon-size:", "px;}");
-    IconProvider::load_custom_icons();
+    IconProvider::load_custom_icons("dock");
 
     /* At this point, wayland connection has been initialized,
      * and hopefully outputs have been created */

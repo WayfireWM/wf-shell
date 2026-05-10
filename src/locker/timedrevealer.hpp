@@ -7,6 +7,7 @@ class WayfireLockerTimedRevealer : public Gtk::Revealer
 {
   private:
     sigc::connection signal;
+    sigc::connection signal_failure;
 
   public:
     WayfireLockerTimedRevealer(std::string always_option);
@@ -17,4 +18,5 @@ class WayfireLockerTimedRevealer : public Gtk::Revealer
     WfOption<double> hide_animation_duration{"locker/hide_anim_dur"};
 
     virtual void activity(); /* Allow plugins to have their own logic if more intricate */
+    void failure();
 };

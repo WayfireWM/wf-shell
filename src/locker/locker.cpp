@@ -100,6 +100,10 @@ void WayfireLockerApp::on_activate()
                 prewake_signal = Glib::signal_timeout().connect([this] ()
                 {
                     kill_parent(ExitType::LOCKED);
+                    for (auto & it : window_list)
+                    {
+                        it.second->remove_css_class("fade-in");
+                    }
 
                     can_early_wake = false;
                     return G_SOURCE_REMOVE;
@@ -124,6 +128,11 @@ void WayfireLockerApp::on_activate()
         prewake_signal = Glib::signal_timeout().connect([this] ()
         {
             kill_parent(ExitType::LOCKED);
+            for (auto & it : window_list)
+            {
+                it.second->remove_css_class("fade-in");
+            }
+
             can_early_wake = false;
             return G_SOURCE_REMOVE;
         }, WfOption<double>{"locker/prewake"} *1000);

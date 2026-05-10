@@ -3,7 +3,9 @@
 #include <iostream>
 #include <giomm.h>
 #include <giomm/dbusproxy.h>
+#include <giomm/asyncresult.h>
 #include <glibmm/ustring.h>
+#include <glibmm/refptr.h>
 #include <glibmm/variant.h>
 #include <gtkmm/image.h>
 #include <gtkmm/box.h>
@@ -29,7 +31,7 @@ WayfireLockerFingerprintPlugin::~WayfireLockerFingerprintPlugin()
 {
     if (device_proxy)
     {
-        device_proxy->call_sync("Release");
+        device_proxy->call("Release");
     }
 }
 
@@ -62,14 +64,17 @@ void WayfireLockerFingerprintPlugin::get_device()
     }
 
     try {
-        auto default_device = manager_proxy->call_sync("GetDefaultDevice");
-        Glib::Variant<Glib::ustring> item_path;
-        default_device.get_child(item_path, 0);
-        Gio::DBus::Proxy::create(connection,
-            "net.reactivated.Fprint",
-            item_path.get(),
-            "net.reactivated.Fprint.Device",
-            sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
+        manager_proxy->call("GetDefaultDevice", [=] (Glib::RefPtr<Gio::AsyncResult>& result)
+        {
+            auto default_device = manager_proxy->call_finish(result);
+            Glib::Variant<Glib::ustring> item_path;
+            default_device.get_child(item_path, 0);
+            Gio::DBus::Proxy::create(connection,
+                "net.reactivated.Fprint",
+                item_path.get(),
+                "net.reactivated.Fprint.Device",
+                sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
+        });
     } catch (Glib::Error & e) /* TODO : Narrow down? */
     {
         hide();
@@ -82,26 +87,34 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
     device_proxy = Gio::DBus::Proxy::create_finish(result);
     update("Listing fingers...", "system-search-symbolic", "info");
     char *username = getlogin();
-    auto reply     = device_proxy->call_sync("ListEnrolledFingers", nullptr,
-        Glib::Variant<std::tuple<Glib::ustring>>::create(username));
-    Glib::Variant<std::vector<Glib::ustring>> array;
-    reply.get_child(array, 0);
-
-    if (array.get_n_children() == 0)
+    device_proxy->call("ListEnrolledFingers", [=] (Glib::RefPtr<Gio::AsyncResult>& result)
     {
-        // Zero fingers for this user.
+        auto reply = device_proxy->call_finish(result);
+        if (!reply)
+        {
+            return;
+        }
+
+        Glib::Variant<std::vector<Glib::ustring>> array;
+        reply.get_child(array, 0);
+
+        if (array.get_n_children() == 0)
+        {
+            // Zero fingers for this user.
+            show();
+            update("No fingerprints enrolled", "dialog-error-symbolic", "bad");
+            // Don't hide entirely, allow the user to see this specific fail
+            return;
+        }
+
         show();
-        update("No fingerprints enrolled", "dialog-error-symbolic", "bad");
-        // Don't hide entirely, allow the user to see this specific fail
-        return;
-    }
+        update("Fingerprint Device Ready", "system-search-symbolic", "info");
+        Glib::Variant<Glib::ustring> finger;
+        reply.get_child(finger, 0);
 
-    show();
-    update("Fingerprint Device Ready", "system-search-symbolic", "info");
-    Glib::Variant<Glib::ustring> finger;
-    reply.get_child(finger, 0);
-
-    start_fingerprint_scanning();
+        start_fingerprint_scanning();
+    },
+        Glib::Variant<std::tuple<Glib::ustring>>::create(username));
 }
 
 void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
@@ -151,6 +164,7 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
             {
                 std::cout << "No match" << std::endl;
                 show();
+                failure();
                 update("Invalid fingerprint", "dialog-error-symbolic", "bad");
                 stop_fingerprint_scanning();
                 WayfireLockerApp::get().recieved_bad_auth();
@@ -217,7 +231,13 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 
         try {
             char *username = getlogin();
-            device_proxy->call_sync("Claim", nullptr,
+            device_proxy->call("Claim", [=] (Glib::RefPtr<Gio::AsyncResult>& result)
+            {
+                show();
+                update("Use fingerprint to unlock", "process-completed-symbolic", "good");
+                device_proxy->call("VerifyStart",
+                    Glib::Variant<std::tuple<Glib::ustring>>::create({""}));
+            },
                 Glib::Variant<std::tuple<Glib::ustring>>::create({username}));
         } catch (Glib::Error & e) /* TODO : Narrow down? */
         {
@@ -232,12 +252,6 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
             }, 3);
             return;
         }
-
-        show();
-        update("Use fingerprint to unlock", "process-completed-symbolic", "good");
-        device_proxy->call_sync("VerifyStart",
-            nullptr,
-            Glib::Variant<std::tuple<Glib::ustring>>::create({""}));
     } else
     {
         update("Unable to start fingerprint scan", "dialog-error-symbolic", "bad");
@@ -265,8 +279,10 @@ void WayfireLockerFingerprintPlugin::stop_fingerprint_scanning()
     /* Stop if running. Eventually log or respond to errors
      *   but for now, avoid crashing lockscreen on close-down */
     try {
-        device_proxy->call_sync("VerifyStop");
-        device_proxy->call_sync("Release");
+        device_proxy->call("VerifyStop", [=] (Glib::RefPtr<Gio::AsyncResult>& result)
+        {
+            device_proxy->call("Release");
+        });
     } catch (Glib::Error & e)
     {}
 }
@@ -290,14 +306,17 @@ void WayfireLockerFingerprintPlugin::init()
     {
         auto manager_proxy = Gio::DBus::Proxy::create_finish(result);
         try {
-            auto default_device = manager_proxy->call_sync("GetDefaultDevice");
-            Glib::Variant<Glib::ustring> item_path;
-            default_device.get_child(item_path, 0);
-            Gio::DBus::Proxy::create(connection,
-                "net.reactivated.Fprint",
-                item_path.get(),
-                "net.reactivated.Fprint.Device",
-                sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
+            manager_proxy->call("GetDefaultDevice", [=] (Glib::RefPtr<Gio::AsyncResult> & result)
+            {
+                auto default_device = manager_proxy->call_finish(result);
+                Glib::Variant<Glib::ustring> item_path;
+                default_device.get_child(item_path, 0);
+                Gio::DBus::Proxy::create(connection,
+                    "net.reactivated.Fprint",
+                    item_path.get(),
+                    "net.reactivated.Fprint.Device",
+                    sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
+            });
         } catch (Glib::Error & e) /* TODO : Narrow down? */
         {
             hide();
@@ -408,6 +427,14 @@ void WayfireLockerFingerprintPlugin::update(std::string label, std::string image
         widget->remove_css_class("bad");
         widget->remove_css_class("good");
         widget->add_css_class(color);
+    }
+}
+
+void WayfireLockerFingerprintPlugin::failure()
+{
+    for (auto & it : widgets)
+    {
+        it.second->failure();
     }
 }
 

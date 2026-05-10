@@ -64,7 +64,7 @@ WayfireLockerUserPluginWidget::WayfireLockerUserPluginWidget(std::string image_p
     label.set_label(username);
     if (image_path == "")
     {
-        image.hide();
+        image.set_from_icon_name("system-users");
     } else
     {
         image.set(image_path);

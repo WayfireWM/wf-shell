@@ -10,6 +10,10 @@
 
 #include "dock.hpp"
 #include "../util/gtk-utils.hpp"
+#include "gtkmm/flowbox.h"
+#include "network/manager.hpp"
+#include "network/network-widget.hpp"
+#include "network/network.hpp"
 #include <css-config.hpp>
 
 
@@ -19,10 +23,17 @@ class WfDock::impl
     std::unique_ptr<WayfireAutohidingWindow> window;
     wl_surface *_wl_surface;
     Gtk::FlowBox box;
+    std::unique_ptr<WayfireMenuButton> network_image;
+    std::unique_ptr<NetworkControlWidget> network_control;
+    std::shared_ptr<NetworkManager> network_manager;
 
     WfOption<std::string> css_path{"dock/css_path"};
-    WfOption<int> dock_height{"dock/dock_height"};
     WfOption<int> entries_per_line{"dock/max_per_line"};
+    WfOption<std::string> position{"dock/position"};
+
+    // needed as a workaround to shrink down when removing items
+    WfOption<int> height{"dock/minimal_height"};
+    WfOption<int> width{"dock/minimal_width"};
 
   public:
     impl(WayfireOutput *output)
@@ -72,6 +83,31 @@ class WfDock::impl
         };
         entries_per_line.set_callback(update_entries_per_line);
         update_entries_per_line();
+
+        auto update_position = [=] ()
+        {
+            if (position.value() == "bottom")
+            {
+                // this is not great, but we lack better options without doing a
+                // layout with boxes in boxes (ugly) or some sort of custom layout manager
+                box.set_orientation(Gtk::Orientation::HORIZONTAL);
+                box.set_direction(Gtk::TextDirection::LTR);
+            } else if (position.value() == "left")
+            {
+                box.set_orientation(Gtk::Orientation::VERTICAL);
+                box.set_direction(Gtk::TextDirection::LTR);
+            } else if (position.value() == "right")
+            {
+                box.set_orientation(Gtk::Orientation::VERTICAL);
+                box.set_direction(Gtk::TextDirection::RTL);
+            } else // top
+            {
+                box.set_orientation(Gtk::Orientation::HORIZONTAL);
+                box.set_direction(Gtk::TextDirection::LTR);
+            }
+        };
+        position.set_callback(update_position);
+        update_position();
     }
 
     void add_child(Gtk::Widget& widget)
@@ -82,7 +118,7 @@ class WfDock::impl
     void rem_child(Gtk::Widget& widget)
     {
         box.remove(widget);
-        window->set_default_size(-1, dock_height);
+        window->set_default_size(width, height);
     }
 
     wl_surface *get_wl_surface()

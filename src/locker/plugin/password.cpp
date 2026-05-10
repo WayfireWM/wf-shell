@@ -25,16 +25,19 @@ WayfireLockerPasswordPluginWidget::~WayfireLockerPasswordPluginWidget()
     {
         entry_submitted.disconnect();
     }
+
+    for (auto signal : replies_signals)
+    {
+        signal.disconnect();
+    }
 }
 
-void WayfireLockerPasswordPlugin::update_labels(std::string text)
+void WayfireLockerPasswordPlugin::add_reply(std::string text)
 {
     for (auto& it : widgets)
     {
-        it.second->label.set_label(text);
+        it.second->add_reply(text);
     }
-
-    label_contents = text;
 }
 
 void WayfireLockerPasswordPlugin::blank_passwords()
@@ -45,9 +48,23 @@ void WayfireLockerPasswordPlugin::blank_passwords()
     }
 }
 
+void WayfireLockerPasswordPluginWidget::lockout_changed(bool lockout)
+{
+    if (lockout)
+    {
+        entry.set_text("");
+        entry.set_sensitive(false);
+        entry.set_placeholder_text("Too many attempts");
+    } else
+    {
+        entry.set_sensitive(true);
+        entry.set_placeholder_text("Password");
+    }
+}
+
 void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
 {
-    widgets.emplace(id, new WayfireLockerPasswordPluginWidget(label_contents));
+    widgets.emplace(id, new WayfireLockerPasswordPluginWidget());
 
     /* Share string to every other entry */
     auto widget = widgets[id];
@@ -84,19 +101,31 @@ void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLock
     });
 }
 
-WayfireLockerPasswordPluginWidget::WayfireLockerPasswordPluginWidget(std::string label_contents) :
+WayfireLockerPasswordPluginWidget::WayfireLockerPasswordPluginWidget() :
     WayfireLockerTimedRevealer("locker/password_always")
 {
     set_child(box);
     box.add_css_class("password");
     box.append(entry);
-    box.append(label);
+    box.append(replies);
     box.set_orientation(Gtk::Orientation::VERTICAL);
-    label.add_css_class("password-reply");
+    replies.add_css_class("password-reply");
+    replies.set_orientation(Gtk::Orientation::VERTICAL);
     entry.add_css_class("password-entry");
     entry.set_placeholder_text("Password");
-    label.set_label(label_contents);
     entry.set_visibility(false);
+}
+
+void WayfireLockerPasswordPluginWidget::add_reply(std::string message)
+{
+    std::shared_ptr<Gtk::Label> new_label = std::make_shared<Gtk::Label>(message);
+    replies.append(*new_label);
+
+    replies_signals.push_back(Glib::signal_timeout().connect_seconds([this, new_label] ()
+    {
+        replies.remove(*new_label);
+        return G_SOURCE_REMOVE;
+    }, 15));
 }
 
 void WayfireLockerPasswordPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
@@ -113,8 +142,6 @@ WayfireLockerPasswordPlugin::WayfireLockerPasswordPlugin() :
 int pam_conversation(int num_mesg, const struct pam_message **mesg, struct pam_response **resp,
     void *appdata_ptr)
 {
-    std::cout << "PAM convo step ... " << std::endl;
-
     WayfireLockerPasswordPlugin *pass_plugin = (WayfireLockerPasswordPlugin*)appdata_ptr;
     *resp = (struct pam_response*)calloc(num_mesg, sizeof(struct pam_response));
     if (*resp == NULL)
@@ -125,7 +152,8 @@ int pam_conversation(int num_mesg, const struct pam_message **mesg, struct pam_r
 
     for (int count = 0; count < num_mesg; count++)
     {
-        std::cout << "PAM msg : " << mesg[count]->msg << std::endl;
+        std::string message = mesg[count]->msg;
+
         resp[count]->resp_retcode = 0;
         /* Echo OFF prompt should be user password. */
         if (mesg[count]->msg_style == PAM_PROMPT_ECHO_OFF)
@@ -133,10 +161,10 @@ int pam_conversation(int num_mesg, const struct pam_message **mesg, struct pam_r
             resp[count]->resp = strdup(pass_plugin->submitted_password.c_str());
         } else if (mesg[count]->msg_style == PAM_ERROR_MSG)
         {
-            pass_plugin->update_labels(mesg[count]->msg);
+            pass_plugin->add_reply(message);
         } else if (mesg[count]->msg_style == PAM_TEXT_INFO)
         {
-            pass_plugin->update_labels(mesg[count]->msg);
+            pass_plugin->add_reply(message);
         }
     }
 
@@ -158,12 +186,11 @@ void WayfireLockerPasswordPlugin::submit_user_password(std::string password)
     int retval;
     /* Start the password-based conversation */
     std::cout << "PAM start ... " << std::endl;
-    retval = pam_start("wf-locker-password", username, &local_conversation, &local_auth_handle);
+    retval = pam_start("wf-locker", username, &local_conversation, &local_auth_handle);
     if (retval != PAM_SUCCESS)
     {
         /* We don't expect to be here. No graceful way out of this. */
-        std::cout << "PAM start returned " << retval << std::endl;
-        update_labels("pam_start failure");
+        add_reply("pam_start failure");
         exit(retval);
     }
 
@@ -175,8 +202,7 @@ void WayfireLockerPasswordPlugin::submit_user_password(std::string password)
     {
         if (retval == PAM_AUTH_ERR)
         {
-            std::cout << "Authentication failure." << std::endl;
-            update_labels("Authentication failure.");
+            failure();
         }
     } else
     {
@@ -188,6 +214,23 @@ void WayfireLockerPasswordPlugin::submit_user_password(std::string password)
     if (unlock)
     {
         WayfireLockerApp::get().perform_unlock("PAM Password authenticated");
+    }
+}
+
+void WayfireLockerPasswordPlugin::lockout_changed(bool lockout)
+{
+    for (auto & it : widgets)
+    {
+        it.second->lockout_changed(lockout);
+    }
+}
+
+void WayfireLockerPasswordPlugin::failure()
+{
+    WayfireLockerApp::get().recieved_bad_auth();
+    for (auto & it : widgets)
+    {
+        it.second->failure();
     }
 }
 

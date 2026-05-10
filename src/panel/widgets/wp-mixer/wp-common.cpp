@@ -209,24 +209,22 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
     // for each widget
     for (auto widget : instance->widgets)
     {
-        WfWpControl *control;
+        WfWpControl *control = nullptr;
 
-        // first, find the appropiate control
+        // first, find the appropriate control
         for (auto & it : widget->objects_to_controls)
         {
-            WpPipewireObject *obj = it.first;
-            control = it.second.get();
-            if (wp_proxy_get_bound_id(WP_PROXY(obj)) == id)
+            if (wp_proxy_get_bound_id(WP_PROXY(it.first)) == id)
             {
+                control = it.second.get();
                 break;
             }
+        }
 
-            // if we are at the end and still no match
-            if (it.first == widget->objects_to_controls.end()->first)
-            {
-                std::cerr << "Wireplumber mixer could not find control for wp object";
-                return;
-            }
+        if (!control)
+        {
+            std::cerr << "Wireplumber mixer could not find control for wp object\n";
+            continue;
         }
 
         const auto update_icons = [&] ()
