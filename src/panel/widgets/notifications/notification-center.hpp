@@ -11,7 +11,7 @@
 class WayfireNotificationCenter : public WayfireWidget
 {
   private:
-    static const int WIDTH = 300, HEIGHT = 400;
+    static const int WIDTH = 500, HEIGHT = 600;
 
     const std::shared_ptr<Daemon> daemon = Daemon::Launch();
     sigc::connection notification_new_conn;
