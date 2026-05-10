@@ -26,13 +26,17 @@ void WayfireLanguage::init(Gtk::Box *container)
         return;
     }
 
-    button.add_css_class("language");
-    button.add_css_class("flat");
-    button.remove_css_class("activated");
-    btn_sig = button.signal_clicked().connect(sigc::mem_fun(*this, &WayfireLanguage::next_layout));
-    button.show();
+    label.add_css_class("language");
+    auto click_gesture = Gtk::GestureClick::create();
+    click_gesture->set_button(1);
+    btn_sig = click_gesture->signal_released().connect(
+        [this] (int count, double x, double y)
+    {
+        next_layout();
+    });
+    label.add_controller(click_gesture);
 
-    container->append(button);
+    container->append(label);
 
     ipc_client->subscribe(this, {"keyboard-modifier-state-changed"});
     ipc_client->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (wf::json_t data)
@@ -74,7 +78,7 @@ bool WayfireLanguage::update_label()
         return false;
     }
 
-    button.set_label(available_layouts[current_layout].ID);
+    label.set_label(available_layouts[current_layout].ID);
     return true;
 }
 

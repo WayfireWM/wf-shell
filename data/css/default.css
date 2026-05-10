@@ -100,7 +100,7 @@ text-shadow: 1px  1px 0 var(--bcol),
     min-width: 48px;
 }
 
-.wf-panel .language label {
+.wf-panel label.language {
     background-color: #24283B;
     padding: 5px;
     margin: 5px;
