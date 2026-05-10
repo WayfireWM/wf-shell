@@ -28,9 +28,8 @@ class WayfireBatteryInfo : public WayfireWidget
 
     sigc::connection btn_sig, disp_dev_sig;
 
-    Gtk::Button button;
     Gtk::Label label;
-    Gtk::Box button_box;
+    Gtk::Box box;
     Gtk::Overlay overlay;
 
     Gtk::Image icon;
