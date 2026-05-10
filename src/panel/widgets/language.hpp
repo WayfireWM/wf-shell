@@ -20,9 +20,8 @@ struct Layout
 
 class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
 {
-    Gtk::Button button;
+    Gtk::Label label;
     sigc::connection btn_sig;
-
     std::shared_ptr<IPCClient> ipc_client;
     uint32_t current_layout;
     std::vector<Layout> available_layouts;
