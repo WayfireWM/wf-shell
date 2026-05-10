@@ -86,7 +86,7 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id, bool s
                 [=]
             {
                 button->popdown();
-                button->set_keyboard_interactive();
+                button->set_keyboard_interactive(false);
                 popover_timeout.disconnect();
                 return true;
             },

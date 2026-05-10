@@ -956,6 +956,7 @@ void WayfireMenu::init(Gtk::Box *container)
 
     button = std::make_unique<WayfireMenuWidget>("panel", "menu");
     button->append(main_image);
+    button->set_keyboard_interactive(true);
     button->add_css_class("menu-button");
     button->add_css_class("flat");
     button->get_children()[0]->add_css_class("flat");
