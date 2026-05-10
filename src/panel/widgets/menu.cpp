@@ -958,8 +958,6 @@ void WayfireMenu::init(Gtk::Box *container)
     button->append(main_image);
     button->set_keyboard_interactive(true);
     button->add_css_class("menu-button");
-    button->add_css_class("flat");
-    button->get_children()[0]->add_css_class("flat");
     button->open_on(1); /* Open menu on left click */
     signals.push_back(button->signal_popup().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown)));
