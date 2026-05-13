@@ -607,18 +607,15 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuButton& button)
 
     const bool should_grab_focus = this->active_button->is_keyboard_interactive();
 
-    /*
-     *  if (should_grab_focus)
-     *  {
-     *   // First, set exclusive mode to grab input
-     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
-     *   wl_surface_commit(get_wl_surface());
-     *
-     *   // Next, allow releasing of focus when clicking outside of the panel
-     *   gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
-     *  }
-     */
-    // TODO come back for intentional focus steal
+    if (should_grab_focus)
+    {
+        // First, set exclusive mode to grab input
+        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+        wl_surface_commit(get_wl_surface());
+
+        // Next, allow releasing of focus when clicking outside of the panel
+        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+    }
 
     this->active_button->set_has_focus(should_grab_focus);
     schedule_show(0);
