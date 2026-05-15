@@ -49,7 +49,7 @@ class WfDock::impl
         window->add_css_class("wf-dock");
         window->set_child(box);
 
-        if ((std::string)css_path != "")
+        if (css_path.value() != "")
         {
             auto css = load_css_from_path(css_path);
             if (css)

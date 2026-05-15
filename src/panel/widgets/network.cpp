@@ -99,9 +99,9 @@ void WayfireNetworkInfo::set_connection(std::shared_ptr<Network> network)
 
 void WayfireNetworkInfo::on_click()
 {
-    if ((std::string)click_command_opt != "default")
+    if (click_command_opt.value() != "default")
     {
-        Glib::spawn_command_line_async((std::string)click_command_opt);
+        Glib::spawn_command_line_async(click_command_opt.value());
     } else
     {
         std::string command = "env XDG_CURRENT_DESKTOP=GNOME gnome-control-center";

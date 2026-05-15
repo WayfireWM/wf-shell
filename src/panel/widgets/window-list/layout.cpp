@@ -17,7 +17,7 @@ void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget, int widt
 
     int per_child = width / child_count;
     // user preference is ignored if too small
-    int preference = std::max(height, (int)user_size);
+    int preference = std::max(height, user_size.value());
     // At minimum use ratio of 1:1, at max use user preference
     per_child = std::max(per_child, height);
     per_child = std::min(per_child, preference);
@@ -61,7 +61,7 @@ void WayfireWindowListLayout::measure_vfunc(const Gtk::Widget& widget, Gtk::Orie
         int child_count = widget.get_children().size();
 
         // Use max of user preference and ratio 1:1
-        int per_child = std::max(for_size, (int)user_size);
+        int per_child = std::max(for_size, user_size.value());
 
         minimum = child_count * for_size;
         natural = per_child * child_count;
