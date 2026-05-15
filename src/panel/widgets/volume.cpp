@@ -155,6 +155,14 @@ void WayfireVolume::on_volume_button_press(GdkEventButton *event)
             gvc_mixer_stream_set_is_muted(gvc_stream, true);
         }
     }
+    if ((event->button == 3) && (event->type == GDK_BUTTON_PRESS))
+    {
+	    const gchar *command = "mate-volume-control";
+
+        if (g_spawn_command_line_async (command, NULL) == FALSE)
+                g_warning ("Couldn't execute command: %s", command);
+    }
+    
 }
 
 void WayfireVolume::on_volume_changed_external()
