@@ -697,22 +697,22 @@ void WayfireMenu::setup_popover_layout()
         Gtk::Window *window = dynamic_cast<Gtk::Window*>(button->get_root());
         WfOption<std::string> panel_layer{"panel/layer"};
 
-        if ((std::string)panel_layer == "overlay")
+        if (panel_layer.value() == "overlay")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
         }
 
-        if ((std::string)panel_layer == "top")
+        if (panel_layer.value() == "top")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
         }
 
-        if ((std::string)panel_layer == "bottom")
+        if (panel_layer.value() == "bottom")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
         }
 
-        if ((std::string)panel_layer == "background")
+        if (panel_layer.value() == "background")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
         }
@@ -775,37 +775,37 @@ void WayfireMenu::update_popover_layout()
 void WayfireLogoutUI::on_logout_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(logout_command).c_str(), NULL);
+    g_spawn_command_line_async(logout_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_reboot_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(reboot_command).c_str(), NULL);
+    g_spawn_command_line_async(reboot_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_shutdown_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(shutdown_command).c_str(), NULL);
+    g_spawn_command_line_async(shutdown_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_suspend_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(suspend_command).c_str(), NULL);
+    g_spawn_command_line_async(suspend_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_hibernate_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(hibernate_command).c_str(), NULL);
+    g_spawn_command_line_async(hibernate_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_switchuser_click()
 {
     ui.hide();
-    g_spawn_command_line_async(std::string(switchuser_command).c_str(), NULL);
+    g_spawn_command_line_async(switchuser_command.value().c_str(), NULL);
 }
 
 void WayfireLogoutUI::on_cancel_click()
@@ -905,9 +905,9 @@ void WayfireMenu::on_logout_click()
 {
     button->get_popover()->hide();
     fullscreen.hide();
-    if (!std::string(menu_logout_command).empty())
+    if (!menu_logout_command.value().empty())
     {
-        g_spawn_command_line_async(std::string(menu_logout_command).c_str(), NULL);
+        g_spawn_command_line_async(menu_logout_command.value().c_str(), NULL);
         return;
     }
 

@@ -58,22 +58,22 @@ class WayfirePanel::impl
     WfOption<std::string> panel_layer{"panel/layer"};
     std::function<void()> set_panel_layer = [=] ()
     {
-        if ((std::string)panel_layer == "overlay")
+        if (panel_layer.value() == "overlay")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
         }
 
-        if ((std::string)panel_layer == "top")
+        if (panel_layer.value() == "top")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
         }
 
-        if ((std::string)panel_layer == "bottom")
+        if (panel_layer.value() == "bottom")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BOTTOM);
         }
 
-        if ((std::string)panel_layer == "background")
+        if (panel_layer.value() == "background")
         {
             gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
         }
@@ -415,15 +415,15 @@ class WayfirePanel::impl
     {
         left_widgets_opt.set_callback([=] ()
         {
-            reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
+            reload_widgets(left_widgets_opt.value(), left_widgets, left_box);
         });
         right_widgets_opt.set_callback([=] ()
         {
-            reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
+            reload_widgets(right_widgets_opt.value(), right_widgets, right_box);
         });
         center_widgets_opt.set_callback([=] ()
         {
-            reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+            reload_widgets(center_widgets_opt.value(), center_widgets, center_box);
             if (center_box.get_children().empty())
             {
                 content_box.unset_center_widget();
@@ -433,9 +433,9 @@ class WayfirePanel::impl
             }
         });
 
-        reload_widgets((std::string)left_widgets_opt, left_widgets, left_box);
-        reload_widgets((std::string)right_widgets_opt, right_widgets, right_box);
-        reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
+        reload_widgets(left_widgets_opt.value(), left_widgets, left_box);
+        reload_widgets(right_widgets_opt.value(), right_widgets, right_box);
+        reload_widgets(center_widgets_opt.value(), center_widgets, center_box);
 
         if (center_box.get_children().empty())
         {
@@ -504,12 +504,12 @@ bool WayfirePanelApp::panel_allowed_by_config(bool allowed, std::string output_n
 {
     if (allowed)
     {
-        return std::string(*priv->panel_outputs).find("*") != std::string::npos ||
-               std::string(*priv->panel_outputs).find(output_name) != std::string::npos;
+        return priv->panel_outputs->value().find("*") != std::string::npos ||
+               priv->panel_outputs->value().find(output_name) != std::string::npos;
     } else
     {
-        return std::string(*priv->panel_outputs).find("*") == std::string::npos &&
-               std::string(*priv->panel_outputs).find(output_name) == std::string::npos;
+        return priv->panel_outputs->value().find("*") == std::string::npos &&
+               priv->panel_outputs->value().find(output_name) == std::string::npos;
     }
 }
 
@@ -584,7 +584,7 @@ void WayfirePanelApp::on_activate()
         }
 
         std::cout << std::endl << "Currently the [panel] outputs option is set to: " <<
-            std::string(*priv->panel_outputs) << std::endl;
+            priv->panel_outputs->value() << std::endl;
     }
 
     const static std::vector<std::pair<std::string, std::string>> icon_sizes_args =
