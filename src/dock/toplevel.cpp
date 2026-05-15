@@ -177,9 +177,7 @@ static void handle_toplevel_state(void *data, toplevel_t, wl_array *state)
 }
 
 static void handle_toplevel_done(void *data, toplevel_t)
-{
-// auto impl = static_cast<WfToplevel::impl*> (data);
-}
+{}
 
 static void handle_toplevel_closed(void *data, toplevel_t handle)
 {

@@ -20,7 +20,6 @@ struct Layout
 
 class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
 {
-    // Gtk::Label label;
     Gtk::Button button;
     sigc::connection btn_sig;
 

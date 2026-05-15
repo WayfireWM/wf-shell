@@ -178,9 +178,6 @@ void StatusNotifierItem::setup_tooltip()
         {
             tooltip->set_icon(pixbuf);
             icon_shown = true;
-        } else
-        {
-            // tooltip->set_icon_from_name(tooltip_icon_name);
         }
 
         tooltip->set_markup(tooltip_label_text);
