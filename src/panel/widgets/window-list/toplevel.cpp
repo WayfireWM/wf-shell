@@ -400,11 +400,9 @@ class WayfireToplevel::impl
     Glib::RefPtr<Gio::Menu> menu;
     Glib::RefPtr<Gio::MenuItem> minimize, maximize, close;
     Glib::RefPtr<Gio::SimpleAction> minimize_action, maximize_action, close_action;
-    // Gtk::Box menu_box;
     Gtk::Box button_contents;
     Gtk::Image image;
     Gtk::Label label;
-    // Gtk::PopoverMenu menu;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
     std::vector<sigc::connection> signals;
     sigc::connection button_leave_signal;
@@ -675,11 +673,6 @@ class WayfireToplevel::impl
 
     bool drag_paused()
     {
-        /*
-         *  auto gseat = Gdk::Display::get_default()->get_default_seat()->get_wl_seat();
-         *  //auto seat  = gdk_wayland_seat_get_wl_seat(gseat->gobj());
-         *  zwlr_foreign_toplevel_handle_v1_activate(handle, gseat);
-         */
         return false;
     }
 

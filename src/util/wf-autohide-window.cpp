@@ -523,7 +523,6 @@ void WayfireAutohidingWindow::start_draw_timer()
 gboolean WayfireAutohidingWindow::update_animation(Glib::RefPtr<Gdk::FrameClock> frame_clock)
 {
     update_margin();
-    // this->queue_draw();
     // Once we've finished fading, stop this callback
     return autohide_animation.running() ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
