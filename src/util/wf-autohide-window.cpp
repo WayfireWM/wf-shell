@@ -9,15 +9,14 @@
 #include <iostream>
 #include <assert.h>
 
-#define AUTOHIDE_SHOW_DELAY 300
-#define AUTOHIDE_HIDE_DELAY 500
-
 WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     const std::string& section) :
     position{section + "/position"},
     y_position{WfOption<int>{section + "/autohide_duration"}},
     edge_offset{section + "/edge_offset"},
-    autohide_opt{section + "/autohide"}
+    autohide_opt{section + "/autohide"},
+    autohide_show_delay{section + "/autohide_show_delay"},
+    autohide_hide_delay{section + "/autohide_hide_delay"}
 {
     this->output = output;
     this->set_decorated(false);
@@ -135,7 +134,7 @@ void WayfireAutohidingWindow::m_show_uncertain()
         {
             schedule_hide(0);
             return false;
-        }, AUTOHIDE_HIDE_DELAY);
+        }, autohide_hide_delay);
     }
 }
 
@@ -218,7 +217,7 @@ void WayfireAutohidingWindow::setup_hotspot()
         ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP : ZWF_OUTPUT_V2_HOTSPOT_EDGE_BOTTOM;
 
     this->edge_hotspot = zwf_output_v2_create_hotspot(output->output,
-        edge, edge_offset, AUTOHIDE_SHOW_DELAY);
+        edge, edge_offset, autohide_show_delay);
 
     this->panel_hotspot = zwf_output_v2_create_hotspot(output->output,
         edge, this->get_allocated_height(), 0); // immediate
@@ -254,7 +253,7 @@ void WayfireAutohidingWindow::setup_hotspot()
         this->input_inside_panel = false;
         if (this->should_autohide())
         {
-            this->schedule_hide(AUTOHIDE_HIDE_DELAY);
+            this->schedule_hide(autohide_hide_delay);
         }
     };
 
@@ -437,7 +436,7 @@ void WayfireAutohidingWindow::unset_active_popover(WayfireMenuButton& button)
 
     if (should_autohide())
     {
-        schedule_hide(AUTOHIDE_HIDE_DELAY);
+        schedule_hide(autohide_hide_delay);
     }
 }
 
