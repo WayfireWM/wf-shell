@@ -32,7 +32,7 @@
     #include "widgets/volume.hpp"
 #endif
 #ifdef HAVE_WIREPLUMBER
-    #include "widgets/wp-mixer/wp-mixer.hpp"
+    #include "widgets/mixer/mixer.hpp"
 #endif
 #include "widgets/window-list/window-list.hpp"
 #include "widgets/notifications/notification-center.hpp"
@@ -243,7 +243,7 @@ class WayfirePanel::impl
         if (name == "wp-mixer")
         {
 #ifdef HAVE_WIREPLUMBER
-            return Widget(new WayfireWpMixer());
+            return Widget(new WayfireMixer());
 #else
             std::cerr << "Built without wireplumber support, mixer widget "
                          " is not available." << std::endl;
@@ -596,7 +596,7 @@ void WayfirePanelApp::on_activate()
         {"panel/battery_icon_size", ".battery image"},
         {"panel/network_icon_size", ".network"},
         {"panel/volume_icon_size", ".volume"},
-        {"panel/wp_icon_size", ".wp-mixer"},
+        {"panel/wp_icon_size", ".mixer"},
         {"panel/wp_popup_icon_size", ".mute-toggle, .default-button"},
         {"panel/notifications_icon_size", ".notification-center "},
         {"panel/tray_icon_size", ".tray-button"}

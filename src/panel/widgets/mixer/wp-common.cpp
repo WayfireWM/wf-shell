@@ -119,7 +119,7 @@ void WpCommon::on_all_plugins_loaded()
     wp_core_install_object_manager(instance->core, instance->object_manager);
 }
 
-void WpCommon::catch_up_to_current_state(WayfireWpMixer *widget)
+void WpCommon::catch_up_to_current_state(WayfireMixer *widget)
 {
     // catch up to objects already registered by the manager
     WpIterator *reg_objs = wp_object_manager_new_iterator(object_manager);
@@ -131,29 +131,29 @@ void WpCommon::catch_up_to_current_state(WayfireWpMixer *widget)
     }
 }
 
-void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *widget)
+void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireMixer *widget)
 {
     // adds a new control to the appropriate section of a widget
 
     const std::string_view type{wp_pipewire_object_get_property(object, PW_KEY_MEDIA_CLASS)};
 
     bool recheck_default = false;
-    WfWpControl *control;
+    MixerControl *control;
     Gtk::Box *which_box;
     if (type == "Audio/Sink")
     {
         which_box = &(widget->sinks_box);
-        control   = new WfWpControlDevice(object, widget);
+        control   = new MixerControlDevice(object, widget);
         recheck_default = true;
     } else if (type == "Audio/Source")
     {
         which_box = &(widget->sources_box);
-        control   = new WfWpControlDevice(object, widget);
+        control   = new MixerControlDevice(object, widget);
         recheck_default = true;
     } else if (type == "Stream/Output/Audio")
     {
         which_box = &(widget->streams_box);
-        control   = new WfWpControl(object, (WayfireWpMixer*)widget);
+        control   = new MixerControl(object, (WayfireMixer*)widget);
     } else
     {
         std::cout << "Could not match pipewire object media class, ignoring\n";
@@ -161,7 +161,7 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *wi
     }
 
     control->init();
-    widget->objects_to_controls.insert({object, std::unique_ptr<WfWpControl>(control)});
+    widget->objects_to_controls.insert({object, std::unique_ptr<MixerControl>(control)});
     which_box->append((Gtk::Widget&)*control);
 
     // we added new controls, so maybe one of them is a default
@@ -199,7 +199,7 @@ void WpCommon::on_object_added(WpObjectManager *manager, gpointer object, gpoint
 
 void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 {
-    // update the visual of the appropriate WfWpControl according to external changes on all widgets
+    // update the visual of the appropriate MixerControl according to external changes on all widgets
 
     auto info = instance->get_volume_and_mute(id);
 
@@ -209,7 +209,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
     // for each widget
     for (auto widget : instance->widgets)
     {
-        WfWpControl *control = nullptr;
+        MixerControl *control = nullptr;
 
         // first, find the appropriate control
         for (auto & it : widget->objects_to_controls)
@@ -281,7 +281,7 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
 
         if (widget->quick_target &&
             (!widget->popover->is_visible() ||
-             (widget->popover->get_child() != (WfWpControl*)&widget->quick_target)))
+             (widget->popover->get_child() != (MixerControl*)&widget->quick_target)))
         {
             // put the quick_target in the popover and show
             widget->popover->set_child(*widget->quick_target);
@@ -324,7 +324,7 @@ void WpCommon::on_default_nodes_changed(gpointer default_nodes_api, gpointer dat
         for (const auto & entry : widget->objects_to_controls)
         {
             auto obj  = WP_PIPEWIRE_OBJECT(entry.first);
-            auto ctrl = static_cast<WfWpControlDevice*>(entry.second.get());
+            auto ctrl = static_cast<MixerControlDevice*>(entry.second.get());
 
             guint32 bound_id = wp_proxy_get_bound_id(WP_PROXY(obj));
             if (bound_id == SPA_ID_INVALID)
@@ -378,7 +378,7 @@ void WpCommon::on_object_removed(WpObjectManager *manager, gpointer object, gpoi
             return;
         }
 
-        WfWpControl *control = it->second.get();
+        MixerControl *control = it->second.get();
         auto *box = (Gtk::Box*)control->get_parent();
         if (box)
         {
@@ -396,13 +396,13 @@ void WpCommon::on_object_removed(WpObjectManager *manager, gpointer object, gpoi
     }
 }
 
-void WpCommon::add_widget(WayfireWpMixer *widget)
+void WpCommon::add_widget(WayfireMixer *widget)
 {
     widgets.push_back(widget);
     catch_up_to_current_state(widget);
 }
 
-void WpCommon::rem_widget(WayfireWpMixer *widget)
+void WpCommon::rem_widget(WayfireMixer *widget)
 {
     widgets.erase(std::find(widgets.begin(), widgets.end(), widget));
 }

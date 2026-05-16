@@ -9,7 +9,7 @@ extern "C" {
 
 #include "widget.hpp"
 #include "wf-popover.hpp"
-#include "wf-wp-control.hpp"
+#include "mixer-control.hpp"
 #include "wp-common.hpp"
 
 enum class QuickTargetChoice // config
@@ -19,9 +19,9 @@ enum class QuickTargetChoice // config
     DEFAULT_SOURCE,
 };
 
-class WfWpControl;
+class MixerControl;
 
-class WayfireWpMixer : public WayfireWidget
+class WayfireMixer : public WayfireWidget
 {
   private:
     void init(Gtk::Box *container) override;
@@ -63,13 +63,13 @@ class WayfireWpMixer : public WayfireWidget
      * configured by panel/wp_quick_target_choice. idea: add pinning?
      */
     QuickTargetChoice quick_target_choice;
-    std::unique_ptr<WfWpControl> quick_target;
-    void set_quick_target_from(WfWpControl *from);
+    std::unique_ptr<MixerControl> quick_target;
+    void set_quick_target_from(MixerControl *from);
 
     Gtk::Box master_box, sinks_box, sources_box, streams_box;
     // idea: add a category for stuff that listens to an audio source
 
-    std::map<WpPipewireObject*, std::unique_ptr<WfWpControl>> objects_to_controls;
+    std::map<WpPipewireObject*, std::unique_ptr<MixerControl>> objects_to_controls;
 
     /** Update the icon based on volume and muted state of the quick_target widget */
     void update_icon();
@@ -84,5 +84,5 @@ class WayfireWpMixer : public WayfireWidget
 
     void handle_config_reload() override;
 
-    virtual ~WayfireWpMixer();
+    virtual ~WayfireMixer();
 };
