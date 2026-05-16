@@ -32,8 +32,8 @@ class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerPasswordPlugin();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
     void submit_user_password(std::string password);
@@ -45,6 +45,6 @@ class WayfireLockerPasswordPlugin : public WayfireLockerPlugin
     sigc::connection timeout;
     void add_reply(std::string text);
 
-    std::unordered_map<int, std::shared_ptr<WayfireLockerPasswordPluginWidget>> widgets;
+    std::unordered_map<std::string, std::shared_ptr<WayfireLockerPasswordPluginWidget>> widgets;
     std::string submitted_password = "";
 };

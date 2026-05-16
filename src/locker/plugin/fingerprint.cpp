@@ -367,7 +367,7 @@ WayfireLockerFingerprintPluginWidget::WayfireLockerFingerprintPluginWidget(std::
     image_print.add_css_class("fingerprint-icon");
     image_overlay.add_css_class("fingerprint-overlay-image");
     label.add_css_class("fingerprint-text");
-    if (color_contents != "")
+    if (!color_contents.empty())
     {
         image_overlay.add_css_class(color_contents);
     }
@@ -393,7 +393,7 @@ void WayfireLockerFingerprintPlugin::lockout_changed(bool lockout)
     }
 }
 
-void WayfireLockerFingerprintPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerFingerprintPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerFingerprintPluginWidget(label_contents, icon_contents,
         color_contents));
@@ -406,7 +406,7 @@ void WayfireLockerFingerprintPlugin::add_output(int id, std::shared_ptr<WayfireL
     grid->attach(*widget, position);
 }
 
-void WayfireLockerFingerprintPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerFingerprintPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     grid->remove(*widgets[id]);
     widgets.erase(id);
@@ -426,7 +426,10 @@ void WayfireLockerFingerprintPlugin::update(std::string label, std::string image
         widget->remove_css_class("info");
         widget->remove_css_class("bad");
         widget->remove_css_class("good");
-        widget->add_css_class(color);
+        if (!color.empty())
+        {
+            widget->add_css_class(color);
+        }
     }
 }
 

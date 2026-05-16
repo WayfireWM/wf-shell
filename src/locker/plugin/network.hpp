@@ -29,12 +29,12 @@ class WayfireLockerNetworkPlugin : public WayfireLockerPlugin
 
   public:
     WayfireLockerNetworkPlugin();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
     void set_connection(std::shared_ptr<Network> network);
-    std::unordered_map<int, std::shared_ptr<WayfireLockerNetworkPluginWidget>> widgets;
+    std::unordered_map<std::string, std::shared_ptr<WayfireLockerNetworkPluginWidget>> widgets;
     std::shared_ptr<NetworkManager> network_manager;
 
 

@@ -23,8 +23,8 @@ class WayfireLockerWeatherPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerWeatherPlugin();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
 
@@ -40,7 +40,7 @@ class WayfireLockerWeatherPlugin : public WayfireLockerPlugin
     void hide();
     void show();
 
-    std::unordered_map<int, std::shared_ptr<WayfireLockerWeatherPluginWidget>> weather_widgets;
+    std::unordered_map<std::string, std::shared_ptr<WayfireLockerWeatherPluginWidget>> weather_widgets;
     std::string label_contents = "";
     std::string icon_path = "";
     bool shown;

@@ -27,8 +27,8 @@ class WayfireLockerPinPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerPinPlugin();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
     void lockout_changed(bool lockout) override;
@@ -40,7 +40,7 @@ class WayfireLockerPinPlugin : public WayfireLockerPlugin
     void add_digit(std::string digit);
     std::string sha512(const std::string input);
 
-    std::unordered_map<int, Glib::RefPtr<WayfireLockerPinPluginWidget>> pinpads;
+    std::unordered_map<std::string, Glib::RefPtr<WayfireLockerPinPluginWidget>> pinpads;
 
     std::string pin     = "";
     std::string pinhash = "nope";

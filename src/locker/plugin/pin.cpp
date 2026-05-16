@@ -134,7 +134,7 @@ void WayfireLockerPinPlugin::init()
 void WayfireLockerPinPlugin::deinit()
 {}
 
-void WayfireLockerPinPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerPinPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     if (disabled)
     {
@@ -148,7 +148,7 @@ void WayfireLockerPinPlugin::add_output(int id, std::shared_ptr<WayfireLockerGri
     grid->attach(*pinpad, position);
 }
 
-void WayfireLockerPinPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerPinPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     if (disabled)
     {

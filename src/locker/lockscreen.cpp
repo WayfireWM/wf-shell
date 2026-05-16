@@ -4,7 +4,9 @@
 #include "lockscreen.hpp"
 
 
-WayfireLockerAppLockscreen::WayfireLockerAppLockscreen(std::string background_path)
+WayfireLockerAppLockscreen::WayfireLockerAppLockscreen(std::string connection_name,
+    std::string background_path) : connection_name(
+        connection_name)
 {
     grid = std::make_shared<WayfireLockerGrid>();
     set_child(overlay);
@@ -16,11 +18,11 @@ WayfireLockerAppLockscreen::WayfireLockerAppLockscreen(std::string background_pa
     grid->set_expand(true);
 
     /* Prepare background */
-    Glib::signal_idle().connect([this, background_path] ()
+    signals.push_back(Glib::signal_idle().connect([this, background_path] ()
     {
         background.show_image(background_path);
         return G_SOURCE_REMOVE;
-    });
+    }));
 
     auto wf_background_cb = [this] ()
     {

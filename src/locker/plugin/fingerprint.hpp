@@ -44,8 +44,8 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     void on_device_acquired(const Glib::RefPtr<Gio::AsyncResult> & result);
     void start_fingerprint_scanning();
     void stop_fingerprint_scanning();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
     void lockout_changed(bool lockout) override;
@@ -57,7 +57,7 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
     bool show_state = false;
     void update(std::string text, std::string image, std::string color);
 
-    std::map<int, std::shared_ptr<WayfireLockerFingerprintPluginWidget>> widgets;
+    std::map<std::string, std::shared_ptr<WayfireLockerFingerprintPluginWidget>> widgets;
     std::string icon_contents  = "";
     std::string label_contents = "";
     std::string color_contents = "";

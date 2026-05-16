@@ -232,14 +232,14 @@ void WayfireLockerApp::on_activate()
                 plugin->init();
                 for (auto & it : window_list)
                 {
-                    int id = it.first;
+                    std::string id = it.first;
                     plugin->add_output(id, it.second->grid);
                 }
             } else
             {
                 for (auto & it : window_list)
                 {
-                    int id = it.first;
+                    std::string id = it.first;
                     plugin->remove_output(id, it.second->grid);
                 }
 
@@ -251,8 +251,8 @@ void WayfireLockerApp::on_activate()
         {
             for (auto & it : window_list)
             {
-                int id = it.first;
-                auto window = it.second;
+                std::string id = it.first;
+                auto window    = it.second;
                 plugin->remove_output(id, window->grid);
                 plugin->add_output(id, window->grid);
             }
@@ -291,19 +291,30 @@ void WayfireLockerApp::deinit_plugins()
 /* A new monitor has been added to the lockscreen */
 void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
 {
-    int id = window_id_count;
-    window_id_count++;
+    auto connection_name = gdk_monitor_get_connector(monitor);
+    if (connection_name == NULL)
+    {
+        connection_name = "NULL";
+    }
+
+    if (window_list.count(std::string(connection_name)) != 0)
+    {
+        std::cerr << "Creating lockscreen for " << connection_name << " but it already exists. Error!";
+        return;
+    }
+
     /* Create lockscreen with a grid for contents */
-    window_list.emplace(id, new WayfireLockerAppLockscreen(background_path));
-    auto window = window_list[id];
-    window->add_css_class("wf-locker-" + std::string(gdk_monitor_get_connector(monitor)));
+    window_list.emplace(connection_name, new WayfireLockerAppLockscreen(connection_name, background_path));
+    auto window = window_list[connection_name];
+    std::cout << "Monitor added : " << connection_name << std::endl;
+    window->add_css_class("wf-locker-" + std::string(connection_name));
 
     for (auto& it : plugins)
     {
         Plugin plugin = it.second;
         if (plugin->enable)
         {
-            it.second->add_output(id, window->grid);
+            it.second->add_output(connection_name, window->grid);
         }
     }
 
@@ -320,14 +331,15 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
         }
     }, true));
 
-    windows_signals.push_back(window->signal_close_request().connect([this, id] ()
+    windows_signals.push_back(window->signal_unrealize().connect([this, window] ()
     {
+        std::cout << "Monitor removed : " << window->connection_name << std::endl;
         for (auto& it : plugins)
         {
             Plugin plugin = it.second;
             if (plugin->enable)
             {
-                plugin->remove_output(id, window_list[id]->grid);
+                plugin->remove_output(window->connection_name, window->grid);
             }
         }
 
@@ -341,7 +353,8 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
             }
         }
 
-        return false;
+        window->disconnect();
+        window_list.erase(window->connection_name);
     }, false));
     if (is_debug())
     {

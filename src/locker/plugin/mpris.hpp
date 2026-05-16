@@ -71,13 +71,13 @@ class WayfireLockerMPRISPlugin : public WayfireLockerPlugin
   private:
     Glib::RefPtr<Gio::DBus::Proxy> manager_proxy;
     std::map<std::string, Glib::RefPtr<Gio::DBus::Proxy>> clients;
-    std::map<int, Glib::RefPtr<WayfireLockerMPRISCollective>> widgets;
+    std::map<std::string, Glib::RefPtr<WayfireLockerMPRISCollective>> widgets;
     sigc::connection signal;
 
   public:
     WayfireLockerMPRISPlugin();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
 

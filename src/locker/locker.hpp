@@ -35,11 +35,10 @@ class WayfireLockerApp : public WayfireShellApp
     GtkSessionLockInstance *lock;
     std::map<std::string, Plugin> plugins = {};
 
-    bool m_is_debug     = false;
-    bool m_is_locked    = false;
-    bool instant_lock   = false;
-    int window_id_count = 0;
-    int bad_auth_count  = 0;
+    bool m_is_debug    = false;
+    bool m_is_locked   = false;
+    bool instant_lock  = false;
+    int bad_auth_count = 0;
     bool lockout = false;
     std::string cache_file = "";
     std::string background_path = "";
@@ -102,5 +101,5 @@ class WayfireLockerApp : public WayfireShellApp
      */
     void kill_parent(ExitType);
 
-    std::map<int, std::shared_ptr<WayfireLockerAppLockscreen>> window_list;
+    std::map<std::string, std::shared_ptr<WayfireLockerAppLockscreen>> window_list;
 };

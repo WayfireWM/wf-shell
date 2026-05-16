@@ -20,7 +20,7 @@ WayfireLockerInstantPluginWidget::WayfireLockerInstantPluginWidget() :
     button.add_css_class("instant-unlock");
 }
 
-void WayfireLockerInstantPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerInstantPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerInstantPluginWidget());
     auto widget = widgets[id];
@@ -32,7 +32,7 @@ void WayfireLockerInstantPlugin::add_output(int id, std::shared_ptr<WayfireLocke
     }, false);
 }
 
-void WayfireLockerInstantPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerInstantPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     grid->remove(*widgets[id]);
     widgets.erase(id);
