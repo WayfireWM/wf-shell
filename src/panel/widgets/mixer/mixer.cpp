@@ -140,10 +140,6 @@ void WayfireMixer::reload_config()
             if (button->get_popup_child() != (Gtk::Widget*)&master_box)
             {
                 button->set_popup_child(master_box);
-                // popdown so that when the click is processed, the popover is down, and thus pops up
-                // not the prettiest result, as it visibly closes instead of just replacing, but i’m not sure
-                // how to make it better
-                button->popdown();
             }
         });
     }
@@ -163,8 +159,6 @@ void WayfireMixer::reload_config()
             if (button->get_popup_child() != quick_target.get())
             {
                 button->set_popup_child(*quick_target);
-                // same as above
-                button->popdown();
             }
         });
     }
