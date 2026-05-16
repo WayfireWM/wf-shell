@@ -3,12 +3,12 @@
 #include <gtkmm.h>
 #include <mutex>
 
-#include "wp-mixer.hpp"
+#include "mixer.hpp"
 #include "animated-scale.hpp"
 
-class WayfireWpMixer;
+class WayfireMixer;
 
-class WfWpControl : public Gtk::Grid
+class MixerControl : public Gtk::Grid
 {
     // Custom grid to facilitate handling
 
@@ -16,7 +16,7 @@ class WfWpControl : public Gtk::Grid
     WayfireAnimatedScale scale;
     Gtk::Image volume_icon;
     sigc::connection mute_conn;
-    WayfireWpMixer *parent;
+    WayfireMixer *parent;
     std::shared_ptr<Gtk::GestureClick> middle_click_mute, right_click_mute;
     sigc::connection middle_conn, right_conn;
     std::vector<sigc::connection> signals;
@@ -25,8 +25,8 @@ class WfWpControl : public Gtk::Grid
     WfOption<int> slider_length{"panel/wp_slider_length"};
 
   public:
-    WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget);
-    ~WfWpControl();
+    MixerControl(WpPipewireObject *obj, WayfireMixer *parent_widget);
+    ~MixerControl();
     virtual void init();
 
     WpPipewireObject *object;
@@ -41,14 +41,14 @@ class WfWpControl : public Gtk::Grid
 
     virtual void handle_config_reload();
 
-    std::unique_ptr<WfWpControl> copy();
+    std::unique_ptr<MixerControl> copy();
 };
 
-// idea: would be neat to have a WfWpControlStream class that presents a dropdown to select which sink a
+// idea: would be neat to have a MixerControlStream class that presents a dropdown to select which sink a
 // stream goes to
 
 // sinks and sources: a control with a button to set itself as default for it’s category
-class WfWpControlDevice : public WfWpControl
+class MixerControlDevice : public MixerControl
 {
   private:
 
@@ -57,9 +57,9 @@ class WfWpControlDevice : public WfWpControl
     void update_icons_pos();
 
   public:
-    WfWpControlDevice(WpPipewireObject *obj, WayfireWpMixer *parent_widget) : WfWpControl(obj, parent_widget)
+    MixerControlDevice(WpPipewireObject *obj, WayfireMixer *parent_widget) : MixerControl(obj, parent_widget)
     {}
-    ~WfWpControlDevice();
+    ~MixerControlDevice();
     void init();
 
     Gtk::ToggleButton default_btn;

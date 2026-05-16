@@ -1,18 +1,18 @@
 #include <pipewire/keys.h>
 #include <gtkmm.h>
 
-#include "wf-wp-control.hpp"
+#include "mixer-control.hpp"
 #include "icon-select.hpp"
 
 #define ICON(volume) icon_from_range(volume_icons, volume)
 
-WfWpControl::WfWpControl(WpPipewireObject *obj, WayfireWpMixer *parent_widget)
+MixerControl::MixerControl(WpPipewireObject *obj, WayfireMixer *parent_widget)
 {
     object = obj;
     parent = parent_widget;
 }
 
-WfWpControl::~WfWpControl()
+MixerControl::~MixerControl()
 {
     mute_conn.disconnect();
     middle_conn.disconnect();
@@ -23,7 +23,7 @@ WfWpControl::~WfWpControl()
     }
 }
 
-void WfWpControl::init()
+void MixerControl::init()
 {
     guint32 id = wp_proxy_get_bound_id(WP_PROXY(object));
 
@@ -128,19 +128,19 @@ void WfWpControl::init()
     update_icon();
 }
 
-void WfWpControl::set_btn_status_no_callbk(bool state)
+void MixerControl::set_btn_status_no_callbk(bool state)
 {
     mute_conn.block(true);
     button.set_active(state);
     mute_conn.block(false);
 }
 
-void WfWpControl::set_scale_target_value(double volume)
+void MixerControl::set_scale_target_value(double volume)
 {
     scale.set_target_value(volume);
 }
 
-void WfWpControl::update_icon()
+void MixerControl::update_icon()
 {
     if (button.get_active())
     {
@@ -153,13 +153,13 @@ void WfWpControl::update_icon()
     volume_icon.set_from_icon_name(ICON(get_scale_target_value()));
 }
 
-double WfWpControl::get_scale_target_value()
+double MixerControl::get_scale_target_value()
 {
     return scale.get_target_value();
 }
 
 // attaches elements to the grid at the appropriate place
-void WfWpControl::update_icons_pos()
+void MixerControl::update_icons_pos()
 {
     static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
 
@@ -176,7 +176,7 @@ void WfWpControl::update_icons_pos()
     }
 }
 
-void WfWpControl::update_gestures()
+void MixerControl::update_gestures()
 {
     // the setting says that it is for quick target, but let’s have all the muting consistent
     static WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
@@ -199,7 +199,7 @@ void WfWpControl::update_gestures()
     }
 }
 
-void WfWpControl::handle_config_reload()
+void MixerControl::handle_config_reload()
 {
     remove(label);
     remove(scale);
@@ -212,17 +212,17 @@ void WfWpControl::handle_config_reload()
 }
 
 // used to make a copy to the face of the widget
-std::unique_ptr<WfWpControl> WfWpControl::copy()
+std::unique_ptr<MixerControl> MixerControl::copy()
 {
-    return std::make_unique<WfWpControl>(object, parent);
+    return std::make_unique<MixerControl>(object, parent);
 }
 
-WfWpControlDevice::~WfWpControlDevice()
+MixerControlDevice::~MixerControlDevice()
 {
     def_conn.disconnect();
 }
 
-void WfWpControlDevice::init()
+void MixerControlDevice::init()
 {
     add_css_class("wp-mixer-control");
     default_btn.add_css_class("default-button");
@@ -247,10 +247,10 @@ void WfWpControlDevice::init()
         WpCommon::get().set_default(object);
     });
 
-    WfWpControl::init();
+    MixerControl::init();
 }
 
-void WfWpControlDevice::set_def_status_no_callbk(bool state)
+void MixerControlDevice::set_def_status_no_callbk(bool state)
 {
     if (state)
     {
@@ -265,9 +265,9 @@ void WfWpControlDevice::set_def_status_no_callbk(bool state)
     def_conn.block(false);
 }
 
-void WfWpControlDevice::update_icons_pos()
+void MixerControlDevice::update_icons_pos()
 {
-    WfWpControl::update_icons_pos();
+    MixerControl::update_icons_pos();
     static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
 
     if (icons_on_left)
@@ -279,8 +279,8 @@ void WfWpControlDevice::update_icons_pos()
     }
 }
 
-void WfWpControlDevice::handle_config_reload()
+void MixerControlDevice::handle_config_reload()
 {
     remove(default_btn);
-    WfWpControl::handle_config_reload();
+    MixerControl::handle_config_reload();
 }

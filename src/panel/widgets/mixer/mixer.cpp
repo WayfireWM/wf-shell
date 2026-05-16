@@ -2,33 +2,33 @@
 #include <wp/proxy-interfaces.h>
 #include <wp/proxy.h>
 
-#include "wp-mixer.hpp"
-#include "wf-wp-control.hpp"
+#include "mixer.hpp"
+#include "mixer-control.hpp"
 #include "icon-select.hpp"
 
 #define ICON(volume) icon_from_range(volume_icons, volume)
 
-bool WayfireWpMixer::on_popover_timeout(int timer)
+bool WayfireMixer::on_popover_timeout(int timer)
 {
     popover_timeout.disconnect();
     popover->popdown();
     return false;
 }
 
-void WayfireWpMixer::check_set_popover_timeout()
+void WayfireMixer::check_set_popover_timeout()
 {
     popover_timeout.disconnect();
 
     popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireWpMixer::on_popover_timeout), 0), timeout * 1000);
+        &WayfireMixer::on_popover_timeout), 0), timeout * 1000);
 }
 
-void WayfireWpMixer::cancel_popover_timeout()
+void WayfireMixer::cancel_popover_timeout()
 {
     popover_timeout.disconnect();
 }
 
-void WayfireWpMixer::reload_config()
+void WayfireMixer::reload_config()
 {
     // adjust margins and spacing
     auto set_spacing = [&] (Gtk::Box& box)
@@ -202,7 +202,7 @@ void WayfireWpMixer::reload_config()
     }
 }
 
-void WayfireWpMixer::handle_config_reload()
+void WayfireMixer::handle_config_reload()
 {
     left_conn.disconnect();
     middle_conn.disconnect();
@@ -215,7 +215,7 @@ void WayfireWpMixer::handle_config_reload()
     }
 }
 
-void WayfireWpMixer::init(Gtk::Box *container)
+void WayfireMixer::init(Gtk::Box *container)
 {
     // sets up the "widget part"
 
@@ -329,7 +329,7 @@ void WayfireWpMixer::init(Gtk::Box *container)
     WpCommon::get().add_widget(this);
 }
 
-void WayfireWpMixer::update_icon()
+void WayfireMixer::update_icon()
 {
     // depends on quick_target widget
     if (!quick_target)
@@ -347,14 +347,14 @@ void WayfireWpMixer::update_icon()
     main_image.set_from_icon_name(ICON(quick_target->get_scale_target_value()));
 }
 
-void WayfireWpMixer::set_quick_target_from(WfWpControl *from)
+void WayfireMixer::set_quick_target_from(MixerControl *from)
 {
     quick_target = from->copy();
     quick_target->init();
     button->set_tooltip_text(quick_target->label.get_text());
 }
 
-WayfireWpMixer::~WayfireWpMixer()
+WayfireMixer::~WayfireMixer()
 {
     WpCommon::get().rem_widget(this);
     gtk_widget_unparent(GTK_WIDGET(popover->gobj()));

@@ -8,8 +8,9 @@ extern "C" {
 #include <wp/wp.h>
 }
 
-#include "wp-mixer.hpp"
-class WayfireWpMixer;
+#include "mixer.hpp"
+
+class WayfireMixer;
 
 class WpCommon
 {
@@ -23,13 +24,13 @@ class WpCommon
     WpPlugin *mixer_api = nullptr;
     WpPlugin *default_nodes_api = nullptr;
 
-    std::vector<WayfireWpMixer*> widgets;
+    std::vector<WayfireMixer*> widgets;
 
-    void catch_up_to_current_state(WayfireWpMixer *widget);
+    void catch_up_to_current_state(WayfireMixer *widget);
     static void on_mixer_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
     static void on_default_nodes_plugin_loaded(WpCore *core, GAsyncResult *res, gpointer data);
     static void on_all_plugins_loaded();
-    void add_object_to_widget(WpPipewireObject *object, WayfireWpMixer *widget);
+    void add_object_to_widget(WpPipewireObject *object, WayfireMixer *widget);
     static void on_object_added(WpObjectManager *manager, gpointer object, gpointer data);
     static void on_mixer_changed(gpointer mixer_api, guint id, gpointer data);
     static void on_default_nodes_changed(gpointer default_nodes_api, gpointer data);
@@ -37,8 +38,8 @@ class WpCommon
 
   public:
 
-    void add_widget(WayfireWpMixer *widget);
-    void rem_widget(WayfireWpMixer *widget);
+    void add_widget(WayfireMixer *widget);
+    void rem_widget(WayfireMixer *widget);
 
     void re_evaluate_def_nodes();
 
