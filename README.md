@@ -26,19 +26,31 @@ A full tree of the css classes is available [here](https://github.com/WayfireWM/
 
 ## Installation
 
-[![Distribution packages](https://repology.org/badge/vertical-allrepos/wf-shell.svg)](https://repology.org/project/wf-shell/versions)
+### Packages
+
+[![](https://repology.org/badge/vertical-allrepos/wf-shell.svg)](https://repology.org/project/wf-shell/versions)
 
 ### Building
 
-wf-shell needs the core wayland libraries and protocols (`wayland-devel` and `wayland-protocols-devel` for Fedora), gtkmm-4.0 and [wf-config](https://github.com/WayfireWM/wf-config)
+wf-shell depends on the wayland and wayfire protocol and libraries, gtkmm4, [wf-config](https://github.com/WayfireWM/wf-config), pam, dbusmenu-gtk, openssl, epoxy, xkbregistry and inotify.
 
-Certain functionality is optional:
+gtk4-layer-shell and wf-json are built as subprojects if they are not found.
+
+Certain features are optionally built :
 - panel wp-mixer widget, built if pipewire and wireplumber libraries are found
 - panel/locker pulseaudio volume widgets, built if libpulse is found
+- live previews for window-list widget, built if gbm and libdrm are found
 - panel/locker weather widgets, built only if specified
 
-To build and install, like any meson project:
+For the following distributions, these are the names of the packages you will need :
 
+| Distribution | Packages |
+| ------------ | -------- |
+| Ubuntu | `git gcc pkgconf meson ninja wayire-dev libgtkmm-4.0-dev libgirepository2.0-dev libgirepository1.0-dev vapigen libdbusmenu-glib-dev openssl-dev libyyjson-dev libinotifytools0-dev libepoxy-dev libpam0g-dev libaudit-dev libxkbregistry-dev libpipewire-0.3-dev libwireplumber-0.5-dev libgbm-dev libdrm-dev` |
+| Void | `git gcc pkconf meson ninja wayfire-devel gtkmm4-devel libgirepository-devel vala libdbusmenu-glib-devel openssl-dev pam-devel libepoxy-devel yyjson libxkbregistry pipewire-devel wireplumber-devel libgbm-devel libdrm-devel ` |
+| Alpine | `git g++ binutils pkgconf meson ninja musl-dev gtkmm4-dev vala gobject-introspection gobject-introspection-dev pulseaudio-dev pipewire-dev wireplumber-dev libdbusmenu-glib-dev alsa-lib-dev yyjson-dev linux-pam-dev util-linux-login openssl-dev` |
+
+To build and install, like any meson project:
 ```
 git clone https://github.com/WayfireWM/wf-shell && cd wf-shell
 meson build --prefix=/usr --buildtype=release
