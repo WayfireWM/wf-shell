@@ -101,7 +101,7 @@ WayfireLockerBatteryPluginWidget::WayfireLockerBatteryPluginWidget() :
     grid.attach(subtext, 0, 1, 2, 1);
 }
 
-void WayfireLockerBatteryPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerBatteryPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerBatteryPluginWidget());
     auto widget = widgets[id];
@@ -116,7 +116,7 @@ void WayfireLockerBatteryPlugin::add_output(int id, std::shared_ptr<WayfireLocke
     update_details();
 }
 
-void WayfireLockerBatteryPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerBatteryPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     grid->remove(*widgets[id]);
     widgets.erase(id);

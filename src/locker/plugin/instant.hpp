@@ -16,10 +16,10 @@ class WayfireLockerInstantPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerInstantPlugin();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
 
-    std::unordered_map<int, std::shared_ptr<WayfireLockerInstantPluginWidget>> widgets;
+    std::unordered_map<std::string, std::shared_ptr<WayfireLockerInstantPluginWidget>> widgets;
 };

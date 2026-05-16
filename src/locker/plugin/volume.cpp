@@ -69,7 +69,7 @@ WayfireLockerVolumePluginWidget::WayfireLockerVolumePluginWidget() :
     box.append(sink_button);
 }
 
-void WayfireLockerVolumePlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerVolumePlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerVolumePluginWidget());
     auto widget = widgets[id];
@@ -102,7 +102,7 @@ void WayfireLockerVolumePlugin::add_output(int id, std::shared_ptr<WayfireLocker
     update_button_images();
 }
 
-void WayfireLockerVolumePlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerVolumePlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     grid->remove(*widgets[id]);
     widgets.erase(id);

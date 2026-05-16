@@ -34,8 +34,8 @@ class WayfireLockerVolumePlugin : public WayfireLockerPlugin
 
   public:
     WayfireLockerVolumePlugin();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
     void update_button_images();
@@ -44,5 +44,5 @@ class WayfireLockerVolumePlugin : public WayfireLockerPlugin
     void on_default_sink_changed();
     void on_default_source_changed();
 
-    std::map<int, std::shared_ptr<WayfireLockerVolumePluginWidget>> widgets;
+    std::map<std::string, std::shared_ptr<WayfireLockerVolumePluginWidget>> widgets;
 };

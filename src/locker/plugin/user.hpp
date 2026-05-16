@@ -19,12 +19,12 @@ class WayfireLockerUserPlugin : public WayfireLockerPlugin
 {
   public:
     WayfireLockerUserPlugin();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
 
-    std::map<int, Glib::RefPtr<WayfireLockerUserPluginWidget>> widgets;
+    std::map<std::string, Glib::RefPtr<WayfireLockerUserPluginWidget>> widgets;
 
     std::string image_path = "";
 };

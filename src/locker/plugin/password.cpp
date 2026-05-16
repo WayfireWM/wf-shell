@@ -62,7 +62,7 @@ void WayfireLockerPasswordPluginWidget::lockout_changed(bool lockout)
     }
 }
 
-void WayfireLockerPasswordPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerPasswordPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerPasswordPluginWidget());
 
@@ -128,7 +128,7 @@ void WayfireLockerPasswordPluginWidget::add_reply(std::string message)
     }, 15));
 }
 
-void WayfireLockerPasswordPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerPasswordPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     grid->remove(*widgets[id]);
     widgets.erase(id);

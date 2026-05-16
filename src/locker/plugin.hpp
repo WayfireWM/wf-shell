@@ -20,8 +20,8 @@ class WayfireLockerPlugin
     {}
     WfOption<bool> enable, always;
     WfOption<std::string> position;
-    virtual void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)    = 0;
-    virtual void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) = 0;
+    virtual void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)    = 0;
+    virtual void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) = 0;
     virtual void init()   = 0; /* Called just before lockscreens shown. */
     virtual void deinit() = 0; /* Called after lockscreen unlocked. */
     virtual void lockout_changed(bool lockout)

@@ -15,7 +15,11 @@ WayfireLockerNetworkPluginWidget::WayfireLockerNetworkPluginWidget(std::string i
     box.append(label);
     image.set_from_icon_name(image_contents);
     label.set_label(label_contents);
-    label.add_css_class(css_contents);
+    if (!css_contents.empty())
+    {
+        label.add_css_class(css_contents);
+    }
+
     box.set_orientation(Gtk::Orientation::HORIZONTAL);
     set_child(box);
 }
@@ -53,7 +57,7 @@ void WayfireLockerNetworkPlugin::init()
 void WayfireLockerNetworkPlugin::deinit()
 {}
 
-void WayfireLockerNetworkPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerNetworkPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerNetworkPluginWidget(image_contents, label_contents, css_contents));
     auto widget = widgets[id];
@@ -65,7 +69,7 @@ void WayfireLockerNetworkPlugin::add_output(int id, std::shared_ptr<WayfireLocke
     set_connection(network_manager->get_primary_network());
 }
 
-void WayfireLockerNetworkPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerNetworkPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.erase(id);
 }

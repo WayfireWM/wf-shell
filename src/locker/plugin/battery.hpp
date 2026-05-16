@@ -47,8 +47,8 @@ class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
 
   public:
     WayfireLockerBatteryPlugin();
-    void add_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
+    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
     void init() override;
     void deinit() override;
     void hide();
@@ -61,5 +61,5 @@ class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
     void update_details();
 
 
-    std::map<int, std::shared_ptr<WayfireLockerBatteryPluginWidget>> widgets;
+    std::map<std::string, std::shared_ptr<WayfireLockerBatteryPluginWidget>> widgets;
 };

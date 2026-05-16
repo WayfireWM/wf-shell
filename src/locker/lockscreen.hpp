@@ -19,8 +19,9 @@ class WayfireLockerAppLockscreen : public Gtk::Window
     WfOption<bool> wf_background{"locker/background_image"};
     std::vector<sigc::connection> signals;
     int last_x = -1, last_y = -1;
+    std::string connection_name;
 
-    WayfireLockerAppLockscreen(std::string background_path);
+    WayfireLockerAppLockscreen(std::string connection_name, std::string background_path);
 
     void start_disappear_timer();
     void disconnect();

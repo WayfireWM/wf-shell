@@ -26,7 +26,7 @@ WayfireLockerClockPluginWidget::WayfireLockerClockPluginWidget(std::string conte
     label.set_justify(Gtk::Justification::CENTER);
 }
 
-void WayfireLockerClockPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerClockPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerClockPluginWidget(label_contents));
     auto widget = widgets[id];
@@ -34,7 +34,7 @@ void WayfireLockerClockPlugin::add_output(int id, std::shared_ptr<WayfireLockerG
     grid->attach(*widget, position);
 }
 
-void WayfireLockerClockPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerClockPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     grid->remove(*widgets[id]);
     widgets.erase(id);

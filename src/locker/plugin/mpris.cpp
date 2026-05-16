@@ -326,13 +326,13 @@ void WayfireLockerMPRISPlugin::deinit()
     manager_proxy = nullptr;
 }
 
-void WayfireLockerMPRISPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerMPRISPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     grid->remove(*widgets[id]);
     widgets.erase(id);
 }
 
-void WayfireLockerMPRISPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerMPRISPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerMPRISCollective());
 

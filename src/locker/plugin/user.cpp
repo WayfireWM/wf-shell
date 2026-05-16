@@ -74,14 +74,14 @@ WayfireLockerUserPluginWidget::WayfireLockerUserPluginWidget(std::string image_p
     box.append(label);
 }
 
-void WayfireLockerUserPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerUserPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     widgets.emplace(id, new WayfireLockerUserPluginWidget(image_path));
     auto widget = widgets[id];
     grid->attach(*widget, position);
 }
 
-void WayfireLockerUserPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerUserPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     grid->remove(*widgets[id]);
     widgets.erase(id);

@@ -45,7 +45,7 @@ WayfireLockerWeatherPluginWidget::WayfireLockerWeatherPluginWidget(std::string c
     box.append(image);
 }
 
-void WayfireLockerWeatherPlugin::add_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerWeatherPlugin::add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     weather_widgets.emplace(id, new WayfireLockerWeatherPluginWidget(label_contents, icon_path));
 
@@ -58,7 +58,7 @@ void WayfireLockerWeatherPlugin::add_output(int id, std::shared_ptr<WayfireLocke
     grid->attach(*weather_widget, position);
 }
 
-void WayfireLockerWeatherPlugin::remove_output(int id, std::shared_ptr<WayfireLockerGrid> grid)
+void WayfireLockerWeatherPlugin::remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid)
 {
     grid->remove(*weather_widgets[id]);
     weather_widgets.erase(id);
