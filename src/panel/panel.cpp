@@ -240,7 +240,7 @@ class WayfirePanel::impl
 #endif
         }
 
-        if (name == "wp-mixer")
+        if (name == "mixer")
         {
 #ifdef HAVE_WIREPLUMBER
             return Widget(new WayfireMixer());
@@ -596,8 +596,8 @@ void WayfirePanelApp::on_activate()
         {"panel/battery_icon_size", ".battery image"},
         {"panel/network_icon_size", ".network"},
         {"panel/volume_icon_size", ".volume"},
-        {"panel/wp_icon_size", ".mixer"},
-        {"panel/wp_popup_icon_size", ".mute-toggle, .default-button"},
+        {"panel/mixer_icon_size", ".mixer"},
+        {"panel/mixer_popup_icon_size", ".mute-toggle, .default-button"},
         {"panel/notifications_icon_size", ".notification-center "},
         {"panel/tray_icon_size", ".tray-button"}
     };

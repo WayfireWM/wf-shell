@@ -29,7 +29,7 @@ void MixerControl::init()
 
     // build layout
 
-    add_css_class("wp-mixer-control");
+    add_css_class("mixer-control");
     button.set_child(volume_icon);
     button.add_css_class("mute-toggle");
     button.add_css_class("widget-icon");
@@ -161,7 +161,7 @@ double MixerControl::get_scale_target_value()
 // attaches elements to the grid at the appropriate place
 void MixerControl::update_icons_pos()
 {
-    static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
+    static WfOption<bool> icons_on_left{"panel/mixer_icons_on_left"};
 
     if (icons_on_left)
     {
@@ -179,8 +179,8 @@ void MixerControl::update_icons_pos()
 void MixerControl::update_gestures()
 {
     // the setting says that it is for quick target, but let’s have all the muting consistent
-    static WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
-    static WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
+    static WfOption<std::string> str_wp_right_click_action{"panel/mixer_right_click_action"};
+    static WfOption<std::string> str_wp_middle_click_action{"panel/mixer_middle_click_action"};
 
     auto mute_action =
         [&] (int count, double x, double y)
@@ -224,7 +224,7 @@ MixerControlDevice::~MixerControlDevice()
 
 void MixerControlDevice::init()
 {
-    add_css_class("wp-mixer-control");
+    add_css_class("mixer-control");
     default_btn.add_css_class("default-button");
     default_btn.add_css_class("widget-icon");
     default_btn.add_css_class("flat");
@@ -268,7 +268,7 @@ void MixerControlDevice::set_def_status_no_callbk(bool state)
 void MixerControlDevice::update_icons_pos()
 {
     MixerControl::update_icons_pos();
-    static WfOption<bool> icons_on_left{"panel/wp_icons_on_left"};
+    static WfOption<bool> icons_on_left{"panel/mixer_icons_on_left"};
 
     if (icons_on_left)
     {

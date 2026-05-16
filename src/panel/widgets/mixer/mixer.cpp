@@ -45,10 +45,10 @@ void WayfireMixer::reload_config()
     master_box.set_orientation(stack_categories ? Gtk::Orientation::VERTICAL : Gtk::Orientation::HORIZONTAL);
 
     // big matching operation
-    static WfOption<std::string> str_quick_target_choice{"panel/wp_quick_target_choice"};
-    static WfOption<std::string> str_wp_left_click_action{"panel/wp_left_click_action"};
-    static WfOption<std::string> str_wp_right_click_action{"panel/wp_right_click_action"};
-    static WfOption<std::string> str_wp_middle_click_action{"panel/wp_middle_click_action"};
+    static WfOption<std::string> str_quick_target_choice{"panel/mixer_quick_target_choice"};
+    static WfOption<std::string> str_wp_left_click_action{"panel/mixer_left_click_action"};
+    static WfOption<std::string> str_wp_right_click_action{"panel/mixer_right_click_action"};
+    static WfOption<std::string> str_wp_middle_click_action{"panel/mixer_middle_click_action"};
 
     if (str_quick_target_choice.value() == "last_change")
     {
@@ -221,7 +221,7 @@ void WayfireMixer::init(Gtk::Box *container)
 
     button = std::make_unique<WayfireMenuButton>("panel");
     button->add_css_class("widget-icon");
-    button->add_css_class("wp-mixer");
+    button->add_css_class("mixer");
     button->add_css_class("flat");
     button->get_children()[0]->add_css_class("flat");
     button->set_child(main_image);
@@ -235,7 +235,7 @@ void WayfireMixer::init(Gtk::Box *container)
     popover = button->get_popover();
     popover->set_child(master_box);
     popover->set_autohide(false);
-    popover->add_css_class("wp-mixer-popover");
+    popover->add_css_class("mixer-popover");
 
     // scroll to change volume of the object targetted by the quick_target widget
     auto scroll_gesture = Gtk::EventControllerScroll::create();
