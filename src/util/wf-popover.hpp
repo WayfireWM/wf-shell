@@ -35,7 +35,8 @@ class WayfireMenuWidget : public Gtk::Box
 
     friend class WayfireAutohidingWindow;
 
-    sigc::connection click_signal, timer_signal;
+    sigc::connection timer_signal;
+    std::vector<sigc::connection> click_signals;
     std::vector<sigc::connection> signals;
     std::string class_name;
 
