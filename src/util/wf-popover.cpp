@@ -185,6 +185,8 @@ WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::stri
     scroll.set_propagate_natural_height(true);
     scroll.set_propagate_natural_width(true);
 
+    popover.set_autohide(false);
+
     gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(this->gobj()));
     gtk_widget_set_parent(GTK_WIDGET(menu.gobj()), GTK_WIDGET(this->gobj()));
     /* Moved to another menu */
