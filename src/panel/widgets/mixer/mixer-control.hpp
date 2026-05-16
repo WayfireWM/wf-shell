@@ -22,7 +22,7 @@ class MixerControl : public Gtk::Grid
     std::vector<sigc::connection> signals;
     void update_gestures();
     virtual void update_icons_pos();
-    WfOption<int> slider_length{"panel/wp_slider_length"};
+    WfOption<int> slider_length{"panel/mixer_slider_length"};
 
   public:
     MixerControl(WpPipewireObject *obj, WayfireMixer *parent_widget);

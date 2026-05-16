@@ -28,9 +28,9 @@ class WayfireMixer : public WayfireWidget
 
     Gtk::Image main_image;
 
-    WfOption<int> spacing{"panel/wp_spacing"};
-    WfOption<bool> stack_categories{"panel/wp_stack_categories"};
-    WfOption<double> timeout{"panel/wp_popup_timeout"};
+    WfOption<int> spacing{"panel/mixer_spacing"};
+    WfOption<bool> stack_categories{"panel/mixer_stack_categories"};
+    WfOption<double> timeout{"panel/mixer_popup_timeout"};
 
     void on_volume_value_changed();
     bool on_popover_timeout(int timer);
@@ -50,9 +50,9 @@ class WayfireMixer : public WayfireWidget
 
   public:
 
-    WfOption<double> scroll_sensitivity{"panel/wp_scroll_sensitivity"};
-    WfOption<bool> invert_scroll{"panel/wp_invert_scroll"};
-    WfOption<bool> popup_on_change{"panel/wp_popup_on_change"};
+    WfOption<double> scroll_sensitivity{"panel/mixer_scroll_sensitivity"};
+    WfOption<bool> invert_scroll{"panel/mixer_invert_scroll"};
+    WfOption<bool> popup_on_change{"panel/mixer_popup_on_change"};
 
     std::unique_ptr<WayfireMenuButton> button;
     Gtk::Popover *popover;
@@ -60,7 +60,7 @@ class WayfireMixer : public WayfireWidget
     /*
      * the "quick_target" is the representation of the audio channel that shows it’s volume
      * level on the widget icon and is concerned by the quick actions.
-     * configured by panel/wp_quick_target_choice. idea: add pinning?
+     * configured by panel/mixer_quick_target_choice. idea: add pinning?
      */
     QuickTargetChoice quick_target_choice;
     std::unique_ptr<MixerControl> quick_target;
