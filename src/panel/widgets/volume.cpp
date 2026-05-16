@@ -200,7 +200,7 @@ void WayfireVolume::init(Gtk::Box *container)
     volume_scale.set_size_request(300, 0);
     volume_scale.set_user_changed_callback([=] () { on_volume_value_changed(); });
     volume_scale.add_controller(scroll_gesture2);
-    // button->add_controller(scroll_gesture);
+    button->add_controller(scroll_gesture);
     button->add_controller(long_press);
     button->add_controller(middle_click_gesture);
     button->open_on(1);

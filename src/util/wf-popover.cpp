@@ -144,7 +144,7 @@ void WayfireMenuWidget::popdown()
 
 void WayfireMenuWidget::open_on(int button)
 {
-    if (click_signal)
+    for (auto click_signal : click_signals)
     {
         click_signal.disconnect();
     }
@@ -156,12 +156,17 @@ void WayfireMenuWidget::open_on(int button)
 
     auto click_gesture = Gtk::GestureClick::create();
     click_gesture->set_button(button);
+    click_signals.push_back(click_gesture->signal_pressed().connect(
+        [=] (int, double, double)
+    {
+        click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
     /* Action on release */
-    click_signal = click_gesture->signal_released().connect(
+    click_signals.push_back(click_gesture->signal_released().connect(
         [=] (int, double, double)
     {
         toggle();
-    });
+    }));
     add_controller(click_gesture);
 }
 
@@ -244,8 +249,12 @@ WayfireMenuWidget::~WayfireMenuWidget()
         signal.disconnect();
     }
 
+    for (auto click_signal : click_signals)
+    {
+        click_signal.disconnect();
+    }
+
     timer_signal.disconnect();
-    click_signal.disconnect();
 
     gtk_widget_unparent(GTK_WIDGET(popover.gobj()));
     gtk_widget_unparent(GTK_WIDGET(menu.gobj()));
@@ -286,23 +295,18 @@ Gtk::Widget*WayfireMenuWidget::get_popup_child()
 
 void WayfireMenuWidget::toggle()
 {
-    Glib::signal_idle().connect([=] ()
+    auto panel = get_panel(this);
+    if (panel)
     {
-        auto panel = get_panel(this);
-        if (panel)
+        WayfireMenuWidget *popover = panel->get_active_popover();
+        if (popover == NULL)
         {
-            WayfireMenuWidget *popover = panel->get_active_popover();
-            if (popover == NULL)
-            {
-                popup();
-            } else
-            {
-                popover->popdown();
-            }
+            popup();
+        } else
+        {
+            popover->popdown();
         }
-
-        return G_SOURCE_REMOVE;
-    });
+    }
 }
 
 bool WayfireMenuWidget::is_popup_visible()
