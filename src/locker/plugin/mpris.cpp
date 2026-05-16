@@ -30,6 +30,8 @@ WayfireLockerMPRISWidget::WayfireLockerMPRISWidget(std::string name,
 
     label.set_halign(Gtk::Align::START);
     label.set_valign(Gtk::Align::START);
+    label.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
+    label.set_max_width_chars(40);
     label.set_wrap(true);
 
     controlbox.set_expand(true);
