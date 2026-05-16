@@ -95,9 +95,12 @@ void WayfireLockerPasswordPlugin::add_output(std::string id, std::shared_ptr<Way
     /* Add to window */
     grid->attach(*widget, position);
 
-    widget->signal_realize().connect([=] ()
+    widget->property_reveal_child().signal_changed().connect([=] ()
     {
-        widget->entry.grab_focus();
+        if (widget->get_reveal_child())
+        {
+            widget->entry.grab_focus();
+        }
     });
 }
 
