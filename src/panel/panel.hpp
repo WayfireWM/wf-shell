@@ -18,6 +18,8 @@ class WayfirePanel
     wl_surface *get_wl_surface();
     Gtk::Window& get_window();
     void handle_config_reload();
+    void init_widgets();
+    void init_layout();
     void set_panel_app(WayfirePanelApp *panel_app);
     std::shared_ptr<WayfireIPC> get_ipc_server_instance();
 
