@@ -43,7 +43,7 @@ bool WayfireClock::update_label()
      * This could be circumvented with the modifiers the user passes to the
      * format string, * but to remove the requirement that the user does
      * something fancy, we just remove any leading spaces. */
-    int i = 0;
+    size_t i = 0;
     while (i < text.length() && text[i] == ' ')
     {
         i++;
