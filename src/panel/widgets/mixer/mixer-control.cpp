@@ -73,7 +73,7 @@ void MixerControl::init()
     {
         // if the menu was popped up because of an external change
         // and is now changed manually, don’t hide
-        parent->cancel_popover_timeout();
+        parent->button->popup();
         ignore = true;
         // disregarding the return value prevents cases where ignore is read at an ncorrect time,
         // with the only problem of having one update ignored if something goes very wrong
@@ -83,7 +83,7 @@ void MixerControl::init()
     scale.set_user_changed_callback(
         [this, id] ()
     {
-        parent->cancel_popover_timeout(); // see above
+        parent->button->popup();
         ignore = true;
         WpCommon::get().set_volume(id, scale.get_target_value());
     });

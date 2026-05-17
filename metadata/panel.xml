@@ -372,7 +372,7 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	<option name="mixer_popup_timeout" type="double">
 		<_short>Popup timeout</_short>
 		<default>2.5</default>
-		<min>0</min>
+		<min>0.1</min>
 	</option>
 	<option name="mixer_slider_length" type="int">
 		<_short>Slider length</_short>

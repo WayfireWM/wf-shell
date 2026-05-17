@@ -9,6 +9,7 @@
 #include "gtkmm/widget.h"
 #include "wf-autohide-window.hpp"
 #include <cstddef>
+#include <cstdio>
 #include <iostream>
 #include <memory>
 #include <gtk4-layer-shell.h>
@@ -149,6 +150,13 @@ void WayfireMenuWidget::open_on(int button)
         click_signal.disconnect();
     }
 
+    click_signals.clear();
+
+    if (previous_controller != nullptr)
+    {
+        remove_controller(previous_controller);
+    }
+
     if (button < 0)
     {
         return;
@@ -168,6 +176,7 @@ void WayfireMenuWidget::open_on(int button)
         toggle();
     }));
     add_controller(click_gesture);
+    previous_controller = click_gesture;
 }
 
 WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::string class_name,
