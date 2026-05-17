@@ -180,9 +180,7 @@ class WayfireMenu : public WayfireWidget
     WfOption<bool> menu_fullscreen{"panel/menu_fullscreen"};
     void setup_popover_layout();
     void update_popover_layout();
-    void update_category_width();
-    void update_content_height();
-    void update_content_width();
+    void update_size();
     void create_logout_ui();
     void on_logout_click();
     void key_press_search();

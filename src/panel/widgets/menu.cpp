@@ -488,7 +488,6 @@ void WayfireMenu::on_search_changed()
             /* Text has been unset, show categories again */
             populate_menu_items(category);
             category_scrolled_window.show();
-            app_scrolled_window.set_min_content_width(int(menu_min_content_width));
         } else
         {
             /* User is filtering, hide categories, ignore chosen category */
@@ -583,8 +582,8 @@ void WayfireMenu::setup_popover_layout()
     flowbox.set_sort_func(sigc::mem_fun(*this, &WayfireMenu::on_sort));
     flowbox.set_filter_func(sigc::mem_fun(*this, &WayfireMenu::on_filter));
     flowbox.add_css_class("app-list");
-    flowbox.set_size_request(int(menu_min_content_width), int(menu_min_content_height));
     flowbox.set_vexpand(true);
+    flowbox.set_hexpand(true);
 
     flowbox_container.append(flowbox);
 
@@ -593,8 +592,6 @@ void WayfireMenu::setup_popover_layout()
     scroll_pair.set_homogeneous(false);
     scroll_pair.set_vexpand(true);
 
-    app_scrolled_window.set_min_content_width(int(menu_min_content_width));
-    app_scrolled_window.set_min_content_height(int(menu_min_content_height));
     app_scrolled_window.set_child(flowbox_container);
     app_scrolled_window.add_css_class("app-list-scroll");
     app_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
@@ -603,8 +600,6 @@ void WayfireMenu::setup_popover_layout()
     category_box.add_css_class("category-list");
     category_box.set_orientation(Gtk::Orientation::VERTICAL);
 
-    category_scrolled_window.set_min_content_width(int(menu_min_category_width));
-    category_scrolled_window.set_min_content_height(int(menu_min_content_height));
     category_scrolled_window.set_child(category_box);
     category_scrolled_window.add_css_class("categtory-list-scroll");
     category_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
@@ -942,9 +937,9 @@ void WayfireMenu::init(Gtk::Box *container)
         flowbox.set_column_spacing(flowbox_spacing.value());
         flowbox.set_column_spacing(flowbox_spacing.value());
     });
-    menu_min_category_width.set_callback([=] () { update_category_width(); });
-    menu_min_content_height.set_callback([=] () { update_content_height(); });
-    menu_min_content_width.set_callback([=] () { update_content_width(); });
+    menu_min_category_width.set_callback([=] () { update_size(); });
+    menu_min_content_height.set_callback([=] () { update_size(); });
+    menu_min_content_width.set_callback([=] () { update_size(); });
     panel_position.set_callback([=] () { update_popover_layout(); });
     menu_show_categories.set_callback([=] () { update_popover_layout(); });
     menu_list.set_callback([=] () { update_popover_layout(); });
@@ -1015,22 +1010,31 @@ void WayfireMenu::init(Gtk::Box *container)
     box.show();
     main_image.show();
     button->show();
+
+    signals.push_back(button->get_scroll().signal_map().connect([=] ()
+    {
+        update_size();
+    }));
 }
 
-void WayfireMenu::update_category_width()
+void WayfireMenu::update_size()
 {
-    category_scrolled_window.set_min_content_width(int(menu_min_category_width));
-}
+    int width  = button->get_scroll().get_width();
+    int height = button->get_scroll().get_height();
+    if ((width <= 0) || (height <= 0))
+    {
+        /* Not yet allocated, do it next tick */
+        popover_layout_box.set_size_request(menu_min_content_width.value() + menu_min_category_width,
+            menu_min_content_height);
 
-void WayfireMenu::update_content_height()
-{
-    category_scrolled_window.set_min_content_height(int(menu_min_content_height));
-    app_scrolled_window.set_min_content_height(int(menu_min_content_height));
-}
+        Glib::signal_idle().connect_once([=] ()
+        {
+            update_size();
+        });
+        return;
+    }
 
-void WayfireMenu::update_content_width()
-{
-    app_scrolled_window.set_min_content_width(int(menu_min_content_width));
+    popover_layout_box.set_size_request(width, height);
 }
 
 void WayfireMenu::toggle_menu()
