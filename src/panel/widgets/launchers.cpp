@@ -4,7 +4,7 @@
 #include <glibmm/spawn.h>
 #include <glibmm/keyfile.h>
 #include <gtkmm/icontheme.h>
-#include "gtkmm/gestureclick.h"
+#include <gtkmm/gestureclick.h>
 #include <gdk/gdkcairo.h>
 #include <cassert>
 #include <gtk-utils.hpp>
