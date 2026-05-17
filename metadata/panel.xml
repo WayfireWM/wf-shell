@@ -138,6 +138,21 @@
 		<_short>Battery Font</_short>
 		<default>default</default>
 	</option>
+	<option name="launchers" type="dynamic-list" type-hint="dict">
+		<_short>Launchers</_short>
+		<_long>Launchers</_long>
+		<entry prefix="launcher_cmd_" type="string" name="cmd">
+			<_short>Command</_short>
+			<_long>Command</_long>
+			<hint>file</hint>
+		</entry>
+		<entry prefix="launcher_icon_" type="string" name="cmd">
+			<_short>Icon</_short>
+		</entry>
+		<entry prefix="launcher_label_" type="string" name="label">
+			<_short>Label</_short>
+		</entry>
+	</option>
 	</group>
 	<group>
 	<_short>Network</_short>
