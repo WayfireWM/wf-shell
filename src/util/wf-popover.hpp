@@ -1,16 +1,11 @@
 #pragma once
 
-#include "giomm/menumodel.h"
-#include "glibmm/refptr.h"
-#include "gtkmm/gestureclick.h"
-#include "gtkmm/scrolledwindow.h"
-#include <gtkmm/widget.h>
+#include <glibmm.h>
+#include <giomm.h>
+#include <gtkmm.h>
+
 #include <sigc++/connection.h>
 #include <sigc++/signal.h>
-#include <gtkmm/box.h>
-#include <gtkmm/popover.h>
-#include <gtkmm/popovermenu.h>
-#include <memory>
 #include <vector>
 #include <wf-option-wrap.hpp>
 
