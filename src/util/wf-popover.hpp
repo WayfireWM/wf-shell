@@ -85,6 +85,8 @@ class WayfireMenuWidget : public Gtk::Box
 
     Gtk::Widget *get_popup_child();
 
+    Gtk::ScrolledWindow& get_scroll();
+
     /**
      * Set whether the popup should grab input focus when opened
      * By default, the menu button interacts with the keyboard.
