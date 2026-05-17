@@ -7,7 +7,9 @@
 #include <gtkmm/cssprovider.h>
 
 #include "wf-shell-app.hpp"
+#include "wf-ipc.hpp"
 
+class WayfirePanelApp;
 class WayfirePanel
 {
   public:
@@ -16,6 +18,8 @@ class WayfirePanel
     wl_surface *get_wl_surface();
     Gtk::Window& get_window();
     void handle_config_reload();
+    void set_panel_app(WayfirePanelApp *panel_app);
+    std::shared_ptr<WayfireIPC> get_ipc_server_instance();
 
   private:
     class impl;
@@ -33,10 +37,13 @@ class WayfirePanelApp : public WayfireShellApp
     static void create(int argc, char **argv);
     ~WayfirePanelApp();
 
+    void on_activate() override;
     void handle_new_output(WayfireOutput *output) override;
     void handle_output_removed(WayfireOutput *output) override;
     void on_config_reload() override;
     void on_css_reload() override;
+    std::shared_ptr<WayfireIPC> get_ipc_server_instance();
+    std::shared_ptr<WayfireIPC> ipc_server = nullptr;    
 
   private:
     WayfirePanelApp(int argc, char **argv);

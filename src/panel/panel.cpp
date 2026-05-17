@@ -78,7 +78,7 @@ class WayfirePanel::impl
 
         window->override_background_color(rgba);
     };
-
+    
     WfOption<std::string> panel_layer{"panel/layer"};
     std::function<void()> set_panel_layer = [=] ()
     {
@@ -345,6 +345,12 @@ class WayfirePanel::impl
             w->handle_config_reload();
         }
     }
+    
+    WayfirePanelApp *panel_app;
+    void set_panel_app(WayfirePanelApp *panel_app)
+    {
+        this->panel_app = panel_app;
+    }
 };
 
 WayfirePanel::WayfirePanel(WayfireOutput *output) : pimpl(new impl(output))
@@ -364,11 +370,35 @@ void WayfirePanel::handle_config_reload()
     return pimpl->handle_config_reload();
 }
 
+void WayfirePanel::set_panel_app(WayfirePanelApp *panel_app)
+{
+    pimpl->set_panel_app(panel_app);
+}
+
+
 class WayfirePanelApp::impl
 {
   public:
     std::map<WayfireOutput*, std::unique_ptr<WayfirePanel>> panels;
 };
+
+void WayfirePanelApp::on_activate()
+{
+    WayfireShellApp::on_activate();
+
+    if (!ipc_server)
+    {
+        ipc_server = WayfireIPC::get_instance();
+    }
+
+    for (auto& p : priv->panels)
+    {
+        p.second->handle_config_reload();
+        p.second->set_panel_app(this);
+ /*       p.second->init_widgets();*/
+    }
+}
+
 
 void WayfirePanelApp::on_config_reload()
 {
