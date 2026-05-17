@@ -415,6 +415,10 @@ If full_span is off, both sides of the panel will take the same amount of space,
 			<value>show_quick_target</value>
 			<_name>Show quick action target</_name>
 		</desc>
+		<desc>
+			<value>mute_quick_target</value>
+			<_name>Mute quick action target</_name>
+		</desc>
 	</option>
 	<option name="mixer_middle_click_action" type="string">
 		<_short>Middle click action</_short>
