@@ -14,6 +14,7 @@ project(
 )
 
 wayfire        = dependency('wayfire')
+json = subproject('wf-json').get_variable('wfjson')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols')
 gtkmm          = dependency('gtkmm-3.0', version: '>=3.24')
