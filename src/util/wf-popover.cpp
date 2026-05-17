@@ -6,6 +6,7 @@
 #include "gtk/gtk.h"
 #include "gtkmm/eventcontrollermotion.h"
 #include "gtkmm/gestureclick.h"
+#include "gtkmm/viewport.h"
 #include "gtkmm/widget.h"
 #include "wf-autohide-window.hpp"
 #include <cstddef>
@@ -299,7 +300,14 @@ void WayfireMenuWidget::set_popup_child(Gtk::Widget & widget)
 
 Gtk::Widget*WayfireMenuWidget::get_popup_child()
 {
-    return popover.get_child();
+    auto child = scroll.get_child();
+    // the scrollable window wraps the child given to it in a viewport if it is not scrollable
+    if (auto *viewport = dynamic_cast<Gtk::Viewport*>(child))
+    {
+        return viewport->get_child();
+    }
+
+    return child;
 }
 
 void WayfireMenuWidget::toggle()
