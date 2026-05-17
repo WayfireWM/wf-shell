@@ -380,3 +380,8 @@ void WayfireMenuWidget::set_timer(int millis)
         return G_SOURCE_REMOVE;
     }, millis);
 }
+
+Gtk::ScrolledWindow& WayfireMenuWidget::get_scroll()
+{
+    return scroll;
+}

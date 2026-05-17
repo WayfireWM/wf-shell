@@ -209,6 +209,8 @@ void WayfireVolume::init(Gtk::Box *container)
     container->append(*button);
     button->append(main_image);
     button->set_popup_child(volume_scale);
+    /* Override scroll bar as it isn't needed here */
+    button->get_scroll().set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::NEVER);
 }
 
 WayfireVolume::~WayfireVolume()
