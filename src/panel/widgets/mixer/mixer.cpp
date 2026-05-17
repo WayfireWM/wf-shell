@@ -50,7 +50,15 @@ void WayfireMixer::reload_config()
     // "actions" that can be bound to different clicks
     auto show_mixer_action = [&] (int c, double x, double y)
     {
-        if (button->get_popup_child() != (Gtk::Widget*)&master_box)
+        if ((button->get_popup_child() == &master_box) && button->is_popup_visible())
+        {
+            button->popdown();
+            return;
+        }
+
+        button->popup();
+
+        if (button->get_popup_child() != &master_box)
         {
             button->set_popup_child(master_box);
         }
@@ -58,7 +66,6 @@ void WayfireMixer::reload_config()
 
     auto show_quick_target_action = [&] (int c, double x, double y)
     {
-        // unschedule hiding
         if (!quick_target)
         {
             return; // no quick_target means we have nothing to show
@@ -70,10 +77,7 @@ void WayfireMixer::reload_config()
             return;
         }
 
-        if (!button->is_popup_visible())
-        {
-            button->popup();
-        }
+        button->popup();
 
         if (button->get_popup_child() != quick_target.get())
         {
@@ -93,7 +97,6 @@ void WayfireMixer::reload_config()
 
     if (str_wp_left_click_action.value() == "show_mixer")
     {
-        button->open_on(1);
         left_conn = left_click_gesture->signal_released().connect(show_mixer_action);
     }
 
@@ -109,7 +112,6 @@ void WayfireMixer::reload_config()
 
     if (str_wp_middle_click_action.value() == "show_mixer")
     {
-        button->open_on(3);
         middle_conn = middle_click_gesture->signal_released().connect(show_mixer_action);
     }
 
@@ -125,7 +127,6 @@ void WayfireMixer::reload_config()
 
     if (str_wp_right_click_action.value() == "show_mixer")
     {
-        button->open_on(2);
         right_conn = right_click_gesture->signal_released().connect(show_mixer_action);
     }
 
@@ -161,7 +162,7 @@ void WayfireMixer::init(Gtk::Box *container)
     button->add_css_class("widget-icon");
     button->append(main_image);
     button->show();
-    button->open_on(1);
+    button->open_on(-1); // the gestures callback will take care of opening and closing
     sinks_box.add_css_class("outputs");
     sources_box.add_css_class("inputs");
     streams_box.add_css_class("streams");
