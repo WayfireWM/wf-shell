@@ -41,7 +41,7 @@ class WayfireBatteryInfo : public WayfireWidget
     void update_icon();
     void update_details();
     void update_state();
-    void showstat_cb();
+    void button_press_cb(GdkEventButton *event);
 
     void on_properties_changed(
         const Gio::DBus::Proxy::MapChangedProperties& properties,
