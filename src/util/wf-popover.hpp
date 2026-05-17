@@ -2,6 +2,7 @@
 
 #include "giomm/menumodel.h"
 #include "glibmm/refptr.h"
+#include "gtkmm/gestureclick.h"
 #include "gtkmm/scrolledwindow.h"
 #include <gtkmm/widget.h>
 #include <sigc++/connection.h>
@@ -29,6 +30,7 @@ class WayfireMenuWidget : public Gtk::Box
     bool use_menu = false, use_widget = false;
     bool interactive = false;
     WfOption<std::string> panel_position;
+    Glib::RefPtr<Gtk::GestureClick> previous_controller = nullptr;
 
     /* Make the menu button active on its AutohideWindow */
     void set_active_on_window();
