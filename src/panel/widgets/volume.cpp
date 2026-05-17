@@ -1,9 +1,7 @@
 #include <gtkmm.h>
 #include <glibmm.h>
+
 #include "volume.hpp"
-#include "glib.h"
-#include "glibmm/main.h"
-#include "gtkmm/gesture.h"
 #include "icon-select.hpp"
 #include "wf-popover.hpp"
 

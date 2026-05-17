@@ -10,8 +10,6 @@
 #include <sys/mman.h>
 
 #include "toplevel.hpp"
-#include "gtkmm/enums.h"
-#include "gtkmm/gesture.h"
 #include "window-list.hpp"
 #include "gtk-utils.hpp"
 

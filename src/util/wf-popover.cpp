@@ -1,19 +1,10 @@
-#include "wf-popover.hpp"
-#include "giomm/menumodel.h"
-#include "glib.h"
-#include "glibmm.h"
-#include "glibmm/main.h"
-#include "gtk/gtk.h"
-#include "gtkmm/eventcontrollermotion.h"
-#include "gtkmm/gestureclick.h"
-#include "gtkmm/viewport.h"
-#include "gtkmm/widget.h"
-#include "wf-autohide-window.hpp"
 #include <cstddef>
 #include <cstdio>
-#include <iostream>
 #include <memory>
 #include <gtk4-layer-shell.h>
+
+#include "wf-popover.hpp"
+#include "wf-autohide-window.hpp"
 
 /* Helper to get panel from button. NULL if not added to one */
 WayfireAutohidingWindow *get_panel(Gtk::Widget *button)
