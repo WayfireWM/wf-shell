@@ -554,6 +554,7 @@ void WayfireMenu::on_popover_shown()
     on_search_changed();
     set_category("All");
     flowbox.unselect_all();
+    search_entry.grab_focus();
 }
 
 bool WayfireMenu::update_icon()

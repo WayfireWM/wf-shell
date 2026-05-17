@@ -616,7 +616,7 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuWidget& button)
     const bool should_grab_focus = this->active_button->is_keyboard_interactive();
     if (should_grab_focus)
     {
-        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+        gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
     } else
     {
         gtk_layer_set_keyboard_mode(this->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
