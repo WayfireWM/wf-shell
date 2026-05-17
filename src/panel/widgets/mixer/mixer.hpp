@@ -30,16 +30,14 @@ class WayfireMixer : public WayfireWidget
 
     WfOption<int> spacing{"panel/mixer_spacing"};
     WfOption<bool> stack_categories{"panel/mixer_stack_categories"};
-    WfOption<double> timeout{"panel/mixer_popup_timeout"};
 
     void on_volume_value_changed();
-    bool on_popover_timeout(int timer);
 
     // signals and gestures for the configurable actions on click
     gulong notify_volume_signal   = 0;
     gulong notify_is_muted_signal = 0;
     gulong notify_default_sink_changed = 0;
-    sigc::connection popover_timeout, volume_changed_signal, left_conn, middle_conn, right_conn, scroll_conn;
+    sigc::connection volume_changed_signal, left_conn, middle_conn, right_conn, scroll_conn;
     std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
 
     // widgets for the mixer itself
@@ -53,6 +51,7 @@ class WayfireMixer : public WayfireWidget
     WfOption<double> scroll_sensitivity{"panel/mixer_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/mixer_invert_scroll"};
     WfOption<bool> popup_on_change{"panel/mixer_popup_on_change"};
+    WfOption<double> timeout{"panel/mixer_popup_timeout"};
 
     std::unique_ptr<WayfireMenuWidget> button;
 
@@ -72,14 +71,6 @@ class WayfireMixer : public WayfireWidget
 
     /** Update the icon based on volume and muted state of the quick_target widget */
     void update_icon();
-
-    /**
-     * Check whether the popover should be auto-hidden, and if yes, start a timer to hide it
-     */
-    void check_set_popover_timeout();
-
-    // cancel popover self-hiding. mostly used after user interactions to an externally opened popover
-    void cancel_popover_timeout();
 
     void handle_config_reload() override;
 

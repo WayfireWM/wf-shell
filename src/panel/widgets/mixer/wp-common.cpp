@@ -287,12 +287,9 @@ void WpCommon::on_mixer_changed(gpointer mixer_api, guint id, gpointer data)
             widget->button->set_popup_child(*widget->quick_target);
             if (widget->popup_on_change && change)
             {
-                widget->button->popup();
+                widget->button->popup_timed(widget->timeout * 1000);
             }
         }
-
-        // in all cases that reach here, (re-)schedule hiding
-        widget->check_set_popover_timeout();
     }
 }
 

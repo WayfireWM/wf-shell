@@ -8,25 +8,6 @@
 
 #define ICON(volume) icon_from_range(volume_icons, volume)
 
-bool WayfireMixer::on_popover_timeout(int timer)
-{
-    popover_timeout.disconnect();
-    button->popdown();
-    return false;
-}
-
-void WayfireMixer::check_set_popover_timeout()
-{
-    popover_timeout.disconnect();
-
-    popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireMixer::on_popover_timeout), 0), timeout * 1000);
-}
-
-void WayfireMixer::cancel_popover_timeout()
-{
-    popover_timeout.disconnect();
-}
 
 void WayfireMixer::reload_config()
 {
@@ -67,34 +48,17 @@ void WayfireMixer::reload_config()
     }
 
     // "actions" that can be bound to different clicks
-
     auto show_mixer_action = [&] (int c, double x, double y)
     {
-        // unschedule hiding
-        cancel_popover_timeout();
-
-        if ((button->get_popup_child() == (Gtk::Widget*)&master_box) && button->is_popup_visible())
-        {
-            button->popdown();
-            return;
-        }
-
-        if (!button->is_popup_visible())
-        {
-            button->popup();
-        }
-
         if (button->get_popup_child() != (Gtk::Widget*)&master_box)
         {
             button->set_popup_child(master_box);
-            popover_timeout.disconnect();
         }
     };
 
     auto show_quick_target_action = [&] (int c, double x, double y)
     {
         // unschedule hiding
-        cancel_popover_timeout();
         if (!quick_target)
         {
             return; // no quick_target means we have nothing to show
@@ -114,7 +78,6 @@ void WayfireMixer::reload_config()
         if (button->get_popup_child() != quick_target.get())
         {
             button->set_popup_child(*quick_target);
-            popover_timeout.disconnect();
         }
     };
 
@@ -128,71 +91,52 @@ void WayfireMixer::reload_config()
         quick_target->button.set_active(!quick_target->button.get_active());
     };
 
-    // the left click case is a bit special, since it’s supposed to show the popover.
-    // (this is also why the mute action is not available for the left click)
     if (str_wp_left_click_action.value() == "show_mixer")
     {
-        left_conn = left_click_gesture->signal_pressed().connect(
-            [&] (int c, double x, double y)
-        {
-            // unschedule hiding
-            cancel_popover_timeout();
-            if (button->get_popup_child() != (Gtk::Widget*)&master_box)
-            {
-                button->set_popup_child(master_box);
-            }
-        });
+        button->open_on(1);
+        left_conn = left_click_gesture->signal_released().connect(show_mixer_action);
     }
 
     if (str_wp_left_click_action.value() == "show_quick_target")
     {
-        left_conn = left_click_gesture->signal_pressed().connect(
-            [&] (int c, double x, double y)
-        {
-            // unschedule hiding
-            cancel_popover_timeout();
-            if (!quick_target)
-            {
-                return;
-            }
-
-            if (button->get_popup_child() != quick_target.get())
-            {
-                button->set_popup_child(*quick_target);
-            }
-        });
+        left_conn = left_click_gesture->signal_released().connect(show_quick_target_action);
     }
 
-    // more simple matching
+    if (str_wp_left_click_action.value() == "mute_quick_target")
+    {
+        left_conn = left_click_gesture->signal_released().connect(mute_action);
+    }
 
     if (str_wp_middle_click_action.value() == "show_mixer")
     {
-        middle_conn = middle_click_gesture->signal_pressed().connect(show_mixer_action);
+        button->open_on(3);
+        middle_conn = middle_click_gesture->signal_released().connect(show_mixer_action);
     }
 
     if (str_wp_middle_click_action.value() == "show_quick_target")
     {
-        middle_conn = middle_click_gesture->signal_pressed().connect(show_quick_target_action);
+        middle_conn = middle_click_gesture->signal_released().connect(show_quick_target_action);
     }
 
     if (str_wp_middle_click_action.value() == "mute_quick_target")
     {
-        middle_conn = middle_click_gesture->signal_pressed().connect(mute_action);
+        middle_conn = middle_click_gesture->signal_released().connect(mute_action);
     }
 
     if (str_wp_right_click_action.value() == "show_mixer")
     {
-        right_conn = right_click_gesture->signal_pressed().connect(show_mixer_action);
+        button->open_on(2);
+        right_conn = right_click_gesture->signal_released().connect(show_mixer_action);
     }
 
     if (str_wp_right_click_action.value() == "show_quick_target")
     {
-        right_conn = right_click_gesture->signal_pressed().connect(show_quick_target_action);
+        right_conn = right_click_gesture->signal_released().connect(show_quick_target_action);
     }
 
     if (str_wp_right_click_action.value() == "mute_quick_target")
     {
-        right_conn = right_click_gesture->signal_pressed().connect(mute_action);
+        right_conn = right_click_gesture->signal_released().connect(mute_action);
     }
 }
 
@@ -345,7 +289,6 @@ void WayfireMixer::set_quick_target_from(MixerControl *from)
 WayfireMixer::~WayfireMixer()
 {
     WpCommon::get().rem_widget(this);
-    popover_timeout.disconnect();
     volume_changed_signal.disconnect();
     left_conn.disconnect();
     middle_conn.disconnect();
