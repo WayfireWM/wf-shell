@@ -67,6 +67,8 @@ void WayfireLanguage::on_event(wf::json_t data)
         if (state_layout != current_layout)
         {
             current_layout = state_layout;
+            std::cerr << "Unhiding panel" << std::endl;
+            WayfirePanelApp::get().unhide_now();
             set_current(state_layout);
         }
     }

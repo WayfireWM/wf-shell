@@ -3,6 +3,7 @@
 #include "volume.hpp"
 #include "launchers.hpp"
 #include "gtk-utils.hpp"
+#include "panel.hpp"
 
 WayfireVolumeScale::WayfireVolumeScale()
 {
@@ -81,6 +82,7 @@ void WayfireVolume::update_icon()
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
         set_image_icon(main_image, "audio-volume-muted", icon_size);
+        WayfirePanelApp::get().unhide_now();
         return;
     }
 
@@ -93,6 +95,7 @@ void WayfireVolume::update_icon()
     };
 
     set_image_icon(main_image, icon_name_from_state.at(current), icon_size);
+    WayfirePanelApp::get().unhide_now();
 }
 
 bool WayfireVolume::on_popover_timeout(int timer)
@@ -192,7 +195,7 @@ static void notify_is_muted(GvcMixerControl *gvc_control,
     guint id, gpointer user_data)
 {
     WayfireVolume *wf_volume = (WayfireVolume*)user_data;
-    wf_volume->update_icon();
+    wf_volume->update_icon();	
 }
 
 void WayfireVolume::disconnect_gvc_stream_signals()
@@ -249,7 +252,6 @@ static void default_sink_changed(GvcMixerControl *gvc_control,
 void WayfireVolume::on_volume_value_changed()
 {
     /* User manually changed volume */
-    button->grab_focus();
     set_volume(volume_scale.get_target_value());
 }
 

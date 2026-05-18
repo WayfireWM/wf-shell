@@ -20,6 +20,7 @@ class WayfirePanel
     void handle_config_reload();
     void init_widgets();
     void init_layout();
+    void unhide_now();
     void set_panel_app(WayfirePanelApp *panel_app);
     std::shared_ptr<WayfireIPC> get_ipc_server_instance();
 
@@ -44,6 +45,7 @@ class WayfirePanelApp : public WayfireShellApp
     void handle_output_removed(WayfireOutput *output) override;
     void on_config_reload() override;
     void on_css_reload() override;
+    void unhide_now();
     std::shared_ptr<WayfireIPC> get_ipc_server_instance();
     std::shared_ptr<WayfireIPC> ipc_server = nullptr;    
 

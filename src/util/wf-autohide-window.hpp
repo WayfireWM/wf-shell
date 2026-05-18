@@ -54,6 +54,7 @@ class WayfireAutohidingWindow : public Gtk::Window
      * in the meantime */
     void schedule_hide(int delay);
     void schedule_show(int delay);
+    void m_show_uncertain();
 
     /** When auto exclusive zone is set, the window will adjust its exclusive
      * zone based on the window size.
@@ -109,8 +110,6 @@ class WayfireAutohidingWindow : public Gtk::Window
     bool m_do_hide();
     int autohide_counter = static_cast<int>(autohide_opt);
 
-    /** Show the window but hide if no pointer input */
-    void m_show_uncertain();
 
     int32_t last_hotspot_height = -1;
     bool input_inside_panel     = false;

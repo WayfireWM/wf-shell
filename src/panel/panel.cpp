@@ -353,7 +353,7 @@ class WayfirePanel::impl
         reload_widgets((std::string)center_widgets_opt, center_widgets, center_box);
     }    
     
-     void init_layout()
+    void init_layout()
     {
         left_box.get_style_context()->add_class("left");
         center_box.get_style_context()->add_class("center");
@@ -369,7 +369,12 @@ class WayfirePanel::impl
         window->add(content_box);
         window->show_all();
     }
-    
+    void unhide_now()
+    {
+		
+    window->m_show_uncertain();
+
+    }    
     std::shared_ptr<WayfireIPC> get_ipc_server_instance()
     {
         return panel_app->get_ipc_server_instance();
@@ -401,6 +406,11 @@ void WayfirePanel::init_widgets()
 void WayfirePanel::init_layout()
 {
     pimpl->init_layout();
+}
+
+void WayfirePanel::unhide_now()
+{
+    pimpl->unhide_now();
 }
 
 void WayfirePanel::set_panel_app(WayfirePanelApp *panel_app)
@@ -546,6 +556,14 @@ void WayfirePanelApp::create(int argc, char **argv)
 
     instance = std::unique_ptr<WayfireShellApp>(new WayfirePanelApp{argc, argv});
     instance->run();
+}
+
+void WayfirePanelApp::unhide_now()
+{
+    for (auto& p : priv->panels)
+    {
+        p.second->unhide_now();
+    }
 }
 
 WayfirePanelApp::~WayfirePanelApp() = default;
