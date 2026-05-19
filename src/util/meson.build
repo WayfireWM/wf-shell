@@ -2,10 +2,12 @@ util = static_library(
     'util', 
     [
     'gtk-utils.cpp', 
-    'wf-shell-app.cpp', 
+    'wf-shell-app.cpp',
+    'animated-scale.cpp', 
     'wf-ipc.cpp',  
     'wf-autohide-window.cpp', 
-    'wf-popover.cpp'
+    'wf-popover.cpp',
+    'icon-select.cpp'
     ],
     
     dependencies:
