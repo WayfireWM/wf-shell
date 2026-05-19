@@ -39,8 +39,7 @@ class WayfirePanelApp : public WayfireShellApp
      * call to create() */
     static void create(int argc, char **argv);
     ~WayfirePanelApp();
-
-    void on_activate() override;
+    
     void handle_new_output(WayfireOutput *output) override;
     void handle_output_removed(WayfireOutput *output) override;
     void on_config_reload() override;

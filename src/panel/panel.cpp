@@ -119,7 +119,6 @@ class WayfirePanel::impl
 
         bg_color.set_callback(on_window_color_updated);
         on_window_color_updated(); // set initial color
-		window->present();
 
 	
         window->signal_delete_event().connect(
@@ -425,25 +424,6 @@ class WayfirePanelApp::impl
     std::map<WayfireOutput*, std::unique_ptr<WayfirePanel>> panels;
 };
 
-void WayfirePanelApp::on_activate()
-{
-    WayfireShellApp::on_activate();
-
-    if (!ipc_server)
-    {
-        ipc_server = WayfireIPC::get_instance();
-    }
-
-    for (auto& p : priv->panels)
-    {
-        p.second->handle_config_reload();
-        p.second->set_panel_app(this);
-        p.second->init_widgets();
-        p.second->init_layout();
-    }
-}
-
-
 void WayfirePanelApp::on_config_reload()
 {
     for (auto& p : priv->panels)
@@ -510,8 +490,18 @@ void WayfirePanelApp::add_css_file(std::string file, int priority)
 
 void WayfirePanelApp::handle_new_output(WayfireOutput *output)
 {
+	    if (!ipc_server)
+    {
+        ipc_server = WayfireIPC::get_instance();
+    }
+	
     priv->panels[output] = std::unique_ptr<WayfirePanel>(
         new WayfirePanel(output));
+        priv->panels[output]->handle_config_reload();
+        priv->panels[output]->set_panel_app(this);
+        priv->panels[output]->init_widgets();
+        priv->panels[output]->init_layout();
+        
 }
 
 WayfirePanel*WayfirePanelApp::panel_for_wl_output(wl_output *output)
