@@ -8,56 +8,17 @@
 
 #define ICON(volume) icon_from_range(volume_icons, volume)
 
-enum VolumeLevel
-{
-    VOLUME_LEVEL_MUTE = 0,
-    VOLUME_LEVEL_LOW,
-    VOLUME_LEVEL_MED,
-    VOLUME_LEVEL_HIGH,
-    VOLUME_LEVEL_OOR, /* Out of range */
-};
-
-static VolumeLevel get_volume_level(pa_volume_t volume, pa_volume_t max)
-{
-    auto third = max / 3;
-    if (volume == 0)
-    {
-        return VOLUME_LEVEL_MUTE;
-    } else if ((volume > 0) && (volume <= third))
-    {
-        return VOLUME_LEVEL_LOW;
-    } else if ((volume > third) && (volume <= (third * 2)))
-    {
-        return VOLUME_LEVEL_MED;
-    } else if ((volume > (third * 2)) && (volume <= max))
-    {
-        return VOLUME_LEVEL_HIGH;
-    }
-
-    return VOLUME_LEVEL_OOR;
-}
-
 void WayfireVolume::update_icon()
 {
-    VolumeLevel current =
-        get_volume_level(volume_scale.get_target_value(), max_norm);
 
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
-        set_image_icon(main_image, "audio-volume-muted", icon_size);
+        set_image_icon(main_image, ICON(0), icon_size);
         WayfirePanelApp::get().unhide_now();
         return;
     }
 
-    std::map<VolumeLevel, std::string> icon_name_from_state = {
-        {VOLUME_LEVEL_MUTE, "audio-volume-muted"},
-        {VOLUME_LEVEL_LOW, "audio-volume-low"},
-        {VOLUME_LEVEL_MED, "audio-volume-medium"},
-        {VOLUME_LEVEL_HIGH, "audio-volume-high"},
-        {VOLUME_LEVEL_OOR, "audio-volume-muted"},
-    };
-
-    set_image_icon(main_image, icon_name_from_state.at(current), icon_size);
+    set_image_icon(main_image, ICON(volume_scale.get_target_value()), icon_size);
     WayfirePanelApp::get().unhide_now();
 }
 
