@@ -10,7 +10,6 @@
 
 void WayfireVolume::update_icon()
 {
-
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
         set_image_icon(main_image, ICON(0), icon_size);
@@ -18,7 +17,7 @@ void WayfireVolume::update_icon()
         return;
     }
 
-    set_image_icon(main_image, ICON(volume_scale.get_target_value()), icon_size);
+    set_image_icon(main_image, ICON(volume_scale.get_target_value()/(double)max_norm), icon_size);
     WayfirePanelApp::get().unhide_now();
 }
 
