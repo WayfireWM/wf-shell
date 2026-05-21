@@ -280,6 +280,18 @@
 		<_long>Set to negative value to disable.</_long>
 		<default>2.5</default>
 	</option>
+		<option name="notification_width" type="int">
+		<_short>Notification center Width</_short>
+		<default>500</default>
+		<min>100</min>
+		<max>5000</max>
+	</option>
+	<option name="notification_height" type="int">
+		<_short>Notificaton center Height</_short>
+		<default>600</default>
+		<min>100</min>
+		<max>5000</max>
+	</option>
 	<option name="notifications_critical_in_dnd" type="bool">
 		<_short>Always Show Critical notifications</_short>
 		<_long>Makes critical notifications to be shown even in DND mode.</_long>
@@ -289,7 +301,7 @@
 		<_short>Notifications Icon Size</_short>
 		<default>32</default>
 		<min>1</min>
-	</option>
+	</option>	
 	</group>
 	<group>
 	<_short>Tray</_short>
