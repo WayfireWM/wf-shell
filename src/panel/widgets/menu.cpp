@@ -1030,8 +1030,14 @@ void WayfireMenu::update_size()
     if ((width <= 0) || (height <= 0))
     {
         /* Not yet allocated, do it next tick */
-        popover_layout_box.set_size_request(menu_min_content_width.value() + menu_min_category_width,
-            menu_min_content_height);
+        width  = menu_min_content_width;
+        height = menu_min_content_height;
+        if (menu_show_categories.value())
+        {
+            width += menu_min_category_width;
+        }
+
+        popover_layout_box.set_size_request(width, height);
 
         Glib::signal_idle().connect_once([=] ()
         {
@@ -1040,6 +1046,7 @@ void WayfireMenu::update_size()
         return;
     }
 
+    /* We know the size of the outside of the scrollbox, use it */
     popover_layout_box.set_size_request(width, height);
 }
 
