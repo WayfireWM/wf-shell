@@ -25,6 +25,7 @@ class WayfireBatteryInfo : public WayfireWidget
     WfOption<std::string> font_opt{"panel/battery_font"};
     WfOption<int> size_opt{"panel/battery_icon_size"};
     WfOption<bool> invert_opt{"panel/battery_icon_invert"};
+    WfOption<std::string> battery_left_click_command{"panel/battery_left_click_command"};
 
     Gtk::Button button;
     Gtk::Label label;
@@ -41,6 +42,7 @@ class WayfireBatteryInfo : public WayfireWidget
     void update_icon();
     void update_details();
     void update_state();
+    void button_press_cb(GdkEventButton *event);
 
     void on_properties_changed(
         const Gio::DBus::Proxy::MapChangedProperties& properties,

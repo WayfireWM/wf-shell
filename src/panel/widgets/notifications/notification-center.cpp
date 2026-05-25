@@ -17,7 +17,7 @@ void WayfireNotificationCenter::init(Gtk::HBox *container)
     button->show_all();
 
     auto *popover = button->get_popover();
-    popover->set_size_request(WIDTH, HEIGHT);
+    popover->set_size_request(notification_width, notification_height);
     popover->get_style_context()->add_class("notification-popover");
 
     vbox.set_valign(Gtk::ALIGN_START);
@@ -27,7 +27,7 @@ void WayfireNotificationCenter::init(Gtk::HBox *container)
 
     button->set_tooltip_text("Middle click to toggle DND mode.");
     button->signal_button_press_event().connect_notify([=] (GdkEventButton *ev)
-    {
+    {		
         if (ev->button == 2)
         {
             dnd_enabled = !dnd_enabled;
@@ -62,9 +62,10 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id, bool s
     widget->set_reveal_child();
     if (show_popup && !dnd_enabled || (show_critical_in_dnd && (notification.hints.urgency == 2)))
     {
-        auto *popover = button->get_popover();
+        auto *popover = button->get_popover(); 
+        popover->set_size_request(notification_width, notification_height); 
         if ((timeout > 0) && (!popover_timeout.empty() || !popover->is_visible()))
-        {
+        {          
             popover_timeout.disconnect();
             popover_timeout = Glib::signal_timeout().connect(
                 [=]
@@ -76,7 +77,6 @@ void WayfireNotificationCenter::newNotification(Notification::id_type id, bool s
             },
                 timeout * 1000);
         }
-
         button->set_keyboard_interactive(false);
         popover->popup();
     }

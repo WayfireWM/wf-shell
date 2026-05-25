@@ -15,7 +15,7 @@
 #include "launchers.hpp"
 #include "wf-autohide-window.hpp"
 
-#define MAX_LAUNCHER_NAME_LENGTH 11
+#define MAX_LAUNCHER_NAME_LENGTH 24
 const std::string default_icon = "wayfire";
 
 WfMenuCategory::WfMenuCategory(std::string _name, std::string _icon_name) :

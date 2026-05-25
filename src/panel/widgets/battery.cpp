@@ -174,6 +174,17 @@ void WayfireBatteryInfo::update_details()
     }
 }
 
+void WayfireBatteryInfo::button_press_cb(GdkEventButton *event)
+{
+	
+    if ((event->button == 3) && (event->type == GDK_BUTTON_PRESS))
+    {
+        if (g_spawn_command_line_async (std::string(battery_left_click_command).c_str(), NULL) == FALSE)
+                g_warning ("Couldn't execute command: %s", std::string(battery_left_click_command).c_str());
+     }           
+}
+
+
 void WayfireBatteryInfo::update_state()
 {
     std::cout << "unimplemented reached, in battery.cpp: "
@@ -234,6 +245,8 @@ void WayfireBatteryInfo::init(Gtk::HBox *container)
     button_box.add(icon);
     button.get_style_context()->add_class("battery");
     button.get_style_context()->add_class("flat");
+    button.signal_button_press_event().connect_notify(
+        sigc::mem_fun(this, &WayfireBatteryInfo::button_press_cb));
 
     status_opt.set_callback([=] () { update_details(); });
     font_opt.set_callback([=] () { update_font(); });

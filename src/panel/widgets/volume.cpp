@@ -3,96 +3,22 @@
 #include "volume.hpp"
 #include "launchers.hpp"
 #include "gtk-utils.hpp"
+#include "panel.hpp"
+#include "icon-select.hpp"
 
-WayfireVolumeScale::WayfireVolumeScale()
-{
-    this->signal_draw().connect_notify(
-        [=] (const Cairo::RefPtr<Cairo::Context>& ctx)
-    {
-        if (this->current_volume.running())
-        {
-            value_changed.block();
-            this->set_value(this->current_volume);
-            value_changed.unblock();
-        }
-    }, true);
-
-    value_changed = this->signal_value_changed().connect_notify([=] ()
-    {
-        this->current_volume.animate(this->get_value(), this->get_value());
-        if (this->user_changed_callback)
-        {
-            this->user_changed_callback();
-        }
-    });
-}
-
-void WayfireVolumeScale::set_target_value(double value)
-{
-    this->current_volume.animate(value);
-    this->queue_draw();
-}
-
-double WayfireVolumeScale::get_target_value() const
-{
-    return this->current_volume.end;
-}
-
-void WayfireVolumeScale::set_user_changed_callback(
-    std::function<void()> callback)
-{
-    this->user_changed_callback = callback;
-}
-
-enum VolumeLevel
-{
-    VOLUME_LEVEL_MUTE = 0,
-    VOLUME_LEVEL_LOW,
-    VOLUME_LEVEL_MED,
-    VOLUME_LEVEL_HIGH,
-    VOLUME_LEVEL_OOR, /* Out of range */
-};
-
-static VolumeLevel get_volume_level(pa_volume_t volume, pa_volume_t max)
-{
-    auto third = max / 3;
-    if (volume == 0)
-    {
-        return VOLUME_LEVEL_MUTE;
-    } else if ((volume > 0) && (volume <= third))
-    {
-        return VOLUME_LEVEL_LOW;
-    } else if ((volume > third) && (volume <= (third * 2)))
-    {
-        return VOLUME_LEVEL_MED;
-    } else if ((volume > (third * 2)) && (volume <= max))
-    {
-        return VOLUME_LEVEL_HIGH;
-    }
-
-    return VOLUME_LEVEL_OOR;
-}
+#define ICON(volume) icon_from_range(volume_icons, volume)
 
 void WayfireVolume::update_icon()
 {
-    VolumeLevel current =
-        get_volume_level(volume_scale.get_target_value(), max_norm);
-
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
-        set_image_icon(main_image, "audio-volume-muted", icon_size);
+        set_image_icon(main_image, ICON(0), icon_size);
+        WayfirePanelApp::get().unhide_now();
         return;
     }
 
-    std::map<VolumeLevel, std::string> icon_name_from_state = {
-        {VOLUME_LEVEL_MUTE, "audio-volume-muted"},
-        {VOLUME_LEVEL_LOW, "audio-volume-low"},
-        {VOLUME_LEVEL_MED, "audio-volume-medium"},
-        {VOLUME_LEVEL_HIGH, "audio-volume-high"},
-        {VOLUME_LEVEL_OOR, "audio-volume-muted"},
-    };
-
-    set_image_icon(main_image, icon_name_from_state.at(current), icon_size);
+    set_image_icon(main_image, ICON(volume_scale.get_target_value()/(double)max_norm), icon_size);
+    WayfirePanelApp::get().unhide_now();
 }
 
 bool WayfireVolume::on_popover_timeout(int timer)
@@ -155,6 +81,12 @@ void WayfireVolume::on_volume_button_press(GdkEventButton *event)
             gvc_mixer_stream_set_is_muted(gvc_stream, true);
         }
     }
+    if ((event->button == 3) && (event->type == GDK_BUTTON_PRESS))
+    {
+        if (g_spawn_command_line_async (std::string(volume_left_click_command).c_str(), NULL) == FALSE)
+                g_warning ("Couldn't execute command: %s", std::string(volume_left_click_command).c_str());
+    }
+    
 }
 
 void WayfireVolume::on_volume_changed_external()
@@ -184,7 +116,7 @@ static void notify_is_muted(GvcMixerControl *gvc_control,
     guint id, gpointer user_data)
 {
     WayfireVolume *wf_volume = (WayfireVolume*)user_data;
-    wf_volume->update_icon();
+    wf_volume->update_icon();	
 }
 
 void WayfireVolume::disconnect_gvc_stream_signals()
@@ -241,7 +173,6 @@ static void default_sink_changed(GvcMixerControl *gvc_control,
 void WayfireVolume::on_volume_value_changed()
 {
     /* User manually changed volume */
-    button->grab_focus();
     set_volume(volume_scale.get_target_value());
 }
 

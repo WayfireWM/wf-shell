@@ -11,7 +11,6 @@
 class WayfireNotificationCenter : public WayfireWidget
 {
   private:
-    static const int WIDTH = 300, HEIGHT = 400;
 
     const std::shared_ptr<Daemon> daemon = Daemon::Launch();
     sigc::connection notification_new_conn;
@@ -34,6 +33,8 @@ class WayfireNotificationCenter : public WayfireWidget
     WfOption<double> timeout{"panel/notifications_autohide_timeout"};
     WfOption<bool> show_critical_in_dnd{"panel/notifications_critical_in_dnd"};
     WfOption<int> icon_size{"panel/notifications_icon_size"};
+    WfOption<int> notification_width{"panel/notification_width"};
+    WfOption<int> notification_height{"panel/notification_height"};
     bool dnd_enabled = false;
 
   public:

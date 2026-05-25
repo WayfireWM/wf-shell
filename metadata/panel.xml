@@ -33,6 +33,16 @@
 		<_short>Autohide Duration</_short>
 		<default>300</default>
 	</option>
+	<option name="autohide_show_delay" type="int">
+		<_short>Autohide show delay</_short>
+		<_long>Amount of time (in milliseconds) the cursor needs to be in the zone before showing.</_long>
+		<default>300</default>
+	</option>
+	<option name="autohide_hide_delay" type="int">
+		<_short>Autohide hide delay</_short>
+		<_long>Amount of time (in milliseconds) the cursor needs to be out of the zone before hiding.</_long>
+		<default>5000</default>
+	</option>
 	<option name="position" type="string">
 		<_short>Panel Position</_short>
 		<default>top</default>
@@ -85,6 +95,21 @@
 		<_short>Launchers Size</_short>
 		<default>42</default>
 	</option>
+		<option name="launchers" type="dynamic-list" type-hint="dict">
+		<_short>Launchers</_short>
+		<_long>Launchers</_long>
+		<entry prefix="launcher_cmd_" type="string" name="cmd">
+			<_short>Command</_short>
+			<_long>Command</_long>
+			<hint>file</hint>
+		</entry>
+		<entry prefix="launcher_icon_" type="string" name="cmd">
+			<_short>Icon</_short>
+		</entry>
+		<entry prefix="launcher_label_" type="string" name="label">
+			<_short>Label</_short>
+		</entry>
+	</option>
 	</group>
 	<group>
 	<_short>Clock</_short>
@@ -127,6 +152,10 @@
 	<option name="battery_font" type="string">
 		<_short>Battery Font</_short>
 		<default>default</default>
+	</option>
+	<option name="battery_left_click_command" type="string">
+		<_short>Command on left click</_short>
+		<default>mate-power-statistics</default>
 	</option>
 	</group>
 	<group>
@@ -247,6 +276,10 @@
 		<_short>Volume Scroll Sensitivity</_short>
 		<default>0.05</default>
 	</option>
+	<option name="volume_left_click_command" type="string">
+		<_short>Command on left click</_short>
+		<default>mate-volume-control</default>
+	</option>
 	</group>
 	<group>
 	<_short>Notifications</_short>
@@ -254,6 +287,18 @@
 		<_short>Notifications Display Timeout</_short>
 		<_long>Set to negative value to disable.</_long>
 		<default>2.5</default>
+	</option>
+		<option name="notification_width" type="int">
+		<_short>Notification center Width</_short>
+		<default>500</default>
+		<min>100</min>
+		<max>5000</max>
+	</option>
+	<option name="notification_height" type="int">
+		<_short>Notificaton center Height</_short>
+		<default>600</default>
+		<min>100</min>
+		<max>5000</max>
 	</option>
 	<option name="notifications_critical_in_dnd" type="bool">
 		<_short>Always Show Critical notifications</_short>
@@ -264,7 +309,7 @@
 		<_short>Notifications Icon Size</_short>
 		<default>32</default>
 		<min>1</min>
-	</option>
+	</option>	
 	</group>
 	<group>
 	<_short>Tray</_short>

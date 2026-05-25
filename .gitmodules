@@ -7,3 +7,6 @@
 [submodule "subprojects/wayland-logout"]
 	path = subprojects/wayland-logout
 	url = https://github.com/soreau/wayland-logout
+[submodule "subprojects/wf-json"]
+	path = subprojects/wf-json
+	url = https://github.com/WayfireWM/wf-json
