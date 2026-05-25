@@ -6,7 +6,6 @@
 #include <glibmm/spawn.h>
 #include <iostream>
 #include <gtk4-layer-shell.h>
-#include <gtk/gtk.h>
 
 #include "menu.hpp"
 #include "gtk-utils.hpp"
@@ -14,6 +13,127 @@
 #include "wf-popover.hpp"
 
 const std::string default_icon = "wayfire";
+
+WfMenuLayout::WfMenuLayout(WayfireMenu *menu) : menu(menu)
+{}
+
+void WfMenuLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int height, int baseline)
+{
+    if (menu == nullptr)
+    {
+        return;
+    }
+
+    Gtk::Widget::Measurements entry_measurements, logout_measurements, separator_measurements;
+    entry_measurements     = menu->search_entry.measure(Gtk::Orientation::VERTICAL, width);
+    logout_measurements    = menu->box_bottom.measure(Gtk::Orientation::VERTICAL, width);
+    separator_measurements = menu->separator.measure(Gtk::Orientation::VERTICAL, width);
+
+    int remaining_height = height -
+        (entry_measurements.sizes.minimum +
+            logout_measurements.sizes.minimum +
+            separator_measurements.sizes.natural);
+    if (remaining_height <= 0)
+    {
+        return;
+    }
+
+    search_alloc.set_x(0);
+    search_alloc.set_y(0);
+    search_alloc.set_height(entry_measurements.sizes.minimum);
+    search_alloc.set_width(width);
+    menu->search_entry.size_allocate(search_alloc, -1);
+
+    logout_alloc.set_x(0);
+    logout_alloc.set_y(height - logout_measurements.sizes.minimum);
+    logout_alloc.set_width(width);
+    logout_alloc.set_height(logout_measurements.sizes.minimum);
+    menu->box_bottom.size_allocate(logout_alloc, -1);
+
+    separator_alloc.set_x(0);
+    separator_alloc.set_y(height -
+        (logout_measurements.sizes.minimum + separator_measurements.sizes.natural));
+    separator_alloc.set_width(width);
+    separator_alloc.set_height(separator_measurements.sizes.natural);
+    menu->separator.size_allocate(separator_alloc, -1);
+
+    if (show_categories.value())
+    {
+        category_alloc.set_x(0);
+        category_alloc.set_y(entry_measurements.sizes.minimum);
+        category_alloc.set_width(category_width);
+        category_alloc.set_height(remaining_height);
+        menu->category_scrolled_window.size_allocate(category_alloc, -1);
+
+        flow_alloc.set_x(category_width);
+        flow_alloc.set_y(entry_measurements.sizes.minimum);
+        flow_alloc.set_width(width - category_width);
+        flow_alloc.set_height(remaining_height);
+        menu->app_scrolled_window.size_allocate(flow_alloc, -1);
+    } else
+    {
+        /* Even if we're not having it, allocate some space */
+        category_alloc.set_x(0);
+        category_alloc.set_y(entry_measurements.sizes.minimum);
+        category_alloc.set_width(width);
+        category_alloc.set_height(remaining_height);
+        menu->category_scrolled_window.size_allocate(category_alloc, -1);
+
+        flow_alloc.set_x(0);
+        flow_alloc.set_y(entry_measurements.sizes.minimum);
+        flow_alloc.set_width(width);
+        flow_alloc.set_height(remaining_height);
+        menu->app_scrolled_window.size_allocate(flow_alloc, -1);
+    }
+}
+
+void WfMenuLayout::measure_vfunc(const Gtk::Widget& widget, Gtk::Orientation orientation,
+    int for_size, int& minimum, int& natural, int& minimum_baseline,
+    int& natural_baseline) const
+{
+    minimum_baseline = -1;
+    natural_baseline = -1;
+    // What is our preferred width?
+    if (orientation == Gtk::Orientation::HORIZONTAL)
+    {
+        if (limit_width > 0)
+        {
+            minimum = limit_width;
+            natural = limit_width;
+            return;
+        }
+
+        minimum = category_width + content_width;
+        natural = category_width + content_width;
+    } else
+    {
+        if (limit_height > 0)
+        {
+            minimum = limit_height;
+            natural = limit_height;
+            return;
+        }
+
+        Gtk::Widget::Measurements entry_measurements, logout_measurements;
+        entry_measurements  = menu->search_entry.measure(Gtk::Orientation::VERTICAL, for_size);
+        logout_measurements = menu->box_bottom.measure(Gtk::Orientation::VERTICAL, for_size);
+
+        minimum = entry_measurements.sizes.minimum + logout_measurements.sizes.minimum + content_height;
+        natural = entry_measurements.sizes.minimum + logout_measurements.sizes.minimum + content_height;
+    }
+}
+
+void WfMenuLayout::set_limit(int w, int h)
+{
+    if ((w == limit_width) && (h == limit_height))
+    {
+        return;
+    }
+
+    limit_width  = w;
+    limit_height = h;
+    menu->popover_layout_box.queue_resize();
+}
 
 WfMenuCategory::WfMenuCategory(std::string _name, std::string _icon_name) :
     name(_name), icon_name(_icon_name)
@@ -575,6 +695,11 @@ void WayfireMenu::setup_popover_layout()
 {
     button->set_popup_child(popover_layout_box);
 
+    popover_layout_box.append(app_scrolled_window);
+    popover_layout_box.append(category_scrolled_window);
+    popover_layout_box.append(search_entry);
+    popover_layout_box.append(box_bottom);
+
     flowbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
     flowbox.set_activate_on_single_click(true);
     flowbox.set_valign(Gtk::Align::START);
@@ -586,16 +711,9 @@ void WayfireMenu::setup_popover_layout()
     flowbox.set_hexpand(true);
 
     flowbox_container.append(flowbox);
-
-    scroll_pair.append(category_scrolled_window);
-    scroll_pair.append(app_scrolled_window);
-    scroll_pair.set_homogeneous(false);
-    scroll_pair.set_vexpand(true);
-
     app_scrolled_window.set_child(flowbox_container);
     app_scrolled_window.add_css_class("app-list-scroll");
     app_scrolled_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
-    app_scrolled_window.set_vexpand(true);
 
     category_box.add_css_class("category-list");
     category_box.set_orientation(Gtk::Orientation::VERTICAL);
@@ -671,31 +789,19 @@ void WayfireMenu::setup_popover_layout()
         }
     }, false));
     popover_layout_box.add_controller(typing_gesture);
+
+    layout = std::make_shared<WfMenuLayout>(this);
+    popover_layout_box.set_layout_manager(layout);
 }
 
 void WayfireMenu::update_popover_layout()
 {
-    /* Layout was already initialized, make sure to remove widgets before
-     * adding them again */
-    auto children = popover_layout_box.get_children();
-    if (std::count(children.begin(), children.end(), &search_entry))
+    if (!menu_show_categories)
     {
-        popover_layout_box.remove(search_entry);
-    }
-
-    if (std::count(children.begin(), children.end(), &scroll_pair))
+        category_scrolled_window.hide();
+    } else
     {
-        popover_layout_box.remove(scroll_pair);
-    }
-
-    if (std::count(children.begin(), children.end(), &separator))
-    {
-        popover_layout_box.remove(separator);
-    }
-
-    if (std::count(children.begin(), children.end(), &box_bottom))
-    {
-        popover_layout_box.remove(box_bottom);
+        category_scrolled_window.show();
     }
 
     if (menu_list)
@@ -704,25 +810,6 @@ void WayfireMenu::update_popover_layout()
     } else
     {
         flowbox.set_max_children_per_line(-1);
-    }
-
-    if ((std::string)panel_position == WF_WINDOW_POSITION_TOP)
-    {
-        popover_layout_box.append(search_entry);
-        popover_layout_box.append(scroll_pair);
-        popover_layout_box.append(separator);
-        popover_layout_box.append(box_bottom);
-    } else
-    {
-        popover_layout_box.append(scroll_pair);
-        popover_layout_box.append(search_entry);
-        popover_layout_box.append(separator);
-        popover_layout_box.append(box_bottom);
-    }
-
-    if (!menu_show_categories)
-    {
-        category_scrolled_window.hide();
     }
 }
 
@@ -1031,7 +1118,7 @@ void WayfireMenu::update_size()
             width += menu_min_category_width;
         }
 
-        popover_layout_box.set_size_request(width, height);
+        layout->set_limit(width, height);
 
         Glib::signal_idle().connect_once([=] ()
         {
@@ -1041,7 +1128,7 @@ void WayfireMenu::update_size()
     }
 
     /* We know the size of the outside of the scrollbox, use it */
-    popover_layout_box.set_size_request(width, height);
+    layout->set_limit(width, height);
 }
 
 void WayfireMenu::toggle_menu()
