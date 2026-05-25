@@ -114,12 +114,15 @@ void WfMenuLayout::measure_vfunc(const Gtk::Widget& widget, Gtk::Orientation ori
             return;
         }
 
-        Gtk::Widget::Measurements entry_measurements, logout_measurements;
-        entry_measurements  = menu->search_entry.measure(Gtk::Orientation::VERTICAL, for_size);
-        logout_measurements = menu->box_bottom.measure(Gtk::Orientation::VERTICAL, for_size);
+        Gtk::Widget::Measurements entry_measurements, logout_measurements, separator_measurements;
+        entry_measurements     = menu->search_entry.measure(Gtk::Orientation::VERTICAL, for_size);
+        logout_measurements    = menu->box_bottom.measure(Gtk::Orientation::VERTICAL, for_size);
+        separator_measurements = menu->separator.measure(Gtk::Orientation::VERTICAL, for_size);
 
-        minimum = entry_measurements.sizes.minimum + logout_measurements.sizes.minimum + content_height;
-        natural = entry_measurements.sizes.minimum + logout_measurements.sizes.minimum + content_height;
+        minimum = separator_measurements.sizes.natural + entry_measurements.sizes.minimum +
+            logout_measurements.sizes.minimum + content_height;
+        natural = separator_measurements.sizes.natural + entry_measurements.sizes.minimum +
+            logout_measurements.sizes.minimum + content_height;
     }
 }
 
@@ -704,6 +707,7 @@ void WayfireMenu::setup_popover_layout()
     popover_layout_box.append(app_scrolled_window);
     popover_layout_box.append(category_scrolled_window);
     popover_layout_box.append(search_entry);
+    popover_layout_box.append(separator);
     popover_layout_box.append(box_bottom);
 
     flowbox.set_selection_mode(Gtk::SelectionMode::SINGLE);
