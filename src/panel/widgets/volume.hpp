@@ -20,6 +20,7 @@ class WayfireVolume : public WayfireWidget
     WfOption<int> icon_size{"panel/volume_icon_size"};
     WfOption<double> timeout{"panel/volume_display_timeout"};
     WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
+    WfOption<std::string> volume_left_click_command{"panel/volume_left_click_command"};
 
     void on_volume_scroll(GdkEventScroll *event);
     void on_volume_button_press(GdkEventButton *event);

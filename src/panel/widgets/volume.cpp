@@ -83,10 +83,8 @@ void WayfireVolume::on_volume_button_press(GdkEventButton *event)
     }
     if ((event->button == 3) && (event->type == GDK_BUTTON_PRESS))
     {
-	    const gchar *command = "mate-volume-control";
-
-        if (g_spawn_command_line_async (command, NULL) == FALSE)
-                g_warning ("Couldn't execute command: %s", command);
+        if (g_spawn_command_line_async (std::string(volume_left_click_command).c_str(), NULL) == FALSE)
+                g_warning ("Couldn't execute command: %s", std::string(volume_left_click_command).c_str());
     }
     
 }

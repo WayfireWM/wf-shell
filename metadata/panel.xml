@@ -153,6 +153,10 @@
 		<_short>Battery Font</_short>
 		<default>default</default>
 	</option>
+	<option name="battery_left_click_command" type="string">
+		<_short>Command on left click</_short>
+		<default>mate-power-statistics</default>
+	</option>
 	</group>
 	<group>
 	<_short>Network</_short>
@@ -271,6 +275,10 @@
 	<option name="volume_scroll_sensitivity" type="double">
 		<_short>Volume Scroll Sensitivity</_short>
 		<default>0.05</default>
+	</option>
+	<option name="volume_left_click_command" type="string">
+		<_short>Command on left click</_short>
+		<default>mate-volume-control</default>
 	</option>
 	</group>
 	<group>
