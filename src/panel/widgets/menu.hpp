@@ -5,13 +5,34 @@
 #include <sigc++/connection.h>
 #include <set>
 
-#include "../widget.hpp"
-#include "gtkmm/enums.h"
-#include "gtkmm/orientable.h"
+#include "widget.hpp"
 #include "wf-popover.hpp"
 
 class WayfireMenu;
 using AppInfo = Glib::RefPtr<Gio::DesktopAppInfo>;
+
+class WfMenuLayout : public Gtk::LayoutManager
+{
+  protected:
+    Gtk::Allocation search_alloc, logout_alloc, category_alloc, flow_alloc, separator_alloc;
+
+    void allocate_vfunc(const Gtk::Widget& widget, int width, int height, int baseline) override;
+    void measure_vfunc(const Gtk::Widget& widget, Gtk::Orientation orientation, int for_size, int& minimum,
+        int& natural, int& minimum_baseline, int& natural_baseline) const override;
+    WayfireMenu *menu;
+    int limit_width = 0, limit_height = 0;
+
+    WfOption<bool> show_categories{"panel/menu_show_categories"};
+    WfOption<int> category_width{"panel/menu_min_category_width"};
+    WfOption<int> content_width{"panel/menu_min_content_width"};
+    WfOption<int> content_height{"panel/menu_min_content_height"};
+
+  public:
+    WfMenuLayout(WayfireMenu *menu);
+
+    void set_limit(int x, int y);
+};
+
 
 class WfMenuCategory
 {
@@ -122,9 +143,9 @@ class WayfireMenu : public WayfireWidget
 {
     WayfireOutput *output;
 
+  public:
     Gtk::Box flowbox_container;
-    Gtk::Box box, box_bottom, scroll_pair;
-    Gtk::Box bottom_pad;
+    Gtk::Box box, box_bottom;
     Gtk::Box popover_layout_box;
     Gtk::Box category_box;
     Gtk::Separator separator;
@@ -134,6 +155,9 @@ class WayfireMenu : public WayfireWidget
     Gtk::Button logout_button;
     Gtk::Image logout_image;
     Gtk::ScrolledWindow app_scrolled_window, category_scrolled_window;
+
+  private:
+    std::shared_ptr<WfMenuLayout> layout;
     std::unique_ptr<WayfireMenuWidget> button;
     std::unique_ptr<WayfireLogoutUI> logout_ui;
 
