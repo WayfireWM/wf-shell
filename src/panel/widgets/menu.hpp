@@ -26,6 +26,7 @@ class WfMenuLayout : public Gtk::LayoutManager
     WfOption<int> category_width{"panel/menu_min_category_width"};
     WfOption<int> content_width{"panel/menu_min_content_width"};
     WfOption<int> content_height{"panel/menu_min_content_height"};
+    WfOption<std::string> panel_position{"panel/position"};
 
   public:
     WfMenuLayout(WayfireMenu *menu);

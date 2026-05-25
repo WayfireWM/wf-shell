@@ -193,6 +193,27 @@ WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::stri
 
     popover.set_autohide(false);
 
+    auto panel_position_changed = [=] ()
+    {
+        auto pos = panel_position.value();
+        if (pos == "top")
+        {
+            popover.set_position(Gtk::PositionType::BOTTOM);
+        } else if (pos == "bottom")
+        {
+            popover.set_position(Gtk::PositionType::TOP);
+        } else if (pos == "left")
+        {
+            popover.set_position(Gtk::PositionType::RIGHT);
+        } else if (pos == "right")
+        {
+            popover.set_position(Gtk::PositionType::LEFT);
+        }
+    };
+
+    panel_position_changed();
+    panel_position.set_callback(panel_position_changed);
+
     gtk_widget_set_parent(GTK_WIDGET(popover.gobj()), GTK_WIDGET(this->gobj()));
     gtk_widget_set_parent(GTK_WIDGET(menu.gobj()), GTK_WIDGET(this->gobj()));
     /* Moved to another menu */

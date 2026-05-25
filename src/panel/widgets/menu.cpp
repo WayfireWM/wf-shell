@@ -24,6 +24,8 @@ void WfMenuLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int heig
         return;
     }
 
+    bool is_top = panel_position.value() == WF_WINDOW_POSITION_TOP;
+
     Gtk::Widget::Measurements entry_measurements, logout_measurements, separator_measurements;
     entry_measurements     = menu->search_entry.measure(Gtk::Orientation::VERTICAL, width);
     logout_measurements    = menu->box_bottom.measure(Gtk::Orientation::VERTICAL, width);
@@ -39,7 +41,9 @@ void WfMenuLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int heig
     }
 
     search_alloc.set_x(0);
-    search_alloc.set_y(0);
+    search_alloc.set_y(is_top ? 0 : height -
+        (logout_measurements.sizes.minimum + separator_measurements.sizes.natural +
+            entry_measurements.sizes.minimum));
     search_alloc.set_height(entry_measurements.sizes.minimum);
     search_alloc.set_width(width);
     menu->search_entry.size_allocate(search_alloc, -1);
@@ -60,13 +64,13 @@ void WfMenuLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int heig
     if (show_categories.value())
     {
         category_alloc.set_x(0);
-        category_alloc.set_y(entry_measurements.sizes.minimum);
+        category_alloc.set_y(is_top ? entry_measurements.sizes.minimum : 0);
         category_alloc.set_width(category_width);
         category_alloc.set_height(remaining_height);
         menu->category_scrolled_window.size_allocate(category_alloc, -1);
 
         flow_alloc.set_x(category_width);
-        flow_alloc.set_y(entry_measurements.sizes.minimum);
+        flow_alloc.set_y(is_top ? entry_measurements.sizes.minimum : 0);
         flow_alloc.set_width(width - category_width);
         flow_alloc.set_height(remaining_height);
         menu->app_scrolled_window.size_allocate(flow_alloc, -1);
@@ -74,13 +78,13 @@ void WfMenuLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int heig
     {
         /* Even if we're not having it, allocate some space */
         category_alloc.set_x(0);
-        category_alloc.set_y(entry_measurements.sizes.minimum);
+        category_alloc.set_y(is_top ? entry_measurements.sizes.minimum : 0);
         category_alloc.set_width(width);
         category_alloc.set_height(remaining_height);
         menu->category_scrolled_window.size_allocate(category_alloc, -1);
 
         flow_alloc.set_x(0);
-        flow_alloc.set_y(entry_measurements.sizes.minimum);
+        flow_alloc.set_y(is_top ? entry_measurements.sizes.minimum : 0);
         flow_alloc.set_width(width);
         flow_alloc.set_height(remaining_height);
         menu->app_scrolled_window.size_allocate(flow_alloc, -1);
