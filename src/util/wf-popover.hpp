@@ -50,7 +50,7 @@ class WayfireMenuWidget : public Gtk::Box
     void set_child(Gtk::Widget & widget);
     Gtk::Widget *get_child();
 
-    void popup();
+    void popup(bool autohide = true);
     void popup_timed(int millis);
     void popdown();
 
