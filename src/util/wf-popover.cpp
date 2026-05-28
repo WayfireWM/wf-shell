@@ -42,7 +42,7 @@ void WayfireMenuWidget::set_menu_model(Glib::RefPtr<Gio::MenuModel> new_menu)
     menu.set_menu_model(new_menu);
 }
 
-void WayfireMenuWidget::popup()
+void WayfireMenuWidget::popup(bool autohide)
 {
     cancel_timer();
     auto panel = get_panel(this);
@@ -66,6 +66,7 @@ void WayfireMenuWidget::popup()
             fullscreen->show();
         } else
         {
+            popover.set_autohide(autohide);
             popover.popup();
         }
     } else
@@ -105,7 +106,7 @@ void WayfireMenuWidget::popup_timed(int millis)
         return;
     }
 
-    popup();
+    popup(false);
     set_timer(millis);
 }
 
@@ -190,8 +191,6 @@ WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::stri
     scroll.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
     scroll.set_propagate_natural_height(true);
     scroll.set_propagate_natural_width(true);
-
-    popover.set_autohide(false);
 
     auto panel_position_changed = [=] ()
     {
