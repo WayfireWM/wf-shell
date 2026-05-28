@@ -15,18 +15,29 @@ Connection::Connection(std::string path, std::shared_ptr<Gio::DBus::Proxy> conne
 
     Glib::Variant<std::string> type_data;
     connection_proxy->get_cached_property(type_data, "Type");
-    std::string type = type_data.get();
+    std::string type = "error";
+    if (type_data)
+    {
+        type = type_data.get();
+    }
+
     has_wireguard = (type == "wireguard");
 
     Glib::Variant<bool> vpn_data;
     connection_proxy->get_cached_property(vpn_data, "Vpn");
-    has_vpn = vpn_data.get();
+    if (vpn_data)
+    {
+        has_vpn = vpn_data.get();
+    }
 
     if (has_vpn || has_wireguard)
     {
         Glib::Variant<std::string> vpn_path_start;
         connection_proxy->get_cached_property(vpn_path_start, "Connection");
-        vpn_path = vpn_path_start.get();
+        if (vpn_path_start)
+        {
+            vpn_path = vpn_path_start.get();
+        }
     }
 }
 

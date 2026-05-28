@@ -51,8 +51,10 @@ std::string WayfireLockerApp::get_application_name()
     return "org.wayfire.locker";
 }
 
-WayfireLockerApp::WayfireLockerApp()
-{}
+WayfireLockerApp::WayfireLockerApp(bool now)
+{
+    can_early_wake = !now;
+}
 
 WayfireLockerApp::~WayfireLockerApp()
 {}
@@ -73,19 +75,6 @@ void WayfireLockerApp::perform_lock()
         /* Demand the session be locked */
         gtk_session_lock_instance_lock(lock);
     }
-}
-
-/* Called before each activate */
-void WayfireLockerApp::command_line()
-{
-    app->add_main_option_entry(
-        [=] (const Glib::ustring & option_name,
-             const Glib::ustring & value, bool has_value)
-    {
-        can_early_wake = false;
-        return true;
-    },
-        "now", 'n', "Instant lock", "", Glib::OptionEntry::Flags::NO_ARG);
 }
 
 void WayfireLockerApp::on_activate()
@@ -229,7 +218,7 @@ void WayfireLockerApp::on_activate()
         {
             if (plugin->enable)
             {
-                plugin->init();
+                plugin->start();
                 for (auto & it : window_list)
                 {
                     std::string id = it.first;
@@ -243,7 +232,7 @@ void WayfireLockerApp::on_activate()
                     plugin->remove_output(id, it.second->grid);
                 }
 
-                plugin->deinit();
+                plugin->stop();
             }
         });
         plugin->position.set_callback(
@@ -270,7 +259,7 @@ void WayfireLockerApp::init_plugins()
         Plugin plugin = it.second;
         if (plugin->enable)
         {
-            it.second->init();
+            it.second->start();
         }
     }
 }
@@ -283,7 +272,7 @@ void WayfireLockerApp::deinit_plugins()
         Plugin plugin = it.second;
         if (plugin->enable)
         {
-            it.second->deinit();
+            it.second->stop();
         }
     }
 }
@@ -358,7 +347,6 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     }, false));
     if (is_debug())
     {
-        init_plugins();
         m_is_locked = true;
         window->present();
     } else
@@ -422,17 +410,17 @@ void WayfireLockerApp::perform_unlock(std::string reason)
     });
 }
 
-void WayfireLockerApp::create(int argc, char **argv, pid_t p_pid)
+void WayfireLockerApp::create(pid_t p_pid, bool now)
 {
     if (instance)
     {
         throw std::logic_error("Running WayfireLockerApp twice!");
     }
 
-    instance = std::unique_ptr<WayfireShellApp>(new WayfireLockerApp{});
+    instance = std::unique_ptr<WayfireShellApp>(new WayfireLockerApp(now));
     (dynamic_cast<WayfireLockerApp&>(*instance)).p_pid = p_pid;
     instance->init_app();
-    instance->run(argc, argv);
+    instance->run(0, NULL);
     /* In case exit has happened before parent quits */
     (dynamic_cast<WayfireLockerApp&>(*instance)).kill_parent(ExitType::ERROR_NOT_LOCKED);
 }
@@ -455,6 +443,34 @@ void WayfireLockerApp::set_is_locked(bool locked)
 /* Starting point */
 int main(int argc, char **argv)
 {
+    bool nofork = false, now = false;
+    for (int count = 0; count < argc; count++)
+    {
+        if (strcmp(argv[count], "--nofork") == 0)
+        {
+            nofork = true;
+        }
+
+        if (strcmp(argv[count], "--now") == 0)
+        {
+            now = true;
+        }
+    }
+
+    std::cout << "nofork: " << nofork << " now: " << now << std::endl;
+    if (nofork)
+    {
+        std::cout << "NO fork" << std::endl;
+        if (!gtk_session_lock_is_supported())
+        {
+            std::cerr << "This session does not support locking" << std::endl;
+            exit(1);
+        }
+
+        WayfireLockerApp::create(0, now);
+        return 0;
+    }
+
     pid_t c_pid, p_pid = getpid();
     c_pid = fork();
     if (c_pid == -1)
@@ -490,7 +506,7 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        WayfireLockerApp::create(argc, argv, p_pid);
+        WayfireLockerApp::create(p_pid, now);
     }
 
     return 0;

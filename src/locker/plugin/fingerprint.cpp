@@ -35,9 +35,9 @@ WayfireLockerFingerprintPlugin::~WayfireLockerFingerprintPlugin()
     }
 }
 
-void WayfireLockerFingerprintPlugin::on_connection(const Glib::RefPtr<Gio::DBus::Connection> & connection,
-    const Glib::ustring & name)
+void WayfireLockerFingerprintPlugin::on_connection(const Glib::RefPtr<Gio::AsyncResult> & result)
 {
+    connection = Gio::DBus::Connection::get_finish(result);
     /* Bail here if config has this disabled */
     if (!enable)
     {
@@ -45,10 +45,62 @@ void WayfireLockerFingerprintPlugin::on_connection(const Glib::RefPtr<Gio::DBus:
     }
 
     Gio::DBus::Proxy::create(connection,
+        "org.freedesktop.DBus",
+        "/org/freedesktop/DBus",
+        "org.freedesktop.DBus",
+        [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
+    {
+        dbus_proxy = Gio::DBus::Proxy::create_finish(result);
+        /*
+         * Prepare for fprintd disappearing
+         * https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.NameOwnerChanged.html
+         */
+        fprint_watcher = dbus_proxy->signal_signal().connect(
+            [this] (const Glib::ustring & sender_name,
+                    const Glib::ustring & signal_name,
+                    const Glib::VariantContainerBase & params)
+        {
+            if (signal_name == "NameOwnerChanged")
+            {
+                Glib::Variant<std::string> to, from, name;
+                params.get_child(name, 0);
+                params.get_child(from, 1);
+                params.get_child(to, 2);
+                if (name.get() == "net.reactivated.Fprint")
+                {
+                    if (from.get() == "")
+                    {
+                        get_fprintd();
+                    } else if (to.get() == "")
+                    {
+                        manager_proxy = nullptr;
+                        device_proxy  = nullptr;
+                        signal.disconnect();
+                        starting_fingerprint.disconnect();
+                        finding_new_device.disconnect();
+                        hide();
+                    }
+                }
+            }
+        });
+        get_fprintd();
+    });
+}
+
+void WayfireLockerFingerprintPlugin::get_fprintd()
+{
+    /* Watch for in progress async task */
+    if (getting_fprintd || (manager_proxy != nullptr))
+    {
+        return;
+    }
+
+    getting_fprintd = true;
+    Gio::DBus::Proxy::create(connection,
         "net.reactivated.Fprint",
         "/net/reactivated/Fprint/Manager",
         "net.reactivated.Fprint.Manager",
-        [this, connection] (const Glib::RefPtr<Gio::AsyncResult> & result)
+        [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
     {
         manager_proxy = Gio::DBus::Proxy::create_finish(result);
         get_device();
@@ -57,6 +109,7 @@ void WayfireLockerFingerprintPlugin::on_connection(const Glib::RefPtr<Gio::DBus:
 
 void WayfireLockerFingerprintPlugin::get_device()
 {
+    getting_fprintd = false;
     if (device_proxy != nullptr)
     {
         std::cerr << "get_device when device_proxy is not null" << std::endl;
@@ -87,34 +140,37 @@ void WayfireLockerFingerprintPlugin::on_device_acquired(const Glib::RefPtr<Gio::
     device_proxy = Gio::DBus::Proxy::create_finish(result);
     update("Listing fingers...", "system-search-symbolic", "info");
     char *username = getlogin();
-    device_proxy->call("ListEnrolledFingers", [=] (Glib::RefPtr<Gio::AsyncResult>& result)
-    {
-        auto reply = device_proxy->call_finish(result);
-        if (!reply)
-        {
-            return;
-        }
-
-        Glib::Variant<std::vector<Glib::ustring>> array;
-        reply.get_child(array, 0);
-
-        if (array.get_n_children() == 0)
-        {
-            // Zero fingers for this user.
-            show();
-            update("No fingerprints enrolled", "dialog-error-symbolic", "bad");
-            // Don't hide entirely, allow the user to see this specific fail
-            return;
-        }
-
-        show();
-        update("Fingerprint Device Ready", "system-search-symbolic", "info");
-        Glib::Variant<Glib::ustring> finger;
-        reply.get_child(finger, 0);
-
-        start_fingerprint_scanning();
-    },
+    device_proxy->call("ListEnrolledFingers",
+        sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_list_fingerprints),
         Glib::Variant<std::tuple<Glib::ustring>>::create(username));
+}
+
+void WayfireLockerFingerprintPlugin::on_list_fingerprints(Glib::RefPtr<Gio::AsyncResult>& result)
+{
+    auto reply = device_proxy->call_finish(result);
+    if (!reply)
+    {
+        return;
+    }
+
+    Glib::Variant<std::vector<Glib::ustring>> array;
+    reply.get_child(array, 0);
+
+    if (array.get_n_children() == 0)
+    {
+        // Zero fingers for this user.
+        show();
+        update("No fingerprints enrolled", "dialog-error-symbolic", "bad");
+        // Don't hide entirely, allow the user to see this specific fail
+        return;
+    }
+
+    show();
+    update("Fingerprint Device Ready", "system-search-symbolic", "info");
+    Glib::Variant<Glib::ustring> finger;
+    reply.get_child(finger, 0);
+
+    start_fingerprint_scanning();
 }
 
 void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
@@ -154,7 +210,6 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
             update(mesg.get(), "system-search-symbolic", "info");
             if (mesg.get() == "verify-match")
             {
-                std::cout << "Match" << std::endl;
                 stop_fingerprint_scanning();
                 WayfireLockerApp::get().perform_unlock("Fingerprint verified");
                 return;
@@ -162,7 +217,6 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
 
             if (mesg.get() == "verify-no-match")
             {
-                std::cout << "No match" << std::endl;
                 show();
                 failure();
                 update("Invalid fingerprint", "dialog-error-symbolic", "bad");
@@ -242,7 +296,6 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
         } catch (Glib::Error & e) /* TODO : Narrow down? */
         {
             stop_fingerprint_scanning();
-            std::cout << "Fingerprint device already claimed, try in 3s" << std::endl;
             update("Fingerprint reader busy...", "dialog-error-symbolic", "info");
             Glib::signal_timeout().connect_seconds(
                 [this] ()
@@ -289,40 +342,8 @@ void WayfireLockerFingerprintPlugin::stop_fingerprint_scanning()
 
 void WayfireLockerFingerprintPlugin::init()
 {
-    auto cancellable = Gio::Cancellable::create();
-    connection = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM, cancellable);
-    if (!connection)
-    {
-        std::cerr << "Failed to connect to dbus" << std::endl;
-        return;
-    }
-
-    Gio::DBus::Proxy::create(
-        connection,
-        "net.reactivated.Fprint",
-        "/net/reactivated/Fprint/Manager",
-        "net.reactivated.Fprint.Manager",
-        [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
-    {
-        auto manager_proxy = Gio::DBus::Proxy::create_finish(result);
-        try {
-            manager_proxy->call("GetDefaultDevice", [=] (Glib::RefPtr<Gio::AsyncResult> & result)
-            {
-                auto default_device = manager_proxy->call_finish(result);
-                Glib::Variant<Glib::ustring> item_path;
-                default_device.get_child(item_path, 0);
-                Gio::DBus::Proxy::create(connection,
-                    "net.reactivated.Fprint",
-                    item_path.get(),
-                    "net.reactivated.Fprint.Device",
-                    sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_device_acquired));
-            });
-        } catch (Glib::Error & e) /* TODO : Narrow down? */
-        {
-            hide();
-            return;
-        }
-    });
+    Gio::DBus::Connection::get(Gio::DBus::BusType::SYSTEM,
+        sigc::mem_fun(*this, &WayfireLockerFingerprintPlugin::on_connection));
 }
 
 void WayfireLockerFingerprintPlugin::deinit()

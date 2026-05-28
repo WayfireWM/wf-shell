@@ -54,7 +54,7 @@ class WayfireLockerApp : public WayfireShellApp
 
   public:
     using WayfireShellApp::WayfireShellApp;
-    static void create(int argc, char **argv, pid_t p_pid);
+    static void create(pid_t p_pid, bool now);
     static WayfireLockerApp& get()
     {
         return (WayfireLockerApp&)WayfireShellApp::get();
@@ -62,7 +62,6 @@ class WayfireLockerApp : public WayfireShellApp
 
     Gio::Application::Flags get_extra_application_flags() override;
     std::string get_application_name() override;
-    void command_line() override;
 
     /* Starts the program. get() is valid afterward the first (and the only)
      * call to create() */
@@ -78,7 +77,7 @@ class WayfireLockerApp : public WayfireShellApp
 
     bool is_locked();
     void set_is_locked(bool locked);
-    WayfireLockerApp();
+    WayfireLockerApp(bool now);
     ~WayfireLockerApp();
 
     Plugin get_plugin(std::string name);

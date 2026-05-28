@@ -31,17 +31,21 @@ class WayfireLockerFingerprintPlugin : public WayfireLockerPlugin
 {
   private:
     DBusConnection connection;
-    Glib::RefPtr<Gio::DBus::Proxy> device_proxy, manager_proxy;
-    sigc::connection signal;
+    Glib::RefPtr<Gio::DBus::Proxy> device_proxy, manager_proxy, dbus_proxy;
+    sigc::connection signal, fprint_watcher;
     sigc::connection starting_fingerprint, finding_new_device;
+
+    bool getting_fprintd = false;
+    void get_fprintd();
 
   public:
 
     WayfireLockerFingerprintPlugin();
     ~WayfireLockerFingerprintPlugin();
-    void on_connection(const Glib::RefPtr<Gio::DBus::Connection> & connection, const Glib::ustring & name);
+    void on_connection(const Glib::RefPtr<Gio::AsyncResult> & result);
     void get_device();
     void on_device_acquired(const Glib::RefPtr<Gio::AsyncResult> & result);
+    void on_list_fingerprints(Glib::RefPtr<Gio::AsyncResult>& result);
     void start_fingerprint_scanning();
     void stop_fingerprint_scanning();
     void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;

@@ -73,6 +73,8 @@ class WayfireLockerMPRISPlugin : public WayfireLockerPlugin
     std::map<std::string, Glib::RefPtr<Gio::DBus::Proxy>> clients;
     std::map<std::string, Glib::RefPtr<WayfireLockerMPRISCollective>> widgets;
     sigc::connection signal;
+    void bus_created(const Glib::RefPtr<Gio::AsyncResult> & result);
+    void list_names(Glib::RefPtr<Gio::AsyncResult> & result);
 
   public:
     WayfireLockerMPRISPlugin();
