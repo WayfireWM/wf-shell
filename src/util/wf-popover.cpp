@@ -42,8 +42,14 @@ void WayfireMenuWidget::set_menu_model(Glib::RefPtr<Gio::MenuModel> new_menu)
     menu.set_menu_model(new_menu);
 }
 
+bool WayfireMenuWidget::is_manual_popup()
+{
+    return this->autohide;
+}
+
 void WayfireMenuWidget::popup(bool autohide)
 {
+    this->autohide = autohide;
     cancel_timer();
     auto panel = get_panel(this);
     if (!panel)
