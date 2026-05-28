@@ -267,54 +267,65 @@ void WayfireLockerMPRISPlugin::init()
         "org.freedesktop.DBus",
         "/org/freedesktop/DBus",
         "org.freedesktop.DBus",
-        [this] (const Glib::RefPtr<Gio::AsyncResult> & result)
+        sigc::mem_fun(*this, &WayfireLockerMPRISPlugin::bus_created));
+}
+
+void WayfireLockerMPRISPlugin::bus_created(const Glib::RefPtr<Gio::AsyncResult> & result)
+{
+    if (manager_proxy)
     {
-        // Got a dbus proxy
-        manager_proxy = Gio::DBus::Proxy::create_finish(result);
-        manager_proxy->call("ListNames", [=] (Glib::RefPtr<Gio::AsyncResult> & result)
+        Gio::DBus::Proxy::create_finish(result);
+        return;
+    }
+
+    // Got a dbus proxy
+    manager_proxy = Gio::DBus::Proxy::create_finish(result);
+    manager_proxy->call("ListNames", sigc::mem_fun(*this, &WayfireLockerMPRISPlugin::list_names));
+}
+
+void WayfireLockerMPRISPlugin::list_names(Glib::RefPtr<Gio::AsyncResult> & result)
+{
+    auto val = manager_proxy->call_finish(result);
+    if (!val)
+    {
+        return;
+    }
+
+    /* Get all clients that existed before we started */
+    Glib::Variant<std::vector<std::string>> list;
+    val.get_child(list, 0);
+    auto l2 = list.get();
+    for (auto t : l2)
+    {
+        if (t.substr(0, 23) == "org.mpris.MediaPlayer2.")
         {
-            auto val = manager_proxy->call_finish(result);
-            if (!val)
-            {
-                return;
-            }
+            add_client(t);
+        }
+    }
 
-            Glib::Variant<std::vector<std::string>> list;
-            val.get_child(list, 0);
-            auto l2 = list.get();
-            for (auto t : l2)
+    /* Get all clients connecting and disconnecting */
+    signal = manager_proxy->signal_signal().connect(
+        [this] (const Glib::ustring & sender_name,
+                const Glib::ustring & signal_name,
+                const Glib::VariantContainerBase & params)
+    {
+        if (signal_name == "NameOwnerChanged")
+        {
+            Glib::Variant<std::string> to, from, name;
+            params.get_child(name, 0);
+            params.get_child(to, 1);
+            params.get_child(from, 2);
+            if (name.get().substr(0, 23) == "org.mpris.MediaPlayer2.")
             {
-                if (t.substr(0, 23) == "org.mpris.MediaPlayer2.")
+                if (to.get() == "")
                 {
-                    add_client(t);
+                    add_client(name.get());
+                } else if (from.get() == "")
+                {
+                    rem_client(name.get());
                 }
             }
-
-            /* https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.NameOwnerChanged.html */
-            signal = manager_proxy->signal_signal().connect(
-                [this] (const Glib::ustring & sender_name,
-                        const Glib::ustring & signal_name,
-                        const Glib::VariantContainerBase & params)
-            {
-                if (signal_name == "NameOwnerChanged")
-                {
-                    Glib::Variant<std::string> to, from, name;
-                    params.get_child(name, 0);
-                    params.get_child(to, 1);
-                    params.get_child(from, 2);
-                    if (name.get().substr(0, 23) == "org.mpris.MediaPlayer2.")
-                    {
-                        if (to.get() == "")
-                        {
-                            add_client(name.get());
-                        } else if (from.get() == "")
-                        {
-                            rem_client(name.get());
-                        }
-                    }
-                }
-            });
-        });
+        }
     });
 }
 

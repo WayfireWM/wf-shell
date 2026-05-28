@@ -451,7 +451,7 @@ void NetworkManager::changed_primary()
 
         Glib::Variant<std::string> inner_connection_val;
         connection_proxy->get_cached_property(inner_connection_val, "Connection");
-        if (vpns_not_changed.count(inner_connection_val.get()) > 0)
+        if (inner_connection_val && (vpns_not_changed.count(inner_connection_val.get()) > 0))
         {
             auto vpn = vpns_not_changed[inner_connection_val.get()];
             vpn->set_connection_path(connection_path_loop);
