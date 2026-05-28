@@ -617,7 +617,7 @@ void WayfireAutohidingWindow::set_active_popover(WayfireMenuWidget& button)
     }
 
     /* Set this panel to forcibly show over fullscreen apps */
-    if (force_show_popup.value())
+    if (button.is_manual_popup() && force_show_popup.value())
     {
         gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
     }

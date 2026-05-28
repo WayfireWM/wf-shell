@@ -40,6 +40,8 @@ class WayfireMenuWidget : public Gtk::Box
     void cancel_timer();
     void set_timer(int millis);
 
+    bool autohide = true;
+
     type_signal_simple popup_signal, popdown_signal;
     WfOption<bool> menus_motion{"panel/menus_change_motion"};
 
@@ -49,6 +51,8 @@ class WayfireMenuWidget : public Gtk::Box
     void set_menu_model(Glib::RefPtr<Gio::MenuModel> menu);
     void set_child(Gtk::Widget & widget);
     Gtk::Widget *get_child();
+
+    bool is_manual_popup();
 
     void popup(bool autohide = true);
     void popup_timed(int millis);
