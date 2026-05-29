@@ -956,7 +956,12 @@ class WayfireToplevel::impl
     void remove_button()
     {
         button_leave_signal.disconnect();
-        window_list->remove(button);
+        auto children = window_list->get_children();
+        if (std::count(children.begin(), children.end(), &button) == 1)
+        {
+            window_list->remove(button);
+        }
+
         send_rectangle_hints();
     }
 
@@ -1033,7 +1038,12 @@ class WayfireToplevel::impl
     {
         if (window_list->output->wo == output)
         {
-            window_list->remove(button);
+            auto children = window_list->get_children();
+            if (std::count(children.begin(), children.end(), &button) == 1)
+            {
+                window_list->remove(button);
+            }
+
             send_rectangle_hints();
         }
     }
