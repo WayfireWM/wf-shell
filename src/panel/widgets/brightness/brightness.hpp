@@ -1,3 +1,4 @@
+#include "wf-popover.hpp"
 #include <gtkmm.h>
 #include <memory>
 #include <sigc++/connection.h>
@@ -133,24 +134,22 @@ class WayfireBrightness : public WayfireWidget
     WayfireOutput *output;
 
     Gtk::Image icon;
-    Gtk::Popover *popover;
     Gtk::Box box, display_box, other_box;
     Gtk::Label display_label, other_label;
     Gtk::Separator disp_othr_sep;
     sigc::connection popover_timeout;
 
-    WfOption<double> popup_timeout{"panel/brightness_popup_timeout"};
     WfOption<int> spacing{"panel/brightness_spacing"};
 
-    bool on_popover_timeout(int timer);
     void hide_unused();
 
   public:
     WayfireBrightness(WayfireOutput *output);
     ~WayfireBrightness();
 
-    std::unique_ptr<WayfireMenuButton> button;
+    std::unique_ptr<WayfireMenuWidget> button;
 
+    WfOption<double> popup_timeout{"panel/brightness_popup_timeout"};
     WfOption<double> scroll_sensitivity{"panel/brightness_scroll_sensitivity"};
     WfOption<bool> invert_scroll{"panel/brightness_invert_scroll"};
     WfOption<bool> popup_on_change{"panel/brightness_popup_on_change"};
@@ -158,9 +157,6 @@ class WayfireBrightness : public WayfireWidget
     std::shared_ptr<WfLightControl> ctrl_this_display;
 
     std::vector<std::shared_ptr<WfLightControl>> controls;
-
-    void check_set_popover_timeout();
-    void cancel_popover_timeout();
 
     void add_control(std::shared_ptr<WfLightControl> control);
     void rem_control(std::shared_ptr<WfLightControl> control);
