@@ -187,27 +187,21 @@ void StatusNotifierItem::setup_tooltip()
 
 void StatusNotifierItem::update_icon()
 {
-    if (const auto icon_theme_path = get_item_property<Glib::ustring>(
-        "IconThemePath");!icon_theme_path.empty())
-    {
-        icon_theme = Gtk::IconTheme::create();
-        icon_theme->add_resource_path(icon_theme_path);
-    } else
-    {
-        icon_theme = Gtk::IconTheme::get_for_display(get_display());
-    }
-
     const Glib::ustring icon_type_name =
         get_item_property<Glib::ustring>("Status") == "NeedsAttention" ? "AttentionIcon" : "Icon";
     const bool hide = get_item_property<Glib::ustring>("Status") == "Passive";
-    const auto icon_name   = get_item_property<Glib::ustring>(icon_type_name + "Name");
-    const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
-    if (pixmap_data)
+    const auto icon_name = get_item_property<Glib::ustring>(icon_type_name + "Name");
+
+    if (!IconProvider::image_set_icon(icon, icon_name))
     {
-        icon.set(pixmap_data);
-    } else
-    {
-        icon.set_from_icon_name(icon_name);
+        const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
+        if (pixmap_data)
+        {
+            icon.set(pixmap_data);
+        } else
+        {
+            icon.set_from_icon_name("dialog-information");
+        }
     }
 
     if (hide)
@@ -252,9 +246,6 @@ void StatusNotifierItem::handle_signal(const Glib::ustring & signal,
     if (property == "ToolTip")
     {
         fetch_property(property);
-    } else if (property == "IconThemePath")
-    {
-        fetch_property(property, [this] { update_icon(); });
     } else if ((property.size() >= 4) && (property.substr(property.size() - 4) == "Icon"))
     {
         fetch_property(property + "Name",

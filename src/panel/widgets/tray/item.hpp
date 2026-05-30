@@ -32,8 +32,6 @@ class StatusNotifierItem : public Gtk::Button
 
     std::vector<sigc::connection> signals;
 
-    Glib::RefPtr<Gtk::IconTheme> icon_theme;
-
     template<typename T>
     T get_item_property(const Glib::ustring & name, const T & default_value = {}) const
     {
