@@ -86,10 +86,9 @@ void WfLightControl::update_parent_icon()
     if (parent->ctrl_this_display.get() == this)
     {
         parent->update_icon();
-        if (parent->popup_on_change && !parent->button->get_active())
+        if (parent->popup_on_change)
         {
-            parent->button->activate();
-            parent->check_set_popover_timeout();
+            parent->button->popup_timed(parent->popup_timeout);
         }
     }
 }
@@ -121,15 +120,11 @@ WayfireBrightness::~WayfireBrightness()
 
 void WayfireBrightness::init(Gtk::Box *container)
 {
-    button = std::make_unique<WayfireMenuButton>("panel");
-    button->add_css_class("widget-icon");
-    button->add_css_class("brightness");
-    button->add_css_class("flat");
-    button->get_children()[0]->add_css_class("flat");
+    button = std::make_unique<WayfireMenuWidget>("panel", "brightness");
     button->set_child(icon);
     button->show();
-    popover = button->get_popover();
-    popover->set_autohide(false);
+    button->open_on(1);
+    button->add_css_class("widget-icon");
 
     // layout
     box.set_orientation(Gtk::Orientation::VERTICAL);
@@ -196,8 +191,7 @@ void WayfireBrightness::init(Gtk::Box *container)
     scroll_gesture->set_flags(Gtk::EventControllerScroll::Flags::VERTICAL);
     button->add_controller(scroll_gesture);
 
-    popover->set_child(box);
-    popover->get_style_context()->add_class("brightness-popover");
+    button->set_popup_child(box);
 
     container->append(*button);
 
@@ -293,24 +287,4 @@ void WayfireBrightness::update_icon()
     }
 
     icon.set_from_icon_name(ICON(ctrl_this_display->get_scale_target_value()));
-}
-
-bool WayfireBrightness::on_popover_timeout(int timer)
-{
-    popover_timeout.disconnect();
-    popover->popdown();
-    return false;
-}
-
-void WayfireBrightness::check_set_popover_timeout()
-{
-    popover_timeout.disconnect();
-
-    popover_timeout = Glib::signal_timeout().connect(sigc::bind(sigc::mem_fun(*this,
-        &WayfireBrightness::on_popover_timeout), 0), popup_timeout * 1000);
-}
-
-void WayfireBrightness::cancel_popover_timeout()
-{
-    popover_timeout.disconnect();
 }

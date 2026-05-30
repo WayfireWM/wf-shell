@@ -105,7 +105,6 @@ class WfLightDdcaControl : public WfLightControl
             std::thread(writevcp, this).detach();
         }
 
-        parent->cancel_popover_timeout();
         update_parent_icon();
 
         for (auto control : DdcaSurveillor::get().ref_to_controls[ref])

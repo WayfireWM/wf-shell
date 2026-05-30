@@ -82,7 +82,6 @@ class WfLightSysfsControl : public WfLightControl
 
         b_file.close();
 
-        parent->cancel_popover_timeout();
         update_parent_icon();
     }
 
@@ -148,8 +147,6 @@ class WfLightSysfsDbusSystemdControl : public WfLightSysfsControl
             params,
             "org.freedesktop.login1" // bus name
         );
-
-        parent->cancel_popover_timeout();
         update_parent_icon();
     }
 };

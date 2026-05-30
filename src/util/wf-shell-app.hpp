@@ -17,7 +17,7 @@ using GMonitor = Glib::RefPtr<Gdk::Monitor>;
  */
 struct WayfireOutput
 {
-    GMonitor monitor;
+    GMonitor monitor = nullptr;
     wl_output *wo;
     zwf_output_v2 *output;
     sigc::signal<void()> toggle_menu_signal();
