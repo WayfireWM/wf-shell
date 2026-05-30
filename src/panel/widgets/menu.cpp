@@ -84,17 +84,23 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     right_click_g->set_button(3);
     long_press_g->set_touch_only(true);
 
-    signals.push_back(left_click_g->signal_pressed().connect(
+    signals.push_back(left_click_g->signal_pressed().connect([=] (int, double, double)
+    {
+        left_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
+    signals.push_back(left_click_g->signal_released().connect(
         [=] (int c, double x, double y)
     {
         on_click();
-        left_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
     }));
-    signals.push_back(right_click_g->signal_pressed().connect(
+    signals.push_back(right_click_g->signal_pressed().connect([=] (int, double, double)
+    {
+        right_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
+    signals.push_back(right_click_g->signal_released().connect(
         [=] (int c, double x, double y)
     {
         extra_actions_button.activate();
-        right_click_g->set_state(Gtk::EventSequenceState::CLAIMED);
     }));
     signals.push_back(long_press_g->signal_pressed().connect(
         [=] (double x, double y)
