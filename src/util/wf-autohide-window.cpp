@@ -86,7 +86,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     auto display = Gdk::Display::get_default();
     signals.push_back(WayfireShellApp::get().signal_monitor_list_changed().connect([=] ()
     {
-        Glib::signal_idle().connect_once([=] () { this->reinit_ext_hotspots(); });
+        this->reinit_ext_hotspots();
     }));
 
 
@@ -280,13 +280,6 @@ void WayfireAutohidingWindow::reinit_ext_hotspots()
     }
 
     adjacent_edges_hotspots.clear();
-    if ((this->output->monitor == nullptr) || !(this->output->monitor->is_valid()))
-    {
-        // Catch a too-soon reinit
-        std::cout << "Monitor is not valid" << std::endl;
-        Glib::signal_timeout().connect_once([this] () {reinit_ext_hotspots();}, 100);
-        return;
-    }
 
     std::cout << "Monitor reinit hotspots " << this->output->monitor->get_connector() << std::endl;
 

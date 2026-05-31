@@ -248,45 +248,57 @@ void WayfireShellApp::on_activate()
     }
 }
 
-void WayfireShellApp::output_list_updated(const int pos, const int rem, const int add)
+bool WayfireShellApp::sanity_check_outputs()
 {
     auto display = Gdk::Display::get_default();
     auto monitor_list = display->get_monitors();
-    auto context = g_main_context_default();
 
-    for (int i = pos; i < pos + add; i++)
+    for (guint count = 0; count < monitor_list->get_n_items(); count++)
     {
-        auto monitor = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(i));
-
-        /* XXX: Workaround bug that causes a new output to have
-         * no name. We use the name for various reasons so we need
-         * it to be valid when signaling new output to the apps.
-         * We set a timer for 100ms, then print a warning if the
-         * timeout fired. */
+        auto monitor = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(count));
         std::string output_name = monitor->get_connector();
-
-        bool cancel_wait    = false;
-        auto timeout_signal = Glib::signal_timeout().connect([&cancel_wait] ()
+        if (output_name.empty())
         {
-            cancel_wait = true;
-            return G_SOURCE_REMOVE;
-        }, 100);
-
-        while (output_name.empty() && !cancel_wait)
-        {
-            g_main_context_iteration(context, true);
-            output_name = monitor->get_connector();
+            return false;
         }
+    }
 
-        timeout_signal.disconnect();
-        if (cancel_wait)
+    return true;
+}
+
+void WayfireShellApp::output_list_updated(const int pos, const int rem, const int add)
+{
+    /* XXX: Workaround bug that causes a new output to have
+     * no name. We use the name for various reasons so we need
+     * it to be valid when signaling new output to the apps.
+     * We set a timer for 100ms, then print a warning if the
+     * timeout fired.
+     *
+     * Moved up here because context-looping as before would cause a crash
+     * on quick plug/unplug
+     */
+    debounce_monitor_hotplug.disconnect();
+
+    if (!sanity_check_outputs())
+    {
+        debounce_monitor_hotplug = Glib::signal_idle().connect([=] ()
         {
-            std::cerr << "Timeout reached while waiting for output name." <<
-                    (output_name.empty() ?
-                " Our local output object does not have a name at this point." :
-                "") << std::endl;
-        } /* XXX: End workaround. */
+            output_list_updated(0, 0, 0);
+            return G_SOURCE_REMOVE;
+        });
+        return;
+    }
 
+    /* XXX: End workaround*/
+
+    auto display = Gdk::Display::get_default();
+    auto monitor_list = display->get_monitors();
+
+    for (guint count = 0; count < monitor_list->get_n_items(); count++)
+    {
+        auto monitor = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_list->get_object(count));
+
+        std::string output_name = monitor->get_connector();
         if (monitor->get_connector() == live_preview_output_name)
         {
             live_preview_output = gdk_wayland_monitor_get_wl_output(monitor->gobj());
@@ -303,7 +315,6 @@ void WayfireShellApp::output_list_updated(const int pos, const int rem, const in
 
 void WayfireShellApp::add_output(GMonitor monitor)
 {
-    std::cout << monitor->get_connector() << " plug" << std::endl;
     auto it = std::find_if(monitors.begin(), monitors.end(),
         [monitor] (auto& output) { return output->monitor == monitor; });
 
@@ -328,13 +339,12 @@ void WayfireShellApp::add_output(GMonitor monitor)
 
 void WayfireShellApp::rem_output(GMonitor monitor)
 {
-    std::cout << monitor->get_connector() << " unplug" << std::endl;
     auto it = std::find_if(monitors.begin(), monitors.end(),
         [monitor] (auto& output) { return output->monitor == monitor; });
 
+    handle_output_removed(it->get());
     if (it != monitors.end())
     {
-        handle_output_removed(it->get());
         monitors.erase(it);
     } else
     {
@@ -380,7 +390,9 @@ void WayfireShellApp::init_app()
 }
 
 WayfireShellApp::~WayfireShellApp()
-{}
+{
+    debounce_monitor_hotplug.disconnect();
+}
 
 std::unique_ptr<WayfireShellApp> WayfireShellApp::instance;
 WayfireShellApp& WayfireShellApp::get()
