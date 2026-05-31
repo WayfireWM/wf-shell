@@ -165,7 +165,6 @@ void WayfireMixer::init(Gtk::Box *container)
     // sets up the "widget part"
 
     button = std::make_unique<WayfireMenuWidget>("panel", "mixer");
-    button->add_css_class("widget-icon");
     button->append(main_image);
     button->show();
     button->open_on(-1); // the gestures callback will take care of opening and closing
@@ -174,6 +173,7 @@ void WayfireMixer::init(Gtk::Box *container)
     streams_box.add_css_class("streams");
     out_in_wall.add_css_class("out-in");
     in_streams_wall.add_css_class("in-streams");
+    main_image.add_css_class("widget-icon");
 
     button->set_popup_child(master_box);
 

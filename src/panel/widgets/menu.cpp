@@ -164,6 +164,8 @@ WfMenuCategoryButton::WfMenuCategoryButton(WayfireMenu *_menu, std::string _cate
     m_image.set_pixel_size(32);
     m_label.set_text(label);
     m_label.set_xalign(0.0);
+    m_label.add_css_class("default-icon");
+
 
     m_box.append(m_image);
     m_box.append(m_label);
@@ -191,7 +193,7 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     Gtk::FlowBoxChild(), menu(_menu), app_info(app)
 {
     image.set((const Glib::RefPtr<const Gio::Icon>&)app->get_icon());
-
+    image.add_css_class("default-icon");
     label.set_text(app->get_name());
     label.set_ellipsize(Pango::EllipsizeMode::END);
 
@@ -201,8 +203,6 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     extra_actions_button.set_has_frame(false);
 
     box.set_expand(false);
-    box.add_css_class("flat");
-    box.add_css_class("widget-icon");
     box.add_css_class("app-button");
 
     auto left_click_g  = Gtk::GestureClick::create();

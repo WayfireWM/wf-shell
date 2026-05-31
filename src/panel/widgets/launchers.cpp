@@ -159,7 +159,6 @@ launcher_container WayfireLaunchers::get_launchers_from_config()
 
 void WayfireLaunchers::init(Gtk::Box *container)
 {
-    box.add_css_class("widget-icon");
     box.add_css_class("launchers");
 
     container->append(box);

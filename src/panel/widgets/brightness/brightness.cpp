@@ -124,7 +124,7 @@ void WayfireBrightness::init(Gtk::Box *container)
     button->set_child(icon);
     button->show();
     button->open_on(1);
-    button->add_css_class("widget-icon");
+    icon.add_css_class("widget-icon");
 
     // layout
     box.set_orientation(Gtk::Orientation::VERTICAL);

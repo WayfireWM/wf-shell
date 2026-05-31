@@ -16,13 +16,10 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
 {
     network_manager = NetworkManager::getInstance();
     button = std::make_unique<WayfireMenuWidget>("panel", "network");
-    button->add_css_class("widget-icon");
-    button->add_css_class("flat");
     button->add_css_class("network");
 
     container->append(*button);
     button->append(button_content);
-    button->add_css_class("flat");
 
     button->set_popup_child(control);
 
@@ -33,6 +30,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     button->open_on(1);
 
     icon.set_valign(Gtk::Align::CENTER);
+    icon.add_css_class("widget-icon");
 
     auto show_hide_label = [this] ()
     {
@@ -80,7 +78,7 @@ void WayfireNetworkInfo::set_connection(std::shared_ptr<Network> network)
 {
     for (auto clas : button_content.get_css_classes())
     {
-        if ((clas == "flat") || (clas == "network") || (clas == "widget-icon"))
+        if (clas == "network")
         {
             continue;
         }

@@ -28,7 +28,7 @@ void WayfireLockerNetworkPluginWidget::set_connection(std::shared_ptr<Network> n
 {
     for (auto clas : box.get_css_classes())
     {
-        if ((clas == "flat") || (clas == "network") || (clas == "widget-icon"))
+        if ((clas == "network"))
         {
             continue;
         }
