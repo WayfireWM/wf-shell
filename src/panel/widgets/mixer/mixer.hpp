@@ -29,7 +29,7 @@ class WayfireMixer : public WayfireWidget
     Gtk::Image main_image;
 
     WfOption<int> spacing{"panel/mixer_spacing"};
-    WfOption<bool> stack_categories{"panel/mixer_stack_categories"};
+    WfOption<std::string> layout{"panel/mixer_layout"};
 
     void on_volume_value_changed();
 

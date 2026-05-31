@@ -409,10 +409,18 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<_long>Displays the mute and set default icon on the left</_long>
 		<default>false</default>
 	</option>
-	<option name="mixer_stack_categories" type="bool">
-		<_short>Stack categories</_short>
-		<_long>Displays the outputs, inputs and streams stacked on top of each other instead of side by side</_long>
-		<default>false</default>
+	<option name="mixer_layout" type="string">
+		<_short>Layout</_short>
+		<_long>Type of layout in which to arrange the mixer</_long>
+		<default>horizontal</default>
+		<desc>
+			<value>horizontal</value>
+			<_name>Horizontal</_name>
+		</desc>
+		<desc>
+			<value>vertical</value>
+			<_name>Vertical</_name>
+		</desc>
 	</option>
 	<option name="mixer_spacing" type="int">
 		<_short>Spacing between controls</_short>
