@@ -32,8 +32,7 @@ void MixerControl::init()
     add_css_class("mixer-control");
     button.set_child(volume_icon);
     button.add_css_class("mute-toggle");
-    button.add_css_class("widget-icon");
-    button.add_css_class("flat");
+    volume_icon.add_css_class("default-icon");
 
     scale.set_range(0.0, 1.0);
     scale.set_size_request(slider_length, 0);
@@ -226,11 +225,10 @@ void MixerControlDevice::init()
 {
     add_css_class("mixer-control");
     default_btn.add_css_class("default-button");
-    default_btn.add_css_class("widget-icon");
-    default_btn.add_css_class("flat");
 
     is_def_icon.set_from_icon_name("emblem-default");
     default_btn.set_child(is_def_icon);
+    is_def_icon.add_css_class("default-icon");
 
     // we are not using ToggleButton groups because on_default_nodes_changed
     // will be called anyway to set the status of all devices

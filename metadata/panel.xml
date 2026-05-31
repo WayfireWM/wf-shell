@@ -43,6 +43,12 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<_long>Minimum width the panel takes.</_long>
 		<default>32</default>
 	</option>
+	<option name="default_icon_size" type="int">
+		<_short>Default Icon Size</_short>
+		<_long>The default size of all icons, excluding those directly on the panel</_long>
+		<default>32</default>
+		<minimum>1</minimum>
+	</option>
 	<option name="autohide" type="bool">
 		<_short>Autohide</_short>
 		<default>false</default>
@@ -145,7 +151,7 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	</option>
 	<option name="launchers_size" type="int">
 		<_short>Launchers Icon Size</_short>
-		<default>42</default>
+		<default>0</default>
 		<min>0</min>
 	</option>
 	<option name="launchers" type="dynamic-list" type-hint="dict">
@@ -275,7 +281,7 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	</option>
 	<option name="menu_icon_size" type="int">
 		<_short>Menu Icon Size</_short>
-		<default>42</default>
+		<default>0</default>
 		<min>0</min>
 	</option>
 	<option name="menu_item_icon_size" type="int">

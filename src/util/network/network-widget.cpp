@@ -83,6 +83,7 @@ VPNControlWidget::VPNControlWidget(std::shared_ptr<VpnConfig> config) :
     append(label);
     label.set_label(config->name);
     image.set_from_icon_name("network-vpn-symbolic");
+    image.add_css_class("default-icon");
     signals.push_back(config->signal_state_changed().connect(
         [this, config] (bool active)
     {
@@ -118,6 +119,7 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
     topbox.append(label);
     revealer.set_child(revealer_box);
     revealer_box.set_orientation(Gtk::Orientation::VERTICAL);
+    image.add_css_class("default-icon");
     auto wifi   = std::dynamic_pointer_cast<WifiNetwork>(network);
     auto mobile = std::dynamic_pointer_cast<ModemNetwork>(network);
     auto wired  = std::dynamic_pointer_cast<WiredNetwork>(network);

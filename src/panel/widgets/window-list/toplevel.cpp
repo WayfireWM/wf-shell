@@ -422,7 +422,7 @@ class WayfireToplevel::impl
             &toplevel_handle_v1_impl, this);
 
         button.add_css_class("window-button");
-        button.remove_css_class("activated");
+        image.add_css_class("widget-icon");
         button.append(image);
         button.append(label);
         button.set_halign(Gtk::Align::FILL);

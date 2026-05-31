@@ -601,18 +601,19 @@ void WayfirePanelApp::on_activate()
 
     const static std::vector<std::pair<std::string, std::string>> icon_sizes_args =
     {
-        {"panel/minimal_height", ""},
-        {"panel/menu_icon_size", ".menu-icon"},
-        {"panel/menu_item_icon_size", ".app-button"},
-        {"panel/launchers_size", ".launcher"},
-        {"panel/battery_icon_size", ".battery image"},
-        {"panel/network_icon_size", ".network"},
-        {"panel/volume_icon_size", ".volume"},
-        {"panel/mixer_icon_size", ".mixer"},
-        {"panel/mixer_popup_icon_size", ".mute-toggle, .default-button"},
-        {"panel/notifications_icon_size", ".notification-center "},
-        {"panel/tray_icon_size", ".tray-button"},
-        {"panel/brightness_icon_size", ".brightness"}
+        {"panel/minimal_height", ".widget-icon"},
+        {"panel/default_icon_size", ".default-icon"},
+        {"panel/menu_icon_size", ".menu-icon.widget-icon"},
+        {"panel/menu_item_icon_size", ".app-button.widget-icon"},
+        {"panel/launchers_size", ".launcher.widget-icon"},
+        {"panel/battery_icon_size", ".battery image.widget-icon"},
+        {"panel/network_icon_size", ".network.widget-icon"},
+        {"panel/volume_icon_size", ".volume.widget-icon"},
+        {"panel/mixer_icon_size", ".mixer.widget-icon"},
+        {"panel/mixer_popup_icon_size", ".mute-toggle.widget-icon, .default-button.widget-icon"},
+        {"panel/notifications_icon_size", ".notification-center .widget-icon"},
+        {"panel/tray_icon_size", ".tray-button.widget-icon"},
+        {"panel/brightness_icon_size", ".brightness.widget-icon"}
     };
     for (auto pair : icon_sizes_args)
     {
