@@ -40,6 +40,8 @@ class WayfireShellApp
     std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
     sigc::signal<void()> monitor_list_changed;
 
+    bool sanity_check_outputs();
+
   protected:
     /** This should be initialized by the subclass in each program which uses
      * wf-shell-app */
@@ -47,6 +49,7 @@ class WayfireShellApp
     static std::unique_ptr<WayfireShellApp> instance;
     std::optional<std::string> cmdline_config;
     std::optional<std::string> cmdline_css;
+    sigc::connection debounce_monitor_hotplug;
 
     Glib::RefPtr<Gtk::Application> app;
     bool activated = false;
