@@ -19,7 +19,7 @@
 	</option>
 	<option name="randomize" type="bool">
 		<_short>Randomize</_short>
-		<default>false</default>
+		<default>true</default>
 	</option>
 	<option name="fill_mode" type="string">
 		<_short>Fill mode</_short>
