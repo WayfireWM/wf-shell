@@ -8,10 +8,12 @@
 
 #include <giomm/dbusproxy.h>
 #include <giomm/dbusconnection.h>
+#include <giomm/simpleactiongroup.h>
 
 #include <sigc++/connection.h>
 
-#include "../widget.hpp"
+#include "widget.hpp"
+#include "wf-popover.hpp"
 
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
 using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
@@ -29,13 +31,13 @@ class WayfireBatteryInfo : public WayfireWidget
     sigc::connection btn_sig, disp_dev_sig;
 
     Gtk::Label label;
-    Gtk::Box box;
+    std::unique_ptr<WayfireMenuWidget> box;
     Gtk::Overlay overlay;
-
+    std::shared_ptr<Gio::Menu> profiles_menu;
     Gtk::Image icon;
 
     DBusConnection connection;
-    DBusProxy upower_proxy, display_device;
+    DBusProxy upower_proxy, powerprofile_proxy, display_device;
 
     bool setup_dbus();
 
@@ -49,6 +51,15 @@ class WayfireBatteryInfo : public WayfireWidget
     void on_properties_changed(
         const Gio::DBus::Proxy::MapChangedProperties& properties,
         const std::vector<Glib::ustring>& invalidated);
+
+    void on_upower_properties_changed(
+        const Gio::DBus::Proxy::MapChangedProperties& properties,
+        const std::vector<Glib::ustring>& invalidated);
+
+    void set_current_profile(Glib::ustring profile);
+    void setup_profiles(std::vector<std::map<Glib::ustring, Glib::VariantBase>> profiles);
+
+    std::shared_ptr<Gio::SimpleAction> state_action;
 
   public:
     virtual void init(Gtk::Box *container);
