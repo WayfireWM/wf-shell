@@ -1,5 +1,14 @@
+background_dir = join_paths(get_option('prefix'), 'share', 'wf-shell', 'backgrounds')
+
+install_data(join_paths('backgrounds','calm-blue.png'), install_dir: background_dir)
+install_data(join_paths('backgrounds','circuits.png'), install_dir: background_dir)
+install_data(join_paths('backgrounds','secret-chest.png'), install_dir: background_dir)
+install_data(join_paths('backgrounds','simple.png'), install_dir: background_dir)
+install_data(join_paths('backgrounds','simple-2.png'), install_dir: background_dir)
+install_data(join_paths('backgrounds','snow.png'), install_dir: background_dir)
+install_data(join_paths('backgrounds','wallpaper.jpg'), install_dir: background_dir)
+
 install_data('wayfire.png', install_dir: icon_dir)
-install_data('wallpaper.jpg', install_dir: resource_dir)
 install_data('wf-locker-pin.desktop', install_dir: join_paths(get_option('prefix'), 'share', 'applications'))
 
 install_data(join_paths('icons', '48x48', 'wayfire.png'), install_dir: join_paths(get_option('prefix'), 'share', 'icons', 'hicolor', '48x48', 'apps'))
