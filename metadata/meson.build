@@ -1,6 +1,6 @@
 configure_file(input: 'background.xml.in', output: 'background.xml',
         configuration: {
-            'wallpaper': join_paths(resource_dir, 'wallpaper.jpg')
+            'wallpaper': join_paths(resource_dir, 'backgrounds')
         },
         install: true,
         install_dir: metadata_dir)
