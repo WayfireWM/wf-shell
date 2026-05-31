@@ -23,7 +23,13 @@ void WayfireMixer::reload_config()
     set_spacing(sources_box);
     set_spacing(streams_box);
 
-    master_box.set_orientation(stack_categories ? Gtk::Orientation::VERTICAL : Gtk::Orientation::HORIZONTAL);
+    if (layout.value() == "vertical")
+    {
+        master_box.set_orientation(Gtk::Orientation::VERTICAL);
+    } else // horizontal
+    {
+        master_box.set_orientation(Gtk::Orientation::HORIZONTAL);
+    }
 
     // big matching operation
     static WfOption<std::string> str_quick_target_choice{"panel/mixer_quick_target_choice"};
