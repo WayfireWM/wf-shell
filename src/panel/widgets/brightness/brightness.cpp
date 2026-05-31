@@ -88,7 +88,7 @@ void WfLightControl::update_parent_icon()
         parent->update_icon();
         if (parent->popup_on_change)
         {
-            parent->button->popup_timed(parent->popup_timeout);
+            parent->button->popup_timed(parent->popup_timeout * 1000);
         }
     }
 }
