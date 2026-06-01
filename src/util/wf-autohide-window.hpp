@@ -109,6 +109,7 @@ class WayfireAutohidingWindow : public Gtk::Window
     WfOption<int> autohide_hide_delay;
 
     WfOption<int> edge_margin;
+    WfOption<bool> mirror_margin;
 
     bool auto_exclusive_zone     = !autohide_opt;
     int auto_exclusive_zone_size = 0;

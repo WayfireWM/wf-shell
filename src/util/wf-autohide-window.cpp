@@ -23,6 +23,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     autohide_show_delay{section + "/autohide_show_delay"},
     autohide_hide_delay{section + "/autohide_hide_delay"},
     edge_margin{section + "/edge_margin"},
+    mirror_margin{section + "/mirror_margin"},
     edge_hotspot_size{section + "/edge_hotspot_size"},
     adjacent_edge_hotspot_size{section + "/adjacent_edge_hotspot_size"}
 {
@@ -39,6 +40,7 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     this->position.set_callback([=] () { this->update_position(); });
     this->full_span.set_callback([=] () { this->update_position(); });
     this->edge_margin.set_callback([=] () { update_position(); });
+    this->mirror_margin.set_callback([=] () { update_position(); });
     this->update_position();
 
     const auto set_size = [=] () { this->set_size_request(minimal_width, minimal_height); };
@@ -73,7 +75,6 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
     this->edge_hotspot_size.set_callback([=] () { this->setup_hotspot(); });
 
     this->autohide_opt.set_callback([=] { setup_autohide(); });
-
 
     if (!output->output)
     {
@@ -207,16 +208,37 @@ void WayfireAutohidingWindow::m_show_uncertain()
 
 void WayfireAutohidingWindow::update_position()
 {
-    /* Reset old anchors */
-    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_TOP, false);
-    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, false);
-    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, false);
-    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, false);
+    // reset anchors and margins
+    for (auto edge :
+     {GTK_LAYER_SHELL_EDGE_TOP, GTK_LAYER_SHELL_EDGE_BOTTOM, GTK_LAYER_SHELL_EDGE_LEFT,
+         GTK_LAYER_SHELL_EDGE_RIGHT})
+    {
+        gtk_layer_set_anchor(this->gobj(), edge, false);
+        gtk_layer_set_margin(this->gobj(), edge, 0);
+    }
 
     /* Set new anchor */
     GtkLayerShellEdge edge = get_anchor_edge(position);
     gtk_layer_set_anchor(this->gobj(), edge, true);
     gtk_layer_set_margin(this->gobj(), edge, edge_margin);
+
+    // margins on both sides of the window
+    if (mirror_margin && auto_exclusive_zone)
+    {
+        if (edge == GTK_LAYER_SHELL_EDGE_TOP)
+        {
+            gtk_layer_set_margin(this->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, edge_margin);
+        } else if (edge == GTK_LAYER_SHELL_EDGE_BOTTOM)
+        {
+            gtk_layer_set_margin(this->gobj(), GTK_LAYER_SHELL_EDGE_TOP, edge_margin);
+        } else if (edge == GTK_LAYER_SHELL_EDGE_LEFT)
+        {
+            gtk_layer_set_margin(this->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, edge_margin);
+        } else if (edge == GTK_LAYER_SHELL_EDGE_RIGHT)
+        {
+            gtk_layer_set_margin(this->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, edge_margin);
+        }
+    }
 
     if (full_span)
     {
