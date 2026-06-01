@@ -439,6 +439,13 @@ void WayfireLockerFingerprintPlugin::update(std::string label, std::string image
     label_contents = label;
     color_contents = color;
 
+    // the text is susceptible to be updated when the elements of the locker are otherwise hidden,
+    // notably by verification status, so something happened that we can count as activity
+    for (auto pair : WayfireLockerApp::get().window_list)
+    {
+        pair.second->window_activity();
+    }
+
     for (auto& it : widgets)
     {
         it.second->label.set_label(label);
