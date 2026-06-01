@@ -143,7 +143,7 @@
 	<option name="pin_enable" type="bool">
 		<_short>Enable</_short>
 		<_long>Show a PIN pad and authenticate against users chosen PIN</_long>
-		<default>true</default>
+		<default>false</default>
 	</option>
 	<option name="pin_position" type="string">
 		<desc>
@@ -241,7 +241,7 @@
 			<value>bottom-right</value>
 			<_name>Bottom Right</_name>
 		</desc>
-		<default>center-right</default>
+		<default>bottom-center</default>
 	</option>
 	<option name="fingerprint_font" type="string">
 		<_short>Fingerprint Reply Font</_short>
@@ -386,7 +386,7 @@
 	<_short>Weather</_short>
 	<option name="weather_enable" type="bool">
 		<_short>Enable</_short>
-		<default>true</default>
+		<default>false</default>
 	</option>
 	<option name="weather_position" type="string">
 		<desc>
