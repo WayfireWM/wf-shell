@@ -133,11 +133,6 @@ void WayfireMenuWidget::popdown()
         fullscreen->hide();
     }
 
-    if (!use_menu && !use_widget)
-    {
-        return;
-    }
-
     popdown_signal.emit();
     panel->unset_active_popover();
 }
