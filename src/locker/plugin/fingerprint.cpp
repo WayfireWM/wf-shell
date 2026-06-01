@@ -287,6 +287,11 @@ void WayfireLockerFingerprintPlugin::start_fingerprint_scanning()
             char *username = getlogin();
             device_proxy->call("Claim", [=] (Glib::RefPtr<Gio::AsyncResult>& result)
             {
+                if (device_proxy == nullptr)
+                {
+                    return;
+                }
+
                 show();
                 update("Use fingerprint to unlock", "process-completed-symbolic", "good");
                 device_proxy->call("VerifyStart",
@@ -334,7 +339,10 @@ void WayfireLockerFingerprintPlugin::stop_fingerprint_scanning()
     try {
         device_proxy->call("VerifyStop", [=] (Glib::RefPtr<Gio::AsyncResult>& result)
         {
-            device_proxy->call("Release");
+            if (device_proxy != nullptr)
+            {
+                device_proxy->call("Release");
+            }
         });
     } catch (Glib::Error & e)
     {}
