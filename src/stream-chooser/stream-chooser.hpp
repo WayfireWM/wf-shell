@@ -25,12 +25,12 @@ class WayfireStreamChooserApp : public Gtk::Application
     Gtk::ScrolledWindow scroll_window, scroll_screen;
     WayfireStreamChooserApp();
 
-    wl_display *display;
     wl_registry *registry;
     ext_foreign_toplevel_list_v1 *list;
     Glib::RefPtr<MainLayout> layout;
 
   public:
+    wl_display *display;
     bool is_in_use = false;
     bool has_foreign_toplevel_list = false;
     bool has_image_copy_capture    = false;

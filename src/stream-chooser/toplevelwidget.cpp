@@ -119,16 +119,35 @@ static struct wl_buffer *toplevel_create_shm_buffer(int width, int height, void 
     return buffer;
 }
 
-void toplevel_free_shm_buffer(std::shared_ptr<toplevel_buffer>& buffer)
+void toplevel_free_shm_buffer(WayfireChooserTopLevel *toplevel)
 {
-    if (buffer->buffer == NULL)
+    if (!toplevel->buffer || !toplevel->buffer->buffer)
     {
         return;
     }
 
-    munmap(buffer->data, buffer->size);
-    wl_buffer_destroy(buffer->buffer);
-    buffer->buffer = NULL;
+    munmap(toplevel->buffer->data, toplevel->buffer->size);
+    toplevel->buffer->buffer = NULL;
+}
+
+/* Buffer Release */
+
+static void buffer_release_handler(void *data, wl_buffer *wl_buffer)
+{
+    auto toplevel = (WayfireChooserTopLevel*)data;
+    wl_buffer_destroy(wl_buffer);
+    toplevel_free_shm_buffer(toplevel);
+    toplevel->size();
+}
+
+static const wl_buffer_listener buffer_listener =
+{
+    .release = buffer_release_handler,
+};
+
+static void setup_buffer_listener(WayfireChooserTopLevel *toplevel)
+{
+    wl_buffer_add_listener(toplevel->buffer->buffer, &buffer_listener, toplevel);
 }
 
 static void session_handle_buffer_size(void *data,
@@ -138,6 +157,7 @@ static void session_handle_buffer_size(void *data,
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     toplevel->current_buffer_width  = width;
     toplevel->current_buffer_height = height;
+    toplevel->size();
 }
 
 static void session_handle_shm_format(void *data,
@@ -161,10 +181,7 @@ static void session_handle_dmabuf_format(void*,
 
 static void session_handle_done(void *data,
     struct ext_image_copy_capture_session_v1*)
-{
-    WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
-    toplevel->size();
-}
+{}
 
 static void session_handle_stopped(void*,
     struct ext_image_copy_capture_session_v1 *session)
@@ -206,12 +223,15 @@ static void frame_handle_ready(void *data,
     toplevel->buffer_ready();
 }
 
-static void frame_handle_failed(void*,
+static void frame_handle_failed(void *data,
     struct ext_image_copy_capture_frame_v1 *handle,
     uint32_t reason)
 {
+    WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     std::cerr << "Failed to copy frame because reason: " << reason << std::endl;
     ext_image_copy_capture_frame_v1_destroy(handle);
+    toplevel->frame = NULL;
+    toplevel->size();
 }
 
 static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
@@ -224,20 +244,7 @@ static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
 
 void WayfireChooserTopLevel::grab_toplevel_screenshot()
 {
-    if (WayfireStreamChooserApp::getInstance().is_in_use)
-    {
-        Glib::signal_timeout().connect(
-            [this] ()
-        {
-            grab_toplevel_screenshot();
-            return G_SOURCE_REMOVE;
-        }, 100);
-        return;
-    }
-
-    WayfireStreamChooserApp::getInstance().is_in_use = true;
-
-    auto copy_capture_source = ext_foreign_toplevel_image_capture_source_manager_v1_create_source(
+    copy_capture_source = ext_foreign_toplevel_image_capture_source_manager_v1_create_source(
         WayfireStreamChooserApp::getInstance().toplevel_capture_manager,
         handle);
     recording_session = ext_image_copy_capture_manager_v1_create_session(
@@ -245,7 +252,6 @@ void WayfireChooserTopLevel::grab_toplevel_screenshot()
         copy_capture_source,
         0);
     ext_image_copy_capture_session_v1_add_listener(recording_session, &recording_session_listener, this);
-    ext_image_capture_source_v1_destroy(copy_capture_source);
 }
 
 void WayfireChooserTopLevel::size()
@@ -253,6 +259,11 @@ void WayfireChooserTopLevel::size()
     if ((current_buffer_width <= 0) || (current_buffer_height <= 0))
     {
         printf("%s invalid size\n", __func__);
+        return;
+    }
+
+    if (!recording_session)
+    {
         return;
     }
 
@@ -271,9 +282,10 @@ void WayfireChooserTopLevel::size()
     buffer->frame = frame;
     ext_image_copy_capture_frame_v1_add_listener(buffer->frame, &frame_listener, this);
 
-    toplevel_free_shm_buffer(buffer);
     buffer->buffer =
         toplevel_create_shm_buffer(buffer->width, buffer->height, &buffer->data, &buffer->size);
+
+    setup_buffer_listener(this);
 
     if (buffer->buffer == NULL)
     {
@@ -318,11 +330,15 @@ void WayfireChooserTopLevel::buffer_ready()
     auto texture = builder->build();
 
     screenshot.set_paintable(texture);
+}
+
+void WayfireChooserTopLevel::destroy()
+{
+    ext_image_capture_source_v1_destroy(copy_capture_source);
     ext_image_copy_capture_frame_v1_destroy(frame);
     frame = NULL;
     ext_image_copy_capture_session_v1_destroy(recording_session);
     recording_session = NULL;
-    WayfireStreamChooserApp::getInstance().is_in_use = false;
 }
 
 /* Gtk Overlay showing information about a window */
@@ -392,7 +408,9 @@ void WayfireChooserTopLevel::commit()
 }
 
 WayfireChooserTopLevel::~WayfireChooserTopLevel()
-{}
+{
+    destroy();
+}
 
 void WayfireChooserTopLevel::print()
 {

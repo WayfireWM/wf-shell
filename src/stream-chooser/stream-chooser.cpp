@@ -46,6 +46,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
         WayfireStreamChooserApp::getInstance().set_toplevel_list(list);
         ext_foreign_toplevel_list_v1_add_listener(list,
             &toplevel_list_v1_impl, NULL);
+        wl_display_roundtrip(WayfireStreamChooserApp::getInstance().display);
     } else if (strcmp(interface, ext_image_copy_capture_manager_v1_interface.name) == 0)
     {
         auto manager = (ext_image_copy_capture_manager_v1*)wl_registry_bind(registry, name,
@@ -266,6 +267,11 @@ void WayfireStreamChooserApp::add_toplevel(ext_foreign_toplevel_handle_v1 *handl
 
 void WayfireStreamChooserApp::remove_toplevel(WayfireChooserTopLevel *toplevel)
 {
+    if (toplevels.find(toplevel->handle) == toplevels.end())
+    {
+        return;
+    }
+
     window_list.remove(*toplevel);
     toplevels.erase(toplevel->handle);
 }

@@ -20,7 +20,6 @@ class WayfireChooserTopLevel : public Gtk::Box
   private:
     Gtk::Overlay overlay;
     Gtk::Image icon;
-    Gtk::Picture screenshot;
     Gtk::Label label;
 
     std::string buffered_title = "", title = "";
@@ -28,16 +27,19 @@ class WayfireChooserTopLevel : public Gtk::Box
     std::string buffered_identifier = "", identifier = "";
     Glib::RefPtr<ToplevelLayout> layout;
 
-    std::shared_ptr<toplevel_buffer> buffer = nullptr;
-    ext_image_copy_capture_frame_v1 *frame = NULL;
     ext_image_copy_capture_session_v1 *recording_session = NULL;
+    ext_image_capture_source_v1 *copy_capture_source = NULL;
 
   public:
+    Gtk::Picture screenshot;
     int current_buffer_width = 0, current_buffer_height = 0, current_buffer_format = 0;
     ext_foreign_toplevel_handle_v1 *handle = nullptr;
+    std::shared_ptr<toplevel_buffer> buffer = nullptr;
+    ext_image_copy_capture_frame_v1 *frame = NULL;
     WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *handle);
     ~WayfireChooserTopLevel();
     void commit();
+    void destroy();
     void set_app_id(std::string app_id);
     void set_title(std::string title);
     void set_identifier(std::string identifier);
