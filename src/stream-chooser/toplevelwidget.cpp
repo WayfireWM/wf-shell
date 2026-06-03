@@ -136,8 +136,12 @@ static void buffer_release_handler(void *data, wl_buffer *wl_buffer)
 {
     auto toplevel = (WayfireChooserTopLevel*)data;
     wl_buffer_destroy(wl_buffer);
-    toplevel_free_shm_buffer(toplevel);
-    toplevel->size();
+
+    /* TODO: Double Buffer */
+    if (toplevel->buffer->buffer == wl_buffer)
+    {
+        toplevel_free_shm_buffer(toplevel);
+    }
 }
 
 static const wl_buffer_listener buffer_listener =
@@ -157,7 +161,6 @@ static void session_handle_buffer_size(void *data,
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     toplevel->current_buffer_width  = width;
     toplevel->current_buffer_height = height;
-    toplevel->size();
 }
 
 static void session_handle_shm_format(void *data,
@@ -298,6 +301,13 @@ void WayfireChooserTopLevel::size()
     ext_image_copy_capture_frame_v1_capture(buffer->frame);
 }
 
+bool WayfireChooserTopLevel::on_frame_tick(const Glib::RefPtr<Gdk::FrameClock>& frame_clock)
+{
+    this->size();
+
+    return true;
+}
+
 void WayfireChooserTopLevel::buffer_ready()
 {
     if ((buffer == nullptr) || (buffer->buffer == nullptr))
@@ -359,6 +369,8 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
     screenshot.set_valign(Gtk::Align::FILL);
     label.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
     label.set_max_width_chars(40);
+
+    screenshot.add_tick_callback(sigc::mem_fun(*this, &WayfireChooserTopLevel::on_frame_tick));
 
     ext_foreign_toplevel_handle_v1_add_listener(handle, &listener, this);
 }
