@@ -36,6 +36,7 @@ class WayfireChooserTopLevel : public Gtk::Box
     ext_foreign_toplevel_handle_v1 *handle = nullptr;
     std::shared_ptr<toplevel_buffer> buffer = nullptr;
     ext_image_copy_capture_frame_v1 *frame = NULL;
+    bool on_frame_tick(const Glib::RefPtr<Gdk::FrameClock>& frame_clock);
     WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *handle);
     ~WayfireChooserTopLevel();
     void commit();
