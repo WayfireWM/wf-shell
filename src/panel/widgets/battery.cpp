@@ -189,7 +189,7 @@ void WayfireBatteryInfo::update_state()
                  "\n\tWayfireBatteryInfo::update_state()" << std::endl;
 }
 
-bool WayfireBatteryInfo::setup_dbus()
+bool WayfireBatteryInfo::setup_dbus_power_modes()
 {
     auto cancellable = Gio::Cancellable::create();
     connection = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM, cancellable);
@@ -218,10 +218,25 @@ bool WayfireBatteryInfo::setup_dbus()
         {
             setup_profiles(profiles.get());
             set_current_profile(current_profile.get());
+            return true;
         } else
         {
             std::cout << "Unable to conect to Power Profiles. Continuing" << std::endl;
+            return false;
         }
+    }
+
+    return false;
+}
+
+bool WayfireBatteryInfo::setup_dbus_battery()
+{
+    auto cancellable = Gio::Cancellable::create();
+    connection = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM, cancellable);
+    if (!connection)
+    {
+        std::cerr << "Failed to connect to dbus" << std::endl;
+        return false;
     }
 
     upower_proxy = Gio::DBus::Proxy::create_sync(connection, UPOWER_NAME,
@@ -277,11 +292,9 @@ void WayfireBatteryInfo::handle_config_reload()
 
 void WayfireBatteryInfo::init(Gtk::Box *container)
 {
-    profiles_menu = Gio::Menu::create();
-    state_action  = Gio::SimpleAction::create_radio_string("set_profile", "");
     box = std::make_unique<WayfireMenuWidget>("panel", "battery");
 
-    if (!setup_dbus())
+    if (!setup_dbus_battery())
     {
         return;
     }
@@ -294,38 +307,46 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
 
     update_details();
     update_icon();
-    auto actions = Gio::SimpleActionGroup::create();
 
-    state_action->signal_activate().connect([=] (Glib::VariantBase vb)
+    if (setup_dbus_power_modes())
     {
-        // User has requested a change of state. Don't change the UI choice, let the dbus roundtrip happen to
-        // be sure.
-        if (vb.is_of_type(Glib::VariantType("s")))
+        profiles_menu = Gio::Menu::create();
+        state_action  = Gio::SimpleAction::create_radio_string("set_profile", "");
+
+        auto actions = Gio::SimpleActionGroup::create();
+
+        state_action->signal_activate().connect([=] (Glib::VariantBase vb)
         {
-            // Couldn't seem to make proxy send property back, so this will have to do
-            Glib::VariantContainerBase params = Glib::Variant<std::tuple<Glib::ustring, Glib::ustring,
-                Glib::VariantBase>>::create({POWER_PROFILE_NAME, ACTIVE_PROFILE, vb});
+            // User has requested a change of state. Don't change the UI choice,
+            // let the dbus roundtrip happen to be sure.
+            if (vb.is_of_type(Glib::VariantType("s")))
+            {
+                // Couldn't seem to make proxy send property back, so this will have to do
+                Glib::VariantContainerBase params = Glib::Variant<std::tuple<Glib::ustring, Glib::ustring,
+                    Glib::VariantBase>>::create({POWER_PROFILE_NAME, ACTIVE_PROFILE, vb});
 
-            connection->call_sync(
-                POWER_PROFILE_PATH,
-                "org.freedesktop.DBus.Properties",
-                "Set",
-                params,
-                NULL,
-                POWER_PROFILE_NAME,
-                -1,
-                Gio::DBus::CallFlags::NONE,
-                {});
-        }
-    });
+                connection->call_sync(
+                    POWER_PROFILE_PATH,
+                    "org.freedesktop.DBus.Properties",
+                    "Set",
+                    params,
+                    NULL,
+                    POWER_PROFILE_NAME,
+                    -1,
+                    Gio::DBus::CallFlags::NONE,
+                    {});
+            }
+        });
 
-    box->open_on(1);
+        actions->add_action(state_action);
 
-    actions->add_action(state_action);
-    box->insert_action_group("actions", actions);
+        box->open_on(1);
+        box->insert_action_group("actions", actions);
+        box->set_spacing(5);
+        box->set_menu_model(profiles_menu);
+    }
+
     container->append(*box);
-    box->set_spacing(5);
-    box->set_menu_model(profiles_menu);
 
     icon.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(*this, &WayfireBatteryInfo::update_icon));

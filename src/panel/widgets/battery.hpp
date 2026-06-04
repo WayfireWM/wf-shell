@@ -39,7 +39,8 @@ class WayfireBatteryInfo : public WayfireWidget
     DBusConnection connection;
     DBusProxy upower_proxy, powerprofile_proxy, display_device;
 
-    bool setup_dbus();
+    bool setup_dbus_power_modes();
+    bool setup_dbus_battery();
 
     void update_icon();
     void update_details();
