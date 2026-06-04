@@ -358,6 +358,8 @@ void WayfireLockerApp::on_monitor_present(GdkMonitor *monitor)
     {
         window->add_css_class("fade-in");
     }
+
+    window->add_css_class(gdk_monitor_get_connector(monitor));
 }
 
 /* Called on any successful auth to unlock & end locker */

@@ -102,6 +102,9 @@ WayfireAutohidingWindow::WayfireAutohidingWindow(WayfireOutput *output,
         },
     };
     zwf_output_v2_add_listener(output->output, &listener, this);
+
+    // Set css match
+    add_css_class(output->monitor->get_connector());
 }
 
 WayfireAutohidingWindow::~WayfireAutohidingWindow()
