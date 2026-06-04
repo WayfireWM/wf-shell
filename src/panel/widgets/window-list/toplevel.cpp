@@ -423,6 +423,7 @@ class WayfireToplevel::impl
 
         button.add_css_class("window-button");
         image.add_css_class("widget-icon");
+        image.add_css_class("toplevel-icon");
         button.append(image);
         button.append(label);
         button.set_halign(Gtk::Align::FILL);
@@ -435,6 +436,7 @@ class WayfireToplevel::impl
 
         button.property_scale_factor().signal_changed()
             .connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_scale_update));
+
 
         actions = Gio::SimpleActionGroup::create();
 
