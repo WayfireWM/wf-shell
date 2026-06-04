@@ -434,8 +434,8 @@ class WayfireToplevel::impl
         label.set_hexpand(true);
         label.set_halign(Gtk::Align::START);
 
-        button.property_scale_factor().signal_changed()
-            .connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_scale_update));
+        signals.push_back(button.property_scale_factor().signal_changed()
+            .connect(sigc::mem_fun(*this, &WayfireToplevel::impl::on_scale_update)));
 
 
         actions = Gio::SimpleActionGroup::create();
