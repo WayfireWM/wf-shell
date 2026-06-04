@@ -613,7 +613,8 @@ void WayfirePanelApp::on_activate()
         {"panel/mixer_popup_icon_size", ".mute-toggle.widget-icon, .default-button.widget-icon"},
         {"panel/notifications_icon_size", ".notification-center .widget-icon"},
         {"panel/tray_icon_size", ".tray-button.widget-icon"},
-        {"panel/brightness_icon_size", ".brightness.widget-icon"}
+        {"panel/brightness_icon_size", ".brightness.widget-icon"},
+        {"panel/window_list_icon_size", ".toplevel-icon.widget-icon"},
     };
     for (auto pair : icon_sizes_args)
     {
