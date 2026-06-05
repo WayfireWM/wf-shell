@@ -46,7 +46,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
         WayfireStreamChooserApp::getInstance().set_toplevel_list(list);
         ext_foreign_toplevel_list_v1_add_listener(list,
             &toplevel_list_v1_impl, NULL);
-        wl_display_roundtrip(WayfireStreamChooserApp::getInstance().display);
+        wl_display_flush(WayfireStreamChooserApp::getInstance().display);
     } else if (strcmp(interface, ext_image_copy_capture_manager_v1_interface.name) == 0)
     {
         auto manager = (ext_image_copy_capture_manager_v1*)wl_registry_bind(registry, name,
@@ -186,6 +186,7 @@ void WayfireStreamChooserApp::activate()
     wl_registry_add_listener(registry, &registry_listener, this);
     this->registry = registry;
     wl_display_roundtrip(display);
+    wl_registry_destroy(registry);
 
     bool failed = false;
     if (!has_image_copy_capture)

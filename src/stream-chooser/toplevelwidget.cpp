@@ -149,7 +149,7 @@ static const wl_buffer_listener buffer_listener =
     .release = buffer_release_handler,
 };
 
-static void setup_buffer_listener(WayfireChooserTopLevel *toplevel)
+static void setup_buffer_destroy_listener(WayfireChooserTopLevel *toplevel)
 {
     wl_buffer_add_listener(toplevel->buffer->buffer, &buffer_listener, toplevel);
 }
@@ -234,7 +234,6 @@ static void frame_handle_failed(void *data,
     std::cerr << "Failed to copy frame because reason: " << reason << std::endl;
     ext_image_copy_capture_frame_v1_destroy(handle);
     toplevel->frame = NULL;
-    toplevel->size();
 }
 
 static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
@@ -270,6 +269,12 @@ void WayfireChooserTopLevel::size()
         return;
     }
 
+    if (buffer && buffer->buffer)
+    {
+        printf("%s buffer in flight\n", __func__);
+        return;
+    }
+
     buffer = std::make_shared<toplevel_buffer>();
 
     if (frame)
@@ -288,13 +293,13 @@ void WayfireChooserTopLevel::size()
     buffer->buffer =
         toplevel_create_shm_buffer(buffer->width, buffer->height, &buffer->data, &buffer->size);
 
-    setup_buffer_listener(this);
-
     if (buffer->buffer == NULL)
     {
         printf("%s failed to create buffer\n", __func__);
         exit(EXIT_FAILURE);
     }
+
+    setup_buffer_destroy_listener(this);
 
     ext_image_copy_capture_frame_v1_attach_buffer(buffer->frame, buffer->buffer);
     ext_image_copy_capture_frame_v1_damage_buffer(buffer->frame, 0, 0, buffer->width, buffer->height);
