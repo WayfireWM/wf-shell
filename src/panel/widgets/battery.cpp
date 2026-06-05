@@ -298,6 +298,9 @@ void WayfireBatteryInfo::handle_config_reload()
 
 void WayfireBatteryInfo::init(Gtk::Box *container)
 {
+    profiles_menu = Gio::Menu::create();
+    state_action  = Gio::SimpleAction::create_radio_string("set_profile", "");
+
     // the two features are battery displaying and power modes
     feat_bat   = setup_dbus_battery();
     feat_modes = setup_dbus_power_modes();
@@ -324,9 +327,6 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
 
     if (feat_modes)
     {
-        profiles_menu = Gio::Menu::create();
-        state_action  = Gio::SimpleAction::create_radio_string("set_profile", "");
-
         auto actions = Gio::SimpleActionGroup::create();
 
         state_action->signal_activate().connect([=] (Glib::VariantBase vb)
@@ -380,9 +380,7 @@ void WayfireBatteryInfo::on_upower_properties_changed(
             {
                 auto value_string =
                     Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::ustring>>(prop.second).get();
-                power_mode = value_string;
                 set_current_profile(value_string);
-                update_icon();
             }
         } else if (prop.first == PROFILES)
         {
@@ -400,7 +398,9 @@ void WayfireBatteryInfo::on_upower_properties_changed(
 
 void WayfireBatteryInfo::set_current_profile(Glib::ustring profile)
 {
+    power_mode = profile;
     state_action->set_state(Glib::Variant<Glib::ustring>::create(profile));
+    update_icon();
 }
 
 void WayfireBatteryInfo::setup_profiles(std::vector<std::map<Glib::ustring, Glib::VariantBase>> profiles)
