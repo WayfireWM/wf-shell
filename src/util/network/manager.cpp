@@ -566,27 +566,26 @@ void NetworkManager::activate_connection(std::string p1, std::string p2, std::st
     Glib::VariantStringBase::create_object_path(path2, p2);
     Glib::VariantStringBase::create_object_path(path3, p3);
     auto paths = Glib::VariantContainerBase::create_tuple({path1, path2, path3});
-    // auto data = Glib::VariantContainerBase::create_tuple(paths);
 
     try {
         nm_proxy->call("ActivateConnection", paths);
     } catch (...)
+    {}
+}
+
+void NetworkManager::request_password(std::string p2, std::string p3)
+{
+    if (p2.find("/Devices/") != std::string::npos)
     {
-        /* It's most likely a WIFI AP with no password set. Let's ask */
-        std::cout << p2 << std::endl;
-        /* No, it's not a regex */
-        if (p2.find("/Devices/") != std::string::npos)
+        auto device = std::dynamic_pointer_cast<WifiNetwork>(all_devices[p2]);
+        if (device)
         {
-            auto device = std::dynamic_pointer_cast<WifiNetwork>(all_devices[p2]);
-            if (device)
-            {
-                popup_cache_p2 = p2;
-                popup_cache_p3 = p3;
-                auto ap = device->get_access_points()[p3];
-                popup_label.set_label("Preshared Key required for Access Point '" + ap->get_ssid() + "'");
-                popup_window.present();
-                popup_window.get_focus();
-            }
+            popup_cache_p2 = p2;
+            popup_cache_p3 = p3;
+            auto ap = device->get_access_points()[p3];
+            popup_label.set_label("Preshared Key required for Access Point '" + ap->get_ssid() + "'");
+            popup_window.present();
+            popup_window.get_focus();
         }
     }
 }

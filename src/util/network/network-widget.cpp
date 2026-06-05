@@ -257,9 +257,9 @@ void DeviceControlWidget::add_access_point(std::shared_ptr<AccessPoint> ap)
     auto click  = Gtk::GestureClick::create();
 
     auto sig = click->signal_released().connect(
-        [this, path] (int, double, double)
+        [this, path, widget] (int, double, double)
     {
-        selected_access_point(path);
+        selected_access_point(path, widget);
     });
     widget->add_controller(click);
     widget->signals.push_back(sig);
@@ -268,7 +268,7 @@ void DeviceControlWidget::add_access_point(std::shared_ptr<AccessPoint> ap)
     sort_access_points();
 }
 
-void DeviceControlWidget::selected_access_point(std::string path)
+void DeviceControlWidget::selected_access_point(std::string path, std::shared_ptr<AccessPointWidget> widget)
 {
     auto wifi = std::dynamic_pointer_cast<WifiNetwork>(network);
     if (!wifi)
@@ -286,7 +286,13 @@ void DeviceControlWidget::selected_access_point(std::string path)
         wifi->disconnect();
     } else
     {
-        wifi->connect(path);
+        if (widget->get_ap()->has_saved_password())
+        {
+            wifi->connect(path);
+        } else
+        {
+            NetworkManager::getInstance()->request_password(wifi->get_path(), path);
+        }
     }
 }
 

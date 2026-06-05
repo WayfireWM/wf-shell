@@ -41,7 +41,7 @@ class DeviceControlWidget : public Gtk::Box
     ~DeviceControlWidget();
     void add_access_point(std::shared_ptr<AccessPoint> ap);
     void remove_access_point(std::string path);
-    void selected_access_point(std::string path);
+    void selected_access_point(std::string path, std::shared_ptr<AccessPointWidget> widget);
     void sort_access_points();
     std::string type;
 };
