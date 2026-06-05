@@ -178,6 +178,7 @@ class NetworkManager
     void mobile_global_set(bool value);
     void networking_global_set(bool value);
     void submit_password();
+    void request_password(std::string p2, std::string p3);
 
     std::shared_ptr<NetworkSettings> get_setting_for_ssid(std::string ssid);
 };
