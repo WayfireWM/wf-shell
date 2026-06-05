@@ -38,9 +38,11 @@ class WayfireBatteryInfo : public WayfireWidget
 
     DBusConnection connection;
     DBusProxy upower_proxy, powerprofile_proxy, display_device;
+    std::string power_mode = "";
 
-    bool setup_dbus_power_modes();
+    bool feat_bat, feat_modes; // the available features when running
     bool setup_dbus_battery();
+    bool setup_dbus_power_modes();
 
     void update_icon();
     void update_details();
