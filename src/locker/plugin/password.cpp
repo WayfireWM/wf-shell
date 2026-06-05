@@ -81,6 +81,8 @@ void WayfireLockerPasswordPlugin::add_output(std::string id, std::shared_ptr<Way
             pair.second->entry.set_position(start);
             pair.second->entry_updated.unblock();
         }
+
+        widget->activity();
     }, true);
 
     /* Set entry callback for return */
