@@ -77,6 +77,12 @@ void WayfireBatteryInfo::on_properties_changed(
 
 void WayfireBatteryInfo::update_icon()
 {
+    if (!feat_bat && feat_modes)
+    {
+        icon.set_from_icon_name("power-profile-" + power_mode);
+        return;
+    }
+
     Glib::Variant<Glib::ustring> icon_name;
     display_device->get_cached_property(icon_name, ICON);
     icon.set_from_icon_name(icon_name.get());
@@ -292,23 +298,31 @@ void WayfireBatteryInfo::handle_config_reload()
 
 void WayfireBatteryInfo::init(Gtk::Box *container)
 {
-    box = std::make_unique<WayfireMenuWidget>("panel", "battery");
+    // the two features are battery displaying and power modes
+    feat_bat   = setup_dbus_battery();
+    feat_modes = setup_dbus_power_modes();
 
-    if (!setup_dbus_battery())
+    // ignore if we can’t do either
+    if (!feat_bat && !feat_modes)
     {
         return;
     }
+
+    box = std::make_unique<WayfireMenuWidget>("panel", "battery");
 
     box->append(overlay);
     overlay.set_child(icon);
     icon.add_css_class("widget-icon");
 
-    status_opt.set_callback([=] () { update_details(); });
+    if (feat_bat)
+    {
+        status_opt.set_callback([=] () { update_details(); });
+        update_details();
+    }
 
-    update_details();
     update_icon();
 
-    if (setup_dbus_power_modes())
+    if (feat_modes)
     {
         profiles_menu = Gio::Menu::create();
         state_action  = Gio::SimpleAction::create_radio_string("set_profile", "");
@@ -366,7 +380,9 @@ void WayfireBatteryInfo::on_upower_properties_changed(
             {
                 auto value_string =
                     Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::ustring>>(prop.second).get();
+                power_mode = value_string;
                 set_current_profile(value_string);
+                update_icon();
             }
         } else if (prop.first == PROFILES)
         {
