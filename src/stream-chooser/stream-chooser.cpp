@@ -280,6 +280,11 @@ void WayfireStreamChooserApp::remove_toplevel(WayfireChooserTopLevel *toplevel)
 void WayfireStreamChooserApp::add_output(std::shared_ptr<Gdk::Monitor> monitor)
 {
     std::string connector = monitor->get_connector();
+    if (connector.empty())
+    {
+        return;
+    }
+
     outputs.emplace(connector, new WayfireChooserOutput(monitor));
     screen_list.append(*outputs[connector]);
     if (screen_list.get_selected_children().size() == 0)
