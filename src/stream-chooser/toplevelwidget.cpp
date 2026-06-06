@@ -134,14 +134,7 @@ void toplevel_free_shm_buffer(WayfireChooserTopLevel *toplevel)
 
 static void buffer_release_handler(void *data, wl_buffer *wl_buffer)
 {
-    auto toplevel = (WayfireChooserTopLevel*)data;
     wl_buffer_destroy(wl_buffer);
-
-    /* TODO: Double Buffer */
-    if (toplevel->buffer->buffer == wl_buffer)
-    {
-        toplevel_free_shm_buffer(toplevel);
-    }
 }
 
 static const wl_buffer_listener buffer_listener =
@@ -224,6 +217,7 @@ static void frame_handle_ready(void *data,
 {
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     toplevel->buffer_ready();
+    toplevel_free_shm_buffer(toplevel);
 }
 
 static void frame_handle_failed(void *data,
@@ -234,6 +228,7 @@ static void frame_handle_failed(void *data,
     std::cerr << "Failed to copy frame because reason: " << reason << std::endl;
     ext_image_copy_capture_frame_v1_destroy(handle);
     toplevel->frame = NULL;
+    toplevel_free_shm_buffer(toplevel);
 }
 
 static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
@@ -349,11 +344,20 @@ void WayfireChooserTopLevel::buffer_ready()
 
 void WayfireChooserTopLevel::destroy()
 {
-    ext_image_capture_source_v1_destroy(copy_capture_source);
-    ext_image_copy_capture_frame_v1_destroy(frame);
-    frame = NULL;
-    ext_image_copy_capture_session_v1_destroy(recording_session);
-    recording_session = NULL;
+    if (frame)
+    {
+        ext_image_copy_capture_frame_v1_destroy(frame);
+    }
+
+    if (copy_capture_source)
+    {
+        ext_image_capture_source_v1_destroy(copy_capture_source);
+    }
+
+    if (recording_session)
+    {
+        ext_image_copy_capture_session_v1_destroy(recording_session);
+    }
 }
 
 /* Gtk Overlay showing information about a window */
