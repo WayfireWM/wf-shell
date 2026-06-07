@@ -27,12 +27,13 @@ class WayfireChooserOutput : public Gtk::Box
     std::shared_ptr<Gdk::Monitor> output;
     ext_image_copy_capture_session_v1 *recording_session = NULL;
     ext_image_capture_source_v1 *copy_capture_source     = NULL;
-    void grab_output_screenshot();
+    void start_output_source_ssession();
+    sigc::connection timer_connection;
 
   public:
     std::shared_ptr<output_buffer> buffer  = nullptr;
     ext_image_copy_capture_frame_v1 *frame = NULL;
-    bool on_frame_tick(const Glib::RefPtr<Gdk::FrameClock>& frame_clock);
+    bool waiting_for_buffer = false;
     void print();
     void size();
     void buffer_ready();

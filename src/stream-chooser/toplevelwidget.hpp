@@ -32,14 +32,16 @@ class WayfireChooserTopLevel : public Gtk::Box
 
     ext_image_copy_capture_session_v1 *recording_session = NULL;
     ext_image_capture_source_v1 *copy_capture_source = NULL;
+    void start_toplevel_source_ssession();
+    sigc::connection timer_connection;
 
   public:
     Gtk::Picture screenshot;
     int current_buffer_width = 0, current_buffer_height = 0, current_buffer_format = 0;
-    ext_foreign_toplevel_handle_v1 *handle = nullptr;
+    ext_foreign_toplevel_handle_v1 *handle  = nullptr;
     std::shared_ptr<toplevel_buffer> buffer = nullptr;
-    ext_image_copy_capture_frame_v1 *frame = NULL;
-    bool on_frame_tick(const Glib::RefPtr<Gdk::FrameClock>& frame_clock);
+    ext_image_copy_capture_frame_v1 *frame  = NULL;
+    bool waiting_for_buffer = false;
     WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *handle);
     ~WayfireChooserTopLevel();
     void commit();
@@ -47,7 +49,6 @@ class WayfireChooserTopLevel : public Gtk::Box
     void set_app_id(std::string app_id);
     void set_title(std::string title);
     void set_identifier(std::string identifier);
-    void grab_toplevel_screenshot();
     void size();
     void buffer_ready();
     void print();

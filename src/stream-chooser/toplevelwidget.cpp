@@ -130,6 +130,7 @@ static void frame_handle_ready(void *data,
 {
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     toplevel->buffer_ready();
+    toplevel->waiting_for_buffer = false;
 }
 
 static void frame_handle_failed(void *data,
@@ -140,6 +141,7 @@ static void frame_handle_failed(void *data,
     std::cerr << "Failed to copy frame because reason: " << reason << std::endl;
     ext_image_copy_capture_frame_v1_destroy(handle);
     toplevel->frame = nullptr;
+    toplevel->waiting_for_buffer = false;
 }
 
 static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
@@ -220,7 +222,7 @@ static void frame_handle_linux_dmabuf(uint32_t width, uint32_t height, WayfireCh
     zwp_linux_buffer_params_v1_create(buffer->params, w, h, format, 0);
 }
 
-void WayfireChooserTopLevel::grab_toplevel_screenshot()
+void WayfireChooserTopLevel::start_toplevel_source_ssession()
 {
     copy_capture_source = ext_foreign_toplevel_image_capture_source_manager_v1_create_source(
         WayfireStreamChooserApp::getInstance().toplevel_capture_manager,
@@ -245,6 +247,11 @@ void WayfireChooserTopLevel::size()
         return;
     }
 
+    if (waiting_for_buffer)
+    {
+        return;
+    }
+
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
@@ -260,6 +267,7 @@ void WayfireChooserTopLevel::size()
     if (dirty)
     {
         frame_handle_linux_dmabuf(buffer->width, buffer->height, this);
+        waiting_for_buffer = true;
         while (!buffer->buffer && wl_display_dispatch(WayfireStreamChooserApp::getInstance().display) != -1)
         {}
     }
@@ -277,13 +285,6 @@ void WayfireChooserTopLevel::size()
     ext_image_copy_capture_frame_v1_attach_buffer(buffer->frame, buffer->buffer);
     ext_image_copy_capture_frame_v1_damage_buffer(buffer->frame, 0, 0, buffer->width, buffer->height);
     ext_image_copy_capture_frame_v1_capture(buffer->frame);
-}
-
-bool WayfireChooserTopLevel::on_frame_tick(const Glib::RefPtr<Gdk::FrameClock>& frame_clock)
-{
-    this->size();
-
-    return true;
 }
 
 void WayfireChooserTopLevel::buffer_ready()
@@ -330,24 +331,6 @@ void WayfireChooserTopLevel::buffer_ready()
     gbm_bo_unmap(buffer->bo, map_data);
 }
 
-void WayfireChooserTopLevel::destroy()
-{
-    if (frame)
-    {
-        ext_image_copy_capture_frame_v1_destroy(frame);
-    }
-
-    if (copy_capture_source)
-    {
-        ext_image_capture_source_v1_destroy(copy_capture_source);
-    }
-
-    if (recording_session)
-    {
-        ext_image_copy_capture_session_v1_destroy(recording_session);
-    }
-}
-
 /* Gtk Overlay showing information about a window */
 WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *handle) : handle(handle)
 {
@@ -368,8 +351,6 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
     label.set_max_width_chars(40);
 
     buffer = std::make_shared<toplevel_buffer>();
-
-    screenshot.add_tick_callback(sigc::mem_fun(*this, &WayfireChooserTopLevel::on_frame_tick));
 
     ext_foreign_toplevel_handle_v1_add_listener(handle, &listener, this);
 }
@@ -414,13 +395,48 @@ void WayfireChooserTopLevel::commit()
     /* If we have the protocols, grab a screenshot */
     if (WayfireStreamChooserApp::getInstance().has_image_copy_capture)
     {
-        grab_toplevel_screenshot();
+        start_toplevel_source_ssession();
+
+        timer_connection = Glib::signal_timeout().connect(
+            [this] ()
+        {
+            this->size();
+            return G_SOURCE_CONTINUE;
+        }, 50);
     }
 }
 
 WayfireChooserTopLevel::~WayfireChooserTopLevel()
 {
-    destroy();
+    if (timer_connection.connected())
+    {
+        timer_connection.disconnect();
+    }
+
+    if (frame)
+    {
+        ext_image_copy_capture_frame_v1_destroy(frame);
+    }
+
+    if (copy_capture_source)
+    {
+        ext_image_capture_source_v1_destroy(copy_capture_source);
+    }
+
+    if (recording_session)
+    {
+        ext_image_copy_capture_session_v1_destroy(recording_session);
+    }
+
+    if (buffer->bo)
+    {
+        gbm_bo_destroy(buffer->bo);
+    }
+
+    if (buffer->params)
+    {
+        zwp_linux_buffer_params_v1_destroy(buffer->params);
+    }
 }
 
 void WayfireChooserTopLevel::print()
