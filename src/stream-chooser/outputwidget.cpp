@@ -202,13 +202,6 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
         WayfireStreamChooserApp::getInstance().remove_output(output->get_connector());
     });
 
-    timer_connection = Glib::signal_timeout().connect(
-        [this] ()
-    {
-        this->size();
-        return G_SOURCE_CONTINUE;
-    }, 50);
-
     buffer = std::make_shared<output_buffer>();
 
     start_output_source_ssession();
@@ -216,11 +209,6 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
 
 WayfireChooserOutput::~WayfireChooserOutput()
 {
-    if (timer_connection.connected())
-    {
-        timer_connection.disconnect();
-    }
-
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
@@ -253,7 +241,7 @@ void WayfireChooserOutput::print()
     exit(0);
 }
 
-void WayfireChooserOutput::size()
+void WayfireChooserOutput::frame_request()
 {
     if ((current_buffer_width <= 0) || (current_buffer_height <= 0))
     {

@@ -32,7 +32,6 @@ class WayfireChooserTopLevel : public Gtk::Box
 
     ext_image_capture_source_v1 *copy_capture_source = NULL;
     void start_toplevel_source_ssession();
-    sigc::connection timer_connection;
 
   public:
     Gtk::Picture screenshot;
@@ -49,7 +48,7 @@ class WayfireChooserTopLevel : public Gtk::Box
     void set_app_id(std::string app_id);
     void set_title(std::string title);
     void set_identifier(std::string identifier);
-    void size();
+    void frame_request();
     void buffer_ready();
     void print();
 };

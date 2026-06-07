@@ -234,7 +234,7 @@ void WayfireChooserTopLevel::start_toplevel_source_ssession()
     ext_image_copy_capture_session_v1_add_listener(recording_session, &recording_session_listener, this);
 }
 
-void WayfireChooserTopLevel::size()
+void WayfireChooserTopLevel::frame_request()
 {
     if ((current_buffer_width <= 0) || (current_buffer_height <= 0))
     {
@@ -349,6 +349,8 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
 
     buffer = std::make_shared<toplevel_buffer>();
 
+    start_toplevel_source_ssession();
+
     ext_foreign_toplevel_handle_v1_add_listener(handle, &listener, this);
 }
 
@@ -388,28 +390,10 @@ void WayfireChooserTopLevel::commit()
         identifier = buffered_identifier;
         buffered_identifier = "";
     }
-
-    /* If we have the protocols, grab a screenshot */
-    if (WayfireStreamChooserApp::getInstance().has_image_copy_capture)
-    {
-        start_toplevel_source_ssession();
-
-        timer_connection = Glib::signal_timeout().connect(
-            [this] ()
-        {
-            this->size();
-            return G_SOURCE_CONTINUE;
-        }, 50);
-    }
 }
 
 WayfireChooserTopLevel::~WayfireChooserTopLevel()
 {
-    if (timer_connection.connected())
-    {
-        timer_connection.disconnect();
-    }
-
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
