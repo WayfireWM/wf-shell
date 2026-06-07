@@ -338,6 +338,22 @@ void WayfireStreamChooserApp::activate()
         gtk_layer_set_exclusive_zone(window.gobj(), 0);
     }
 
+    Glib::signal_timeout().connect(
+        [this] ()
+    {
+        for (auto & toplevel : this->toplevels)
+        {
+            toplevel.second->frame_request();
+        }
+
+        for (auto & output : this->outputs)
+        {
+            output.second->frame_request();
+        }
+
+        return G_SOURCE_CONTINUE;
+    }, 50);
+
     window.present();
 }
 
