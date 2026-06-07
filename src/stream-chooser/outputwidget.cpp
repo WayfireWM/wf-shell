@@ -27,6 +27,7 @@ static void frame_handle_ready(void *data,
 {
     WayfireChooserOutput *output = (WayfireChooserOutput*)data;
     output->buffer_ready();
+    output->waiting_for_buffer = false;
 }
 
 static void frame_handle_failed(void *data,
@@ -37,6 +38,7 @@ static void frame_handle_failed(void *data,
     std::cerr << "Failed to copy frame because reason: " << reason << std::endl;
     ext_image_copy_capture_frame_v1_destroy(handle);
     output->frame = nullptr;
+    output->waiting_for_buffer = false;
 }
 
 static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
@@ -165,14 +167,7 @@ static void frame_handle_linux_dmabuf(uint32_t width, uint32_t height, WayfireCh
     zwp_linux_buffer_params_v1_create(buffer->params, w, h, format, 0);
 }
 
-bool WayfireChooserOutput::on_frame_tick(const Glib::RefPtr<Gdk::FrameClock>& frame_clock)
-{
-    this->size();
-
-    return true;
-}
-
-void WayfireChooserOutput::grab_output_screenshot()
+void WayfireChooserOutput::start_output_source_ssession()
 {
     copy_capture_source = ext_output_image_capture_source_manager_v1_create_source(
         WayfireStreamChooserApp::getInstance().output_capture_manager,
@@ -209,13 +204,23 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
 
     buffer = std::make_shared<output_buffer>();
 
-    grab_output_screenshot();
+    start_output_source_ssession();
 
-    contents.add_tick_callback(sigc::mem_fun(*this, &WayfireChooserOutput::on_frame_tick));
+    timer_connection = Glib::signal_timeout().connect(
+        [this] ()
+    {
+        this->size();
+        return G_SOURCE_CONTINUE;
+    }, 50);
 }
 
 WayfireChooserOutput::~WayfireChooserOutput()
 {
+    if (timer_connection.connected())
+    {
+        timer_connection.disconnect();
+    }
+
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
@@ -229,6 +234,16 @@ WayfireChooserOutput::~WayfireChooserOutput()
     if (recording_session)
     {
         ext_image_copy_capture_session_v1_destroy(recording_session);
+    }
+
+    if (buffer->bo)
+    {
+        gbm_bo_destroy(buffer->bo);
+    }
+
+    if (buffer->params)
+    {
+        zwp_linux_buffer_params_v1_destroy(buffer->params);
     }
 }
 
@@ -251,6 +266,11 @@ void WayfireChooserOutput::size()
         return;
     }
 
+    if (waiting_for_buffer)
+    {
+        return;
+    }
+
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
@@ -266,6 +286,7 @@ void WayfireChooserOutput::size()
     if (dirty)
     {
         frame_handle_linux_dmabuf(buffer->width, buffer->height, this);
+        waiting_for_buffer = true;
         while (!buffer->buffer && wl_display_dispatch(WayfireStreamChooserApp::getInstance().display) != -1)
         {}
     }
