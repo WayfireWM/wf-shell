@@ -34,9 +34,9 @@ class WayfireStreamChooserApp : public Gtk::Application
     bool has_foreign_toplevel_list = false;
     bool has_image_copy_capture    = false;
     bool has_image_capture_source  = false;
+    std::string drm_device_name;
     int drm_fd = -1;
     gbm_device *gbm_device_ptr = nullptr;
-    std::string drm_device_name;
 
     zwp_linux_dmabuf_v1 *dmabuf;
     ext_image_copy_capture_manager_v1 *manager;
@@ -67,7 +67,14 @@ class WayfireStreamChooserApp : public Gtk::Application
     WayfireStreamChooserApp();
     ~WayfireStreamChooserApp()
     {
-        gbm_device_destroy(gbm_device_ptr);
-        close(drm_fd);
+        if (gbm_device_ptr)
+        {
+            gbm_device_destroy(gbm_device_ptr);
+        }
+
+        if (drm_fd > 0)
+        {
+            close(drm_fd);
+        }
     }
 };

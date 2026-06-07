@@ -27,7 +27,7 @@ static void frame_handle_ready(void *data,
 {
     WayfireChooserOutput *output = (WayfireChooserOutput*)data;
     output->buffer_ready();
-    output->waiting_for_buffer = false;
+    output->frame_in_flight = false;
 }
 
 static void frame_handle_failed(void *data,
@@ -38,7 +38,7 @@ static void frame_handle_failed(void *data,
     std::cerr << "Failed to copy frame because reason: " << reason << std::endl;
     ext_image_copy_capture_frame_v1_destroy(handle);
     output->frame = nullptr;
-    output->waiting_for_buffer = false;
+    output->frame_in_flight = false;
 }
 
 static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
@@ -202,16 +202,16 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
         WayfireStreamChooserApp::getInstance().remove_output(output->get_connector());
     });
 
-    buffer = std::make_shared<output_buffer>();
-
-    start_output_source_ssession();
-
     timer_connection = Glib::signal_timeout().connect(
         [this] ()
     {
         this->size();
         return G_SOURCE_CONTINUE;
     }, 50);
+
+    buffer = std::make_shared<output_buffer>();
+
+    start_output_source_ssession();
 }
 
 WayfireChooserOutput::~WayfireChooserOutput()
@@ -266,7 +266,23 @@ void WayfireChooserOutput::size()
         return;
     }
 
-    if (waiting_for_buffer)
+    bool dirty = (buffer->width != current_buffer_width) || (buffer->height != current_buffer_height) ||
+        !buffer->buffer;
+
+    buffer->width  = current_buffer_width;
+    buffer->height = current_buffer_height;
+
+    if (dirty)
+    {
+        frame_handle_linux_dmabuf(buffer->width, buffer->height, this);
+    }
+
+    if (!buffer->buffer)
+    {
+        return;
+    }
+
+    if (frame_in_flight)
     {
         return;
     }
@@ -277,26 +293,6 @@ void WayfireChooserOutput::size()
         frame = NULL;
     }
 
-    bool dirty = (buffer->width != current_buffer_width) || (buffer->height != current_buffer_height) ||
-        !buffer->buffer;
-
-    buffer->width  = current_buffer_width;
-    buffer->height = current_buffer_height;
-
-    if (dirty)
-    {
-        frame_handle_linux_dmabuf(buffer->width, buffer->height, this);
-        waiting_for_buffer = true;
-        while (!buffer->buffer && wl_display_dispatch(WayfireStreamChooserApp::getInstance().display) != -1)
-        {}
-    }
-
-    if (!buffer->buffer)
-    {
-        printf("%s: failed to create buffer\n", __func__);
-        return;
-    }
-
     frame = ext_image_copy_capture_session_v1_create_frame(recording_session);
     buffer->frame = frame;
 
@@ -304,6 +300,7 @@ void WayfireChooserOutput::size()
     ext_image_copy_capture_frame_v1_attach_buffer(buffer->frame, buffer->buffer);
     ext_image_copy_capture_frame_v1_damage_buffer(buffer->frame, 0, 0, buffer->width, buffer->height);
     ext_image_copy_capture_frame_v1_capture(buffer->frame);
+    frame_in_flight = true;
 }
 
 void WayfireChooserOutput::buffer_ready()

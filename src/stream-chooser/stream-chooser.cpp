@@ -148,7 +148,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
     } else if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0)
     {
         auto dmabuf = (zwp_linux_dmabuf_v1*)wl_registry_bind(registry, name,
-            &zwp_linux_dmabuf_v1_interface, 4);
+            &zwp_linux_dmabuf_v1_interface, version);
         if (dmabuf)
         {
             struct zwp_linux_dmabuf_feedback_v1 *feedback =
