@@ -573,16 +573,16 @@ void NetworkManager::activate_connection(std::string p1, std::string p2, std::st
     {}
 }
 
-void NetworkManager::request_password(std::string p2, std::string p3)
+void NetworkManager::request_password(std::string device_path, std::string ap_path)
 {
-    if (p2.find("/Devices/") != std::string::npos)
+    if (device_path.find("/Devices/") != std::string::npos)
     {
-        auto device = std::dynamic_pointer_cast<WifiNetwork>(all_devices[p2]);
+        auto device = std::dynamic_pointer_cast<WifiNetwork>(all_devices[device_path]);
         if (device)
         {
-            popup_cache_p2 = p2;
-            popup_cache_p3 = p3;
-            auto ap = device->get_access_points()[p3];
+            popup_cache_device = device_path;
+            popup_cache_ap     = ap_path;
+            auto ap = device->get_access_points()[ap_path];
             popup_label.set_label("Preshared Key required for Access Point '" + ap->get_ssid() + "'");
             popup_window.present();
             popup_window.get_focus();
@@ -716,13 +716,13 @@ void NetworkManager::submit_password()
     }
 
     popup_entry.set_text("");
-    auto wifi = std::dynamic_pointer_cast<WifiNetwork>(all_devices[popup_cache_p2]);
+    auto wifi = std::dynamic_pointer_cast<WifiNetwork>(all_devices[popup_cache_device]);
     if (!wifi)
     {
         return;
     }
 
-    auto ap = wifi->get_access_points()[popup_cache_p3];
+    auto ap = wifi->get_access_points()[popup_cache_ap];
     if (!ap)
     {
         return;
@@ -788,7 +788,7 @@ void NetworkManager::submit_password()
     // Object paths (o)
     // ------------------------
     auto device_path =
-        Glib::Variant<Glib::DBusObjectPathString>::create(popup_cache_p2);
+        Glib::Variant<Glib::DBusObjectPathString>::create(popup_cache_device);
     // Access point path is "/" → NM autoselects AP matching SSID
     auto ap_path = Glib::Variant<Glib::DBusObjectPathString>::create("/");
     // ------------------------
