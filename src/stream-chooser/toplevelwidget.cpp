@@ -2,9 +2,7 @@
 
 #include <sys/mman.h>
 #include <gdk/wayland/gdkwayland.h>
-#include "ext-foreign-toplevel-list-v1-client-protocol.h"
 #include "ext-image-capture-source-v1-client-protocol.h"
-#include "ext-image-copy-capture-v1-client-protocol.h"
 #include "glib.h"
 #include "glibmm/main.h"
 #include "gtk-utils.hpp"
@@ -62,91 +60,6 @@ ext_foreign_toplevel_handle_v1_listener listener =
     .identifier = toplevel_handle_identifier,
 };
 
-/* SHM Callbacks*/
-static int backingfile(off_t size)
-{
-    static int count;
-    char name[128];
-    sprintf(name, "/tmp/wf-stream-chooser-%d-XXXXXX", count++);
-    int fd = mkstemp(name);
-    if (fd < 0)
-    {
-        perror("mkstemp");
-        return -1;
-    }
-
-    int ret;
-    while ((ret = ftruncate(fd, size)) == EINTR)
-    {}
-
-    if (ret < 0)
-    {
-        perror("ret < 0");
-        close(fd);
-        return -1;
-    }
-
-    unlink(name);
-    return fd;
-}
-
-static struct wl_buffer *toplevel_create_shm_buffer(int width, int height, void **data_out, size_t *size)
-{
-    *size = width * 4 * height;
-
-    int fd = backingfile(*size);
-    if (fd < 0)
-    {
-        perror("Creating a buffer file failed");
-        return NULL;
-    }
-
-    void *data = mmap(NULL, *size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (data == MAP_FAILED)
-    {
-        perror("mmap failed");
-        close(fd);
-        return NULL;
-    }
-
-    wl_shm_pool *pool = wl_shm_create_pool(WayfireStreamChooserApp::getInstance().shm, fd, *size);
-    close(fd);
-    wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, width, height,
-        width * 4, WL_SHM_FORMAT_ABGR8888);
-    wl_shm_pool_destroy(pool);
-
-    *data_out = data;
-    return buffer;
-}
-
-void toplevel_free_shm_buffer(WayfireChooserTopLevel *toplevel)
-{
-    if (!toplevel->buffer || !toplevel->buffer->buffer)
-    {
-        return;
-    }
-
-    munmap(toplevel->buffer->data, toplevel->buffer->size);
-    toplevel->buffer->buffer = NULL;
-}
-
-/* Buffer Release */
-
-static void buffer_release_handler(void *data, wl_buffer *wl_buffer)
-{
-    wl_buffer_destroy(wl_buffer);
-}
-
-static const wl_buffer_listener buffer_listener =
-{
-    .release = buffer_release_handler,
-};
-
-static void setup_buffer_destroy_listener(WayfireChooserTopLevel *toplevel)
-{
-    wl_buffer_add_listener(toplevel->buffer->buffer, &buffer_listener, toplevel);
-}
-
 static void session_handle_buffer_size(void *data,
     struct ext_image_copy_capture_session_v1*,
     uint32_t width, uint32_t height)
@@ -159,21 +72,21 @@ static void session_handle_buffer_size(void *data,
 static void session_handle_shm_format(void *data,
     struct ext_image_copy_capture_session_v1*,
     uint32_t format)
-{
-    WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
-    toplevel->current_buffer_format = format;
-}
+{}
 
 static void session_handle_dmabuf_device(void*,
     struct ext_image_copy_capture_session_v1*,
     struct wl_array*)
 {}
 
-static void session_handle_dmabuf_format(void*,
+static void session_handle_dmabuf_format(void *data,
     struct ext_image_copy_capture_session_v1*,
-    uint32_t,
+    uint32_t format,
     struct wl_array*)
-{}
+{
+    WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
+    toplevel->current_buffer_format = format;
+}
 
 static void session_handle_done(void *data,
     struct ext_image_copy_capture_session_v1*)
@@ -217,7 +130,6 @@ static void frame_handle_ready(void *data,
 {
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     toplevel->buffer_ready();
-    toplevel_free_shm_buffer(toplevel);
 }
 
 static void frame_handle_failed(void *data,
@@ -227,8 +139,7 @@ static void frame_handle_failed(void *data,
     WayfireChooserTopLevel *toplevel = (WayfireChooserTopLevel*)data;
     std::cerr << "Failed to copy frame because reason: " << reason << std::endl;
     ext_image_copy_capture_frame_v1_destroy(handle);
-    toplevel->frame = NULL;
-    toplevel_free_shm_buffer(toplevel);
+    toplevel->frame = nullptr;
 }
 
 static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
@@ -238,6 +149,76 @@ static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
     .ready  = frame_handle_ready,
     .failed = frame_handle_failed,
 };
+
+static void dmabuf_created(void *data, struct zwp_linux_buffer_params_v1*,
+    struct wl_buffer *wl_buffer)
+{
+    auto toplevel = (WayfireChooserTopLevel*)data;
+    toplevel->buffer->buffer = wl_buffer;
+}
+
+static void dmabuf_failed(void*, struct zwp_linux_buffer_params_v1*)
+{
+    std::cerr << "Failed to create dmabuf" << std::endl;
+}
+
+static const struct zwp_linux_buffer_params_v1_listener params_listener = {
+    .created = dmabuf_created,
+    .failed  = dmabuf_failed,
+};
+
+static void frame_handle_linux_dmabuf(uint32_t width, uint32_t height, WayfireChooserTopLevel *toplevel)
+{
+    auto format = (toplevel->current_buffer_format == WL_SHM_FORMAT_XRGB8888) ?
+        GBM_FORMAT_XRGB8888 : GBM_FORMAT_ARGB8888;
+
+    auto buffer = toplevel->buffer;
+
+    if (buffer->bo)
+    {
+        gbm_bo_destroy(buffer->bo);
+        buffer->bo = nullptr;
+    }
+
+    if (buffer->params)
+    {
+        zwp_linux_buffer_params_v1_destroy(buffer->params);
+        buffer->params = nullptr;
+    }
+
+    auto w = width;
+    auto h = height;
+
+    const uint64_t modifier = 0; // DRM_FORMAT_MOD_LINEAR
+    buffer->bo = gbm_bo_create_with_modifiers(WayfireStreamChooserApp::getInstance().gbm_device_ptr, w, h,
+        format, &modifier, 1);
+    if (buffer->bo == NULL)
+    {
+        buffer->bo = gbm_bo_create(WayfireStreamChooserApp::getInstance().gbm_device_ptr, w, h,
+            format, GBM_BO_USE_LINEAR | GBM_BO_USE_RENDERING);
+    }
+
+    if (buffer->bo == NULL)
+    {
+        perror("failed to create gbm bo");
+        return;
+    }
+
+    buffer->width  = gbm_bo_get_width(buffer->bo);
+    buffer->height = gbm_bo_get_height(buffer->bo);
+    buffer->stride = gbm_bo_get_stride(buffer->bo);
+    buffer->params = zwp_linux_dmabuf_v1_create_params(WayfireStreamChooserApp::getInstance().dmabuf);
+
+    uint64_t mod = gbm_bo_get_modifier(buffer->bo);
+    zwp_linux_buffer_params_v1_add(buffer->params,
+        gbm_bo_get_fd(buffer->bo), 0,
+        gbm_bo_get_offset(buffer->bo, 0),
+        gbm_bo_get_stride(buffer->bo),
+        mod >> 32, mod & 0xffffffff);
+
+    zwp_linux_buffer_params_v1_add_listener(buffer->params, &params_listener, toplevel);
+    zwp_linux_buffer_params_v1_create(buffer->params, w, h, format, 0);
+}
 
 void WayfireChooserTopLevel::grab_toplevel_screenshot()
 {
@@ -264,38 +245,35 @@ void WayfireChooserTopLevel::size()
         return;
     }
 
-    if (buffer && buffer->buffer)
-    {
-        printf("%s buffer in flight\n", __func__);
-        return;
-    }
-
-    buffer = std::make_shared<toplevel_buffer>();
-
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
         frame = NULL;
     }
 
+    bool dirty = (buffer->width != current_buffer_width) || (buffer->height != current_buffer_height) ||
+        !buffer->buffer;
+
     buffer->width  = current_buffer_width;
     buffer->height = current_buffer_height;
 
-    frame = ext_image_copy_capture_session_v1_create_frame(recording_session);
-    buffer->frame = frame;
-    ext_image_copy_capture_frame_v1_add_listener(buffer->frame, &frame_listener, this);
-
-    buffer->buffer =
-        toplevel_create_shm_buffer(buffer->width, buffer->height, &buffer->data, &buffer->size);
-
-    if (buffer->buffer == NULL)
+    if (dirty)
     {
-        printf("%s failed to create buffer\n", __func__);
-        exit(EXIT_FAILURE);
+        frame_handle_linux_dmabuf(buffer->width, buffer->height, this);
+        while (!buffer->buffer && wl_display_dispatch(WayfireStreamChooserApp::getInstance().display) != -1)
+        {}
     }
 
-    setup_buffer_destroy_listener(this);
+    if (!buffer->buffer)
+    {
+        printf("%s: failed to create buffer\n", __func__);
+        return;
+    }
 
+    frame = ext_image_copy_capture_session_v1_create_frame(recording_session);
+    buffer->frame = frame;
+
+    ext_image_copy_capture_frame_v1_add_listener(buffer->frame, &frame_listener, this);
     ext_image_copy_capture_frame_v1_attach_buffer(buffer->frame, buffer->buffer);
     ext_image_copy_capture_frame_v1_damage_buffer(buffer->frame, 0, 0, buffer->width, buffer->height);
     ext_image_copy_capture_frame_v1_capture(buffer->frame);
@@ -317,16 +295,24 @@ void WayfireChooserTopLevel::buffer_ready()
         return;
     }
 
+    uint32_t stride = 0;
+    void *map_data  = NULL;
+    void *data = gbm_bo_map(buffer->bo, 0, 0, buffer->width, buffer->height,
+        GBM_BO_TRANSFER_READ, &stride, &map_data);
+    if (!data)
+    {
+        perror("failed to map bo");
+        return;
+    }
+
     /* buffer->data is now valid */
     std::shared_ptr<Glib::Bytes> bytes = 0;
-    size_t size = buffer->size;
-    if (buffer->data)
-    {
-        bytes = Glib::Bytes::create(buffer->data, size);
-    }
+    size_t size = stride * buffer->height;
+    bytes = Glib::Bytes::create((unsigned char*)data, size);
 
     if (!bytes)
     {
+        gbm_bo_unmap(buffer->bo, map_data);
         return;
     }
 
@@ -334,12 +320,14 @@ void WayfireChooserTopLevel::buffer_ready()
     builder->set_bytes(bytes);
     builder->set_width(buffer->width);
     builder->set_height(buffer->height);
-    builder->set_stride(buffer->width * 4);
-    builder->set_format(Gdk::MemoryFormat::R8G8B8A8);
+    builder->set_stride(stride);
+    builder->set_format(Gdk::MemoryFormat::B8G8R8A8);
 
     auto texture = builder->build();
 
     screenshot.set_paintable(texture);
+
+    gbm_bo_unmap(buffer->bo, map_data);
 }
 
 void WayfireChooserTopLevel::destroy()
@@ -378,6 +366,8 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
     screenshot.set_valign(Gtk::Align::FILL);
     label.set_ellipsize(Pango::EllipsizeMode::MIDDLE);
     label.set_max_width_chars(40);
+
+    buffer = std::make_shared<toplevel_buffer>();
 
     screenshot.add_tick_callback(sigc::mem_fun(*this, &WayfireChooserTopLevel::on_frame_tick));
 

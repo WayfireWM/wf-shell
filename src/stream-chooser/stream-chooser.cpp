@@ -1,9 +1,12 @@
 #include <iostream>
+#include <fcntl.h>
+#include <xf86drm.h>
 #include <gtk4-layer-shell/gtk4-layer-shell.h>
 #include <gdk/wayland/gdkwayland.h>
-#include <ext-foreign-toplevel-list-v1-client-protocol.h>
-#include <ext-image-capture-source-v1-client-protocol.h>
-#include <ext-image-copy-capture-v1-client-protocol.h>
+#include "ext-foreign-toplevel-list-v1-client-protocol.h"
+#include "ext-image-capture-source-v1-client-protocol.h"
+#include "ext-image-copy-capture-v1-client-protocol.h"
+#include "linux-dmabuf-unstable-v1-client-protocol.h"
 #include <wayland-client-protocol.h>
 
 #include "stream-chooser.hpp"
@@ -32,6 +35,81 @@ ext_foreign_toplevel_list_v1_listener toplevel_list_v1_impl = {
     .finished = handle_finished,
 };
 
+static void dmabuf_feedback_done(void*, struct zwp_linux_dmabuf_feedback_v1 *feedback)
+{
+    zwp_linux_dmabuf_feedback_v1_destroy(feedback);
+}
+
+static void dmabuf_feedback_format_table(void*, struct zwp_linux_dmabuf_feedback_v1*,
+    int32_t fd, uint32_t)
+{
+    close(fd);
+}
+
+static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feedback_v1*,
+    struct wl_array *device)
+{
+    auto instance = (WayfireStreamChooserApp*)data;
+    dev_t dev_id;
+    memcpy(&dev_id, device->data, device->size);
+
+    drmDevice *dev = NULL;
+    if (drmGetDeviceFromDevId(dev_id, 0, &dev) != 0)
+    {
+        perror("failed to get DRM device from dev id");
+        return;
+    }
+
+    if (dev->available_nodes & (1 << DRM_NODE_RENDER))
+    {
+        instance->drm_device_name = dev->nodes[DRM_NODE_RENDER];
+    } else if (dev->available_nodes & (1 << DRM_NODE_PRIMARY))
+    {
+        instance->drm_device_name = dev->nodes[DRM_NODE_PRIMARY];
+    }
+
+    drmFreeDevice(&dev);
+
+    instance->drm_fd = open(instance->drm_device_name.c_str(), O_RDWR);
+    if (instance->drm_fd < 0)
+    {
+        perror("failed to open drm device");
+        exit(EXIT_FAILURE);
+    }
+
+    instance->gbm_device_ptr = gbm_create_device(instance->drm_fd);
+    if (instance->gbm_device_ptr == NULL)
+    {
+        perror("failed to create gbm device");
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void dmabuf_feedback_tranche_done(void*, struct zwp_linux_dmabuf_feedback_v1*)
+{}
+
+static void dmabuf_feedback_tranche_target_device(void*, struct zwp_linux_dmabuf_feedback_v1*,
+    struct wl_array*)
+{}
+
+static void dmabuf_feedback_tranche_formats(void*, struct zwp_linux_dmabuf_feedback_v1*,
+    struct wl_array*)
+{}
+
+static void dmabuf_feedback_tranche_flags(void*, struct zwp_linux_dmabuf_feedback_v1*,
+    uint32_t)
+{}
+
+static const struct zwp_linux_dmabuf_feedback_v1_listener dmabuf_feedback_listener = {
+    .done = dmabuf_feedback_done,
+    .format_table = dmabuf_feedback_format_table,
+    .main_device  = dmabuf_feedback_main_device,
+    .tranche_done = dmabuf_feedback_tranche_done,
+    .tranche_target_device = dmabuf_feedback_tranche_target_device,
+    .tranche_formats = dmabuf_feedback_tranche_formats,
+    .tranche_flags   = dmabuf_feedback_tranche_flags,
+};
+
 /* Static callbacks for wayland registry */
 static void registry_add_object(void *data, wl_registry *registry, uint32_t name,
     const char *interface, uint32_t version)
@@ -53,10 +131,6 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
             &ext_image_copy_capture_manager_v1_interface, version);
         WayfireStreamChooserApp::getInstance().has_image_copy_capture = true;
         WayfireStreamChooserApp::getInstance().set_copy_capture_manager(manager);
-    } else if (strcmp(interface, wl_shm_interface.name) == 0)
-    {
-        auto shm = (wl_shm*)wl_registry_bind(registry, name, &wl_shm_interface, 1);
-        WayfireStreamChooserApp::getInstance().set_shm(shm);
     } else if (strcmp(interface, ext_foreign_toplevel_image_capture_source_manager_v1_interface.name) == 0)
     {
         auto toplevel_capture_manager =
@@ -71,6 +145,18 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
                 &ext_output_image_capture_source_manager_v1_interface,
                 version);
         WayfireStreamChooserApp::getInstance().set_output_capture_manager(output_capture_manager);
+    } else if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0)
+    {
+        auto dmabuf = (zwp_linux_dmabuf_v1*)wl_registry_bind(registry, name,
+            &zwp_linux_dmabuf_v1_interface, 4);
+        if (dmabuf)
+        {
+            struct zwp_linux_dmabuf_feedback_v1 *feedback =
+                zwp_linux_dmabuf_v1_get_default_feedback(dmabuf);
+            zwp_linux_dmabuf_feedback_v1_add_listener(feedback, &dmabuf_feedback_listener, data);
+        }
+
+        WayfireStreamChooserApp::getInstance().set_linux_dmabuf(dmabuf);
     }
 }
 
@@ -294,9 +380,9 @@ void WayfireStreamChooserApp::add_output(std::shared_ptr<Gdk::Monitor> monitor)
     }
 }
 
-void WayfireStreamChooserApp::set_shm(wl_shm *shm)
+void WayfireStreamChooserApp::set_linux_dmabuf(zwp_linux_dmabuf_v1 *dmabuf)
 {
-    this->shm = shm;
+    this->dmabuf = dmabuf;
 }
 
 void WayfireStreamChooserApp::remove_output(std::string connector)
