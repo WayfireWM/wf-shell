@@ -23,7 +23,6 @@ class WayfireStreamChooserApp : public Gtk::Application
     Gtk::FlowBox window_list, screen_list;
     Gtk::Button done, cancel;
     Gtk::ScrolledWindow scroll_window, scroll_screen;
-    WayfireStreamChooserApp();
 
     wl_registry *registry;
     ext_foreign_toplevel_list_v1 *list;
@@ -35,8 +34,11 @@ class WayfireStreamChooserApp : public Gtk::Application
     bool has_foreign_toplevel_list = false;
     bool has_image_copy_capture    = false;
     bool has_image_capture_source  = false;
+    int drm_fd = -1;
+    gbm_device *gbm_device_ptr = nullptr;
+    std::string drm_device_name;
 
-    wl_shm *shm;
+    zwp_linux_dmabuf_v1 *dmabuf;
     ext_image_copy_capture_manager_v1 *manager;
     ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager;
     ext_output_image_capture_source_manager_v1 *output_capture_manager;
@@ -50,7 +52,7 @@ class WayfireStreamChooserApp : public Gtk::Application
         return instance;
     }
 
-    void set_shm(wl_shm *shm);
+    void set_linux_dmabuf(zwp_linux_dmabuf_v1 *dmabuf);
     void set_toplevel_list(ext_foreign_toplevel_list_v1 *list);
     void set_copy_capture_manager(ext_image_copy_capture_manager_v1 *manager);
     void set_toplevel_capture_manager(
@@ -62,6 +64,10 @@ class WayfireStreamChooserApp : public Gtk::Application
     void add_output(std::shared_ptr<Gdk::Monitor> monitor);
     void remove_output(std::string connector);
     void activate();
-    WayfireStreamChooserApp(WayfireStreamChooserApp const&) = delete;
-    void operator =(WayfireStreamChooserApp const&) = delete;
+    WayfireStreamChooserApp();
+    ~WayfireStreamChooserApp()
+    {
+        gbm_device_destroy(gbm_device_ptr);
+        close(drm_fd);
+    }
 };

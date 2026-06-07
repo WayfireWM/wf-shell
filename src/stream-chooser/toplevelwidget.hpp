@@ -1,17 +1,20 @@
 #pragma once
+#include <gbm.h>
 #include <gtkmm.h>
 #include <memory>
 #include "ext-foreign-toplevel-list-v1-client-protocol.h"
 #include "ext-image-copy-capture-v1-client-protocol.h"
+#include "linux-dmabuf-unstable-v1-client-protocol.h"
 #include "toplevellayout.hpp"
 
 struct toplevel_buffer
 {
     int width  = 0;
     int height = 0;
-    void *data;
-    wl_buffer *buffer;
-    size_t size = 0;
+    int stride = 0;
+    gbm_bo *bo = nullptr;
+    wl_buffer *buffer = nullptr;
+    zwp_linux_buffer_params_v1 *params     = nullptr;
     ext_image_copy_capture_frame_v1 *frame = NULL;
 };
 

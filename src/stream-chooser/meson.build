@@ -1,4 +1,6 @@
 deps = [
+  gbm,
+  drm,
   gtkmm,
   wf_protos,
   wfconfig,
