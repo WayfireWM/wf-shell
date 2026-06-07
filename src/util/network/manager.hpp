@@ -61,7 +61,7 @@ class NetworkManager
     Gtk::Label popup_label;
     Gtk::Entry popup_entry;
 
-    std::string popup_cache_p2 = "", popup_cache_p3 = "";
+    std::string popup_cache_device = "", popup_cache_ap = "";
     inline static std::weak_ptr<NetworkManager> instance;
 
   public:
@@ -178,7 +178,7 @@ class NetworkManager
     void mobile_global_set(bool value);
     void networking_global_set(bool value);
     void submit_password();
-    void request_password(std::string p2, std::string p3);
+    void request_password(std::string device_path, std::string ap_path);
 
     std::shared_ptr<NetworkSettings> get_setting_for_ssid(std::string ssid);
 };
