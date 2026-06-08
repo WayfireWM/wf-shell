@@ -236,6 +236,11 @@ void WayfireChooserTopLevel::start_toplevel_source_ssession()
 
 void WayfireChooserTopLevel::frame_request()
 {
+    if (!streaming)
+    {
+        return;
+    }
+
     if ((current_buffer_width <= 0) || (current_buffer_height <= 0))
     {
         printf("%s invalid size\n", __func__);
@@ -328,6 +333,16 @@ void WayfireChooserTopLevel::buffer_ready()
     gbm_bo_unmap(buffer->bo, map_data);
 }
 
+void WayfireChooserTopLevel::stream()
+{
+    streaming = true;
+}
+
+void WayfireChooserTopLevel::pause()
+{
+    streaming = false;
+}
+
 /* Gtk Overlay showing information about a window */
 WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *handle) : handle(handle)
 {
@@ -358,6 +373,37 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
     start_toplevel_source_ssession();
 
     ext_foreign_toplevel_handle_v1_add_listener(handle, &listener, this);
+
+    initial_timeout = Glib::signal_timeout().connect(
+            [this] ()
+    {
+        this->pause();
+        return G_SOURCE_REMOVE;
+    }, 2000);
+
+    auto motion_controller = Gtk::EventControllerMotion::create();
+    pointer_enter = motion_controller->signal_enter().connect(
+        [this] (double, double)
+    {
+        this->initial_timeout.disconnect();
+        this->pause_timeout.disconnect();
+        this->stream();
+    });
+    add_controller(motion_controller);
+
+    motion_controller = Gtk::EventControllerMotion::create();
+    pointer_leave = motion_controller->signal_leave().connect(
+        [this] ()
+    {
+        this->pause_timeout.disconnect();
+        this->pause_timeout = Glib::signal_timeout().connect(
+            [this] ()
+        {
+            this->pause();
+            return G_SOURCE_REMOVE;
+        }, 2000);
+    });
+    add_controller(motion_controller);
 }
 
 void WayfireChooserTopLevel::set_title(std::string title)
@@ -400,6 +446,9 @@ void WayfireChooserTopLevel::commit()
 
 WayfireChooserTopLevel::~WayfireChooserTopLevel()
 {
+    pointer_enter.disconnect();
+    pointer_leave.disconnect();
+
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
