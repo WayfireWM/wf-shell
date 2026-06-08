@@ -15,6 +15,7 @@ using type_signal_resize = sigc::signal<void (int, int)>;
 class WayfireStreamChooserApp : public Gtk::Application
 {
   private:
+    wl_display *display;
     Gtk::Window window;
 
     Gtk::Box main, buttons;
@@ -31,7 +32,6 @@ class WayfireStreamChooserApp : public Gtk::Application
     type_signal_resize resized_signal;
 
   public:
-    wl_display *display;
     Gtk::Notebook notebook;
     Gtk::FlowBox window_list, screen_list;
     bool has_foreign_toplevel_list = false;

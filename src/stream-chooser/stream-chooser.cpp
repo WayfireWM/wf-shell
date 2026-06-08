@@ -124,7 +124,6 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
         WayfireStreamChooserApp::getInstance().set_toplevel_list(list);
         ext_foreign_toplevel_list_v1_add_listener(list,
             &toplevel_list_v1_impl, NULL);
-        wl_display_flush(WayfireStreamChooserApp::getInstance().display);
     } else if (strcmp(interface, ext_image_copy_capture_manager_v1_interface.name) == 0)
     {
         auto manager = (ext_image_copy_capture_manager_v1*)wl_registry_bind(registry, name,
@@ -282,31 +281,24 @@ void WayfireStreamChooserApp::activate()
     wl_display_roundtrip(display);
     wl_registry_destroy(registry);
 
-    bool failed = false;
     if (!has_image_copy_capture)
     {
-        failed = true;
         std::cerr << "Compositor has not advertised ext-image-copy-capture-v1" << std::endl;
     }
 
     if (!has_foreign_toplevel_list)
     {
-        failed = true;
         std::cerr << "Compositor has not advertised ext-foreign-toplevel-list-v1" << std::endl;
     }
 
     if (!has_image_capture_source)
     {
-        failed = true;
         std::cerr << "Compositor has not advertised ext-image-capture-source-v1" << std::endl;
     }
 
-    if (failed)
-    {
-        window_label.set_sensitive(false);
-        window_label.set_tooltip_text("This compositor does not currently support sharing individual windows");
-        notebook.set_current_page(1);
-    }
+    window_label.set_sensitive(false);
+    window_label.set_tooltip_text("This compositor does not currently support sharing individual windows");
+    notebook.set_current_page(1);
 
     /* Get output list */
     auto gtkdisplay = Gdk::Display::get_default();
@@ -365,6 +357,7 @@ void WayfireStreamChooserApp::activate()
     window.present();
 }
 
+static bool first_toplevel = true;
 void WayfireStreamChooserApp::add_toplevel(ext_foreign_toplevel_handle_v1 *handle)
 {
     toplevels.emplace(handle, new WayfireChooserTopLevel(handle));
@@ -373,6 +366,14 @@ void WayfireStreamChooserApp::add_toplevel(ext_foreign_toplevel_handle_v1 *handl
     {
         auto child = window_list.get_child_at_index(0);
         window_list.select_child(*child);
+    }
+
+    window_label.set_sensitive(true);
+    window_label.set_tooltip_text("");
+    if (first_toplevel)
+    {
+        first_toplevel = false;
+        notebook.set_current_page(0);
     }
 }
 
@@ -385,6 +386,11 @@ void WayfireStreamChooserApp::remove_toplevel(WayfireChooserTopLevel *toplevel)
 
     window_list.remove(*toplevel);
     toplevels.erase(toplevel->handle);
+    if (toplevels.empty())
+    {
+        window_label.set_sensitive(false);
+        window_label.set_tooltip_text("No windows open");
+    }
 }
 
 void WayfireStreamChooserApp::add_output(std::shared_ptr<Gdk::Monitor> monitor)
