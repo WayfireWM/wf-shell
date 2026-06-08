@@ -70,6 +70,8 @@ class WayfireStreamChooserApp : public Gtk::Application
     WayfireStreamChooserApp();
     ~WayfireStreamChooserApp()
     {
+        toplevels.clear();
+        outputs.clear();
         if (gbm_device_ptr)
         {
             gbm_device_destroy(gbm_device_ptr);

@@ -94,10 +94,7 @@ static void session_handle_done(void *data,
 
 static void session_handle_stopped(void*,
     struct ext_image_copy_capture_session_v1 *session)
-{
-    ext_image_copy_capture_session_v1_destroy(session);
-    session = NULL;
-}
+{}
 
 static const struct ext_image_copy_capture_session_v1_listener recording_session_listener = {
     .buffer_size   = session_handle_buffer_size,
@@ -487,6 +484,11 @@ WayfireChooserTopLevel::~WayfireChooserTopLevel()
     if (recording_session)
     {
         ext_image_copy_capture_session_v1_destroy(recording_session);
+    }
+
+    if (buffer->buffer)
+    {
+        wl_buffer_destroy(buffer->buffer);
     }
 
     if (buffer->bo)
