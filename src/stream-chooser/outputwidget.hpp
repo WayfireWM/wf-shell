@@ -29,9 +29,14 @@ class WayfireChooserOutput : public Gtk::Box
     ext_image_capture_source_v1 *copy_capture_source = NULL;
     void start_output_source_ssession();
 
+    void pause();
+    void stream();
+    bool streaming = true;
+    sigc::connection pause_timeout, initial_timeout;
+
   public:
     ext_image_copy_capture_session_v1 *recording_session = NULL;
-    std::shared_ptr<output_buffer> buffer  = nullptr;
+    std::shared_ptr<output_buffer> buffer = nullptr;
     ext_image_copy_capture_frame_v1 *frame = NULL;
     bool frame_in_flight = false;
     void print();

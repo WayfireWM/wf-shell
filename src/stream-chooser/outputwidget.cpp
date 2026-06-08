@@ -179,6 +179,16 @@ void WayfireChooserOutput::start_output_source_ssession()
     ext_image_copy_capture_session_v1_add_listener(recording_session, &recording_session_listener, this);
 }
 
+void WayfireChooserOutput::stream()
+{
+    streaming = true;
+}
+
+void WayfireChooserOutput::pause()
+{
+    streaming = false;
+}
+
 WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output) : output(output)
 {
     append(contents);
@@ -208,6 +218,66 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
     buffer = std::make_shared<output_buffer>();
 
     start_output_source_ssession();
+
+    initial_timeout = Glib::signal_timeout().connect(
+        [this] ()
+    {
+        this->pause();
+        return G_SOURCE_REMOVE;
+    }, 2000);
+
+    signals.push_back(
+        WayfireStreamChooserApp::getInstance().screen_list.signal_selected_children_changed().connect(
+            [=] ()
+    {
+        if (WayfireStreamChooserApp::getInstance().screen_list.get_selected_children()[0]->get_children()[0]
+            ==
+            this)
+        {
+            this->initial_timeout.disconnect();
+            this->pause_timeout.disconnect();
+            this->stream();
+            return;
+        }
+
+        this->pause_timeout.disconnect();
+        this->pause_timeout = Glib::signal_timeout().connect(
+            [this] ()
+        {
+            this->pause();
+            return G_SOURCE_REMOVE;
+        }, 2000);
+    }));
+
+    auto motion_controller = Gtk::EventControllerMotion::create();
+    signals.push_back(motion_controller->signal_enter().connect(
+        [this] (double, double)
+    {
+        this->initial_timeout.disconnect();
+        this->pause_timeout.disconnect();
+        this->stream();
+    }));
+    add_controller(motion_controller);
+
+    motion_controller = Gtk::EventControllerMotion::create();
+    signals.push_back(motion_controller->signal_leave().connect(
+        [this] ()
+    {
+        this->pause_timeout.disconnect();
+        this->pause_timeout = Glib::signal_timeout().connect(
+            [this] ()
+        {
+            if (WayfireStreamChooserApp::getInstance().screen_list.get_selected_children()[0]->get_children()[
+                0] == this)
+            {
+                return G_SOURCE_REMOVE;
+            }
+
+            this->pause();
+            return G_SOURCE_REMOVE;
+        }, 2000);
+    }));
+    add_controller(motion_controller);
 }
 
 WayfireChooserOutput::~WayfireChooserOutput()
@@ -251,6 +321,11 @@ void WayfireChooserOutput::print()
 
 void WayfireChooserOutput::frame_request()
 {
+    if (!streaming)
+    {
+        return;
+    }
+
     if ((current_buffer_width <= 0) || (current_buffer_height <= 0))
     {
         printf("%s invalid size\n", __func__);
