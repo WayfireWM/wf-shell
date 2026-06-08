@@ -9,6 +9,8 @@
 #include "outputwidget.hpp"
 #include "toplevelwidget.hpp"
 
+using type_signal_resize = sigc::signal<void (int, int)>;
+
 
 class WayfireStreamChooserApp : public Gtk::Application
 {
@@ -27,6 +29,8 @@ class WayfireStreamChooserApp : public Gtk::Application
     wl_registry *registry;
     ext_foreign_toplevel_list_v1 *list;
     Glib::RefPtr<MainLayout> layout;
+
+    type_signal_resize resized_signal;
 
   public:
     wl_display *display;
@@ -77,4 +81,7 @@ class WayfireStreamChooserApp : public Gtk::Application
             close(drm_fd);
         }
     }
+
+    type_signal_resize signal_resize();
+    void resize(int width, int height);
 };

@@ -2,6 +2,7 @@
 #include <gbm.h>
 #include <gtkmm.h>
 #include <memory>
+#include <vector>
 #include "ext-foreign-toplevel-list-v1-client-protocol.h"
 #include "ext-image-copy-capture-v1-client-protocol.h"
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
@@ -21,6 +22,7 @@ struct toplevel_buffer
 class WayfireChooserTopLevel : public Gtk::Box
 {
   private:
+    std::vector<sigc::connection> signals;
     Gtk::Overlay overlay;
     Gtk::Image icon;
     Gtk::Label label;
