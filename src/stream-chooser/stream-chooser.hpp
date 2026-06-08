@@ -16,13 +16,11 @@ class WayfireStreamChooserApp : public Gtk::Application
 {
   private:
     Gtk::Window window;
-    Gtk::Notebook notebook;
 
     Gtk::Box main, buttons;
 
     Gtk::Label window_label, screen_label, header;
 
-    Gtk::FlowBox window_list, screen_list;
     Gtk::Button done, cancel;
     Gtk::ScrolledWindow scroll_window, scroll_screen;
 
@@ -34,7 +32,8 @@ class WayfireStreamChooserApp : public Gtk::Application
 
   public:
     wl_display *display;
-    bool is_in_use = false;
+    Gtk::Notebook notebook;
+    Gtk::FlowBox window_list, screen_list;
     bool has_foreign_toplevel_list = false;
     bool has_image_copy_capture    = false;
     bool has_image_capture_source  = false;

@@ -380,6 +380,29 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
         return G_SOURCE_REMOVE;
     }, 2000);
 
+    signals.push_back(
+        WayfireStreamChooserApp::getInstance().window_list.signal_selected_children_changed().connect(
+            [=] ()
+    {
+        if (WayfireStreamChooserApp::getInstance().window_list.get_selected_children()[0]->get_children()[0]
+            ==
+            this)
+        {
+            this->initial_timeout.disconnect();
+            this->pause_timeout.disconnect();
+            this->stream();
+            return;
+        }
+
+        this->pause_timeout.disconnect();
+        this->pause_timeout = Glib::signal_timeout().connect(
+            [this] ()
+        {
+            this->pause();
+            return G_SOURCE_REMOVE;
+        }, 2000);
+    }));
+
     auto motion_controller = Gtk::EventControllerMotion::create();
     signals.push_back(motion_controller->signal_enter().connect(
         [this] (double, double)
@@ -398,6 +421,12 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
         this->pause_timeout = Glib::signal_timeout().connect(
             [this] ()
         {
+            if (WayfireStreamChooserApp::getInstance().window_list.get_selected_children()[0]->get_children()[
+                0] == this)
+            {
+                return G_SOURCE_REMOVE;
+            }
+
             this->pause();
             return G_SOURCE_REMOVE;
         }, 2000);
