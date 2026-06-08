@@ -38,7 +38,7 @@ class WayfireChooserTopLevel : public Gtk::Box
     void pause();
     void stream();
     bool streaming = true;
-    sigc::connection pointer_enter, pointer_leave, pause_timeout, initial_timeout;
+    sigc::connection pause_timeout, initial_timeout;
 
   public:
     Gtk::Picture screenshot;
