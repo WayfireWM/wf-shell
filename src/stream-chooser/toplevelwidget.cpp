@@ -346,7 +346,6 @@ void WayfireChooserTopLevel::pause()
 /* Gtk Overlay showing information about a window */
 WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *handle) : handle(handle)
 {
-    set_size_request(150, 150);
     set_valign(Gtk::Align::FILL);
     set_halign(Gtk::Align::FILL);
     layout = std::make_shared<ToplevelLayout>();
@@ -367,7 +366,7 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
     signals.push_back(WayfireStreamChooserApp::getInstance().signal_resize().connect(
         [=] (int width, int height)
     {
-        std::cout << "Entire width " << width << " height " << height << std::endl;
+        set_size_request(width / 6 - width * 0.01, -1);
     }));
 
     start_toplevel_source_ssession();
@@ -375,24 +374,24 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
     ext_foreign_toplevel_handle_v1_add_listener(handle, &listener, this);
 
     initial_timeout = Glib::signal_timeout().connect(
-            [this] ()
+        [this] ()
     {
         this->pause();
         return G_SOURCE_REMOVE;
     }, 2000);
 
     auto motion_controller = Gtk::EventControllerMotion::create();
-    pointer_enter = motion_controller->signal_enter().connect(
+    signals.push_back(motion_controller->signal_enter().connect(
         [this] (double, double)
     {
         this->initial_timeout.disconnect();
         this->pause_timeout.disconnect();
         this->stream();
-    });
+    }));
     add_controller(motion_controller);
 
     motion_controller = Gtk::EventControllerMotion::create();
-    pointer_leave = motion_controller->signal_leave().connect(
+    signals.push_back(motion_controller->signal_leave().connect(
         [this] ()
     {
         this->pause_timeout.disconnect();
@@ -402,7 +401,7 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
             this->pause();
             return G_SOURCE_REMOVE;
         }, 2000);
-    });
+    }));
     add_controller(motion_controller);
 }
 
@@ -446,9 +445,6 @@ void WayfireChooserTopLevel::commit()
 
 WayfireChooserTopLevel::~WayfireChooserTopLevel()
 {
-    pointer_enter.disconnect();
-    pointer_leave.disconnect();
-
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
@@ -478,6 +474,9 @@ WayfireChooserTopLevel::~WayfireChooserTopLevel()
     {
         signal.disconnect();
     }
+
+    initial_timeout.disconnect();
+    pause_timeout.disconnect();
 }
 
 void WayfireChooserTopLevel::print()
