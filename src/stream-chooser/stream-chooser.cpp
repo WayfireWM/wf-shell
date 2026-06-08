@@ -429,6 +429,16 @@ void WayfireStreamChooserApp::set_output_capture_manager(
     this->output_capture_manager = output_capture_manager;
 }
 
+type_signal_resize WayfireStreamChooserApp::signal_resize()
+{
+    return resized_signal;
+}
+
+void WayfireStreamChooserApp::resize(int width, int height)
+{
+    resized_signal.emit(width, height);
+}
+
 /* Starting point */
 int main(int argc, char **argv)
 {

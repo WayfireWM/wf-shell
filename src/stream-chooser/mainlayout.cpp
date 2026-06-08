@@ -1,4 +1,5 @@
 #include "mainlayout.hpp"
+#include "stream-chooser.hpp"
 void MainLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int height, int baseline)
 {
     Gtk::Widget& widget_not_const = const_cast<Gtk::Widget&>(widget);
@@ -10,6 +11,8 @@ void MainLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int height
     alloc.set_y(height / 4);
     alloc.set_x(width / 4);
     inner->size_allocate(alloc, -1);
+
+    WayfireStreamChooserApp::getInstance().resize(width, height);
 }
 
 void MainLayout::measure_vfunc(const Gtk::Widget& widget, Gtk::Orientation orientation,

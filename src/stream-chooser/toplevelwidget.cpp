@@ -349,6 +349,12 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
 
     buffer = std::make_shared<toplevel_buffer>();
 
+    signals.push_back(WayfireStreamChooserApp::getInstance().signal_resize().connect(
+        [=] (int width, int height)
+    {
+        std::cout << "Entire width " << width << " height " << height << std::endl;
+    }));
+
     start_toplevel_source_ssession();
 
     ext_foreign_toplevel_handle_v1_add_listener(handle, &listener, this);
@@ -417,6 +423,11 @@ WayfireChooserTopLevel::~WayfireChooserTopLevel()
     if (buffer->params)
     {
         zwp_linux_buffer_params_v1_destroy(buffer->params);
+    }
+
+    for (auto signal : signals)
+    {
+        signal.disconnect();
     }
 }
 
