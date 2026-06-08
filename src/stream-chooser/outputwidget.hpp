@@ -22,6 +22,7 @@ class WayfireChooserOutput : public Gtk::Box
 {
     Gtk::Label connector, model;
     Gtk::Picture contents;
+    std::vector<sigc::connection> signals;
 
     wl_output *output_handle;
     std::shared_ptr<Gdk::Monitor> output;

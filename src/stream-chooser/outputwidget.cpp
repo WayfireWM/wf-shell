@@ -197,10 +197,16 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
 
     set_orientation(Gtk::Orientation::VERTICAL);
 
-    output->signal_invalidate().connect([=]
+    signals.push_back(output->signal_invalidate().connect([=]
     {
         WayfireStreamChooserApp::getInstance().remove_output(output->get_connector());
-    });
+    }));
+
+    signals.push_back(WayfireStreamChooserApp::getInstance().signal_resize().connect(
+        [=] (int width, int height)
+    {
+        std::cout << "Entire width " << width << " height " << height << std::endl;
+    }));
 
     buffer = std::make_shared<output_buffer>();
 
@@ -232,6 +238,11 @@ WayfireChooserOutput::~WayfireChooserOutput()
     if (buffer->params)
     {
         zwp_linux_buffer_params_v1_destroy(buffer->params);
+    }
+
+    for (auto signal : signals)
+    {
+        signal.disconnect();
     }
 }
 
