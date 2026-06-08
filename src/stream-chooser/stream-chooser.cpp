@@ -202,15 +202,18 @@ void WayfireStreamChooserApp::activate()
     scroll_window.set_child(window_list);
     scroll_screen.set_child(screen_list);
 
+    window_list.set_max_children_per_line(3);
+    screen_list.set_max_children_per_line(3);
+
     scroll_window.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
     scroll_screen.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
 
     window_list.set_homogeneous(true);
     screen_list.set_homogeneous(true);
 
-    window_list.set_halign(Gtk::Align::START);
+    window_list.set_halign(Gtk::Align::FILL);
     window_list.set_valign(Gtk::Align::START);
-    screen_list.set_halign(Gtk::Align::START);
+    screen_list.set_halign(Gtk::Align::FILL);
     screen_list.set_valign(Gtk::Align::START);
 
     notebook.set_expand(true);

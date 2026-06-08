@@ -366,7 +366,7 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
     signals.push_back(WayfireStreamChooserApp::getInstance().signal_resize().connect(
         [=] (int width, int height)
     {
-        set_size_request(width / 6 - width * 0.01, height / 3 + height * 0.075);
+        set_size_request(-1, height * 0.4);
     }));
 
     start_toplevel_source_ssession();

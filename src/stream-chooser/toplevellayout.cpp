@@ -28,9 +28,8 @@ void ToplevelLayout::measure_vfunc(const Gtk::Widget& widget, Gtk::Orientation o
     int for_size, int& minimum, int& natural, int& minimum_baseline,
     int& natural_baseline) const
 {
-    // Answer 1:1 aspect ratio
-    minimum = for_size;
-    natural = for_size;
+    minimum = std::max(for_size, 32);
+    natural = std::max(for_size, 32);
     minimum_baseline = -1;
     natural_baseline = -1;
 }
