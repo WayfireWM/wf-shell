@@ -184,7 +184,6 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
     append(contents);
     append(model);
     append(connector);
-    set_size_request(150, 150);
     set_valign(Gtk::Align::FILL);
     set_halign(Gtk::Align::FILL);
 
@@ -202,11 +201,11 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
         WayfireStreamChooserApp::getInstance().remove_output(output->get_connector());
     }));
 
-    signals.push_back(WayfireStreamChooserApp::getInstance().signal_resize().connect(
+    WayfireStreamChooserApp::getInstance().signal_resize().connect(
         [=] (int width, int height)
     {
-        std::cout << "Entire width " << width << " height " << height << std::endl;
-    }));
+        set_size_request(-1, height / 3 + height * 0.075);
+    });
 
     buffer = std::make_shared<output_buffer>();
 

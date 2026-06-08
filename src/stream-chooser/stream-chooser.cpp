@@ -192,7 +192,10 @@ void WayfireStreamChooserApp::activate()
     auto window_display = window.get_display();
     auto css_provider   = Gtk::CssProvider::create();
     css_provider->load_from_data(
-        "window.stream-chooser { background-color: rgba(0, 0, 0, 0.5);  } .main-chooser { background-color: unset; }");
+        "window.stream-chooser { background-color: rgba(0, 0, 0, 0.5); } \
+         .main-chooser { background-color: unset; } \
+         .toplevel-background { color: #FFF; background-color: rgba(0,0,0,0.1); } \
+         flowboxchild:selected { background-color: rgba(0,0,0,0.25); background-image: none; }");
     Gtk::StyleContext::add_provider_for_display(window_display,
         css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
 
@@ -213,6 +216,7 @@ void WayfireStreamChooserApp::activate()
     notebook.set_expand(true);
     notebook.append_page(scroll_window, window_label);
     notebook.append_page(scroll_screen, screen_label);
+    notebook.get_children()[1]->add_css_class("toplevel-background");
 
     main.set_orientation(Gtk::Orientation::VERTICAL);
 
@@ -225,6 +229,7 @@ void WayfireStreamChooserApp::activate()
     window_label.set_label("Window");
     screen_label.set_label("Screen");
     header.set_label("Choose a view to share");
+    header.add_css_class("toplevel-background");
 
     cancel.set_label("Cancel");
     done.set_label("Done");

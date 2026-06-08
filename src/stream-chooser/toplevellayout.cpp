@@ -11,7 +11,7 @@ void ToplevelLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int he
     auto l_alloc = Gtk::Allocation();
     l_alloc.set_height(label_height);
     l_alloc.set_width(width);
-    l_alloc.set_y(0);
+    l_alloc.set_y(height - label_height);
     l_alloc.set_x(0);
     label->size_allocate(l_alloc, -1);
 
@@ -19,7 +19,7 @@ void ToplevelLayout::allocate_vfunc(const Gtk::Widget& widget, int width, int he
     auto o_alloc = Gtk::Allocation();
     o_alloc.set_height(height - label_height);
     o_alloc.set_width(width);
-    o_alloc.set_y(label_height);
+    o_alloc.set_y(0);
     o_alloc.set_x(0);
     overlay->size_allocate(o_alloc, -1);
 }
