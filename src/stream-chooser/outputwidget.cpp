@@ -189,8 +189,6 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
 
     output_handle = gdk_wayland_monitor_get_wl_output(output->gobj());
 
-    /* TODO Contents. We should probably grab screenshots of each output and display them */
-
     model.set_label(output->get_model());
     connector.set_label(output->get_connector());
 
@@ -201,11 +199,11 @@ WayfireChooserOutput::WayfireChooserOutput(std::shared_ptr<Gdk::Monitor> output)
         WayfireStreamChooserApp::getInstance().remove_output(output->get_connector());
     }));
 
-    WayfireStreamChooserApp::getInstance().signal_resize().connect(
+    signals.push_back(WayfireStreamChooserApp::getInstance().signal_resize().connect(
         [=] (int width, int height)
     {
         set_size_request(-1, height / 3 + height * 0.075);
-    });
+    }));
 
     buffer = std::make_shared<output_buffer>();
 

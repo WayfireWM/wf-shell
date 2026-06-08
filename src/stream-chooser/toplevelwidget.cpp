@@ -363,11 +363,11 @@ WayfireChooserTopLevel::WayfireChooserTopLevel(ext_foreign_toplevel_handle_v1 *h
 
     buffer = std::make_shared<toplevel_buffer>();
 
-    WayfireStreamChooserApp::getInstance().signal_resize().connect(
+    signals.push_back(WayfireStreamChooserApp::getInstance().signal_resize().connect(
         [=] (int width, int height)
     {
         set_size_request(width / 6 - width * 0.01, height / 3 + height * 0.075);
-    });
+    }));
 
     start_toplevel_source_ssession();
 
