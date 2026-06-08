@@ -35,6 +35,11 @@ class WayfireChooserTopLevel : public Gtk::Box
     ext_image_capture_source_v1 *copy_capture_source = NULL;
     void start_toplevel_source_ssession();
 
+    void pause();
+    void stream();
+    bool streaming = true;
+    sigc::connection pointer_enter, pointer_leave, pause_timeout, initial_timeout;
+
   public:
     Gtk::Picture screenshot;
     int current_buffer_width = 0, current_buffer_height = 0, current_buffer_format = 0;
