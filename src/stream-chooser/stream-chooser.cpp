@@ -194,8 +194,8 @@ void WayfireStreamChooserApp::activate()
     css_provider->load_from_data(
         "window.stream-chooser { background-color: rgba(0, 0, 0, 0.5); } \
          .main-chooser { background-color: unset; } \
-         .toplevel-background { color: #FFF; background-color: rgba(0,0,0,0.1); } \
-         flowboxchild:selected { background-color: rgba(0,0,0,0.25); background-image: none; }");
+         .toplevel-background { color: #FFF; background-color: #333E; } \
+         flowboxchild:selected { background-color: rgba(0,0,0,0.5); background-image: none; border-radius: 25px; }");
     Gtk::StyleContext::add_provider_for_display(window_display,
         css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
 
