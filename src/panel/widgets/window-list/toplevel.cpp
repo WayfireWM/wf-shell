@@ -319,7 +319,7 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list, ext_foreign_toplevel_
 
     start_toplevel_source_session();
 
-    Glib::signal_timeout().connect(
+    timer_connection = Glib::signal_timeout().connect(
         [this] ()
     {
         if (!timer_continue)
@@ -335,6 +335,7 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list, ext_foreign_toplevel_
 
 TooltipMedia::~TooltipMedia()
 {
+    timer_connection.disconnect();
     timer_continue = false;
 
     if (frame)
