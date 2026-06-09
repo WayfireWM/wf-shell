@@ -5,7 +5,6 @@
 #include "../../widget.hpp"
 #include "toplevel.hpp"
 #include "layout.hpp"
-#include "wf-ipc.hpp"
 
 #ifdef HAVE_DMABUF
     #include <gbm.h>

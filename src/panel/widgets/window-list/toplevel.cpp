@@ -734,21 +734,6 @@ class WayfireToplevel::impl
             return false;
         }
 
-        if (!this->window_list->live_window_previews_enabled())
-        {
-            if (!this->window_list->normal_title_tooltips)
-            {
-                std::cerr <<
-                    "Normal title tooltips enabled. To enable live window preview tooltips, make sure to set [panel] option 'live_window_previews = true' in wf-shell configuration and enable wayfire plugin live-previews"
-                          <<
-                    std::endl;
-                this->window_list->enable_normal_tooltips_flag(true);
-            }
-
-            tooltip->set_text(title);
-            return true;
-        }
-
         this->window_list->live_window_preview_view_id = this->view_id;
         tooltip->set_custom(this->custom_tooltip_content);
 
@@ -830,10 +815,6 @@ class WayfireToplevel::impl
     void set_title(std::string title)
     {
         this->title = title;
-        if (!this->window_list->live_window_previews_enabled())
-        {
-            button.set_tooltip_text(title);
-        }
 
         label.set_text(title);
     }
