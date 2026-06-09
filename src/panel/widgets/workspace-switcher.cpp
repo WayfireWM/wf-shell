@@ -134,6 +134,11 @@ void WayfireWorkspaceSwitcher::clear_box()
         box.remove(*child);
     }
 
+    for (auto child : overlay.get_children())
+    {
+        overlay.remove_overlay(*child);
+    }
+
     for (auto child : mini_grid.get_children())
     {
         mini_grid.remove(*child);
@@ -723,14 +728,10 @@ void WayfireWorkspaceSwitcher::grid_remove_view(wf::json_t view_data)
     {
         if (w->id == view_data["id"].as_int())
         {
-            for (auto widget : overlay.get_children())
-            {
-                WayfireWorkspaceWindow *w = (WayfireWorkspaceWindow*)widget;
-                overlay.remove_overlay(*w);
-                auto elem = std::remove(windows.begin(), windows.end(), w);
-                windows.erase(elem, windows.end());
-                return;
-            }
+            overlay.remove_overlay(*w);
+            auto elem = std::remove(windows.begin(), windows.end(), w);
+            windows.erase(elem, windows.end());
+            return;
         }
     }
 }
