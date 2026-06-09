@@ -241,12 +241,6 @@ static void frame_handle_linux_dmabuf(uint32_t width, uint32_t height, TooltipMe
 
 void TooltipMedia::request_next_frame()
 {
-    if (this->frame)
-    {
-        ext_image_copy_capture_frame_v1_destroy(this->frame);
-        this->frame = nullptr;
-    }
-
     if ((current_buffer_width <= 0) || (current_buffer_height <= 0))
     {
         printf("%s invalid size\n", __func__);
