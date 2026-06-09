@@ -41,6 +41,7 @@ class TooltipMedia : public Gtk::Picture
     ext_image_copy_capture_frame_v1 *frame     = NULL;
     ext_image_capture_source_v1 *copy_capture_source     = NULL;
     ext_image_copy_capture_session_v1 *recording_session = NULL;
+    sigc::connection timer_connection;
     bool frame_in_flight = false;
     bool timer_continue  = true;
     uint32_t current_buffer_format = GBM_FORMAT_ARGB8888;
