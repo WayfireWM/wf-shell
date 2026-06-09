@@ -4,7 +4,7 @@
 #include <vector>
 #include <giomm/desktopappinfo.h>
 #include <gtkmm/image.h>
-#include <gtkmm/box.h>
+#include <gtkmm/flowbox.h>
 #include <gtkmm/button.h>
 #include <wayfire/util/duration.hpp>
 
@@ -27,11 +27,12 @@ struct WfLauncherButton
 using launcher_container = std::vector<std::unique_ptr<WfLauncherButton>>;
 class WayfireLaunchers : public WayfireWidget
 {
-    Gtk::Box box;
+    Gtk::FlowBox box;
     launcher_container launchers;
     launcher_container get_launchers_from_config();
 
     WfOption<int> spacing{"panel/launchers_spacing"};
+    WfOption<int> rows_cols{"panel/launchers_rows_cols"};
 
   public:
     virtual void init(Gtk::Box *container);

@@ -171,16 +171,20 @@ void WayfireLaunchers::init(Gtk::Box *container)
 
 void WayfireLaunchers::update_layout()
 {
-    box.set_spacing(spacing);
+    box.set_column_spacing(spacing);
+    box.set_row_spacing(spacing);
+    box.set_max_children_per_line(rows_cols);
+    box.set_min_children_per_line(rows_cols);
+    box.set_selection_mode(Gtk::SelectionMode::NONE);
 
     WfOption<std::string> panel_position{"panel/position"};
 
     if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
     {
-        box.set_orientation(Gtk::Orientation::VERTICAL);
+        box.set_orientation(Gtk::Orientation::HORIZONTAL);
     } else
     {
-        box.set_orientation(Gtk::Orientation::HORIZONTAL);
+        box.set_orientation(Gtk::Orientation::VERTICAL);
     }
 }
 
