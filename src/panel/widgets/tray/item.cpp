@@ -78,6 +78,7 @@ void StatusNotifierItem::init_widget()
     setup_tooltip();
     init_menu();
     icon.add_css_class("widget-icon");
+    icon.add_css_class("tray-button");
     add_css_class("tray-button");
 
     auto scroll_gesture = Gtk::EventControllerScroll::create();
