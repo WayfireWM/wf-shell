@@ -11,6 +11,13 @@
     #include <gbm.h>
 #endif // HAVE_DMABUF
 
+struct WayfireListToplevel
+{
+    std::string title;
+    std::string app_id;
+    std::string identifier;
+};
+
 class WayfireToplevel;
 
 class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubscriber
@@ -21,11 +28,15 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
   public:
     std::map<zwlr_foreign_toplevel_handle_v1*,
         std::unique_ptr<WayfireToplevel>> toplevels;
+    std::map<ext_foreign_toplevel_handle_v1*,
+        std::unique_ptr<WayfireListToplevel>> list_toplevels;
 
     wl_display *display;
     wl_shm *shm = nullptr;
-    zwlr_foreign_toplevel_manager_v1 *manager = nullptr;
-    zwlr_screencopy_manager_v1 *screencopy_manager = nullptr;
+    zwlr_foreign_toplevel_manager_v1 *manager = NULL;
+    ext_foreign_toplevel_list_v1 *foreign_toplevel_list     = NULL;
+    ext_image_copy_capture_manager_v1 *copy_capture_manager = NULL;
+    ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager = NULL;
     WayfireOutput *output;
     Gtk::ScrolledWindow scrolled_window;
 
@@ -33,8 +44,8 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
     virtual ~WayfireWindowList();
 
     void handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1 *manager);
+    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *toplevel);
     void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
-    void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle);
 
     wayfire_config *get_config();
 
