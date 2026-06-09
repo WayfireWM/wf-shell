@@ -322,9 +322,14 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list, ext_foreign_toplevel_
     Glib::signal_timeout().connect(
         [this] ()
     {
+        if (!timer_continue)
+        {
+            return false;
+        }
+
         this->request_next_frame();
 
-        return timer_continue;
+        return true;
     }, 33);
 }
 
