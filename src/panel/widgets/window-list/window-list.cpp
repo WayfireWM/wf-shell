@@ -254,82 +254,8 @@ static struct wl_registry_listener registry_listener =
     &registry_remove_object
 };
 
-void WayfireWindowList::live_window_previews_plugin_check()
-{
-    wf::json_t ipc_methods_request;
-    ipc_methods_request["method"] = "list-methods";
-    this->ipc_client->send(ipc_methods_request.serialize(), [=] (wf::json_t data)
-    {
-        if (data.serialize().find(
-            "error") != std::string::npos)
-        {
-            std::cerr << "Error getting ipc methods list! (are ipc and ipc-rules plugins loaded?)" << std::endl;
-            this->enable_normal_tooltips_flag(true);
-            return;
-        }
-
-        if ((data.serialize().find("live_previews/request_stream") == std::string::npos) ||
-            (data.serialize().find(
-                "live_previews/release_output") == std::string::npos))
-        {
-            std::cerr << "Did not find live-previews ipc methods in methods list. Disabling live window preview tooltips. (is the live-previews plugin enabled?)" << std::endl;
-            this->enable_normal_tooltips_flag(
-                true);
-        } else
-        {
-            if (!this->live_window_previews_opt)
-            {
-                std::cout << "Detected live-previews plugin is enabled but wf-shell configuration [panel] option 'live_window_previews' is set to 'false'." << std::endl;
-                this->enable_normal_tooltips_flag(
-                    true);
-            } else
-            {
-                std::cout << "Enabling live window preview tooltips using " <<
-                    std::string(live_previews_dmabuf ? "dmabuf" : "shm") <<
-                    " transfers on output " << this->output->monitor->get_connector() <<
-                    std::endl;
-                this->enable_normal_tooltips_flag(false);
-            }
-        }
-    });
-}
-
-void WayfireWindowList::enable_ipc(bool enable)
-{
-    if (!this->ipc_client)
-    {
-        this->ipc_client = WayfirePanelApp::get().get_ipc_server_instance()->create_client();
-    }
-
-    if (!this->ipc_client)
-    {
-        std::cerr <<
-            "Failed to connect to ipc. Live window previews will not be available. (are ipc and ipc-rules plugins loaded?)";
-    }
-}
-
-void WayfireWindowList::enable_normal_tooltips_flag(bool enable)
-{
-    this->normal_title_tooltips = enable;
-    this->live_window_preview_tooltips = !enable;
-}
-
-bool WayfireWindowList::live_window_previews_enabled()
-{
-    return this->live_window_previews_opt && this->live_window_preview_tooltips && this->ipc_client;
-}
-
 void WayfireWindowList::init(Gtk::Box *container)
 {
-    enable_ipc(this->live_window_previews_opt);
-    live_window_previews_plugin_check();
-
-    this->live_window_previews_opt.set_callback([=] ()
-    {
-        enable_ipc(this->live_window_previews_opt);
-        live_window_previews_plugin_check();
-    });
-
     auto gdk_display = gdk_display_get_default();
     auto display     = gdk_wayland_display_get_wl_display(gdk_display);
 
