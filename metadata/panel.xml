@@ -155,7 +155,7 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<min>0</min>
 	</option>
 	<option name="launchers_rows_cols" type="int">
-		<_short>Number of rows (in horizontall panels) or columns (in vertical panels) in Launchers widget</_short>
+		<_short>Number of rows (in horizontal panels) or columns (in vertical panels) in Launchers widget</_short>
 		<default>1</default>
 		<min>1</min>
 	</option>
@@ -566,7 +566,7 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<min>0</min>
 	</option>
 	<option name="tray_rows_cols" type="int">
-		<_short>Number of rows (in horizontall panels) or columns (in vertical panels) in tray widget</_short>
+		<_short>Number of rows (in horizontal panels) or columns (in vertical panels) in tray widget</_short>
 		<default>1</default>
 		<min>1</min>
 	</option>
