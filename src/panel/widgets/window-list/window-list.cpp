@@ -28,6 +28,75 @@ zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
     .finished = handle_manager_finished,
 };
 
+/* Toplevel Callbacks */
+
+static void toplevel_handle_closed(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    ext_foreign_toplevel_handle_v1_destroy(handle);
+    window_list->list_toplevels.erase(handle);
+}
+
+static void toplevel_handle_done(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle)
+{}
+
+static void toplevel_handle_title(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle,
+    const char *title)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    window_list->list_toplevels[handle]->title = title;
+}
+
+static void toplevel_handle_app_id(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle,
+    const char *app_id)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    window_list->list_toplevels[handle]->app_id = app_id;
+}
+
+static void toplevel_handle_identifier(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle,
+    const char *identifier)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    window_list->list_toplevels[handle]->identifier = identifier;
+}
+
+ext_foreign_toplevel_handle_v1_listener toplevels_listener =
+{
+    .closed = toplevel_handle_closed,
+    .done   = toplevel_handle_done,
+    .title  = toplevel_handle_title,
+    .app_id = toplevel_handle_app_id,
+    .identifier = toplevel_handle_identifier,
+};
+
+/* Static callbacks for toplevel list object */
+static void handle_toplevel(void *data,
+    struct ext_foreign_toplevel_list_v1 *list,
+    struct ext_foreign_toplevel_handle_v1 *handle)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    window_list->list_toplevels[handle] = std::make_unique<WayfireListToplevel>();
+    ext_foreign_toplevel_handle_v1_add_listener(handle, &toplevels_listener, window_list);
+}
+
+static void handle_finished(void *data,
+    struct ext_foreign_toplevel_list_v1 *list)
+{
+    ext_foreign_toplevel_list_v1_stop(list);
+    ext_foreign_toplevel_list_v1_destroy(list);
+}
+
+ext_foreign_toplevel_list_v1_listener toplevel_list_v1_impl = {
+    .toplevel = handle_toplevel,
+    .finished = handle_finished,
+};
+
 #ifdef HAVE_DMABUF
 static void dmabuf_feedback_done(void *data, struct zwp_linux_dmabuf_feedback_v1 *feedback)
 {
@@ -138,12 +207,27 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
         window_list->handle_toplevel_manager(zwlr_toplevel_manager);
         zwlr_foreign_toplevel_manager_v1_add_listener(window_list->manager,
             &toplevel_manager_v1_impl, window_list);
-        wl_display_roundtrip(window_list->display);
-    } else if (strcmp(interface, zwlr_screencopy_manager_v1_interface.name) == 0)
+    } else if (strcmp(interface, ext_foreign_toplevel_list_v1_interface.name) == 0)
     {
-        window_list->screencopy_manager = (zwlr_screencopy_manager_v1*)wl_registry_bind(registry, name,
-            &zwlr_screencopy_manager_v1_interface,
+        auto foreign_toplevel_list = (ext_foreign_toplevel_list_v1*)
+            wl_registry_bind(registry, name,
+            &ext_foreign_toplevel_list_v1_interface,
             version);
+        window_list->foreign_toplevel_list = foreign_toplevel_list;
+        ext_foreign_toplevel_list_v1_add_listener(foreign_toplevel_list,
+            &toplevel_list_v1_impl, window_list);
+    } else if (strcmp(interface, ext_image_copy_capture_manager_v1_interface.name) == 0)
+    {
+        auto copy_capture_manager = (ext_image_copy_capture_manager_v1*)wl_registry_bind(registry, name,
+            &ext_image_copy_capture_manager_v1_interface, version);
+        window_list->copy_capture_manager = copy_capture_manager;
+    } else if (strcmp(interface, ext_foreign_toplevel_image_capture_source_manager_v1_interface.name) == 0)
+    {
+        auto toplevel_capture_manager =
+            (ext_foreign_toplevel_image_capture_source_manager_v1*)wl_registry_bind(registry, name,
+                &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
+        window_list->toplevel_capture_manager = toplevel_capture_manager;
+        printf("set toplevel_capture_manager: %p\n", toplevel_capture_manager);
     }
 
 #ifdef HAVE_DMABUF
@@ -257,12 +341,11 @@ void WayfireWindowList::init(Gtk::Box *container)
 
     wl_registry_destroy(registry);
 
-    if (!this->manager)
+    if (!this->copy_capture_manager)
     {
         std::cerr << "Compositor doesn't support" <<
-            " wlr-foreign-toplevel-management." <<
+            " ext-image-copy-capture." <<
             "The window-list widget will not be initialized." << std::endl;
-        wl_registry_destroy(registry);
         return;
     }
 
@@ -386,14 +469,14 @@ void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1
     this->manager = manager;
 }
 
-void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
+void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
-    toplevels[handle] = std::unique_ptr<WayfireToplevel>(new WayfireToplevel(this, handle));
+    toplevels[toplevel] = std::make_unique<WayfireToplevel>(this, toplevel);
 }
 
-void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
+void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
-    toplevels.erase(handle);
+    toplevels.erase(toplevel);
 }
 
 void WayfireWindowList::on_event(wf::json_t data)
@@ -420,7 +503,6 @@ WayfireWindowList::~WayfireWindowList()
 
     wl_shm_destroy(this->shm);
     zwlr_foreign_toplevel_manager_v1_destroy(this->manager);
-    zwlr_screencopy_manager_v1_destroy(this->screencopy_manager);
 #ifdef HAVE_DMABUF
     if (this->dmabuf)
     {
