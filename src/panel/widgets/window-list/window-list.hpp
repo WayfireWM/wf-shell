@@ -19,7 +19,7 @@ struct WayfireListToplevel
 
 class WayfireToplevel;
 
-class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubscriber
+class WayfireWindowList : public Gtk::Box, public WayfireWidget
 {
     WfOption<int> user_size{"panel/window_list_size"};
     std::shared_ptr<WayfireWindowListLayout> layout;
@@ -31,7 +31,6 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
         std::unique_ptr<WayfireListToplevel>> list_toplevels;
 
     wl_display *display;
-    wl_shm *shm = nullptr;
     zwlr_foreign_toplevel_manager_v1 *manager = NULL;
     ext_foreign_toplevel_list_v1 *foreign_toplevel_list     = NULL;
     ext_image_copy_capture_manager_v1 *copy_capture_manager = NULL;
@@ -84,21 +83,12 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
      */
     Gtk::Widget *get_widget_before(int x);
 
-    WfOption<bool> live_window_previews_opt{"panel/live_window_previews"};
+    WfOption<bool> live_window_previews{"panel/live_window_previews"};
     void handle_new_wl_output(wl_output *output);
-    void on_event(wf::json_t data) override;
-    std::shared_ptr<IPCClient> ipc_client;
-    bool normal_title_tooltips = false;
-    void enable_normal_tooltips_flag(bool enable);
-    uint64_t live_window_preview_view_id = 0;
-    void enable_ipc(bool enable);
-    bool live_previews_dmabuf = true;
 
-#ifdef HAVE_DMABUF
     zwp_linux_dmabuf_feedback_v1 *feedback = nullptr;
     zwp_linux_dmabuf_v1 *dmabuf = nullptr;
     gbm_device *dmabuf_device   = nullptr;
-#endif // HAVE_DMABUF
 
   private:
     int get_default_button_width();

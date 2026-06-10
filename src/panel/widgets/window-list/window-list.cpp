@@ -4,9 +4,7 @@
 
 #include "window-list.hpp"
 
-#ifdef HAVE_DMABUF
-    #include <fcntl.h>
-#endif // HAVE_DMABUF
+#include <fcntl.h>
 
 #define DEFAULT_SIZE_PC 0.1
 
@@ -137,7 +135,6 @@ ext_foreign_toplevel_list_v1_listener toplevel_list_v1_impl = {
     .finished = handle_finished,
 };
 
-#ifdef HAVE_DMABUF
 static void dmabuf_feedback_done(void *data, struct zwp_linux_dmabuf_feedback_v1 *feedback)
 {
     WayfireWindowList *window_list = (WayfireWindowList*)data;
@@ -167,7 +164,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
     {
         perror("Failed to get DRM device from dev id");
         std::cerr << "Trying shm" << std::endl;
-        window_list->live_previews_dmabuf = false;
         return;
     }
 
@@ -184,7 +180,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
     {
         perror("Failed to open drm device");
         std::cerr << "Trying shm" << std::endl;
-        window_list->live_previews_dmabuf = false;
         return;
     }
 
@@ -194,7 +189,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
         close(drm_fd);
         perror("Failed to create gbm device");
         std::cerr << "Trying shm" << std::endl;
-        window_list->live_previews_dmabuf = false;
         return;
     }
 
@@ -228,17 +222,13 @@ static const struct zwp_linux_dmabuf_feedback_v1_listener dmabuf_feedback_listen
     .tranche_formats = dmabuf_feedback_tranche_formats,
     .tranche_flags   = dmabuf_feedback_tranche_flags,
 };
-#endif // HAVE_DMABUF
 
 static void registry_add_object(void *data, wl_registry *registry, uint32_t name,
     const char *interface, uint32_t version)
 {
     WayfireWindowList *window_list = (WayfireWindowList*)data;
 
-    if (strcmp(interface, wl_shm_interface.name) == 0)
-    {
-        window_list->shm = (wl_shm*)wl_registry_bind(registry, name, &wl_shm_interface, version);
-    } else if (strcmp(interface, zwlr_foreign_toplevel_manager_v1_interface.name) == 0)
+    if (strcmp(interface, zwlr_foreign_toplevel_manager_v1_interface.name) == 0)
     {
         auto zwlr_toplevel_manager = (zwlr_foreign_toplevel_manager_v1*)
             wl_registry_bind(registry, name,
@@ -268,10 +258,7 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
                 &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
         window_list->toplevel_capture_manager = toplevel_capture_manager;
         printf("set toplevel_capture_manager: %p\n", toplevel_capture_manager);
-    }
-
-#ifdef HAVE_DMABUF
-    else if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0)
+    } else if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0)
     {
         window_list->dmabuf = (zwp_linux_dmabuf_v1*)wl_registry_bind(registry, name,
             &zwp_linux_dmabuf_v1_interface, version);
@@ -282,7 +269,6 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
                 window_list);
         }
     }
-#endif // HAVE_DMABUF
 }
 
 static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
@@ -341,12 +327,6 @@ void WayfireWindowList::init(Gtk::Box *container)
             "The window-list widget will not be initialized." << std::endl;
         return;
     }
-
-#ifdef HAVE_DMABUF
-    this->live_previews_dmabuf = this->dmabuf ? true : false;
-#else
-    this->live_previews_dmabuf = false;
-#endif // HAVE_DMABUF
 
     scrolled_window.add_css_class("window-list");
 
@@ -472,9 +452,6 @@ void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *
     toplevels.erase(toplevel);
 }
 
-void WayfireWindowList::on_event(wf::json_t data)
-{}
-
 WayfireWindowList::WayfireWindowList(WayfireOutput *output)
 {
     this->output = output;
@@ -494,9 +471,8 @@ WayfireWindowList::~WayfireWindowList()
      * when the window-list widget is unloaded. */
     toplevels.clear();
 
-    wl_shm_destroy(this->shm);
     zwlr_foreign_toplevel_manager_v1_destroy(this->manager);
-#ifdef HAVE_DMABUF
+
     if (this->dmabuf)
     {
         zwp_linux_dmabuf_v1_destroy(this->dmabuf);
@@ -511,6 +487,4 @@ WayfireWindowList::~WayfireWindowList()
     {
         gbm_device_destroy(this->dmabuf_device);
     }
-
-#endif
 }

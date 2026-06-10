@@ -1,5 +1,7 @@
 #pragma once
 
+#include <gbm.h>
+#include <xf86drm.h>
 #include <memory>
 #include <gtkmm/box.h>
 #include <gtkmm/picture.h>
@@ -9,16 +11,11 @@
 #include <ext-foreign-toplevel-list-v1-client-protocol.h>
 #include <ext-image-capture-source-v1-client-protocol.h>
 #include <ext-image-copy-capture-v1-client-protocol.h>
+#include <linux-dmabuf-unstable-v1-client-protocol.h>
 #include <wayland-client-protocol.h>
 #include <wf-option-wrap.hpp>
 #include "wf-shell-app.hpp"
 #include "panel.hpp"
-
-#ifdef HAVE_DMABUF
-    #include <gbm.h>
-    #include <xf86drm.h>
-    #include <linux-dmabuf-unstable-v1-client-protocol.h>
-#endif // HAVE_DMABUF
 
 class WayfireWindowList;
 class WayfireWindowListBox;
@@ -34,9 +31,7 @@ class TooltipMedia : public Gtk::Picture
 {
   public:
     WayfireWindowList *window_list = nullptr;
-    wl_shm *shm = nullptr;
     wl_buffer *buffer = nullptr;
-    void *shm_data    = nullptr;
     ext_foreign_toplevel_handle_v1 *ext_handle = NULL;
     ext_image_copy_capture_frame_v1 *frame     = NULL;
     ext_image_capture_source_v1 *copy_capture_source     = NULL;
@@ -48,14 +43,11 @@ class TooltipMedia : public Gtk::Picture
     uint32_t current_buffer_width = 0, width = -1;
     uint32_t current_buffer_height = 0, height = -1;
     uint32_t stride;
-    size_t size = 0;
 
-#ifdef HAVE_DMABUF
     gbm_bo *bo = nullptr;
     zwp_linux_buffer_params_v1 *params = nullptr;
     void *dmabuf_data = nullptr;
     void *map_data = nullptr;
-#endif // HAVE_DMABUF
 
     TooltipMedia(WayfireWindowList *window_list, ext_foreign_toplevel_handle_v1 *ext_handle);
     ~TooltipMedia();

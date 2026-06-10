@@ -63,29 +63,27 @@ static const struct ext_image_copy_capture_session_v1_listener recording_session
     .stopped = session_handle_stopped,
 };
 
-#ifdef HAVE_DMABUF
 static void dmabuf_created(void *data, struct zwp_linux_buffer_params_v1*,
     struct wl_buffer *wl_buffer)
 {
     TooltipMedia *tooltip_media = (TooltipMedia*)data;
 
+    if (tooltip_media->buffer)
+    {
+        wl_buffer_destroy(tooltip_media->buffer);
+    }
+
     tooltip_media->buffer = wl_buffer;
 }
 
 static void dmabuf_failed(void *data, struct zwp_linux_buffer_params_v1*)
-{
-    TooltipMedia *tooltip_media = (TooltipMedia*)data;
-
-    std::cerr << "Failed to create dmabuf, trying shm" << std::endl;
-    tooltip_media->window_list->live_previews_dmabuf = false;
-}
+{}
 
 static const struct zwp_linux_buffer_params_v1_listener params_listener =
 {
     .created = dmabuf_created,
     .failed  = dmabuf_failed,
 };
-#endif // HAVE_DMABUF
 
 /* Copy Capture Callbacks */
 
@@ -174,7 +172,7 @@ static void frame_handle_failed(void *data,
     uint32_t reason)
 {
     TooltipMedia *tooltip_media = (TooltipMedia*)data;
-    std::cerr << "Failed to copy frame because reason: " << reason << std::endl;
+
     ext_image_copy_capture_frame_v1_destroy(handle);
     tooltip_media->frame = nullptr;
     tooltip_media->frame_in_flight = false;
@@ -243,7 +241,6 @@ void TooltipMedia::request_next_frame()
 {
     if ((current_buffer_width <= 0) || (current_buffer_height <= 0))
     {
-        printf("%s invalid size\n", __func__);
         return;
     }
 
@@ -304,7 +301,6 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list, ext_foreign_toplevel_
 {
     this->window_list = window_list;
     this->ext_handle  = ext_handle;
-    this->shm = window_list->shm;
     set_can_shrink(true);
     set_content_fit(Gtk::ContentFit::CONTAIN);
     set_vexpand(false);
@@ -347,24 +343,11 @@ TooltipMedia::~TooltipMedia()
         ext_image_copy_capture_session_v1_destroy(recording_session);
     }
 
-    if (
-#ifdef HAVE_DMABUF
-        !this->window_list->live_previews_dmabuf &&
-#endif // HAVE_DMABUF
-        this->shm_data && this->size)
-    {
-        if (munmap(this->shm_data, this->size) < 0)
-        {
-            perror("munmap failed");
-        }
-    }
-
     if (this->buffer)
     {
         wl_buffer_destroy(this->buffer);
     }
 
-#ifdef HAVE_DMABUF
     if (this->params)
     {
         zwp_linux_buffer_params_v1_destroy(this->params);
@@ -379,8 +362,6 @@ TooltipMedia::~TooltipMedia()
     {
         gbm_bo_destroy(this->bo);
     }
-
-#endif // HAVE_DMABUF
 }
 
 class WayfireToplevel::impl
@@ -536,7 +517,7 @@ class WayfireToplevel::impl
 
     void set_tooltip_media()
     {
-        if (this->tooltip_media || !this->ext_handle)
+        if (this->tooltip_media || !this->ext_handle || !(bool)window_list->live_window_previews)
         {
             return;
         }
@@ -734,7 +715,8 @@ class WayfireToplevel::impl
             return false;
         }
 
-        if (this->window_list->list_toplevels.empty())
+        if (this->window_list->list_toplevels.empty() || !this->ext_handle ||
+            !(bool)window_list->live_window_previews)
         {
             tooltip->set_text(title);
         }
