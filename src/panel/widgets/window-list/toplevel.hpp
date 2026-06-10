@@ -72,13 +72,15 @@ class WayfireToplevel
     WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle);
 
     uint32_t get_state();
+    std::string get_app_id();
     void send_rectangle_hint();
     std::vector<zwlr_foreign_toplevel_handle_v1*>& get_children();
     ~WayfireToplevel();
     void set_hide_text(bool hide_text);
     void set_tooltip_media();
     void unset_tooltip_media();
-    void set_list_toplevel_handle(ext_foreign_toplevel_handle_v1 *handle);
+    void set_ext_handle(ext_foreign_toplevel_handle_v1 *handle);
+    ext_foreign_toplevel_handle_v1 *get_ext_handle();
 
     class impl;
 

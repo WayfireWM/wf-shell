@@ -46,6 +46,8 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
     void handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *toplevel);
     void handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle);
 
+    uint64_t get_view_id_from_full_app_id(const std::string& app_id);
+
     wayfire_config *get_config();
 
     void init(Gtk::Box *container) override;
@@ -86,13 +88,10 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget, public IIPCSubs
     void handle_new_wl_output(wl_output *output);
     void on_event(wf::json_t data) override;
     std::shared_ptr<IPCClient> ipc_client;
-    bool live_window_preview_tooltips = false;
     bool normal_title_tooltips = false;
     void enable_normal_tooltips_flag(bool enable);
     uint64_t live_window_preview_view_id = 0;
-    void live_window_previews_plugin_check();
     void enable_ipc(bool enable);
-    bool live_window_previews_enabled();
     bool live_previews_dmabuf = true;
 
 #ifdef HAVE_DMABUF

@@ -386,7 +386,7 @@ TooltipMedia::~TooltipMedia()
 class WayfireToplevel::impl
 {
     zwlr_foreign_toplevel_handle_v1 *handle, *parent;
-    ext_foreign_toplevel_handle_v1 *ext_handle;
+    ext_foreign_toplevel_handle_v1 *ext_handle = NULL;
     std::vector<zwlr_foreign_toplevel_handle_v1*> children;
     uint32_t state;
     uint64_t view_id;
@@ -536,7 +536,7 @@ class WayfireToplevel::impl
 
     void set_tooltip_media()
     {
-        if (this->tooltip_media)
+        if (this->tooltip_media || !this->ext_handle)
         {
             return;
         }
@@ -556,7 +556,12 @@ class WayfireToplevel::impl
         this->tooltip_media = nullptr;
     }
 
-    void set_list_toplevel_handle(ext_foreign_toplevel_handle_v1 *handle)
+    ext_foreign_toplevel_handle_v1 *get_ext_handle()
+    {
+        return this->ext_handle;
+    }
+
+    void set_ext_handle(ext_foreign_toplevel_handle_v1 *handle)
     {
         this->ext_handle = handle;
     }
@@ -729,37 +734,14 @@ class WayfireToplevel::impl
             return false;
         }
 
-        this->window_list->live_window_preview_view_id = this->view_id;
+        if (this->window_list->list_toplevels.empty())
+        {
+            tooltip->set_text(title);
+        }
+
         tooltip->set_custom(this->custom_tooltip_content);
 
         return true;
-    }
-
-    uint64_t get_view_id_from_full_app_id(const std::string& app_id)
-    {
-        const std::string sub_str = "wf-ipc-";
-        size_t pos = app_id.find(sub_str);
-
-        if (pos != std::string::npos)
-        {
-            size_t suffix_start_index = pos + sub_str.length();
-            if (suffix_start_index < app_id.length())
-            {
-                try {
-                    uint64_t view_id = std::stoi(app_id.substr(suffix_start_index, std::string::npos));
-                    return view_id;
-                } catch (...)
-                {
-                    return 0;
-                }
-            } else
-            {
-                return 0;
-            }
-        } else
-        {
-            return 0;
-        }
     }
 
     void set_app_id(std::string app_id)
@@ -767,7 +749,7 @@ class WayfireToplevel::impl
         WfOption<int> minimal_panel_height{"panel/minimal_height"};
         this->app_id = app_id;
         IconProvider::image_set_icon(image, app_id);
-        this->view_id = get_view_id_from_full_app_id(app_id);
+        this->view_id = this->window_list->get_view_id_from_full_app_id(app_id);
         if (this->view_id == 0)
         {
             std::cerr << "Failed to get view id from app_id. " <<
@@ -987,9 +969,19 @@ void WayfireToplevel::unset_tooltip_media()
     pimpl->unset_tooltip_media();
 }
 
-void WayfireToplevel::set_list_toplevel_handle(ext_foreign_toplevel_handle_v1 *handle)
+ext_foreign_toplevel_handle_v1*WayfireToplevel::get_ext_handle()
 {
-    pimpl->set_list_toplevel_handle(handle);
+    return pimpl->get_ext_handle();
+}
+
+void WayfireToplevel::set_ext_handle(ext_foreign_toplevel_handle_v1 *handle)
+{
+    pimpl->set_ext_handle(handle);
+}
+
+std::string WayfireToplevel::get_app_id()
+{
+    return pimpl->get_app_id();
 }
 
 /* wl_array_for_each isn't supported in C++, so we have to manually
@@ -1036,13 +1028,13 @@ static void handle_toplevel_done(void *data, toplevel_t)
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     auto window_list = impl->window_list;
 
-    auto wf_id = impl->get_view_id_from_full_app_id(impl->get_app_id());
+    auto wf_id = window_list->get_view_id_from_full_app_id(impl->get_app_id());
     for (auto & list_toplevel : window_list->list_toplevels)
     {
-        auto id = impl->get_view_id_from_full_app_id(list_toplevel.second->app_id);
+        auto id = window_list->get_view_id_from_full_app_id(list_toplevel.second->app_id);
         if (wf_id == id)
         {
-            impl->set_list_toplevel_handle(list_toplevel.first);
+            impl->set_ext_handle(list_toplevel.first);
             break;
         }
     }
