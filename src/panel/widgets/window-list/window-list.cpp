@@ -34,13 +34,53 @@ static void toplevel_handle_closed(void *data,
     struct ext_foreign_toplevel_handle_v1 *handle)
 {
     WayfireWindowList *window_list = (WayfireWindowList*)data;
+    for (auto & toplevel : window_list->toplevels)
+    {
+        if (!toplevel.second)
+        {
+            continue;
+        }
+
+        if (toplevel.second->get_ext_handle() == handle)
+        {
+            toplevel.second->set_ext_handle(NULL);
+            break;
+        }
+    }
+
     ext_foreign_toplevel_handle_v1_destroy(handle);
     window_list->list_toplevels.erase(handle);
 }
 
 static void toplevel_handle_done(void *data,
     struct ext_foreign_toplevel_handle_v1 *handle)
-{}
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+
+    for (auto & toplevel : window_list->toplevels)
+    {
+        if (!toplevel.second)
+        {
+            continue;
+        }
+
+        auto wf_id = window_list->get_view_id_from_full_app_id(toplevel.second->get_app_id());
+        for (auto & list_toplevel : window_list->list_toplevels)
+        {
+            if (!list_toplevel.second)
+            {
+                continue;
+            }
+
+            auto id = window_list->get_view_id_from_full_app_id(list_toplevel.second->app_id);
+            if (wf_id == id)
+            {
+                toplevel.second->set_ext_handle(list_toplevel.first);
+                break;
+            }
+        }
+    }
+}
 
 static void toplevel_handle_title(void *data,
     struct ext_foreign_toplevel_handle_v1 *handle,
@@ -253,6 +293,33 @@ static struct wl_registry_listener registry_listener =
     &registry_add_object,
     &registry_remove_object
 };
+
+uint64_t WayfireWindowList::get_view_id_from_full_app_id(const std::string& app_id)
+{
+    const std::string sub_str = "wf-ipc-";
+    size_t pos = app_id.find(sub_str);
+
+    if (pos != std::string::npos)
+    {
+        size_t suffix_start_index = pos + sub_str.length();
+        if (suffix_start_index < app_id.length())
+        {
+            try {
+                uint64_t view_id = std::stoi(app_id.substr(suffix_start_index, std::string::npos));
+                return view_id;
+            } catch (...)
+            {
+                return 0;
+            }
+        } else
+        {
+            return 0;
+        }
+    } else
+    {
+        return 0;
+    }
+}
 
 void WayfireWindowList::init(Gtk::Box *container)
 {
