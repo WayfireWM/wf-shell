@@ -68,11 +68,6 @@ static void dmabuf_created(void *data, struct zwp_linux_buffer_params_v1*,
 {
     TooltipMedia *tooltip_media = (TooltipMedia*)data;
 
-    if (tooltip_media->buffer)
-    {
-        wl_buffer_destroy(tooltip_media->buffer);
-    }
-
     tooltip_media->buffer = wl_buffer;
 }
 
@@ -136,20 +131,25 @@ static void frame_handle_ready(void *data,
         tooltip_media->height,
         stride);
 
-    auto w = 500;
-    auto h = tooltip_media->height * (500.0f / tooltip_media->width);
+    gbm_bo_unmap(tooltip_media->bo, map_data);
+
+    uint32_t w = 500;
+    uint32_t h = tooltip_media->height * (500.0f / tooltip_media->width);
 
     auto scaled_pixbuf = pixbuf->scale_simple(
         w, h, Gdk::InterpType::BILINEAR);
 
+    w = scaled_pixbuf->get_width();
+    h = scaled_pixbuf->get_height();
+    uint32_t s = scaled_pixbuf->get_rowstride();
+
     /* Swap red and blue channels */
-    size_t size = w * h * 4;
+    size_t size = s * h;
     pixel_data = scaled_pixbuf->get_pixels();
     std::shared_ptr<Glib::Bytes> bytes = Glib::Bytes::create((unsigned char*)pixel_data, size);
 
     if (!bytes)
     {
-        gbm_bo_unmap(tooltip_media->bo, map_data);
         return;
     }
 
@@ -157,14 +157,13 @@ static void frame_handle_ready(void *data,
     builder->set_bytes(bytes);
     builder->set_width(w);
     builder->set_height(h);
-    builder->set_stride(w * 4);
+    builder->set_stride(s);
     builder->set_format(Gdk::MemoryFormat::B8G8R8A8);
 
     auto texture = builder->build();
 
     tooltip_media->set_paintable(texture);
-
-    gbm_bo_unmap(tooltip_media->bo, map_data);
+    tooltip_media->frame_in_flight = false;
 }
 
 static void frame_handle_failed(void *data,
@@ -320,7 +319,7 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list, ext_foreign_toplevel_
         this->request_next_frame();
 
         return true;
-    }, 33);
+    }, 20);
 }
 
 TooltipMedia::~TooltipMedia()
