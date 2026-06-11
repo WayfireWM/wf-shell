@@ -471,7 +471,32 @@ WayfireWindowList::~WayfireWindowList()
      * when the window-list widget is unloaded. */
     toplevels.clear();
 
-    zwlr_foreign_toplevel_manager_v1_destroy(this->manager);
+    for (auto & list_toplevel : list_toplevels)
+    {
+        ext_foreign_toplevel_handle_v1_destroy(list_toplevel.first);
+    }
+
+    list_toplevels.clear();
+
+    if (this->manager)
+    {
+        zwlr_foreign_toplevel_manager_v1_destroy(this->manager);
+    }
+
+    if (this->foreign_toplevel_list)
+    {
+        ext_foreign_toplevel_list_v1_destroy(this->foreign_toplevel_list);
+    }
+
+    if (this->copy_capture_manager)
+    {
+        ext_image_copy_capture_manager_v1_destroy(this->copy_capture_manager);
+    }
+
+    if (this->toplevel_capture_manager)
+    {
+        ext_foreign_toplevel_image_capture_source_manager_v1_destroy(this->toplevel_capture_manager);
+    }
 
     if (this->dmabuf)
     {
