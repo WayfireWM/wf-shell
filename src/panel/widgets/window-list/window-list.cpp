@@ -314,18 +314,30 @@ void WayfireWindowList::init(Gtk::Box *container)
 
     this->display = display;
 
-    wl_registry *registry = wl_display_get_registry(display);
+    registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
 
-    wl_registry_destroy(registry);
-
-    if (!this->copy_capture_manager)
+    if (!this->manager)
     {
         std::cerr << "Compositor doesn't support" <<
-            " ext-image-copy-capture." <<
+            " ext-image-copy-capture-v1." <<
             "The window-list widget will not be initialized." << std::endl;
         return;
+    }
+
+    if (!this->foreign_toplevel_list)
+    {
+        std::cerr << "Compositor doesn't support" <<
+            " ext-foreign-toplevel-list-v1." <<
+            "Live window previews cannot be enabled." << std::endl;
+    }
+
+    if (!this->toplevel_capture_manager)
+    {
+        std::cerr << "Compositor doesn't support" <<
+            " ext-foreign-toplevel-image-copy-capture-v1." <<
+            "Live window previews cannot be enabled." << std::endl;
     }
 
     scrolled_window.add_css_class("window-list");
@@ -477,6 +489,8 @@ WayfireWindowList::~WayfireWindowList()
     }
 
     list_toplevels.clear();
+
+    wl_registry_destroy(registry);
 
     if (this->manager)
     {
