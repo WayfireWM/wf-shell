@@ -516,7 +516,8 @@ class WayfireToplevel::impl
 
     void set_tooltip_media()
     {
-        if (this->tooltip_media || !this->ext_handle || !(bool)window_list->live_window_previews)
+        if (this->tooltip_media || !this->window_list->toplevel_capture_manager ||
+            !(bool)window_list->live_window_previews || !this->ext_handle)
         {
             return;
         }
@@ -714,8 +715,8 @@ class WayfireToplevel::impl
             return false;
         }
 
-        if (this->window_list->list_toplevels.empty() || !this->ext_handle ||
-            !(bool)window_list->live_window_previews)
+        if (this->window_list->list_toplevels.empty() || !this->window_list->toplevel_capture_manager ||
+            !(bool)window_list->live_window_previews || !this->ext_handle)
         {
             tooltip->set_text(title);
         }

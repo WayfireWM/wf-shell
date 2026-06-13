@@ -21,6 +21,8 @@ class WayfireToplevel;
 
 class WayfireWindowList : public Gtk::Box, public WayfireWidget
 {
+    wl_display *display;
+    wl_registry *registry;
     WfOption<int> user_size{"panel/window_list_size"};
     std::shared_ptr<WayfireWindowListLayout> layout;
 
@@ -30,7 +32,6 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     std::map<ext_foreign_toplevel_handle_v1*,
         std::unique_ptr<WayfireListToplevel>> list_toplevels;
 
-    wl_display *display;
     zwlr_foreign_toplevel_manager_v1 *manager = NULL;
     ext_foreign_toplevel_list_v1 *foreign_toplevel_list     = NULL;
     ext_image_copy_capture_manager_v1 *copy_capture_manager = NULL;
