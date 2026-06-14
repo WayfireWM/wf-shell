@@ -19,7 +19,8 @@ util = static_library(
         'network/settings.cpp',
         'network/connection.cpp',
         'background-gl.cpp',
-        'icon-select.cpp'
+        'platform.cpp',
+        'power-controller.cpp',
     ],
     dependencies: [
         wf_protos,
@@ -30,6 +31,7 @@ util = static_library(
         libinotify,
         json,
     ],
+    cpp_args: platform_cpp_args,
 )
 
 util_includes = include_directories('.')

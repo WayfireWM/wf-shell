@@ -14,7 +14,15 @@ project(
 )
 
 wayfire = dependency('wayfire')
-pam = dependency('pam')
+
+# PAM is only available on Linux.  FreeBSD uses a different authentication
+# framework and does not need PAM linkage.
+if host_machine.system() == 'linux'
+    pam = dependency('pam')
+else
+    pam = dependency('pam', required: false)
+endif
+
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols')
 gtkmm = dependency('gtkmm-4.0', version: '>=4.12')

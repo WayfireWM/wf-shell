@@ -7,6 +7,7 @@
 
 #include "widget.hpp"
 #include "wf-popover.hpp"
+#include "power-controller.hpp"
 
 class WayfireMenu;
 using AppInfo = Glib::RefPtr<Gio::DesktopAppInfo>;
@@ -117,6 +118,16 @@ class WayfireLogoutUI
     WfOption<std::string> suspend_command{"panel/suspend_command"};
     WfOption<std::string> hibernate_command{"panel/hibernate_command"};
     WfOption<std::string> switchuser_command{"panel/switchuser_command"};
+
+    /* Platform-specific commands — populated at construction if the platform
+     * provides them and the user has permission.  Used in preference over the
+     * config-file values. */
+    std::string reboot_cmd;
+    std::string shutdown_cmd;
+    std::string suspend_cmd;
+    std::string hibernate_cmd;
+    std::string switchuser_cmd;
+
     Gtk::Window ui;
     WayfireLogoutUIButton logout;
     WayfireLogoutUIButton reboot;

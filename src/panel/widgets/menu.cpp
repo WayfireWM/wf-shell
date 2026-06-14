@@ -11,6 +11,8 @@
 #include "gtk-utils.hpp"
 #include "wf-autohide-window.hpp"
 #include "wf-popover.hpp"
+#include "power-controller.hpp"
+#include "platform.hpp"
 
 const std::string default_icon = "wayfire";
 
@@ -836,31 +838,41 @@ void WayfireLogoutUI::on_logout_click()
 void WayfireLogoutUI::on_reboot_click()
 {
     ui.hide();
-    g_spawn_command_line_async(reboot_command.value().c_str(), NULL);
+    const char *cmd = reboot_cmd.empty() ? reboot_command.value().c_str()
+                                          : reboot_cmd.c_str();
+    g_spawn_command_line_async(cmd, NULL);
 }
 
 void WayfireLogoutUI::on_shutdown_click()
 {
     ui.hide();
-    g_spawn_command_line_async(shutdown_command.value().c_str(), NULL);
+    const char *cmd = shutdown_cmd.empty() ? shutdown_command.value().c_str()
+                                            : shutdown_cmd.c_str();
+    g_spawn_command_line_async(cmd, NULL);
 }
 
 void WayfireLogoutUI::on_suspend_click()
 {
     ui.hide();
-    g_spawn_command_line_async(suspend_command.value().c_str(), NULL);
+    const char *cmd = suspend_cmd.empty() ? suspend_command.value().c_str()
+                                           : suspend_cmd.c_str();
+    g_spawn_command_line_async(cmd, NULL);
 }
 
 void WayfireLogoutUI::on_hibernate_click()
 {
     ui.hide();
-    g_spawn_command_line_async(hibernate_command.value().c_str(), NULL);
+    const char *cmd = hibernate_cmd.empty() ? hibernate_command.value().c_str()
+                                             : hibernate_cmd.c_str();
+    g_spawn_command_line_async(cmd, NULL);
 }
 
 void WayfireLogoutUI::on_switchuser_click()
 {
     ui.hide();
-    g_spawn_command_line_async(switchuser_command.value().c_str(), NULL);
+    const char *cmd = switchuser_cmd.empty() ? switchuser_command.value().c_str()
+                                               : switchuser_cmd.c_str();
+    g_spawn_command_line_async(cmd, NULL);
 }
 
 void WayfireLogoutUI::on_cancel_click()
@@ -888,33 +900,54 @@ void WayfireLogoutUI::create_logout_ui_button(WayfireLogoutUIButton *button, con
 
 WayfireLogoutUI::WayfireLogoutUI()
 {
+    /* Query platform capabilities once.  Buttons are hidden when not available
+     * or not permitted for the current user. */
+    auto reboot_cap     = WFPowerController::query(WFPowerController::Action::Reboot);
+    auto shutdown_cap   = WFPowerController::query(WFPowerController::Action::Shutdown);
+    auto suspend_cap    = WFPowerController::query(WFPowerController::Action::Suspend);
+    auto hibernate_cap  = WFPowerController::query(WFPowerController::Action::Hibernate);
+    auto switchuser_cap = WFPowerController::query(WFPowerController::Action::SwitchUser);
+
+    /* Populate platform-specific command strings.  If the platform provides a
+     * command, it overrides the config-file default. */
+    if (reboot_cap.available)     reboot_cmd     = reboot_cap.command;
+    if (shutdown_cap.available)   shutdown_cmd   = shutdown_cap.command;
+    if (suspend_cap.available)   suspend_cmd    = suspend_cap.command;
+    if (hibernate_cap.available)  hibernate_cmd  = hibernate_cap.command;
+    if (switchuser_cap.available) switchuser_cmd = switchuser_cap.command;
+
     create_logout_ui_button(&suspend, "emblem-synchronizing", "Suspend");
+    suspend.button.set_visible(suspend_cap.available && suspend_cap.permitted);
     signals.push_back(suspend.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_suspend_click)));
-
     main_layout.attach(suspend.button, 0, 0, 1, 1);
 
     create_logout_ui_button(&hibernate, "weather-clear-night", "Hibernate");
+    hibernate.button.set_visible(hibernate_cap.available && hibernate_cap.permitted);
     signals.push_back(hibernate.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_hibernate_click)));
     main_layout.attach(hibernate.button, 1, 0, 1, 1);
 
     create_logout_ui_button(&switchuser, "system-users", "Switch User");
+    switchuser.button.set_visible(switchuser_cap.available && switchuser_cap.permitted);
     signals.push_back(switchuser.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_switchuser_click)));
     main_layout.attach(switchuser.button, 2, 0, 1, 1);
 
     create_logout_ui_button(&logout, "system-log-out", "Log Out");
+    /* Logout is always available (wayland-logout works on all platforms). */
     signals.push_back(logout.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_logout_click)));
     main_layout.attach(logout.button, 0, 1, 1, 1);
 
     create_logout_ui_button(&reboot, "system-reboot", "Reboot");
+    reboot.button.set_visible(reboot_cap.available && reboot_cap.permitted);
     signals.push_back(reboot.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_reboot_click)));
     main_layout.attach(reboot.button, 1, 1, 1, 1);
 
     create_logout_ui_button(&shutdown, "system-shutdown", "Shut Down");
+    shutdown.button.set_visible(shutdown_cap.available && shutdown_cap.permitted);
     signals.push_back(shutdown.button.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireLogoutUI::on_shutdown_click)));
     main_layout.attach(shutdown.button, 2, 1, 1, 1);
