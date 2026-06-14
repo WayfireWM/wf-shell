@@ -53,6 +53,12 @@ class NetworkManager
     void connect_nm();
     void lost_nm();
 
+#ifdef __FreeBSD__
+    void connect_freebsd();
+    void refresh_freebsd_devices();
+    sigc::connection freebsd_poll;
+#endif
+
     void setting_added(std::string path);
     void setting_removed(std::string path);
 

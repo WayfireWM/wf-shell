@@ -18,6 +18,7 @@ util = static_library(
         'network/modem.cpp',
         'network/settings.cpp',
         'network/connection.cpp',
+        'network/freebsd-network.cpp',
         'background-gl.cpp',
         'platform.cpp',
         'power-controller.cpp',

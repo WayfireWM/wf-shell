@@ -183,14 +183,19 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
         revealer.hide();
     }
 
-    /* Click toggles connection on/off */
-    auto click = Gtk::GestureClick::create();
-    signals.push_back(click->signal_released().connect(
-        [network] (int, double, double)
+    /* Click toggles connection on/off.
+     * On FreeBSD, bringing interfaces up/down requires root — hide the
+     * controller when the user lacks permission so the widget is read-only. */
+    if (network->can_toggle())
     {
-        network->toggle();
-    }));
-    topbox.add_controller(click);
+        auto click = Gtk::GestureClick::create();
+        signals.push_back(click->signal_released().connect(
+            [network] (int, double, double)
+        {
+            network->toggle();
+        }));
+        topbox.add_controller(click);
+    }
 
     /* Set label and image based on friendly info */
     auto network_change_cb = [this, network] ()

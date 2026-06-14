@@ -116,3 +116,9 @@ bool Network::is_active()
     device_proxy->get_cached_property(val, "ActiveConnection");
     return val.get() != "/";
 }
+
+bool Network::can_toggle()
+{
+    /* Linux/NetworkManager handles permissions via its own auth mechanism. */
+    return true;
+}

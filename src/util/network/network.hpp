@@ -41,6 +41,11 @@ class Network
     virtual std::string get_interface();
     bool show_spinner();
     virtual std::string get_icon_name() = 0;
+
+    /* Returns true if the user has permission to toggle this network's state.
+     * Linux/NetworkManager always returns true (permissions handled by NM auth).
+     * Platforms that require elevation (e.g. ifconfig on FreeBSD) check here. */
+    virtual bool can_toggle();
     std::string get_icon_symbolic()
     {
         return get_icon_name() + "-symbolic";

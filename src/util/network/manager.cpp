@@ -8,6 +8,7 @@
 #include "manager.hpp"
 #include "bluetooth.hpp"
 #include "connection.hpp"
+#include "freebsd-network.hpp"
 #include "gtkmm/enums.h"
 #include "network.hpp"
 #include "network/settings.hpp"
@@ -17,6 +18,12 @@
 #include "modem.hpp"
 #include "wired.hpp"
 #include "null.hpp"
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <unistd.h>
 #define NM_DBUS_NAME "org.freedesktop.NetworkManager"
 #define MM_DBUS_NAME "org.freedesktop.ModemManager1"
 #define STRENGTH "Strength"
@@ -44,6 +51,14 @@ NetworkManager::NetworkManager()
     popup_entry.set_visibility(false);
     our_signals.push_back(popup_entry.signal_activate().connect(
         sigc::mem_fun(*this, &NetworkManager::submit_password)));
+
+#ifdef __FreeBSD__
+    /* ── FreeBSD: use ifconfig polling instead of NetworkManager ── */
+    all_devices.emplace("/", new NullNetwork());
+    connect_freebsd();
+    nm_start.emit();
+#else
+    /* ── Linux / other: use NetworkManager over D-Bus ── */
     Gio::DBus::Proxy::create_for_bus(Gio::DBus::BusType::SYSTEM,
         "org.freedesktop.DBus",
         "/org/freedesktop/DBus",
@@ -112,6 +127,7 @@ NetworkManager::NetworkManager()
             }
         }));
     });
+#endif
 }
 
 void NetworkManager::setting_added(std::string path)
@@ -809,8 +825,106 @@ void NetworkManager::networking_global_set(bool value)
     nm_proxy->call("Enable", params);
 }
 
+/* ─── FreeBSD backend ─────────────────────────────────────────────────────── */
+
+#ifdef __FreeBSD__
+
+/*
+ * Detect whether an interface is a wireless interface on FreeBSD.
+ * Wireless interfaces are typically wlanN, which is a virtual interface
+ * layered over a physical device (e.g. iwm0, iwn0, urtwn0).
+ * The actual physical interface does not expose Wi-Fi scan capabilities.
+ */
+static bool is_wireless_iface(const char *iface)
+{
+    /* wlanN is the FreeBSD Wi-Fi virtual interface */
+    return (strncmp(iface, "wlan", 4) == 0) && (iface[4] >= '0' && iface[4] <= '9');
+}
+
+void NetworkManager::refresh_freebsd_devices()
+{
+    struct ifaddrs *ifaddr, *ifa;
+
+    if (getifaddrs(&ifaddr) == -1) {
+        return;
+    }
+
+    std::map<std::string, std::string> current; // interface → path
+
+    for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+        /* Only consider AF_INET (IPv4) addresses — they're present on any up interface.
+         * We skip loopback (lo0). */
+        if (ifa->ifa_addr == nullptr || ifa->ifa_addr->sa_family != AF_INET) {
+            continue;
+        }
+        if (strncmp(ifa->ifa_name, "lo", 2) == 0) {
+            continue;
+        }
+
+        std::string iface = ifa->ifa_name;
+        std::string path = "/org/freedesktop/NetworkManager/Devices/freebsd/" + iface;
+
+        current[iface] = path;
+
+        if (all_devices.find(path) == all_devices.end()) {
+            /* New interface */
+            bool wireless = is_wireless_iface(iface.c_str());
+            auto net = std::make_shared<FreeBSDNetwork>(path, iface, wireless);
+            all_devices.emplace(path, net);
+            device_added.emit(all_devices[path]);
+        }
+    }
+
+    freeifaddrs(ifaddr);
+
+    /* Remove interfaces that have disappeared */
+    std::vector<std::string> removed;
+    for (const auto& [path, dev] : all_devices) {
+        if (path == "/") {
+            continue; // NullNetwork sentinel
+        }
+        // Extract interface name from path
+        std::string iface = path.substr(path.rfind('/') + 1);
+        if (current.find(iface) == current.end()) {
+            removed.push_back(path);
+        }
+    }
+    for (const auto& path : removed) {
+        device_removed.emit(all_devices[path]);
+        all_devices.erase(path);
+    }
+
+    /* Re-emit network altered on each device to refresh icon state */
+    for (auto& [path, dev] : all_devices) {
+        if (path != "/") {
+            dev->signal_network_altered().emit();
+        }
+    }
+}
+
+void NetworkManager::connect_freebsd()
+{
+    /* Initial scan */
+    refresh_freebsd_devices();
+
+    /* Poll every 3 seconds for interface changes */
+    freebsd_poll = Glib::signal_timeout().connect(
+        [this]() -> bool {
+            refresh_freebsd_devices();
+            return true;
+        },
+        3000);
+}
+
+#endif /* __FreeBSD__ */
+
 NetworkManager::~NetworkManager()
 {
+#ifdef __FreeBSD__
+    if (freebsd_poll.connected()) {
+        freebsd_poll.disconnect();
+    }
+#endif
     lost_nm();
     /* Signals that outlast each NetworkManager start/stop but need to clear on widget reload */
     for (auto signal : our_signals)
