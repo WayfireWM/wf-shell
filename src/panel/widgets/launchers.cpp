@@ -7,6 +7,7 @@
 #include <gtkmm/gestureclick.h>
 #include <gdk/gdkcairo.h>
 #include <cassert>
+#include <iostream>
 #include <gtk-utils.hpp>
 
 #include "wf-shell-app.hpp"
@@ -77,8 +78,15 @@ void WfLauncherButton::launch()
 {
     if (app_info)
     {
+        std::cerr << "DEBUG: WfLauncherButton::launch() called, app=" << app_info->get_name() << std::endl;
         auto ctx = Gdk::Display::get_default()->get_app_launch_context();
-        app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
+        try
+        {
+            app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
+        } catch (std::exception& e)
+        {
+            std::cerr << "ERROR: launch failed: " << e.what() << std::endl;
+        }
     }
 }
 

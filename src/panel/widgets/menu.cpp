@@ -5,6 +5,7 @@
 #include <giomm.h>
 #include <glibmm/spawn.h>
 #include <iostream>
+#include <cstdlib>
 #include <gtk4-layer-shell.h>
 
 #include "menu.hpp"
@@ -339,8 +340,15 @@ WfMenuItem::~WfMenuItem()
 
 void WfMenuItem::on_click()
 {
+    std::cerr << "DEBUG: WfMenuItem::on_click() called, app=" << app_info->get_name() << std::endl;
     auto ctx = Gdk::Display::get_default()->get_app_launch_context();
-    app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
+    try
+    {
+        app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
+    } catch (std::exception& e)
+    {
+        std::cerr << "ERROR: launch failed: " << e.what() << std::endl;
+    }
     menu->hide_menu();
 }
 
