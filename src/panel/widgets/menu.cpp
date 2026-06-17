@@ -910,11 +910,12 @@ WayfireLogoutUI::WayfireLogoutUI()
 {
     /* Query platform capabilities once.  Buttons are hidden when not available
      * or not permitted for the current user. */
-    auto reboot_cap     = WFPowerController::query(WFPowerController::Action::Reboot);
-    auto shutdown_cap   = WFPowerController::query(WFPowerController::Action::Shutdown);
-    auto suspend_cap    = WFPowerController::query(WFPowerController::Action::Suspend);
-    auto hibernate_cap  = WFPowerController::query(WFPowerController::Action::Hibernate);
-    auto switchuser_cap = WFPowerController::query(WFPowerController::Action::SwitchUser);
+    auto controller = WFPowerController::create();
+    auto reboot_cap     = controller->query(WFPowerController::Action::Reboot);
+    auto shutdown_cap   = controller->query(WFPowerController::Action::Shutdown);
+    auto suspend_cap    = controller->query(WFPowerController::Action::Suspend);
+    auto hibernate_cap  = controller->query(WFPowerController::Action::Hibernate);
+    auto switchuser_cap = controller->query(WFPowerController::Action::SwitchUser);
 
     /* Populate platform-specific command strings.  If the platform provides a
      * command, it overrides the config-file default. */

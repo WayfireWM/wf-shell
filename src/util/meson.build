@@ -19,9 +19,12 @@ util = static_library(
         'network/settings.cpp',
         'network/connection.cpp',
         'network/freebsd-network.cpp',
+        'network/freebsd-backend.cpp',
         'background-gl.cpp',
         'platform.cpp',
         'power-controller.cpp',
+        'power-controller-linux.cpp',
+        'power-controller-bsd.cpp',
     ],
     dependencies: [
         wf_protos,

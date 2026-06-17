@@ -12,6 +12,7 @@
 #include "connection.hpp"
 #include "vpn.hpp"
 #include "settings.hpp"
+#include "network-backend.hpp"
 
 using type_signal_network = sigc::signal<void (std::shared_ptr<Network>)>;
 using type_signal_device_list_changed = sigc::signal<void (std::map<std::string, std::shared_ptr<Network>>)>;
@@ -53,14 +54,10 @@ class NetworkManager
     void connect_nm();
     void lost_nm();
 
-#ifdef __FreeBSD__
-    void connect_freebsd();
-    void refresh_freebsd_devices();
-    sigc::connection freebsd_poll;
-#endif
-
     void setting_added(std::string path);
     void setting_removed(std::string path);
+
+    std::unique_ptr<NetworkBackend> backend;
 
     Gtk::Window popup_window;
     Gtk::Box popup_box;

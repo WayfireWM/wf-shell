@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 /**
@@ -9,9 +10,9 @@
  * hibernate, switch-user).  Callers query availability and permission before
  * showing or activating buttons.
  *
- * All OS-specific logic lives here — no #ifdefs in callers.
+ * WFPowerController is an abstract base class.  Instantiate via create() —
+ * the factory returns the platform-specific subclass.
  */
-
 class WFPowerController
 {
   public:
@@ -35,14 +36,27 @@ class WFPowerController
         std::string command;
     };
 
+    virtual ~WFPowerController() = default;
+
     /**
      * Query capabilities for a given action on the current platform.
      */
-    static Capability query(Action action);
+    virtual Capability query(Action action) = 0;
+
+    /**
+     * Factory: instantiate the platform-specific controller.
+     * The returned object is owned by the caller.
+     */
+    static std::unique_ptr<WFPowerController> create();
 
     /** Convenience: is the current user root? */
     static bool is_root(void);
 
-  private:
+    /**
+     * Check whether the current user can execute a command without elevation.
+     * Tries to run `command --help 2>/dev/null` via wordexp expansion.
+     * If that fails with EPERM/EACCES, the user lacks permission.
+     * Returns true if the command is executable without privilege.
+     */
     static bool check_permission(const char *command);
 };
