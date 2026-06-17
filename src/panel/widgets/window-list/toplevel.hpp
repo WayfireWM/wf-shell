@@ -37,17 +37,15 @@ class TooltipMedia : public Gtk::Picture
     ext_image_capture_source_v1 *copy_capture_source     = NULL;
     ext_image_copy_capture_session_v1 *recording_session = NULL;
     sigc::connection timer_connection;
-    bool frame_in_flight = false;
-    bool timer_continue  = true;
+    bool timer_continue = true;
     uint32_t current_buffer_format = GBM_FORMAT_ARGB8888;
     uint32_t current_buffer_width = 0, width = -1;
     uint32_t current_buffer_height = 0, height = -1;
     uint32_t stride;
 
     gbm_bo *bo = nullptr;
+    int gbm_bo_fd = -1;
     zwp_linux_buffer_params_v1 *params = nullptr;
-    void *dmabuf_data = nullptr;
-    void *map_data = nullptr;
 
     TooltipMedia(WayfireWindowList *window_list, ext_foreign_toplevel_handle_v1 *ext_handle);
     ~TooltipMedia();

@@ -63,23 +63,6 @@ static const struct ext_image_copy_capture_session_v1_listener recording_session
     .stopped = session_handle_stopped,
 };
 
-static void dmabuf_created(void *data, struct zwp_linux_buffer_params_v1*,
-    struct wl_buffer *wl_buffer)
-{
-    TooltipMedia *tooltip_media = (TooltipMedia*)data;
-
-    tooltip_media->buffer = wl_buffer;
-}
-
-static void dmabuf_failed(void *data, struct zwp_linux_buffer_params_v1*)
-{}
-
-static const struct zwp_linux_buffer_params_v1_listener params_listener =
-{
-    .created = dmabuf_created,
-    .failed  = dmabuf_failed,
-};
-
 /* Copy Capture Callbacks */
 
 static void frame_handle_transform(void*,
@@ -101,8 +84,6 @@ static void frame_handle_ready(void *data,
     struct ext_image_copy_capture_frame_v1*)
 {
     TooltipMedia *tooltip_media = (TooltipMedia*)data;
-
-    tooltip_media->frame_in_flight = false;
 
     if (tooltip_media->buffer == nullptr)
     {
@@ -163,19 +144,12 @@ static void frame_handle_ready(void *data,
     auto texture = builder->build();
 
     tooltip_media->set_paintable(texture);
-    tooltip_media->frame_in_flight = false;
 }
 
 static void frame_handle_failed(void *data,
-    struct ext_image_copy_capture_frame_v1 *handle,
+    struct ext_image_copy_capture_frame_v1*,
     uint32_t reason)
-{
-    TooltipMedia *tooltip_media = (TooltipMedia*)data;
-
-    ext_image_copy_capture_frame_v1_destroy(handle);
-    tooltip_media->frame = nullptr;
-    tooltip_media->frame_in_flight = false;
-}
+{}
 
 static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
     .transform = frame_handle_transform,
@@ -190,16 +164,26 @@ static void frame_handle_linux_dmabuf(uint32_t width, uint32_t height, TooltipMe
     auto format = (tooltip_media->current_buffer_format == WL_SHM_FORMAT_XRGB8888) ?
         GBM_FORMAT_XRGB8888 : GBM_FORMAT_ARGB8888;
 
+    if (tooltip_media->gbm_bo_fd > 0)
+    {
+        close(tooltip_media->gbm_bo_fd);
+    }
+
     if (tooltip_media->bo)
     {
         gbm_bo_destroy(tooltip_media->bo);
         tooltip_media->bo = nullptr;
     }
 
+    if (tooltip_media->buffer)
+    {
+        wl_buffer_destroy(tooltip_media->buffer);
+        tooltip_media->buffer = nullptr;
+    }
+
     if (tooltip_media->params)
     {
         zwp_linux_buffer_params_v1_destroy(tooltip_media->params);
-        tooltip_media->params = nullptr;
     }
 
     auto w = width;
@@ -225,15 +209,16 @@ static void frame_handle_linux_dmabuf(uint32_t width, uint32_t height, TooltipMe
     tooltip_media->stride = gbm_bo_get_stride(tooltip_media->bo);
     tooltip_media->params = zwp_linux_dmabuf_v1_create_params(tooltip_media->window_list->dmabuf);
 
+    tooltip_media->gbm_bo_fd = gbm_bo_get_fd(tooltip_media->bo);
+
     uint64_t mod = gbm_bo_get_modifier(tooltip_media->bo);
     zwp_linux_buffer_params_v1_add(tooltip_media->params,
-        gbm_bo_get_fd(tooltip_media->bo), 0,
+        tooltip_media->gbm_bo_fd, 0,
         gbm_bo_get_offset(tooltip_media->bo, 0),
         gbm_bo_get_stride(tooltip_media->bo),
         mod >> 32, mod & 0xffffffff);
 
-    zwp_linux_buffer_params_v1_add_listener(tooltip_media->params, &params_listener, tooltip_media);
-    zwp_linux_buffer_params_v1_create(tooltip_media->params, w, h, format, 0);
+    tooltip_media->buffer = zwp_linux_buffer_params_v1_create_immed(tooltip_media->params, w, h, format, 0);
 }
 
 void TooltipMedia::request_next_frame()
@@ -264,25 +249,17 @@ void TooltipMedia::request_next_frame()
         return;
     }
 
-    if (frame_in_flight)
-    {
-        return;
-    }
-
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
-        frame = NULL;
     }
 
     frame = ext_image_copy_capture_session_v1_create_frame(recording_session);
-    frame = frame;
 
     ext_image_copy_capture_frame_v1_add_listener(frame, &frame_listener, this);
     ext_image_copy_capture_frame_v1_attach_buffer(frame, buffer);
     ext_image_copy_capture_frame_v1_damage_buffer(frame, 0, 0, width, height);
     ext_image_copy_capture_frame_v1_capture(frame);
-    frame_in_flight = true;
 }
 
 void TooltipMedia::start_toplevel_source_session()
@@ -300,11 +277,6 @@ TooltipMedia::TooltipMedia(WayfireWindowList *window_list, ext_foreign_toplevel_
 {
     this->window_list = window_list;
     this->ext_handle  = ext_handle;
-    set_can_shrink(true);
-    set_content_fit(Gtk::ContentFit::CONTAIN);
-    set_vexpand(false);
-    set_hexpand(false);
-    set_size_request(200, -1);
 
     start_toplevel_source_session();
 
@@ -352,9 +324,9 @@ TooltipMedia::~TooltipMedia()
         zwp_linux_buffer_params_v1_destroy(this->params);
     }
 
-    if (this->bo && this->map_data)
+    if (this->gbm_bo_fd > 0)
     {
-        gbm_bo_unmap(this->bo, this->map_data);
+        close(this->gbm_bo_fd);
     }
 
     if (this->bo)
