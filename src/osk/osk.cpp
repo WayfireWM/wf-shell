@@ -110,13 +110,10 @@ WaylandWindow& WayfireOsk::get_window()
     return *window;
 }
 
-#ifdef HAVE_ENCHANT
 WayfireOskComplete& WayfireOsk::get_complete()
 {
     return *complete;
 }
-
-#endif
 
 void WayfireOsk::activate()
 {
