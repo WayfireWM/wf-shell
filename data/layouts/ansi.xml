@@ -1,0 +1,489 @@
+<?xml version='1.0' encoding='utf-8'?>
+<interface>
+    <requires lib="gtk" version="4.0" />
+    <object class="GtkBox" id="keyboard_main">
+        <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+        <property name="spacing">10</property>
+        <property name="vexpand">true</property>
+        <property name="hexpand">true</property>
+        <child>
+            <object class="GtkBox" id="row_1">
+                <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                <property name="spacing">10</property>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">TLDE</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE01</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE02</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE03</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE04</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE05</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE06</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE07</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE08</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE09</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE10</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE11</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AE12</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">95</property>
+                        <property name="height-request">50</property>
+                        <property name="name">BKSP</property>
+                    </object>
+                </child>
+            </object>
+        </child>
+        <child>
+            <object class="GtkBox" id="row_2">
+                <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                <property name="spacing">10</property>
+                <property name="vexpand">true</property>
+                <property name="hexpand">true</property>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">80</property>
+                        <property name="height-request">50</property>
+                        <property name="name">TAB</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD01</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD02</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD03</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD04</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD05</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD06</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD07</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD08</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD09</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD10</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD11</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AD12</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">80</property>
+                        <property name="height-request">50</property>
+                        <property name="name">BKSL</property>
+                    </object>
+                </child>
+            </object>
+        </child>
+        <child>
+            <object class="GtkBox" id="row_3">
+                <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                <property name="spacing">10</property>
+                <property name="vexpand">true</property>
+                <property name="hexpand">true</property>
+                <child>
+                    <object class="GtkToggleButton">
+                        <property name="width-request">95</property>
+                        <property name="height-request">50</property>
+                        <property name="name">CAPS</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC01</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC02</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC03</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC04</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC05</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC06</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC07</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC08</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC09</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC10</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AC11</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">115</property>
+                        <property name="height-request">50</property>
+                        <property name="name">RTRN</property>
+                    </object>
+                </child>
+            </object>
+        </child>
+        <child>
+            <object class="GtkBox" id="row_4">
+                <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                <property name="spacing">10</property>
+                <property name="vexpand">true</property>
+                <property name="hexpand">true</property>
+                <child>
+                    <object class="GtkToggleButton">
+                        <property name="width-request">125</property>
+                        <property name="height-request">50</property>
+                        <property name="name">LFSH</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB01</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB02</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB03</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB04</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB05</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB06</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB07</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB08</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB09</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">50</property>
+                        <property name="height-request">50</property>
+                        <property name="name">AB10</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">65</property>
+                        <property name="height-request">50</property>
+                        <property name="name">UP</property>
+                    </object>
+                </child>
+            </object>
+        </child>
+        <child>
+            <object class="GtkBox" id="row_5">
+                <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                <property name="vexpand">true</property>
+                <property name="hexpand">true</property>
+                <property name="spacing">10</property>
+                <child>
+                    <object class="GtkToggleButton">
+                        <property name="width-request">65</property>
+                        <property name="height-request">50</property>
+                        <property name="name">LCTL</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkToggleButton">
+                        <property name="width-request">65</property>
+                        <property name="height-request">50</property>
+                        <property name="name">LWIN</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkToggleButton">
+                        <property name="width-request">64</property>
+                        <property name="height-request">50</property>
+                        <property name="name">LALT</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">340</property>
+                        <property name="height-request">50</property>
+                        <property name="name">SPCE</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkToggleButton">
+                        <property name="width-request">65</property>
+                        <property name="height-request">50</property>
+                        <property name="name">RALT</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkToggleButton">
+                        <property name="width-request">65</property>
+                        <property name="height-request">50</property>
+                        <property name="name">RWIN</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkToggleButton">
+                        <property name="width-request">65</property>
+                        <property name="height-request">50</property>
+                        <property name="name">RCTL</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">65</property>
+                        <property name="height-request">50</property>
+                        <property name="name">LEFT</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">65</property>
+                        <property name="height-request">50</property>
+                        <property name="name">DOWN</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkButton">
+                        <property name="width-request">65</property>
+                        <property name="height-request">50</property>
+                        <property name="name">RGHT</property>
+                    </object>
+                </child>
+            </object>
+        </child>
+    </object>
+</interface>

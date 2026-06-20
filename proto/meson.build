@@ -21,6 +21,8 @@ client_protocols = [
     [wl_protocol_dir, 'staging/ext-image-copy-capture/ext-image-copy-capture-v1.xml'],
 	'wlr-foreign-toplevel-management-unstable-v1.xml',
 	'wlr-screencopy.xml',
+	'virtual-keyboard-unstable-v1.xml',
+	'input-method-unstable-v2.xml',
 	wayfire.get_pkgconfig_variable('pkgdatadir') / 'unstable' / 'wayfire-shell-unstable-v2.xml',
 ]
 
