@@ -98,7 +98,15 @@ void WayfireMixer::reload_config()
             return; // no quick_target means we have nothing to change by clicking
         }
 
-        quick_target->button.set_active(!quick_target->button.get_active());
+        guint32 id = wp_proxy_get_bound_id(WP_PROXY(quick_target->object));
+        bool mute  = !quick_target->button.get_active();
+
+        // pretend the mixer control is the source of the change to prevent a popup
+        objects_to_controls[quick_target->object]->ignore = true;
+        // still set visual state
+        objects_to_controls[quick_target->object]->set_btn_status_no_callbk(mute);
+        quick_target->set_btn_status_no_callbk(mute);
+        WpCommon::get().set_mute(id, mute);
     };
 
     if (str_wp_left_click_action.value() == "show_mixer")
