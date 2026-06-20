@@ -26,4 +26,10 @@ install_data('wf-locker', install_dir:'/etc/pam.d/')
 
 install_data('xdpw/wayfire', install_dir: '/etc/xdg/xdg-desktop-portal-wlr/')
 
+install_data(join_paths('layouts', 'ansi.xml'), install_dir: layout_dir)
+install_data(join_paths('layouts', 'iso.xml'), install_dir: layout_dir)
+install_data(join_paths('layouts', 'emoji.xml'), install_dir: layout_dir)
+install_data(join_paths('layouts', 'ether.xml'), install_dir: layout_dir)
+install_data(join_paths('layouts', 'numpad.xml'), install_dir: layout_dir)
+
 subdir('css')
