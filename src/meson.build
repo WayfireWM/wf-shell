@@ -5,6 +5,7 @@ subdir('dock')
 subdir('locker')
 subdir('locker-pin')
 subdir('stream-chooser')
+subdir('osk')
 
 pkgconfig = import('pkgconfig')
 pkgconfig.generate(
