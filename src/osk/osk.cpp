@@ -1,4 +1,6 @@
-#include "complete/complete-enchant.hpp"
+#ifdef HAVE_ENCHANT
+    #include "complete/complete-enchant.hpp"
+#endif
 #ifdef HAVE_LLAMA
     #include "complete/complete-tiny.hpp"
 #endif
