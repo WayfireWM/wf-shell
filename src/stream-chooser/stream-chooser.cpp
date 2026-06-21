@@ -120,7 +120,6 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
             wl_registry_bind(registry, name,
             &ext_foreign_toplevel_list_v1_interface,
             version);
-        WayfireStreamChooserApp::getInstance().has_foreign_toplevel_list = true;
         WayfireStreamChooserApp::getInstance().set_toplevel_list(list);
         ext_foreign_toplevel_list_v1_add_listener(list,
             &toplevel_list_v1_impl, NULL);
@@ -128,14 +127,12 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
     {
         auto manager = (ext_image_copy_capture_manager_v1*)wl_registry_bind(registry, name,
             &ext_image_copy_capture_manager_v1_interface, version);
-        WayfireStreamChooserApp::getInstance().has_image_copy_capture = true;
         WayfireStreamChooserApp::getInstance().set_copy_capture_manager(manager);
     } else if (strcmp(interface, ext_foreign_toplevel_image_capture_source_manager_v1_interface.name) == 0)
     {
         auto toplevel_capture_manager =
             (ext_foreign_toplevel_image_capture_source_manager_v1*)wl_registry_bind(registry, name,
                 &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
-        WayfireStreamChooserApp::getInstance().has_image_capture_source = true;
         WayfireStreamChooserApp::getInstance().set_toplevel_capture_manager(toplevel_capture_manager);
     } else if (strcmp(interface, ext_output_image_capture_source_manager_v1_interface.name) == 0)
     {
@@ -281,24 +278,45 @@ void WayfireStreamChooserApp::activate()
     wl_display_roundtrip(display);
     wl_registry_destroy(registry);
 
-    if (!has_image_copy_capture)
+    bool toplevel_capture = true;
+    bool output_capture   = true;
+    if (!this->manager)
     {
         std::cerr << "Compositor has not advertised ext-image-copy-capture-v1" << std::endl;
+        toplevel_capture = false;
     }
 
-    if (!has_foreign_toplevel_list)
+    if (!this->list)
     {
         std::cerr << "Compositor has not advertised ext-foreign-toplevel-list-v1" << std::endl;
+        toplevel_capture = false;
     }
 
-    if (!has_image_capture_source)
+    if (!this->output_capture_manager)
     {
         std::cerr << "Compositor has not advertised ext-image-capture-source-v1" << std::endl;
+        output_capture = false;
     }
 
-    window_label.set_sensitive(false);
-    window_label.set_tooltip_text("This compositor does not currently support sharing individual windows");
-    notebook.set_current_page(1);
+    if (!this->toplevel_capture_manager)
+    {
+        std::cerr << "Compositor has not advertised ext-foreign-toplevel-image-capture-source-v1" <<
+            std::endl;
+        toplevel_capture = false;
+    }
+
+    if (!toplevel_capture)
+    {
+        if (!output_capture)
+        {
+            std::cerr << "No capture protocols supported, nothing to do." << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        window_label.set_sensitive(false);
+        window_label.set_tooltip_text("This compositor does not currently support sharing individual windows");
+        notebook.set_current_page(1);
+    }
 
     /* Get output list */
     auto gtkdisplay = Gdk::Display::get_default();
@@ -357,7 +375,6 @@ void WayfireStreamChooserApp::activate()
     window.present();
 }
 
-static bool first_toplevel = true;
 void WayfireStreamChooserApp::add_toplevel(ext_foreign_toplevel_handle_v1 *handle)
 {
     toplevels.emplace(handle, new WayfireChooserTopLevel(handle));
@@ -366,14 +383,6 @@ void WayfireStreamChooserApp::add_toplevel(ext_foreign_toplevel_handle_v1 *handl
     {
         auto child = window_list.get_child_at_index(0);
         window_list.select_child(*child);
-    }
-
-    window_label.set_sensitive(true);
-    window_label.set_tooltip_text("");
-    if (first_toplevel)
-    {
-        first_toplevel = false;
-        notebook.set_current_page(0);
     }
 }
 
