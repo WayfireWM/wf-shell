@@ -294,6 +294,11 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<default>48</default>
 		<min>0</min>
 	</option>
+	<option name="menu_category_icon_size" type="int">
+		<_short>Menu category icon size</_short>
+		<default>48</default>
+		<min>0</min>
+	</option>
 	<option name="menu_item_spacing" type="int">
 		<_short>Space between menu items</_short>
 		<default>8</default>
