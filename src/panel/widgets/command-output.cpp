@@ -14,7 +14,7 @@
 #include "command-output.hpp"
 
 static sigc::connection label_set_from_command(std::string command_line,
-    Gtk::Label& label, Gtk::Image* icon = nullptr,
+    Gtk::Label& label, Gtk::Image *icon = nullptr,
     const std::string& icon_name = "")
 {
     command_line = "/bin/sh -c \"" + command_line + "\"";
@@ -47,12 +47,12 @@ static sigc::connection label_set_from_command(std::string command_line,
         label.set_markup(output);
 
         if (icon &&
-    	    !icon_name.empty() &&
-    	    (icon_name[0] == '/' ||
-     	     icon_name.rfind("~/", 0) == 0))
-	{
-    	    IconProvider::image_set_icon(*icon, icon_name);
-	}
+            !icon_name.empty() &&
+            ((icon_name[0] == '/') ||
+             (icon_name.rfind("~/", 0) == 0)))
+        {
+            IconProvider::image_set_icon(*icon, icon_name);
+        }
     }, pid);
 }
 
