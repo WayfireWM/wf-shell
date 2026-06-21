@@ -503,6 +503,12 @@ void NetworkControlWidget::remove_vpn(std::string path)
 
 void NetworkControlWidget::add_device(std::shared_ptr<Network> network)
 {
+    if (network == nullptr)
+    {
+        std::cerr << "Null network in add_device" << std::endl;
+        return;
+    }
+
     /* GUI doesn't want our null-device */
     if (network->get_path() == "/")
     {
@@ -514,15 +520,19 @@ void NetworkControlWidget::add_device(std::shared_ptr<Network> network)
     auto widget = widgets[network->get_path()];
     if (widget->type == "wifi")
     {
+        std::cout << "Adding wifi" << std::endl;
         wifi_box.append(*widget);
     } else if (widget->type == "mobile")
     {
+        std::cout << "Adding mobile" << std::endl;
         mobile_box.append(*widget);
     } else if (widget->type == "wired")
     {
+        std::cout << "Adding wired" << std::endl;
         wire_box.append(*widget);
     } else if (widget->type == "bt")
     {
+        std::cout << "Adding bluetooth" << std::endl;
         bt_box.append(*widget);
     } else
     {
