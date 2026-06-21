@@ -1026,7 +1026,7 @@ void WayfireMenu::init(Gtk::Box *container)
     category_list["Hidden"] = std::make_unique<WfMenuCategory>("Other Desktops",
         "user-desktop");
 
-    main_image.add_css_class("widget-icon");
+    main_image.add_css_class("default-icon");
     main_image.add_css_class("menu-icon");
 
     signals.push_back(output->toggle_menu_signal().connect(sigc::mem_fun(*this, &WayfireMenu::toggle_menu)));
