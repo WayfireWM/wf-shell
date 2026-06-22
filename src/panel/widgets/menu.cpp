@@ -6,6 +6,7 @@
 #include <glibmm/spawn.h>
 #include <iostream>
 #include <gtk4-layer-shell.h>
+#include <sys/wait.h>
 
 #include "menu.hpp"
 #include "gtk-utils.hpp"
@@ -189,6 +190,45 @@ void WfMenuCategoryButton::on_click()
     menu->set_category(category);
 }
 
+/* Double forks to launch the grandchild as a child of PID 1. */
+void double_fork(const std::function<void()>& action)
+{
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+        return; /* Failed */
+    }
+
+    if (pid > 0)
+    {
+        /* Main process. Wait briefly for the intermediate child to clean up and exit */
+        waitpid(pid, nullptr, 0);
+        return;
+    }
+
+    /*Intermediate child process. Disavow parent */
+    setsid();
+
+    pid_t grandchild_pid = fork();
+    if (grandchild_pid < 0)
+    {
+        _exit(EXIT_FAILURE); /* Failed */
+    }
+
+    if (grandchild_pid > 0)
+    {
+        _exit(EXIT_SUCCESS); /* Intermediate child ends, disavowing parent and child */
+    }
+
+    /* End child process, perform action */
+    try {
+        action();
+    } catch (...)
+    {}
+
+    _exit(EXIT_SUCCESS);
+}
+
 WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app) :
     Gtk::FlowBoxChild(), menu(_menu), app_info(app)
 {
@@ -304,8 +344,11 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
         signals.push_back(action_obj->signal_activate().connect(
             [this, action] (Glib::VariantBase vb)
         {
-            auto ctx = Gdk::Display::get_default()->get_app_launch_context();
-            app_info->launch_action(action, ctx);
+            double_fork([this, action] ()
+            {
+                auto context = Gio::AppLaunchContext::create();
+                app_info->launch_action(action, context);
+            });
             menu->hide_menu();
         }));
         m_menu->append_item(menu_item);
@@ -337,8 +380,12 @@ WfMenuItem::~WfMenuItem()
 
 void WfMenuItem::on_click()
 {
-    auto ctx = Gdk::Display::get_default()->get_app_launch_context();
-    app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
+    double_fork([this] ()
+    {
+        auto context = Gio::AppLaunchContext::create();
+        std::vector<Glib::RefPtr<Gio::File>> no_files;
+        app_info->launch(no_files, context);
+    });
     menu->hide_menu();
 }
 
