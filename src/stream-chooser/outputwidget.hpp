@@ -13,6 +13,7 @@ struct output_buffer
     int height = 0;
     int stride = 0;
     gbm_bo *bo = nullptr;
+    int gbm_fd = -1;
     wl_buffer *buffer = nullptr;
     zwp_linux_buffer_params_v1 *params     = nullptr;
     ext_image_copy_capture_frame_v1 *frame = NULL;
@@ -38,7 +39,6 @@ class WayfireChooserOutput : public Gtk::Box
     ext_image_copy_capture_session_v1 *recording_session = NULL;
     std::shared_ptr<output_buffer> buffer = nullptr;
     ext_image_copy_capture_frame_v1 *frame = NULL;
-    bool frame_in_flight = false;
     void print();
     void frame_request();
     void buffer_ready();
