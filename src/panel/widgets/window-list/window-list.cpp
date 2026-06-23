@@ -6,8 +6,6 @@
 
 #include <fcntl.h>
 
-#define DEFAULT_SIZE_PC 0.1
-
 static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager,
     zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
@@ -163,7 +161,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
     if (drmGetDeviceFromDevId(dev_id, 0, &dev) != 0)
     {
         perror("Failed to get DRM device from dev id");
-        std::cerr << "Trying shm" << std::endl;
         return;
     }
 
@@ -179,7 +176,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
     if (drm_fd < 0)
     {
         perror("Failed to open drm device");
-        std::cerr << "Trying shm" << std::endl;
         return;
     }
 
@@ -188,7 +184,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
     {
         close(drm_fd);
         perror("Failed to create gbm device");
-        std::cerr << "Trying shm" << std::endl;
         return;
     }
 
@@ -257,7 +252,6 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
             (ext_foreign_toplevel_image_capture_source_manager_v1*)wl_registry_bind(registry, name,
                 &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
         window_list->toplevel_capture_manager = toplevel_capture_manager;
-        printf("set toplevel_capture_manager: %p\n", toplevel_capture_manager);
     } else if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0)
     {
         window_list->dmabuf = (zwp_linux_dmabuf_v1*)wl_registry_bind(registry, name,
@@ -321,23 +315,23 @@ void WayfireWindowList::init(Gtk::Box *container)
     if (!this->manager)
     {
         std::cerr << "Compositor doesn't support" <<
-            " ext-image-copy-capture-v1." <<
-            "The window-list widget will not be initialized." << std::endl;
+            " wlr-foreign-toplevel-management." << std::endl;
+        std::cerr << "The window-list widget will not be initialized." << std::endl;
         return;
     }
 
     if (!this->foreign_toplevel_list)
     {
         std::cerr << "Compositor doesn't support" <<
-            " ext-foreign-toplevel-list-v1." <<
-            "Live window previews cannot be enabled." << std::endl;
+            " ext-foreign-toplevel-list-v1." << std::endl;
+        std::cerr << "Live window previews cannot be enabled." << std::endl;
     }
 
     if (!this->toplevel_capture_manager)
     {
         std::cerr << "Compositor doesn't support" <<
-            " ext-foreign-toplevel-image-copy-capture-v1." <<
-            "Live window previews cannot be enabled." << std::endl;
+            " ext-foreign-toplevel-image-copy-capture-v1." << std::endl;
+        std::cerr << "Live window previews cannot be enabled." << std::endl;
     }
 
     scrolled_window.add_css_class("window-list");
