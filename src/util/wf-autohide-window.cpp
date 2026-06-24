@@ -207,16 +207,35 @@ void WayfireAutohidingWindow::m_show_uncertain()
 
 void WayfireAutohidingWindow::update_position()
 {
-    /* Reset old anchors */
-    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_TOP, false);
-    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, false);
-    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, false);
-    gtk_layer_set_anchor(this->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, false);
+    // reset anchors and margins
+    for (auto edge :
+     {GTK_LAYER_SHELL_EDGE_TOP, GTK_LAYER_SHELL_EDGE_BOTTOM, GTK_LAYER_SHELL_EDGE_LEFT,
+         GTK_LAYER_SHELL_EDGE_RIGHT})
+    {
+        gtk_layer_set_anchor(this->gobj(), edge, false);
+        gtk_layer_set_margin(this->gobj(), edge, 0);
+    }
 
     /* Set new anchor */
     GtkLayerShellEdge edge = get_anchor_edge(position);
     gtk_layer_set_anchor(this->gobj(), edge, true);
     gtk_layer_set_margin(this->gobj(), edge, edge_margin);
+    if (auto_exclusive_zone)
+    {
+        if (edge == GTK_LAYER_SHELL_EDGE_TOP)
+        {
+            gtk_layer_set_margin(this->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, edge_margin);
+        } else if (edge == GTK_LAYER_SHELL_EDGE_BOTTOM)
+        {
+            gtk_layer_set_margin(this->gobj(), GTK_LAYER_SHELL_EDGE_TOP, edge_margin);
+        } else if (edge == GTK_LAYER_SHELL_EDGE_LEFT)
+        {
+            gtk_layer_set_margin(this->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, edge_margin);
+        } else if (edge == GTK_LAYER_SHELL_EDGE_RIGHT)
+        {
+            gtk_layer_set_margin(this->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, edge_margin);
+        }
+    }
 
     if (full_span)
     {
