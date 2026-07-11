@@ -69,7 +69,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     {
         css_provider = Gtk::CssProvider::create();
         /* This rule has to be more specific than others to be chosen */
-        css_provider->load_from_string(".wf-panel .command-icon-" + name + " .widget-icon{-gtk-icon-size:" + std::to_string(
+        css_provider->load_from_string(".wf-panel .command-icon-" + name + ".widget-icon{-gtk-icon-size:" + std::to_string(
             icon_size) + "px;}");
         icon.add_css_class("command-icon-" + name);
         icon.get_style_context()->add_provider(css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
