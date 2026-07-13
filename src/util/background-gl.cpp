@@ -163,8 +163,8 @@ void BackgroundImage::generate_adjustments(int width, int height)
         adjustments->scale_y = 1.0;
     } else if (!fill_and_crop_string.compare(fill_type))
     {
-        auto width_difference  = screen_width - source_width;
-        auto height_difference = screen_height - source_height;
+        double width_difference  = screen_width - source_width;
+        double height_difference = screen_height - source_height;
         if (width_difference > height_difference)
         {
             adjustments->scale_x = 1.0;
@@ -182,8 +182,8 @@ void BackgroundImage::generate_adjustments(int width, int height)
         }
     } else /* "preserve_aspect" */
     {
-        auto width_difference  = screen_width / source_width;
-        auto height_difference = screen_height / source_height;
+        double width_difference  = screen_width / source_width;
+        double height_difference = screen_height / source_height;
         if (width_difference > height_difference)
         {
             adjustments->scale_x = (screen_width / screen_height) * (source_height / source_width);
