@@ -18,15 +18,6 @@
 #define ICON(volume) icon_from_range(volume_icons, volume)
 #define MIC_ICON(level) icon_from_range(microphone_icons, level)
 
-namespace
-{
-std::string path_basename_hint(const std::string& path)
-{
-    auto slash = path.find_last_of('/');
-    return (slash == std::string::npos) ? path : path.substr(slash + 1);
-}
-}
-
 /**
  * Pulse peak probe — records from a source (sink monitor or mic).
  * On FreeBSD + Virtual OSS: default sink is usually "virtual_oss", so
