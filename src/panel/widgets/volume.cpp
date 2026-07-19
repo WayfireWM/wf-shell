@@ -1135,7 +1135,7 @@ void WayfireVolume::build_popover_ui()
 
     auto head = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL);
     auto title = Gtk::make_managed<Gtk::Label>();
-    title->set_markup("<b>Sound</b>");
+    title->set_markup("<b>Sound Settings</b>");
     title->set_halign(Gtk::Align::START);
     title->set_hexpand(true);
     head->append(*title);
