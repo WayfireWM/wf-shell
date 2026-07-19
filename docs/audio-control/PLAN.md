@@ -384,7 +384,18 @@ See ARCHITECTURE.md § Hotplug, headset plug, and auto-switch · `man wf-shell-a
 
 ---
 
-## 12. UI refresh discipline (do not forget)
+## 12. Detected features only (do not invent controls)
+
+| Rule | Meaning |
+|------|---------|
+| **Only if it is there** | Surface mute/volume/ports/filters **only** when the device, mixer, or loaded module actually exposes them. |
+| **No fake noise cancellation** | Do **not** add NS/AEC/AGC toggles unless we detect a real control (hardware mixer) **or** an already-loaded software path (e.g. Pulse `module-echo-cancel` source). |
+| **USB simple mics** | Devices like Blue Snowball typically only have gain/mute — show that, nothing more. |
+| **Optional software DSP** | Creating echo-cancel modules is out of scope for the compact UI unless later productized and still gated on capability detection. |
+
+Probe → if absent, hide. Never gray out a pretend “Noise cancellation” that does nothing.
+
+## 13. UI refresh discipline (do not forget)
 
 | Rule | Why |
 |------|-----|
