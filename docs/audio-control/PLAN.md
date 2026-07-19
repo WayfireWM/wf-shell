@@ -384,7 +384,18 @@ See ARCHITECTURE.md § Hotplug, headset plug, and auto-switch · `man wf-shell-a
 
 ---
 
-## 12. Agent / collaboration rules (do not forget)
+## 12. UI refresh discipline (do not forget)
+
+| Rule | Why |
+|------|-----|
+| **Event-driven first** | Hardware plug/unplug (USB mic, cards) → GVC/Pulse/devd signals; poll only as a sparse fallback (e.g. FreeBSD `sndstat`). |
+| **No refresh if unchanged** | Fingerprint device lists, active paths, status strings. If equal → **do not** `remove_all` / rebuild ComboBox / rewrite labels. |
+| **Open menus are sacred** | Rebuilding a dropdown while the user has it open causes flicker and selection loss. |
+| **Live routing > stale ini** | Virtual OSS `-P`/`-R` is truth for what’s selected; sync ini to match, not the reverse. |
+
+This applies beyond audio: any panel widget that polls hardware or services should **diff before paint**.
+
+## 13. Agent / collaboration rules (do not forget)
 
 | Rule | Detail |
 |------|--------|
