@@ -103,11 +103,21 @@ class WayfireVolume : public WayfireWidget
     gulong notify_src_volume_signal = 0;
     gulong notify_src_muted_signal  = 0;
     gulong notify_default_source_changed = 0;
+    gulong notify_stream_added = 0;
+    gulong notify_stream_removed = 0;
+    gulong notify_input_added = 0;
+    gulong notify_input_removed = 0;
+    gulong notify_output_added = 0;
+    gulong notify_output_removed = 0;
+    gulong notify_card_added = 0;
+    gulong notify_card_removed = 0;
 
     std::vector<sigc::connection> signals;
     sigc::connection meter_tick;
+    sigc::connection device_poll_tick; /* hotplug while popover open */
     bool popover_open = false;
     bool filling_combos = false;
+    bool device_refresh_pending = false;
 
     std::vector<wf_audio::AudioDevice> play_devices;
     std::vector<wf_audio::AudioDevice> cap_devices;
@@ -148,6 +158,8 @@ class WayfireVolume : public WayfireWidget
     void on_popover_shown();
     void on_popover_hidden();
     bool on_meter_tick();
+    bool on_device_poll_tick();
+    void schedule_device_refresh();
     void fill_graph_combo(Gtk::ComboBoxText& combo, const std::string& active_id);
     void fill_channel_combo();
     std::string safe_graph_style(const std::string& s) const;
@@ -164,4 +176,5 @@ class WayfireVolume : public WayfireWidget
     void on_mic_changed_external();
     void on_default_sink_changed();
     void on_default_source_changed();
+    void on_devices_changed();
 };

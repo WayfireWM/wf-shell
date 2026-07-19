@@ -499,6 +499,7 @@ void WayfireVolume::on_default_sink_changed()
     if (popover_open)
     {
         start_level_probes();
+        schedule_device_refresh();
     }
 }
 
@@ -509,6 +510,11 @@ void WayfireVolume::on_default_source_changed()
     if (!gvc_source)
     {
         update_mic_badge();
+        if (popover_open)
+        {
+            schedule_device_refresh();
+        }
+
         return;
     }
 
@@ -531,7 +537,48 @@ void WayfireVolume::on_default_source_changed()
     if (popover_open)
     {
         start_level_probes();
+        schedule_device_refresh();
     }
+}
+
+void WayfireVolume::on_devices_changed()
+{
+    /* USB mic/DAC plug, Pulse stream add/remove, cards — refresh lists live. */
+    if (popover_open)
+    {
+        schedule_device_refresh();
+    }
+}
+
+void WayfireVolume::schedule_device_refresh()
+{
+    if (device_refresh_pending)
+    {
+        return;
+    }
+
+    device_refresh_pending = true;
+    Glib::signal_idle().connect([this] ()
+    {
+        device_refresh_pending = false;
+        if (popover_open)
+        {
+            refresh_devices();
+        }
+
+        return G_SOURCE_REMOVE;
+    });
+}
+
+bool WayfireVolume::on_device_poll_tick()
+{
+    /* FreeBSD OSS USB devices may appear in sndstat before/without GVC events. */
+    if (popover_open)
+    {
+        refresh_devices();
+    }
+
+    return true;
 }
 
 static void default_sink_changed(GvcMixerControl *, guint, gpointer user_data)
@@ -542,6 +589,11 @@ static void default_sink_changed(GvcMixerControl *, guint, gpointer user_data)
 static void default_source_changed(GvcMixerControl *, guint, gpointer user_data)
 {
     ((WayfireVolume*)user_data)->on_default_source_changed();
+}
+
+static void devices_changed(GvcMixerControl *, guint, gpointer user_data)
+{
+    ((WayfireVolume*)user_data)->on_devices_changed();
 }
 
 void WayfireVolume::on_volume_value_changed()
@@ -1164,6 +1216,13 @@ void WayfireVolume::on_popover_shown()
         meter_tick = Glib::signal_timeout().connect(
             sigc::mem_fun(*this, &WayfireVolume::on_meter_tick), 40);
     }
+
+    /* Poll OSS/sndstat while open so USB mics show without reopen. */
+    if (!device_poll_tick)
+    {
+        device_poll_tick = Glib::signal_timeout().connect(
+            sigc::mem_fun(*this, &WayfireVolume::on_device_poll_tick), 1000);
+    }
 }
 
 void WayfireVolume::on_popover_hidden()
@@ -1172,6 +1231,11 @@ void WayfireVolume::on_popover_hidden()
     if (meter_tick)
     {
         meter_tick.disconnect();
+    }
+
+    if (device_poll_tick)
+    {
+        device_poll_tick.disconnect();
     }
 
     stop_level_probes();
@@ -1438,6 +1502,23 @@ void WayfireVolume::init(Gtk::Box *container)
         "default-sink-changed", G_CALLBACK(default_sink_changed), this);
     notify_default_source_changed = g_signal_connect(gvc_control,
         "default-source-changed", G_CALLBACK(default_source_changed), this);
+    /* Hotplug: Pulse/GVC device inventory changes */
+    notify_stream_added = g_signal_connect(gvc_control, "stream-added",
+        G_CALLBACK(devices_changed), this);
+    notify_stream_removed = g_signal_connect(gvc_control, "stream-removed",
+        G_CALLBACK(devices_changed), this);
+    notify_input_added = g_signal_connect(gvc_control, "input-added",
+        G_CALLBACK(devices_changed), this);
+    notify_input_removed = g_signal_connect(gvc_control, "input-removed",
+        G_CALLBACK(devices_changed), this);
+    notify_output_added = g_signal_connect(gvc_control, "output-added",
+        G_CALLBACK(devices_changed), this);
+    notify_output_removed = g_signal_connect(gvc_control, "output-removed",
+        G_CALLBACK(devices_changed), this);
+    notify_card_added = g_signal_connect(gvc_control, "card-added",
+        G_CALLBACK(devices_changed), this);
+    notify_card_removed = g_signal_connect(gvc_control, "card-removed",
+        G_CALLBACK(devices_changed), this);
     gvc_mixer_control_open(gvc_control);
 
     auto apply_scroll = [this] (double dy, Gdk::ScrollUnit unit, bool shift_mic)
@@ -1547,19 +1628,35 @@ WayfireVolume::~WayfireVolume()
         meter_tick.disconnect();
     }
 
+    if (device_poll_tick)
+    {
+        device_poll_tick.disconnect();
+    }
+
     stop_level_probes();
     disconnect_gvc_stream_signals();
     disconnect_gvc_source_signals();
 
-    if (notify_default_sink_changed && gvc_control)
+    auto disconnect_gvc = [this] (gulong &id)
     {
-        g_signal_handler_disconnect(gvc_control, notify_default_sink_changed);
-    }
+        if (id && gvc_control)
+        {
+            g_signal_handler_disconnect(gvc_control, id);
+        }
 
-    if (notify_default_source_changed && gvc_control)
-    {
-        g_signal_handler_disconnect(gvc_control, notify_default_source_changed);
-    }
+        id = 0;
+    };
+
+    disconnect_gvc(notify_default_sink_changed);
+    disconnect_gvc(notify_default_source_changed);
+    disconnect_gvc(notify_stream_added);
+    disconnect_gvc(notify_stream_removed);
+    disconnect_gvc(notify_input_added);
+    disconnect_gvc(notify_input_removed);
+    disconnect_gvc(notify_output_added);
+    disconnect_gvc(notify_output_removed);
+    disconnect_gvc(notify_card_added);
+    disconnect_gvc(notify_card_removed);
 
     if (gvc_control)
     {
