@@ -969,19 +969,51 @@ void WayfireVolume::refresh_devices()
         }
 
         auto st = audio_backend->virtual_oss_status();
-        std::string cur_play = play_device_opt.value();
-        std::string cur_cap  = capture_device_opt.value();
-        if (cur_play.empty() && st.running)
+        /*
+         * Active selection: live Virtual OSS paths win over stale ini.
+         * (User may have switched mic; daemon is truth. Graph probes Pulse
+         * virtual_oss_rec which follows VOSS -R — dropdown must match that.)
+         */
+        std::string cur_play;
+        std::string cur_cap;
+        const bool use_voss = feat.virtual_oss && prefer_virtual_oss.value() && st.running;
+        if (use_voss && !st.play_path.empty())
         {
             cur_play = st.play_path;
+        } else
+        {
+            cur_play = play_device_opt.value();
         }
 
-        if (cur_cap.empty() && st.running)
+        if (use_voss && !st.record_path.empty())
         {
             cur_cap = st.record_path;
+        } else
+        {
+            cur_cap = capture_device_opt.value();
         }
 
-        int play_active = 0;
+        /* Keep ini in sync with live daemon so next open is not stale. */
+        if (use_voss)
+        {
+            if (!st.play_path.empty() && st.play_path != play_device_opt.value())
+            {
+                if (auto opt = WayfireShellApp::get().config.get_option("panel/volume_play_device"))
+                {
+                    opt->set_value_str(st.play_path);
+                }
+            }
+
+            if (!st.record_path.empty() && st.record_path != capture_device_opt.value())
+            {
+                if (auto opt = WayfireShellApp::get().config.get_option("panel/volume_capture_device"))
+                {
+                    opt->set_value_str(st.record_path);
+                }
+            }
+        }
+
+        int play_active = -1;
         for (size_t i = 0; i < play_devices.size(); i++)
         {
             const auto& d = play_devices[i];
@@ -992,13 +1024,14 @@ void WayfireVolume::refresh_devices()
             }
 
             play_combo.append(d.path, label);
-            if (!cur_play.empty() && (d.path == cur_play || d.id == cur_play))
+            if (!cur_play.empty() && (d.path == cur_play || d.id == cur_play ||
+                    cur_play.find(d.id) != std::string::npos))
             {
                 play_active = (int)i;
             }
         }
 
-        int cap_active = 0;
+        int cap_active = -1;
         for (size_t i = 0; i < cap_devices.size(); i++)
         {
             const auto& d = cap_devices[i];
@@ -1008,8 +1041,21 @@ void WayfireVolume::refresh_devices()
                 label += " (missing)";
             }
 
+            /* Prefer USB kind label clarity */
+            if (d.kind == "usb" ||
+                label.find("USB") != std::string::npos ||
+                label.find("Snowball") != std::string::npos ||
+                label.find("MICROPHONE") != std::string::npos)
+            {
+                if (label.find("USB") == std::string::npos && d.kind != "usb")
+                {
+                    /* leave label; kind may still be analog from description parse */
+                }
+            }
+
             cap_combo.append(d.path, label);
-            if (!cur_cap.empty() && (d.path == cur_cap || d.id == cur_cap))
+            if (!cur_cap.empty() && (d.path == cur_cap || d.id == cur_cap ||
+                    cur_cap.find(d.id) != std::string::npos))
             {
                 cap_active = (int)i;
             }
@@ -1017,12 +1063,12 @@ void WayfireVolume::refresh_devices()
 
         if (!play_devices.empty())
         {
-            play_combo.set_active(play_active);
+            play_combo.set_active(play_active >= 0 ? play_active : 0);
         }
 
         if (!cap_devices.empty())
         {
-            cap_combo.set_active(cap_active);
+            cap_combo.set_active(cap_active >= 0 ? cap_active : 0);
         }
     } catch (...)
     {

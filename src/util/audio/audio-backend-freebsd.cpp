@@ -50,7 +50,9 @@ std::string kind_from_desc(const std::string& desc)
     {
         return "hdmi";
     }
-    if (d.find("usb") != std::string::npos || d.find("uaudio") != std::string::npos)
+    if (d.find("usb") != std::string::npos || d.find("uaudio") != std::string::npos ||
+        d.find("snowball") != std::string::npos || d.find("blue microphone") != std::string::npos ||
+        d.find("webcam") != std::string::npos)
     {
         return "usb";
     }
