@@ -33,7 +33,6 @@
 class WayfireVolume : public WayfireWidget
 {
     Gtk::Image main_image;
-    Gtk::Label vol_pct_badge; /* speaker volume % only — no mic on panel */
     Gtk::Box icon_box{Gtk::Orientation::HORIZONTAL};
 
     /* Popover root */
