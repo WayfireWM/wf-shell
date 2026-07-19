@@ -1,5 +1,8 @@
 # Session control — byobu + Wayfire (for agents & UI tests)
 
+**Project:** REVYTECH, Inc. · [revytechinc/wf-shell](https://github.com/revytechinc/wf-shell)  
+Used when validating the Sound Settings UI and other panel work on a live FreeBSD seat.
+
 ## Why
 
 Grok / tools run inside **byobu (tmux)**. That session **survives** a Wayfire

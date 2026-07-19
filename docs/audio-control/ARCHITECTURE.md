@@ -1,7 +1,11 @@
 # Audio backend architecture (Factory + Builder)
 
+**Maintainer:** REVYTECH, Inc. · **Repo:** [revytechinc/wf-shell](https://github.com/revytechinc/wf-shell)  
+
 **Orientation:** FreeBSD-centric. **virtual_oss is first-class** when autodetected.  
 Pulse/PipeWire and Linux are modular add-ons — never required for the UI to open.
+
+**Status:** Implemented on branch `feature/audio-control-virtual-oss` (see [PLAN.md §15](PLAN.md#15-implementation-addendum-revytech)).
 
 ## Coding standards applied (Honcho)
 
@@ -128,8 +132,33 @@ CLI flags (`-P`/`-R`/`-C`) stay inside FreeBSD backend only.
 | `src/util/audio/audio-backend-builder.cpp` | Factory Method OS branch |
 | `src/util/audio/audio-backend-freebsd.cpp` | FreeBSD product (VOSS first-class) |
 | `src/util/audio/audio-backend-linux.cpp` | Linux product (Pulse-primary) |
-| `src/util/audio/audio-process.cpp` | Shared process helpers (no throw on fail) |
+| `src/util/audio/audio-parse.cpp` | Pure parsers (sndstat, pactl, VOSS) |
+| `src/util/audio/audio-process.cpp` | Process/FS helpers + test hooks |
+| `src/util/audio/volume-logic.hpp` | Pure volume UI helpers (no GTK) |
 | `src/util/audio/audio-backend-cli.cpp` | `wf-audio-info` smoke tool |
+| `tests/audio-backend-test.cpp` | gtest unit suite (meson `suite: audio`) |
+
+## Unit tests & coverage
+
+```sh
+# All unit suites (power, network, audio)
+meson test -C build --suite unit
+
+# Audio only (gtest + python defaults)
+meson test -C build --suite audio
+docs/audio-control/tests/run_all
+
+# Line coverage of src/util/audio/*.cpp (needs -Db_coverage=true)
+docs/audio-control/tests/coverage.sh
+```
+
+**Testability design:** pure parsers never touch the OS; backends call `detail::run_capture` /
+`path_exists` / `read_text_file`, which unit tests override via `ProcessHooks`. Factory products
+for FreeBSD, Linux, and Null are constructible on any host. Residual uncovered lines are
+typically `fork` child paths and hard OS failures (pipe/fork fail).
+
+**Not in unit coverage:** `volume.cpp` GTK glue, PeakProbe / Pulse threaded mainloop, Cairo
+meter drawing (logic extracted to `volume-logic.hpp` and fully tested).
 
 ## CLI smoke test
 

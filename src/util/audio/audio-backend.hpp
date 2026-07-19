@@ -145,4 +145,22 @@ class AudioBackendFactory
     static AudioBackendBuilder builder();
 };
 
+/**
+ * Concrete product constructors (Factory Method internals).
+ * Exposed for unit tests so each OS backend can be exercised
+ * regardless of host platform.
+ */
+namespace detail
+{
+std::unique_ptr<IAudioBackend> create_freebsd_audio_backend(const AudioBackendBuilder& b);
+std::unique_ptr<IAudioBackend> create_linux_audio_backend(const AudioBackendBuilder& b);
+std::unique_ptr<IAudioBackend> create_null_audio_backend(const AudioBackendBuilder& b);
+
+/**
+ * Override platform name used by AudioBackendBuilder::build().
+ * Pass nullptr to restore host platform. Test-only.
+ */
+void set_platform_override_for_test(const char *name);
+}
+
 } // namespace wf_audio

@@ -14,6 +14,9 @@
 #include "icon-select.hpp"
 #include "wf-popover.hpp"
 #include "wf-shell-app.hpp"
+#include "audio/volume-logic.hpp"
+
+namespace vl = wf_audio::volume_logic;
 
 #define ICON(volume) icon_from_range(volume_icons, volume)
 #define MIC_ICON(level) icon_from_range(microphone_icons, level)
@@ -363,8 +366,8 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
     }
 
     /* % relative to norm so 150% is meaningful when above 100% */
-    double frac = max_norm > 0 ? volume / max_norm : 0.0;
-    out_pct.set_text(std::to_string((int)std::lround(frac * 100)) + "%");
+    double frac = vl::volume_fraction(static_cast<double>(volume), max_norm);
+    out_pct.set_text(vl::format_volume_percent(frac) + "%");
     update_icon();
 }
 
@@ -377,8 +380,8 @@ void WayfireVolume::set_mic_volume(pa_volume_t volume, set_volume_flags_t flags)
         gvc_mixer_stream_push_volume(gvc_source);
     }
 
-    double frac = max_norm_src > 0 ? volume / max_norm_src : 0.0;
-    mic_pct.set_text(std::to_string((int)std::lround(frac * 100)) + "%");
+    double frac = vl::volume_fraction(static_cast<double>(volume), max_norm_src);
+    mic_pct.set_text(vl::format_volume_percent(frac) + "%");
     update_mic_badge();
 }
 
@@ -609,18 +612,7 @@ void WayfireVolume::on_mic_value_changed()
 
 std::string WayfireVolume::safe_graph_style(const std::string& s) const
 {
-    static const char *ok[] = {
-        "bars", "wave", "wave-fill", "mirror", "scope", "spectrum", "dots", "ribbon", nullptr
-    };
-    for (int i = 0; ok[i]; i++)
-    {
-        if (s == ok[i])
-        {
-            return s;
-        }
-    }
-
-    return "wave-fill";
+    return vl::safe_graph_style(s);
 }
 
 void WayfireVolume::fill_graph_combo(Gtk::ComboBoxText& combo, const std::string& active_id)
@@ -708,54 +700,19 @@ void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, i
         return;
     }
 
-    int n = is_output ? std::clamp(out_channels.value(), 2, 8) : 2;
-    if ((style == "spectrum") && is_output)
-    {
-        n = std::max(n * 3, 16);
-    } else if (style == "spectrum")
-    {
-        n = 12;
-    }
+    int n = vl::meter_trace_count(style, is_output, out_channels.value());
 
     /* Map peak channels onto display channels (repeat/expand as needed). */
     auto peak_for = [&] (int ch) -> double
     {
-        if (n_peaks <= 0)
-        {
-            /* No probe yet / silent — show flat zero (not fake waves). */
-            return 0.0;
-        }
-
-        int src = ch % n_peaks;
-        double p = std::clamp((double)peaks[src], 0.0, 1.0);
-        /* Soft boost so quiet content is still visible */
-        p = std::min(1.0, p * 1.35);
-        return p;
+        return vl::peak_for_channel(peaks, n_peaks, ch);
     };
 
     double t = g_get_monotonic_time() / 1e6;
 
     auto level_color = [&] (double amp, double& r, double& g, double& b)
     {
-        r = 0.53;
-        g = 0.89;
-        b = 0.63;
-        if (amp > 0.88)
-        {
-            r = 0.95;
-            g = 0.55;
-            b = 0.66;
-        } else if (amp > 0.65)
-        {
-            r = 0.98;
-            g = 0.89;
-            b = 0.69;
-        } else if (is_output)
-        {
-            r = 0.54;
-            g = 0.71;
-            b = 0.98;
-        }
+        vl::level_color(amp, is_output, r, g, b);
     };
 
     if ((style == "bars") || (style == "spectrum"))
@@ -893,24 +850,6 @@ bool WayfireVolume::on_meter_tick()
     return true;
 }
 
-namespace
-{
-std::string device_list_fingerprint(const std::vector<wf_audio::AudioDevice>& devs)
-{
-    std::string fp;
-    for (const auto& d : devs)
-    {
-        fp += d.path;
-        fp += '\x1f';
-        fp += d.description;
-        fp += '\x1f';
-        fp += d.path_ok ? '1' : '0';
-        fp += '\x1e';
-    }
-    return fp;
-}
-}
-
 void WayfireVolume::refresh_voss_strip()
 {
     if (!audio_backend)
@@ -949,7 +888,7 @@ void WayfireVolume::refresh_voss_strip()
             std::to_string(st.sample_rate) + " Hz · " +
             std::to_string(st.bits) + "-bit · " +
             std::to_string(st.channels) + " ch";
-        std::string fp = live + "|" + play + "|" + cap + "|" + fmt;
+        std::string fp = vl::voss_strip_fingerprint(true, st, live + "|" + play + "|" + cap + "|" + fmt);
         if (fp == voss_strip_fp && voss_section.get_visible())
         {
             return; /* avoid label flicker */
@@ -1038,8 +977,8 @@ void WayfireVolume::refresh_devices()
             }
         }
 
-        const std::string play_fp = device_list_fingerprint(new_play);
-        const std::string cap_fp  = device_list_fingerprint(new_cap);
+        const std::string play_fp = vl::device_list_fingerprint(new_play);
+        const std::string cap_fp  = vl::device_list_fingerprint(new_cap);
         const bool play_list_changed = (play_fp != play_list_fp);
         const bool cap_list_changed  = (cap_fp != cap_list_fp);
         const bool play_sel_changed  = (cur_play != play_active_fp);

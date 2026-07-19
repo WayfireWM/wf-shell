@@ -31,3 +31,30 @@ test(
     test_exec_network,
     suite: 'unit',
 )
+
+# Full audio backend + pure parse + volume-logic coverage
+test_exec_audio = executable(
+    'audio-backend-test',
+    'audio-backend-test.cpp',
+    dependencies: [gtest_dep, libutil],
+    include_directories: test_includes,
+    link_with: util,
+)
+
+test(
+    'audio-backend-test',
+    test_exec_audio,
+    suite: ['unit', 'audio'],
+)
+
+# Docs / config red-green (python)
+py3 = find_program('python3')
+audio_defaults_py = join_paths(meson.current_source_dir(),
+    '..', 'docs', 'audio-control', 'tests', 'test_defaults.py')
+test(
+    'audio-defaults-py',
+    py3,
+    args: [audio_defaults_py],
+    suite: ['audio', 'docs'],
+    workdir: join_paths(meson.current_source_dir(), '..'),
+)

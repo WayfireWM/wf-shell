@@ -1,19 +1,47 @@
 #include "audio-process.hpp"
 
 #include <array>
-#include <cerrno>
 #include <cstdio>
-#include <cstring>
+#include <fstream>
+#include <sstream>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <fcntl.h>
 
 namespace wf_audio
 {
 namespace detail
 {
 
-bool run_capture(const std::vector<std::string>& argv, std::string& out, int& exit_code)
+static ProcessHooks g_hooks;
+
+ProcessHooks& process_hooks()
+{
+    return g_hooks;
+}
+
+void reset_process_hooks()
+{
+    g_hooks = ProcessHooks{};
+}
+
+bool path_exists_real(const std::string& path)
+{
+    return access(path.c_str(), F_OK) == 0;
+}
+
+std::string read_text_file_real(const std::string& path)
+{
+    std::ifstream in(path);
+    if (!in)
+    {
+        return {};
+    }
+    std::ostringstream ss;
+    ss << in.rdbuf();
+    return ss.str();
+}
+
+bool run_capture_real(const std::vector<std::string>& argv, std::string& out, int& exit_code)
 {
     out.clear();
     exit_code = -1;
@@ -73,6 +101,33 @@ bool run_capture(const std::vector<std::string>& argv, std::string& out, int& ex
         exit_code = WEXITSTATUS(status);
     }
     return true;
+}
+
+bool run_capture(const std::vector<std::string>& argv, std::string& out, int& exit_code)
+{
+    if (g_hooks.run_capture)
+    {
+        return g_hooks.run_capture(argv, out, exit_code);
+    }
+    return run_capture_real(argv, out, exit_code);
+}
+
+bool path_exists(const std::string& path)
+{
+    if (g_hooks.path_exists)
+    {
+        return g_hooks.path_exists(path);
+    }
+    return path_exists_real(path);
+}
+
+std::string read_text_file(const std::string& path)
+{
+    if (g_hooks.read_text_file)
+    {
+        return g_hooks.read_text_file(path);
+    }
+    return read_text_file_real(path);
 }
 
 std::vector<std::string> split_lines(const std::string& s)

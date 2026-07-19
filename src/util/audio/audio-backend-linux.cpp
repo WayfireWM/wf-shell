@@ -1,13 +1,14 @@
 /*
  * Linux audio backend — Pulse-oriented; virtual_oss optional if present.
+ * Parsing is pure (audio-parse); I/O goes through process hooks.
  */
 
 #include "audio-backend.hpp"
+#include "audio-parse.hpp"
 #include "audio-process.hpp"
 
 #include <memory>
-#include <sstream>
-#include <unistd.h>
+#include <utility>
 
 namespace wf_audio
 {
@@ -16,33 +17,6 @@ namespace detail
 
 namespace
 {
-
-std::vector<AudioDevice> parse_pactl_short(const std::string& text, const std::string& kind)
-{
-    std::vector<AudioDevice> devices;
-    for (const auto& line : split_lines(text))
-    {
-        if (line.empty())
-        {
-            continue;
-        }
-        std::istringstream iss(line);
-        std::string idx, name;
-        if (!(iss >> idx >> name))
-        {
-            continue;
-        }
-        AudioDevice d;
-        d.id          = name;
-        d.path        = name;
-        d.description = name;
-        d.kind        = kind;
-        d.capability  = (kind == "pulse-source") ? DeviceCapability::Record :
-                        DeviceCapability::Play;
-        devices.push_back(std::move(d));
-    }
-    return devices;
-}
 
 class LinuxAudioBackend : public IAudioBackend
 {
@@ -55,48 +29,30 @@ class LinuxAudioBackend : public IAudioBackend
         return "linux";
     }
 
-    /**
-     * Autodetect Linux stack. Pulse is primary; virtual_oss is rare/optional.
-     * Nothing installed → all false — UI degrades, does not crash.
-     */
     AudioStackFeatures features() override
     {
+        /* Fail-soft via empty lists / available=false — never throw. */
         AudioStackFeatures f;
         f.hw_default_unit = false;
-        try
+        auto outs = list_logical_outputs();
+        auto ins  = list_logical_inputs(false);
+        f.logical_io       = !outs.empty() || !ins.empty();
+        f.physical_devices = f.logical_io;
+        if (opts_.prefer_virtual_oss())
         {
-            auto outs = list_logical_outputs();
-            auto ins  = list_logical_inputs(false);
-            f.logical_io       = !outs.empty() || !ins.empty();
-            f.physical_devices = f.logical_io; /* ALSA surfaces via Pulse here */
-        } catch (...)
-        {
-            f.logical_io       = false;
-            f.physical_devices = false;
-        }
-        try
-        {
-            if (opts_.prefer_virtual_oss())
+            auto st = virtual_oss_status();
+            f.virtual_oss = st.available;
+            if (f.virtual_oss)
             {
-                auto st = virtual_oss_status();
-                f.virtual_oss = st.available;
-                if (f.virtual_oss)
-                {
-                    f.virtual_oss_label = "Virtual OSS";
-                    f.mix_channels      = st.running;
-                }
+                f.virtual_oss_label = "Virtual OSS";
+                f.mix_channels      = st.running;
             }
-        } catch (...)
-        {
-            f.virtual_oss  = false;
-            f.mix_channels = false;
         }
         return f;
     }
 
     std::vector<AudioDevice> list_playback_devices() override
     {
-        /* Prefer Pulse sinks as "devices" on Linux; physical ALSA is via Pulse. */
         return list_logical_outputs();
     }
 
@@ -124,27 +80,14 @@ class LinuxAudioBackend : public IAudioBackend
         {
             return {};
         }
-        auto devs = parse_pactl_short(out, "pulse-source");
-        if (include_monitors)
-        {
-            return devs;
-        }
-        std::vector<AudioDevice> filtered;
-        for (auto& d : devs)
-        {
-            if (d.id.find(".monitor") == std::string::npos)
-            {
-                filtered.push_back(std::move(d));
-            }
-        }
-        return filtered;
+        return filter_monitors(parse_pactl_short(out, "pulse-source"), include_monitors);
     }
 
     VirtualOssStatus virtual_oss_status() override
     {
         VirtualOssStatus st;
         st.control_device = opts_.control_device();
-        st.available = (access(st.control_device.c_str(), F_OK) == 0);
+        st.available = path_exists(st.control_device);
         if (!st.available)
         {
             return st;
@@ -152,7 +95,7 @@ class LinuxAudioBackend : public IAudioBackend
         std::string out;
         int code = 0;
         if (run_capture({opts_.virtual_oss_cmd_binary(), st.control_device}, out, code) &&
-            out.find("Output device") != std::string::npos)
+            virtual_oss_status_looks_valid(out))
         {
             st.running = true;
         }
@@ -161,7 +104,6 @@ class LinuxAudioBackend : public IAudioBackend
 
     OpResult set_playback_device(const std::string& device_path) override
     {
-        /* On Linux default path: treat as Pulse sink name */
         return set_default_logical_output(device_path);
     }
 

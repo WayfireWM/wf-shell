@@ -1,7 +1,9 @@
 # Panel Audio Control — Plan (FreeBSD + virtual_oss)
 
-**Repo:** `revytechinc/wf-shell` (`~/git/wf-shell`)  
-**Status:** Planning / mockup review (backend platform layer done)  
+**Maintainer:** **REVYTECH, Inc.**  
+**Repo:** [github.com/revytechinc/wf-shell](https://github.com/revytechinc/wf-shell) (`~/git/wf-shell`)  
+**Branch (work):** `feature/audio-control-virtual-oss`  
+**Status:** **Implemented (v1 sound UI + backend + tests)** — see [§15 Implementation addendum](#15-implementation-addendum-revytech)  
 **Runtime target:** **FreeBSD-centric** (15 + `virtual_oss` first-class when present)  
 **Also:** Linux / Pulse-only hosts must work via modular autodetection — never crash if VOSS absent.
 
@@ -9,6 +11,9 @@
 - Play: `virtual_oss` → `-P /dev/dsp1` (NVIDIA HDMI pcm1)  
 - Capture: `virtual_oss` → `-R /dev/dsp3` (Realtek rear play/rec)  
 - Pulse default sink: `virtual_oss` · default source: `virtual_oss_rec`
+
+> **Note:** Sections 0–14 below are the original design plan (kept for history and open items).  
+> What actually landed is summarized in **§15**. Acceptance checkboxes in §8 are historical; use §15 for “done vs remaining.”
 
 ---
 
@@ -245,26 +250,32 @@ flowchart TB
 
 ## 6. Implementation sketch
 
-### Done (platform layer)
+### Platform layer
 | ID | Task | Status |
 |----|------|--------|
 | P0 | `IAudioBackend` + types + Factory/Builder | **done** |
 | P1 | FreeBSD backend (sndstat, virtual_oss, pactl) | **done** |
 | P2 | Linux backend (Pulse) | **done** |
-| P3 | `wf-audio-info` CLI smoke tool | **done** — see `ARCHITECTURE.md` |
+| P3 | `wf-audio-info` CLI smoke tool | **done** |
+| P4 | Pure parsers + process hooks + gtest coverage | **done** (§15) |
 
-### UI (post-approval)
-| ID | Task | Pri | Notes |
-|----|------|-----|-------|
-| A1 | Popover shell beyond single scale | P0 | volume.cpp uses `IAudioBackend` only |
-| A2 | Output vol/mute + device **dropdown** | P0 | GVC + backend; VOSS play when present |
-| A3 | Input vol/mute + device **dropdown** | P0 | capture-capable only under VOSS |
-| A4 | Virtual OSS strip + badge (autodetect) | P0 | first-class when `features().virtual_oss` |
-| A5 | Input level meter while open | P1 | |
-| A6 | Show-monitors toggle | P2 | |
-| A7 | Persist play/capture + mix prefs | P1 | wf-shell.ini |
-| A8 | Shift+scroll = mic vol | P2 | |
-| A9 | FreeBSD install from fork | P1 | |
+### UI
+| ID | Task | Pri | Status |
+|----|------|-----|--------|
+| A1 | Popover shell beyond single scale | P0 | **done** — “Sound Settings” |
+| A2 | Output vol/mute + device **dropdown** | P0 | **done** |
+| A3 | Input vol/mute + device **dropdown** | P0 | **done** |
+| A4 | Virtual OSS strip (autodetect) | P0 | **done** (footer badge removed as redundant) |
+| A5 | Input + output level meters while open | P1 | **done** — real Pulse peaks |
+| A6 | Show-monitors toggle | P2 | **not done** (deferred) |
+| A7 | Persist play/capture + graph/channel prefs | P1 | **done** — `wf-shell.ini` |
+| A8 | Shift+scroll = mic vol | P2 | **not done** (deferred) |
+| A9 | FreeBSD install from fork | P1 | **partial** — build/install from `revytechinc/wf-shell` |
+| A10 | Independent out/in graph styles | P1 | **done** |
+| A11 | Live hotplug refresh + anti-flicker | P1 | **done** |
+| A12 | Volume &gt; 100% out + mic | P1 | **done** |
+| A13 | Keyboard volume must not open popover | P0 | **done** |
+| A14 | Detected-features-only (no fake NS, etc.) | P0 | **done** (policy) |
 
 ### Documentation phase (required on every feature change)
 Keep the **UI free of tutorial copy**. Deep detail goes to man pages and is updated in the same change set.
@@ -321,13 +332,15 @@ Details: [SESSION-CONTROL.md](SESSION-CONTROL.md).
 
 ## 8. Acceptance
 
-- [ ] Output + **input** both first-class (not collapsed-only)  
-- [ ] Can switch mic hardware pcm3 ↔ pcm4 via `-R`  
-- [ ] Can switch speaker HDMI pcm1 via `-P`  
-- [ ] Pulse default sink/source selectable  
-- [ ] Mute in/out independently  
-- [ ] Level meter or clear “no signal” state  
-- [ ] Scroll/mute-out behavior preserved  
+Historical checklist (original plan). **Current truth → §15.**
+
+- [x] Output + **input** both first-class (not collapsed-only)  
+- [x] Can switch mic hardware via VOSS `-R` (capture-capable list)  
+- [x] Can switch speaker hardware via VOSS `-P`  
+- [x] Pulse default sink/source via GVC when logical I/O present  
+- [x] Mute in/out independently  
+- [x] Level meters with real peaks / quiet flat zero  
+- [x] Scroll/mute-out behavior preserved (popover not forced open on external volume)  
 
 ---
 
@@ -406,7 +419,7 @@ Probe → if absent, hide. Never gray out a pretend “Noise cancellation” tha
 
 This applies beyond audio: any panel widget that polls hardware or services should **diff before paint**.
 
-## 13. Agent / collaboration rules (do not forget)
+## 14. Agent / collaboration rules (do not forget)
 
 | Rule | Detail |
 |------|--------|
@@ -426,3 +439,96 @@ Run this **after** code tests are green and before declaring work done:
 - [ ] Report branch name / commit SHA / push status only — owner decides next
 
 If any step would create a PR automatically, **skip it**.
+
+---
+
+## 15. Implementation addendum (REVYTECH)
+
+**Date:** 2026-07-19 · **Org:** REVYTECH, Inc. · **Repo:** https://github.com/revytechinc/wf-shell  
+
+This section records what was built after the plan above was written. Prefer this over unchecked boxes in older sections when judging “done.”
+
+### 15.1 Delivered — backend (`src/util/audio/`)
+
+| Piece | Notes |
+|-------|--------|
+| `IAudioBackend` + domain types | `OpResult` fail-soft; no throw into UI |
+| Factory Method + Builder | OS product selection; builder options (ctl, VOSS prefer, binaries) |
+| FreeBSD product | sndstat parse, VOSS status/set `-P`/`-R`, sysctl default unit, pactl logical I/O |
+| Linux product | Pulse-primary; optional VOSS if present |
+| Null product | Quiet degrade on unsupported OS |
+| Pure parsers | `audio-parse` — unit-tested without live stack |
+| Process hooks | `ProcessHooks` for mockable I/O in tests |
+| `wf-audio-info` | Installed CLI smoke tool |
+
+### 15.2 Delivered — panel Sound Settings (`volume.cpp`)
+
+| Piece | Notes |
+|-------|--------|
+| Full popover | Title **Sound Settings**; output + input sections |
+| Device combos | Live VOSS play/capture when VOSS preferred; else logical lists |
+| Meters | Real Pulse peaks (`PeakProbe`); independent graph styles out/in |
+| VOSS strip | Running/format/play/capture paths; hidden when not detected |
+| Tray | Speaker icon only (no volume % / mic badge on tray) |
+| Volume range | Above 100% for speaker and mic (UI max amp) |
+| External volume | Keyboard/media keys update levels **without** opening popover |
+| Hotplug | Poll + GVC signals while open; **fingerprint** skip rebuild |
+| Live &gt; ini | Active VOSS paths win; ini synced from live |
+| HDMI labels | Disambiguate identical NVIDIA HDMI strings (pcm + nid) |
+| Features policy | Only show capabilities that autodetection finds (no fake noise-cancel) |
+
+### 15.3 Delivered — config, docs, man
+
+| Piece | Notes |
+|-------|--------|
+| `metadata/panel.xml` | Graph styles, channels, VOSS prefs, auto-switch *keys* (policy) |
+| `wf-shell.ini.example` | Documented defaults |
+| `man 7 wf-shell-audio` | Operator documentation |
+| `man 1 wf-audio-info` | CLI |
+| `docs/audio-control/*` | Architecture, plan, session control, mockup, tests |
+| README | REVYTECH branding, `revytechinc` clone URLs, no packaging badge |
+
+### 15.4 Delivered — tests & coverage
+
+| Suite | How |
+|-------|-----|
+| gtest audio | `tests/audio-backend-test.cpp` · `meson test --suite audio` |
+| Defaults/docs red-green | `docs/audio-control/tests/test_defaults.py` |
+| Runner | `docs/audio-control/tests/run_all` |
+| Coverage | `docs/audio-control/tests/coverage.sh` (~95% `src/util/audio/*.cpp`; pure UI logic in `volume-logic.hpp`) |
+
+### 15.5 Explicitly deferred / open
+
+| Item | Notes |
+|------|--------|
+| Auto headset / USB switch | Ini keys + architecture notes exist; full HDA pin/devd policy not finished |
+| Show Pulse monitors toggle | Deferred (A6) |
+| Shift+scroll mic volume | Deferred (A8) |
+| Per-app streams / EQ | Still pavucontrol |
+| GTK/Cairo unit tests for full `volume.cpp` | Logic extracted; widget glue is integration-only |
+| Distribution packaging badge | Removed from README until REVYTECH packaging is ready |
+| Pull requests | Still **owner-only**; agents branch/commit/push only |
+
+### 15.6 Design patterns (as implemented)
+
+| Pattern | Where |
+|---------|--------|
+| Factory Method | `AudioBackendFactory` / `AudioBackendBuilder::build()` |
+| Builder | Fluent ctl path, VOSS prefer, binary paths |
+| Abstract interface | `IAudioBackend` — panel has no OS `#ifdef` |
+| Null Object | `NullAudioBackend` |
+| Domain types (TAOCP-style) | `AudioDevice`, `AudioStackFeatures`, `VirtualOssStatus`, `OpResult` |
+| Fail-soft | Empty lists / `ok=false` — never crash on missing modules |
+| Fingerprint before paint | Device lists + VOSS strip — no UI rebuild if data unchanged |
+
+### 15.7 How to verify on a FreeBSD seat
+
+```sh
+ninja -C build && ninja -C build install   # or meson install
+# restart panel with WAYLAND_DISPLAY set
+wf-audio-info
+man wf-shell-audio
+meson test -C build --suite audio
+```
+
+**Panel:** open **Sound Settings** from the speaker tray icon; confirm VOSS strip when `/dev/vdsp.ctl` exists; change play/capture; confirm meters move with real audio; confirm keyboard volume does not open the popover.

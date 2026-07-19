@@ -15,6 +15,24 @@
 
 namespace wf_audio
 {
+namespace detail
+{
+static const char *g_platform_override = nullptr;
+
+void set_platform_override_for_test(const char *name)
+{
+    g_platform_override = name;
+}
+
+static const char *effective_platform()
+{
+    if (g_platform_override)
+    {
+        return g_platform_override;
+    }
+    return wf_platform_name();
+}
+} // namespace detail
 
 /* --- Builder --- */
 
@@ -42,17 +60,9 @@ AudioBackendBuilder& AudioBackendBuilder::virtual_oss_cmd_binary(std::string pat
     return *this;
 }
 
-/* Concrete backends implemented in audio-backend-freebsd.cpp / linux.cpp */
-namespace detail
-{
-std::unique_ptr<IAudioBackend> create_freebsd_audio_backend(const AudioBackendBuilder& b);
-std::unique_ptr<IAudioBackend> create_linux_audio_backend(const AudioBackendBuilder& b);
-std::unique_ptr<IAudioBackend> create_null_audio_backend(const AudioBackendBuilder& b);
-}
-
 std::unique_ptr<IAudioBackend> AudioBackendBuilder::build() const
 {
-    const char *plat = wf_platform_name();
+    const char *plat = detail::effective_platform();
     if (plat && std::string(plat) == "freebsd")
     {
         return detail::create_freebsd_audio_backend(*this);

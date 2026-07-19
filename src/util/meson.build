@@ -27,6 +27,7 @@ util = static_library(
         'power-controller-bsd.cpp',
         # Audio backend (Factory + Builder, OS-specific products)
         'audio/audio-process.cpp',
+        'audio/audio-parse.cpp',
         'audio/audio-backend-builder.cpp',
         'audio/audio-backend-freebsd.cpp',
         'audio/audio-backend-linux.cpp',
