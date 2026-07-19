@@ -4,11 +4,7 @@
 
 #include "window-list.hpp"
 
-#ifdef HAVE_DMABUF
-    #include <fcntl.h>
-#endif // HAVE_DMABUF
-
-#define DEFAULT_SIZE_PC 0.1
+#include <fcntl.h>
 
 static void handle_manager_toplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager,
     zwlr_foreign_toplevel_handle_v1 *toplevel)
@@ -28,7 +24,115 @@ zwlr_foreign_toplevel_manager_v1_listener toplevel_manager_v1_impl = {
     .finished = handle_manager_finished,
 };
 
-#ifdef HAVE_DMABUF
+/* Toplevel Callbacks */
+
+static void toplevel_handle_closed(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    for (auto & toplevel : window_list->toplevels)
+    {
+        if (!toplevel.second)
+        {
+            continue;
+        }
+
+        if (toplevel.second->get_ext_handle() == handle)
+        {
+            toplevel.second->set_ext_handle(NULL);
+            break;
+        }
+    }
+
+    ext_foreign_toplevel_handle_v1_destroy(handle);
+    window_list->list_toplevels.erase(handle);
+}
+
+static void toplevel_handle_done(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+
+    for (auto & toplevel : window_list->toplevels)
+    {
+        if (!toplevel.second)
+        {
+            continue;
+        }
+
+        auto wf_id = window_list->get_view_id_from_full_app_id(toplevel.second->get_app_id());
+        for (auto & list_toplevel : window_list->list_toplevels)
+        {
+            if (!list_toplevel.second)
+            {
+                continue;
+            }
+
+            auto id = window_list->get_view_id_from_full_app_id(list_toplevel.second->app_id);
+            if (wf_id == id)
+            {
+                toplevel.second->set_ext_handle(list_toplevel.first);
+                break;
+            }
+        }
+    }
+}
+
+static void toplevel_handle_title(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle,
+    const char *title)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    window_list->list_toplevels[handle]->title = title;
+}
+
+static void toplevel_handle_app_id(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle,
+    const char *app_id)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    window_list->list_toplevels[handle]->app_id = app_id;
+}
+
+static void toplevel_handle_identifier(void *data,
+    struct ext_foreign_toplevel_handle_v1 *handle,
+    const char *identifier)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    window_list->list_toplevels[handle]->identifier = identifier;
+}
+
+ext_foreign_toplevel_handle_v1_listener toplevels_listener =
+{
+    .closed = toplevel_handle_closed,
+    .done   = toplevel_handle_done,
+    .title  = toplevel_handle_title,
+    .app_id = toplevel_handle_app_id,
+    .identifier = toplevel_handle_identifier,
+};
+
+/* Static callbacks for toplevel list object */
+static void handle_toplevel(void *data,
+    struct ext_foreign_toplevel_list_v1 *list,
+    struct ext_foreign_toplevel_handle_v1 *handle)
+{
+    WayfireWindowList *window_list = (WayfireWindowList*)data;
+    window_list->list_toplevels[handle] = std::make_unique<WayfireListToplevel>();
+    ext_foreign_toplevel_handle_v1_add_listener(handle, &toplevels_listener, window_list);
+}
+
+static void handle_finished(void *data,
+    struct ext_foreign_toplevel_list_v1 *list)
+{
+    ext_foreign_toplevel_list_v1_stop(list);
+    ext_foreign_toplevel_list_v1_destroy(list);
+}
+
+ext_foreign_toplevel_list_v1_listener toplevel_list_v1_impl = {
+    .toplevel = handle_toplevel,
+    .finished = handle_finished,
+};
+
 static void dmabuf_feedback_done(void *data, struct zwp_linux_dmabuf_feedback_v1 *feedback)
 {
     WayfireWindowList *window_list = (WayfireWindowList*)data;
@@ -57,8 +161,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
     if (drmGetDeviceFromDevId(dev_id, 0, &dev) != 0)
     {
         perror("Failed to get DRM device from dev id");
-        std::cerr << "Trying shm" << std::endl;
-        window_list->live_previews_dmabuf = false;
         return;
     }
 
@@ -74,8 +176,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
     if (drm_fd < 0)
     {
         perror("Failed to open drm device");
-        std::cerr << "Trying shm" << std::endl;
-        window_list->live_previews_dmabuf = false;
         return;
     }
 
@@ -84,8 +184,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
     {
         close(drm_fd);
         perror("Failed to create gbm device");
-        std::cerr << "Trying shm" << std::endl;
-        window_list->live_previews_dmabuf = false;
         return;
     }
 
@@ -119,17 +217,13 @@ static const struct zwp_linux_dmabuf_feedback_v1_listener dmabuf_feedback_listen
     .tranche_formats = dmabuf_feedback_tranche_formats,
     .tranche_flags   = dmabuf_feedback_tranche_flags,
 };
-#endif // HAVE_DMABUF
 
 static void registry_add_object(void *data, wl_registry *registry, uint32_t name,
     const char *interface, uint32_t version)
 {
     WayfireWindowList *window_list = (WayfireWindowList*)data;
 
-    if (strcmp(interface, wl_shm_interface.name) == 0)
-    {
-        window_list->shm = (wl_shm*)wl_registry_bind(registry, name, &wl_shm_interface, version);
-    } else if (strcmp(interface, zwlr_foreign_toplevel_manager_v1_interface.name) == 0)
+    if (strcmp(interface, zwlr_foreign_toplevel_manager_v1_interface.name) == 0)
     {
         auto zwlr_toplevel_manager = (zwlr_foreign_toplevel_manager_v1*)
             wl_registry_bind(registry, name,
@@ -138,16 +232,27 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
         window_list->handle_toplevel_manager(zwlr_toplevel_manager);
         zwlr_foreign_toplevel_manager_v1_add_listener(window_list->manager,
             &toplevel_manager_v1_impl, window_list);
-        wl_display_roundtrip(window_list->display);
-    } else if (strcmp(interface, zwlr_screencopy_manager_v1_interface.name) == 0)
+    } else if (strcmp(interface, ext_foreign_toplevel_list_v1_interface.name) == 0)
     {
-        window_list->screencopy_manager = (zwlr_screencopy_manager_v1*)wl_registry_bind(registry, name,
-            &zwlr_screencopy_manager_v1_interface,
+        auto foreign_toplevel_list = (ext_foreign_toplevel_list_v1*)
+            wl_registry_bind(registry, name,
+            &ext_foreign_toplevel_list_v1_interface,
             version);
-    }
-
-#ifdef HAVE_DMABUF
-    else if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0)
+        window_list->foreign_toplevel_list = foreign_toplevel_list;
+        ext_foreign_toplevel_list_v1_add_listener(foreign_toplevel_list,
+            &toplevel_list_v1_impl, window_list);
+    } else if (strcmp(interface, ext_image_copy_capture_manager_v1_interface.name) == 0)
+    {
+        auto copy_capture_manager = (ext_image_copy_capture_manager_v1*)wl_registry_bind(registry, name,
+            &ext_image_copy_capture_manager_v1_interface, version);
+        window_list->copy_capture_manager = copy_capture_manager;
+    } else if (strcmp(interface, ext_foreign_toplevel_image_capture_source_manager_v1_interface.name) == 0)
+    {
+        auto toplevel_capture_manager =
+            (ext_foreign_toplevel_image_capture_source_manager_v1*)wl_registry_bind(registry, name,
+                &ext_foreign_toplevel_image_capture_source_manager_v1_interface, version);
+        window_list->toplevel_capture_manager = toplevel_capture_manager;
+    } else if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0)
     {
         window_list->dmabuf = (zwp_linux_dmabuf_v1*)wl_registry_bind(registry, name,
             &zwp_linux_dmabuf_v1_interface, version);
@@ -158,7 +263,6 @@ static void registry_add_object(void *data, wl_registry *registry, uint32_t name
                 window_list);
         }
     }
-#endif // HAVE_DMABUF
 }
 
 static void registry_remove_object(void *data, struct wl_registry *registry, uint32_t name)
@@ -170,107 +274,65 @@ static struct wl_registry_listener registry_listener =
     &registry_remove_object
 };
 
-void WayfireWindowList::live_window_previews_plugin_check()
+uint64_t WayfireWindowList::get_view_id_from_full_app_id(const std::string& app_id)
 {
-    wf::json_t ipc_methods_request;
-    ipc_methods_request["method"] = "list-methods";
-    this->ipc_client->send(ipc_methods_request.serialize(), [=] (wf::json_t data)
-    {
-        if (data.serialize().find(
-            "error") != std::string::npos)
-        {
-            std::cerr << "Error getting ipc methods list! (are ipc and ipc-rules plugins loaded?)" << std::endl;
-            this->enable_normal_tooltips_flag(true);
-            return;
-        }
+    const std::string sub_str = "wf-ipc-";
+    size_t pos = app_id.find(sub_str);
 
-        if ((data.serialize().find("live_previews/request_stream") == std::string::npos) ||
-            (data.serialize().find(
-                "live_previews/release_output") == std::string::npos))
+    if (pos != std::string::npos)
+    {
+        size_t suffix_start_index = pos + sub_str.length();
+        if (suffix_start_index < app_id.length())
         {
-            std::cerr << "Did not find live-previews ipc methods in methods list. Disabling live window preview tooltips. (is the live-previews plugin enabled?)" << std::endl;
-            this->enable_normal_tooltips_flag(
-                true);
+            try {
+                uint64_t view_id = std::stoi(app_id.substr(suffix_start_index, std::string::npos));
+                return view_id;
+            } catch (...)
+            {
+                return 0;
+            }
         } else
         {
-            if (!this->live_window_previews_opt)
-            {
-                std::cout << "Detected live-previews plugin is enabled but wf-shell configuration [panel] option 'live_window_previews' is set to 'false'." << std::endl;
-                this->enable_normal_tooltips_flag(
-                    true);
-            } else
-            {
-                std::cout << "Enabling live window preview tooltips using " <<
-                    std::string(live_previews_dmabuf ? "dmabuf" : "shm") <<
-                    " transfers on output " << this->output->monitor->get_connector() <<
-                    std::endl;
-                this->enable_normal_tooltips_flag(false);
-            }
+            return 0;
         }
-    });
-}
-
-void WayfireWindowList::enable_ipc(bool enable)
-{
-    if (!this->ipc_client)
+    } else
     {
-        this->ipc_client = WayfirePanelApp::get().get_ipc_server_instance()->create_client();
+        return 0;
     }
-
-    if (!this->ipc_client)
-    {
-        std::cerr <<
-            "Failed to connect to ipc. Live window previews will not be available. (are ipc and ipc-rules plugins loaded?)";
-    }
-}
-
-void WayfireWindowList::enable_normal_tooltips_flag(bool enable)
-{
-    this->normal_title_tooltips = enable;
-    this->live_window_preview_tooltips = !enable;
-}
-
-bool WayfireWindowList::live_window_previews_enabled()
-{
-    return this->live_window_previews_opt && this->live_window_preview_tooltips && this->ipc_client;
 }
 
 void WayfireWindowList::init(Gtk::Box *container)
 {
-    enable_ipc(this->live_window_previews_opt);
-    live_window_previews_plugin_check();
-
-    this->live_window_previews_opt.set_callback([=] ()
-    {
-        enable_ipc(this->live_window_previews_opt);
-        live_window_previews_plugin_check();
-    });
-
     auto gdk_display = gdk_display_get_default();
     auto display     = gdk_wayland_display_get_wl_display(gdk_display);
 
     this->display = display;
 
-    wl_registry *registry = wl_display_get_registry(display);
+    registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
-
-    wl_registry_destroy(registry);
 
     if (!this->manager)
     {
         std::cerr << "Compositor doesn't support" <<
-            " wlr-foreign-toplevel-management." <<
-            "The window-list widget will not be initialized." << std::endl;
-        wl_registry_destroy(registry);
+            " wlr-foreign-toplevel-management." << std::endl;
+        std::cerr << "The window-list widget will not be initialized." << std::endl;
         return;
     }
 
-#ifdef HAVE_DMABUF
-    this->live_previews_dmabuf = this->dmabuf ? true : false;
-#else
-    this->live_previews_dmabuf = false;
-#endif // HAVE_DMABUF
+    if (!this->foreign_toplevel_list)
+    {
+        std::cerr << "Compositor doesn't support" <<
+            " ext-foreign-toplevel-list-v1." << std::endl;
+        std::cerr << "Live window previews cannot be enabled." << std::endl;
+    }
+
+    if (!this->toplevel_capture_manager)
+    {
+        std::cerr << "Compositor doesn't support" <<
+            " ext-foreign-toplevel-image-copy-capture-v1." << std::endl;
+        std::cerr << "Live window previews cannot be enabled." << std::endl;
+    }
 
     scrolled_window.add_css_class("window-list");
 
@@ -386,18 +448,15 @@ void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1
     this->manager = manager;
 }
 
-void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *handle)
+void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
-    toplevels[handle] = std::unique_ptr<WayfireToplevel>(new WayfireToplevel(this, handle));
+    toplevels[toplevel] = std::make_unique<WayfireToplevel>(this, toplevel);
 }
 
-void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *handle)
+void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
-    toplevels.erase(handle);
+    toplevels.erase(toplevel);
 }
-
-void WayfireWindowList::on_event(wf::json_t data)
-{}
 
 WayfireWindowList::WayfireWindowList(WayfireOutput *output)
 {
@@ -418,10 +477,35 @@ WayfireWindowList::~WayfireWindowList()
      * when the window-list widget is unloaded. */
     toplevels.clear();
 
-    wl_shm_destroy(this->shm);
-    zwlr_foreign_toplevel_manager_v1_destroy(this->manager);
-    zwlr_screencopy_manager_v1_destroy(this->screencopy_manager);
-#ifdef HAVE_DMABUF
+    for (auto & list_toplevel : list_toplevels)
+    {
+        ext_foreign_toplevel_handle_v1_destroy(list_toplevel.first);
+    }
+
+    list_toplevels.clear();
+
+    wl_registry_destroy(registry);
+
+    if (this->manager)
+    {
+        zwlr_foreign_toplevel_manager_v1_destroy(this->manager);
+    }
+
+    if (this->foreign_toplevel_list)
+    {
+        ext_foreign_toplevel_list_v1_destroy(this->foreign_toplevel_list);
+    }
+
+    if (this->copy_capture_manager)
+    {
+        ext_image_copy_capture_manager_v1_destroy(this->copy_capture_manager);
+    }
+
+    if (this->toplevel_capture_manager)
+    {
+        ext_foreign_toplevel_image_capture_source_manager_v1_destroy(this->toplevel_capture_manager);
+    }
+
     if (this->dmabuf)
     {
         zwp_linux_dmabuf_v1_destroy(this->dmabuf);
@@ -436,6 +520,4 @@ WayfireWindowList::~WayfireWindowList()
     {
         gbm_device_destroy(this->dmabuf_device);
     }
-
-#endif
 }

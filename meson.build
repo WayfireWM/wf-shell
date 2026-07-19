@@ -41,8 +41,8 @@ dbusmenu_gtk = dependency('dbusmenu-glib-0.4')
 xkbregistry = dependency('xkbregistry')
 json = subproject('wf-json').get_variable('wfjson')
 openssl = dependency('openssl')
-gbm = dependency('gbm', required: get_option('live-previews-dmabuf'))
-drm = dependency('libdrm', required: get_option('live-previews-dmabuf'))
+gbm = dependency('gbm', required: false)
+drm = dependency('libdrm', required: false)
 
 if get_option('wayland-logout') == true
 	wayland_logout = subproject('wayland-logout')
@@ -53,8 +53,8 @@ if get_option('weather') == true
 	add_project_arguments('-DHAVE_WEATHER=1', language: 'cpp')
 endif
 
-if gbm.found() and drm.found() and not get_option('live-previews-dmabuf').disabled()
-	add_project_arguments('-DHAVE_DMABUF=1', language: 'cpp')
+if not gbm.found() or not drm.found()
+	message('Live window previews require gbm and libdrm dependencies')
 endif
 
 if libpulse.found()

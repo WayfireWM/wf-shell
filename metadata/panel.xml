@@ -154,6 +154,11 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<default>0</default>
 		<min>0</min>
 	</option>
+	<option name="launchers_rows_cols" type="int">
+		<_short>Number of rows (in horizontal panels) or columns (in vertical panels) in Launchers widget</_short>
+		<default>1</default>
+		<min>1</min>
+	</option>
 	<option name="launchers" type="dynamic-list" type-hint="dict">
 		<_short>Launchers</_short>
 		<_long>Launchers</_long>
@@ -286,6 +291,11 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	</option>
 	<option name="menu_item_icon_size" type="int">
 		<_short>Menu item icon size</_short>
+		<default>48</default>
+		<min>0</min>
+	</option>
+	<option name="menu_category_icon_size" type="int">
+		<_short>Menu category icon size</_short>
 		<default>48</default>
 		<min>0</min>
 	</option>
@@ -559,6 +569,11 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<_short>Space between tray icons</_short>
 		<default>5</default>
 		<min>0</min>
+	</option>
+	<option name="tray_rows_cols" type="int">
+		<_short>Number of rows (in horizontal panels) or columns (in vertical panels) in tray widget</_short>
+		<default>1</default>
+		<min>1</min>
 	</option>
 	<option name="tray_menu_on_middle_click" type="bool">
 		<_short>Middle Button Activates Menu</_short>

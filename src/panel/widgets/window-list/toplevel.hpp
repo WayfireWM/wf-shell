@@ -1,22 +1,21 @@
 #pragma once
 
+#include <gbm.h>
+#include <xf86drm.h>
 #include <memory>
 #include <gtkmm/box.h>
 #include <gtkmm/picture.h>
 #include <cairomm/refptr.h>
 #include <cairomm/context.h>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
-#include <wlr-screencopy-client-protocol.h>
+#include <ext-foreign-toplevel-list-v1-client-protocol.h>
+#include <ext-image-capture-source-v1-client-protocol.h>
+#include <ext-image-copy-capture-v1-client-protocol.h>
+#include <linux-dmabuf-unstable-v1-client-protocol.h>
 #include <wayland-client-protocol.h>
 #include <wf-option-wrap.hpp>
 #include "wf-shell-app.hpp"
 #include "panel.hpp"
-
-#ifdef HAVE_DMABUF
-    #include <gbm.h>
-    #include <xf86drm.h>
-    #include <linux-dmabuf-unstable-v1-client-protocol.h>
-#endif // HAVE_DMABUF
 
 class WayfireWindowList;
 class WayfireWindowListBox;
@@ -32,26 +31,27 @@ class TooltipMedia : public Gtk::Picture
 {
   public:
     WayfireWindowList *window_list = nullptr;
-    wl_shm *shm = nullptr;
     wl_buffer *buffer = nullptr;
-    void *shm_data    = nullptr;
-    zwlr_screencopy_frame_v1 *frame = nullptr;
-    uint32_t buffer_width;
-    uint32_t buffer_height;
-    uint32_t buffer_stride;
-    size_t size = 0;
+    ext_foreign_toplevel_handle_v1 *ext_handle = NULL;
+    ext_image_copy_capture_frame_v1 *frame     = NULL;
+    ext_image_capture_source_v1 *copy_capture_source     = NULL;
+    ext_image_copy_capture_session_v1 *recording_session = NULL;
+    sigc::connection timer_connection;
+    bool timer_continue = true;
+    uint32_t current_buffer_format = GBM_FORMAT_ARGB8888;
+    uint32_t current_buffer_width = 0, width = -1;
+    uint32_t current_buffer_height = 0, height = -1;
+    uint32_t stride;
 
-#ifdef HAVE_DMABUF
     gbm_bo *bo = nullptr;
+    int gbm_bo_fd = -1;
     zwp_linux_buffer_params_v1 *params = nullptr;
-    void *dmabuf_data = nullptr;
-    void *map_data    = nullptr;
-#endif // HAVE_DMABUF
 
-    TooltipMedia(WayfireWindowList *window_list);
+    TooltipMedia(WayfireWindowList *window_list, ext_foreign_toplevel_handle_v1 *ext_handle);
     ~TooltipMedia();
 
-    bool request_next_frame();
+    void start_toplevel_source_session();
+    void request_next_frame();
 };
 
 /* Represents a single opened toplevel window.
@@ -62,12 +62,15 @@ class WayfireToplevel
     WayfireToplevel(WayfireWindowList *window_list, zwlr_foreign_toplevel_handle_v1 *handle);
 
     uint32_t get_state();
+    std::string get_app_id();
     void send_rectangle_hint();
     std::vector<zwlr_foreign_toplevel_handle_v1*>& get_children();
     ~WayfireToplevel();
     void set_hide_text(bool hide_text);
     void set_tooltip_media();
     void unset_tooltip_media();
+    void set_ext_handle(ext_foreign_toplevel_handle_v1 *handle);
+    ext_foreign_toplevel_handle_v1 *get_ext_handle();
 
     class impl;
 

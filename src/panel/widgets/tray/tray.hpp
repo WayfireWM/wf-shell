@@ -11,10 +11,11 @@ class WayfireStatusNotifier : public WayfireWidget
   private:
     StatusNotifierHost host = StatusNotifierHost(this);
 
-    Gtk::Box icons_box;
+    Gtk::FlowBox icons_box;
     std::map<Glib::ustring, StatusNotifierItem> items;
 
     WfOption<int> spacing{"panel/tray_spacing"};
+    WfOption<int> rows_cols{"panel/tray_rows_cols"};
 
     void update_layout();
     void handle_config_reload();

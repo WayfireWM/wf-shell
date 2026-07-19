@@ -14,7 +14,8 @@
 #include "command-output.hpp"
 
 static sigc::connection label_set_from_command(std::string command_line,
-    Gtk::Label& label)
+    Gtk::Label& label, Gtk::Image *icon = nullptr,
+    const std::string& icon_name = "")
 {
     command_line = "/bin/sh -c \"" + command_line + "\"";
 
@@ -23,6 +24,7 @@ static sigc::connection label_set_from_command(std::string command_line,
     Glib::spawn_async_with_pipes("", Glib::shell_parse_argv(command_line),
         Glib::SpawnFlags::DO_NOT_REAP_CHILD | Glib::SpawnFlags::SEARCH_PATH_FROM_ENVP,
         Glib::SlotSpawnChildSetup{}, &pid, nullptr, &output_fd, nullptr);
+
     return Glib::signal_child_watch().connect([=, &label] (Glib::Pid pid, int exit_status)
     {
         FILE *file = fdopen(output_fd, "r");
@@ -43,6 +45,14 @@ static sigc::connection label_set_from_command(std::string command_line,
         }
 
         label.set_markup(output);
+
+        if (icon &&
+            !icon_name.empty() &&
+            ((icon_name[0] == '/') ||
+             (icon_name.rfind("~/", 0) == 0)))
+        {
+            IconProvider::image_set_icon(*icon, icon_name);
+        }
     }, pid);
 }
 
@@ -58,7 +68,8 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     if (icon_size > 0)
     {
         css_provider = Gtk::CssProvider::create();
-        css_provider->load_from_string(".command-icon-" + name + "{-gtk-icon-size:" + std::to_string(
+        /* This rule has to be more specific than others to be chosen */
+        css_provider->load_from_string(".wf-panel .command-icon-" + name + ".widget-icon{-gtk-icon-size:" + std::to_string(
             icon_size) + "px;}");
         icon.add_css_class("command-icon-" + name);
         icon.get_style_context()->add_provider(css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
@@ -101,7 +112,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
     const auto update_output = [=] ()
     {
         command_sig.disconnect();
-        command_sig = label_set_from_command(command, main_label);
+        command_sig = label_set_from_command(command, main_label, &icon, icon_name);
     };
 
     signals.push_back(signal_clicked().connect(update_output));

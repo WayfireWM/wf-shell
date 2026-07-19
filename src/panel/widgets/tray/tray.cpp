@@ -35,16 +35,20 @@ void WayfireStatusNotifier::remove_item(const Glib::ustring & service)
 
 void WayfireStatusNotifier::update_layout()
 {
-    icons_box.set_spacing(spacing);
+    icons_box.set_column_spacing(spacing);
+    icons_box.set_row_spacing(spacing);
+    icons_box.set_max_children_per_line(rows_cols);
+    icons_box.set_min_children_per_line(rows_cols);
+    icons_box.set_selection_mode(Gtk::SelectionMode::NONE);
 
     WfOption<std::string> panel_position{"panel/position"};
 
     if ((panel_position.value() == PANEL_POSITION_LEFT) || (panel_position.value() == PANEL_POSITION_RIGHT))
     {
-        icons_box.set_orientation(Gtk::Orientation::VERTICAL);
+        icons_box.set_orientation(Gtk::Orientation::HORIZONTAL);
     } else
     {
-        icons_box.set_orientation(Gtk::Orientation::HORIZONTAL);
+        icons_box.set_orientation(Gtk::Orientation::VERTICAL);
     }
 }
 
