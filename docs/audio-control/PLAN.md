@@ -381,3 +381,26 @@ See ARCHITECTURE.md § Hotplug, headset plug, and auto-switch · `man wf-shell-a
 3. Rewrite `virtual_oss_dsp` in rc.conf on device change, or only session-live via `virtual_oss_cmd`?  
 4. Auto-fallback order when previous path also gone (HDMI → rear → first present)?  
 5. devd-only vs also slow background poll while panel runs?
+
+---
+
+## 12. Agent / collaboration rules (do not forget)
+
+| Rule | Detail |
+|------|--------|
+| **No pull requests unless asked** | The project owner decides when (if ever) to open a PR. Agents must **not** create GitHub/GitLab PRs, `gh pr create`, or equivalent unsolicited. |
+| **Branch + commit + push is fine** | Work on a feature branch; commit as **Mark LaPointe \<mark@cloudbsd.org\>**; push the branch when asked. Stop there. |
+| **PR URL from remote is not a PR** | A remote may print “create a pull request by visiting…”. That is informational only — do **not** open it. |
+
+### Final checks (end of testing / last pass)
+
+Run this **after** code tests are green and before declaring work done:
+
+- [ ] Unit / red-green suites green (`docs/audio-control/tests/run_all`, backend tests)
+- [ ] Docs/man updated for behaviour changes (documentation phase)
+- [ ] On a feature branch; working tree clean or intentional leftovers noted
+- [ ] Author is **Mark LaPointe \<mark@cloudbsd.org\>** for project commits
+- [ ] **Did not open a PR** (and will not, unless the user explicitly requests one this turn)
+- [ ] Report branch name / commit SHA / push status only — owner decides next
+
+If any step would create a PR automatically, **skip it**.

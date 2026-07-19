@@ -245,3 +245,7 @@ Headset unplug
 
 Install via `man/meson.build`.  
 **Documentation phase:** every feature change that alters routing, features flags, or popover behavior must update the relevant man page(s) in the same change. See PLAN.md § Documentation phase.
+
+## Collaboration (agents)
+
+**Do not open pull requests** unless the user explicitly asks. Branch, commit (author Mark LaPointe \<mark@cloudbsd.org\>), and push when requested — the owner decides PRs. Full checklist: PLAN.md § 12 (final checks after testing).

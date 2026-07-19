@@ -50,6 +50,14 @@ fi
 echo
 if [ "$red" -eq 0 ]; then
   echo "######## ALL GREEN ########"
+  echo
+  echo "######## Final collaboration checks (do not skip) ########"
+  echo "  [ ] On a feature branch for this work (not force-pushing master)"
+  echo "  [ ] Commits use author: Mark LaPointe <mark@cloudbsd.org>"
+  echo "  [ ] Docs/man updated if behaviour changed"
+  echo "  [ ] DO NOT open a pull request unless the user explicitly asked"
+  echo "  [ ] Report branch/SHA only; owner decides PRs"
+  echo "######## (agents: stop after push; no gh pr create) ########"
   exit 0
 fi
 echo "######## RED — fix failures above ########"
