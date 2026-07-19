@@ -33,8 +33,6 @@
 class WayfireVolume : public WayfireWidget
 {
     Gtk::Image main_image;
-    Gtk::Image mic_image;       /* theme icon — not emoji */
-    Gtk::Label mic_pct_badge;   /* numeric only, e.g. "40%" */
     Gtk::Box icon_box{Gtk::Orientation::HORIZONTAL};
 
     /* Popover root */

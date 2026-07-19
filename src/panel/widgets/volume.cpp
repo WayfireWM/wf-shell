@@ -338,34 +338,18 @@ void WayfireVolume::update_icon()
 
 void WayfireVolume::update_mic_badge()
 {
+    /* Panel shows speaker only — mic lives in the popover. Update mute button icon. */
     if (!gvc_source)
     {
-        mic_image.set_visible(false);
-        mic_pct_badge.set_visible(false);
         in_mute_icon.set_from_icon_name(MIC_ICON(0));
         return;
     }
-
-    mic_image.set_visible(true);
-    mic_pct_badge.set_visible(true);
 
     bool muted = gvc_mixer_stream_get_is_muted(gvc_source);
     double frac = max_norm_src > 0 ?
         mic_scale.get_target_value() / max_norm_src : 0.0;
     frac = std::clamp(frac, 0.0, 1.0);
-
-    if (muted)
-    {
-        mic_image.set_from_icon_name(MIC_ICON(0));
-        in_mute_icon.set_from_icon_name(MIC_ICON(0));
-        mic_pct_badge.set_text("mute");
-        return;
-    }
-
-    mic_image.set_from_icon_name(MIC_ICON(frac));
-    in_mute_icon.set_from_icon_name(MIC_ICON(frac));
-    int pct = (int)std::lround(frac * 100.0);
-    mic_pct_badge.set_text(std::to_string(pct) + "%");
+    in_mute_icon.set_from_icon_name(MIC_ICON(muted ? 0.0 : frac));
 }
 
 void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
@@ -1418,13 +1402,8 @@ void WayfireVolume::init(Gtk::Box *container)
     }
 
     main_image.add_css_class("widget-icon");
-    mic_image.add_css_class("widget-icon");
-    mic_image.set_margin_start(4);
-    mic_pct_badge.add_css_class("dim-label");
-    mic_pct_badge.set_margin_start(2);
+    /* Panel: speaker icon only (no mic badge — mic is in Sound Settings). */
     icon_box.append(main_image);
-    icon_box.append(mic_image);
-    icon_box.append(mic_pct_badge);
 
     button = std::make_unique<WayfireMenuWidget>("panel", "volume");
     button->set_keyboard_interactive(false);
