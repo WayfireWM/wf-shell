@@ -13,11 +13,25 @@ std::string icon_from_range(std::map<double, std::vector<std::string>> icons, do
 
 const std::map<double, std::vector<std::string>> volume_icons = {
     {std::numeric_limits<double>::min(), {"emblem-unreadable"}},
-    {0.0, {"audio-volume-muted"}},
-    {0.33, {"audio-volume-low"}},
-    {0.66, {"audio-volume-medium"}},
-    {1.0, {"audio-volume-high"}},
+    {0.0, {"audio-volume-muted-symbolic", "audio-volume-muted"}},
+    {0.33, {"audio-volume-low-symbolic", "audio-volume-low"}},
+    {0.66, {"audio-volume-medium-symbolic", "audio-volume-medium"}},
+    {1.0, {"audio-volume-high-symbolic", "audio-volume-high"}},
     {std::numeric_limits<double>::max(), {"audio-volume-high-danger", "dialog-warning"}}
+};
+
+/* Microphone / capture — avoid emoji (often missing on FreeBSD themes). */
+const std::map<double, std::vector<std::string>> microphone_icons = {
+    {std::numeric_limits<double>::min(), {"emblem-unreadable"}},
+    {0.0, {"microphone-sensitivity-muted-symbolic", "audio-input-microphone-muted",
+           "microphone-sensitivity-muted"}},
+    {0.33, {"microphone-sensitivity-low-symbolic", "audio-input-microphone-symbolic",
+            "audio-input-microphone"}},
+    {0.66, {"microphone-sensitivity-medium-symbolic", "audio-input-microphone-symbolic",
+            "audio-input-microphone"}},
+    {1.0, {"microphone-sensitivity-high-symbolic", "audio-input-microphone-symbolic",
+           "audio-input-microphone"}},
+    {std::numeric_limits<double>::max(), {"audio-input-microphone-symbolic", "audio-input-microphone"}}
 };
 
 const std::map<double, std::vector<std::string>> brightness_display_icons = {

@@ -3,6 +3,12 @@
 #include <glibmm/spawn.h>
 #include <cmath>
 #include <algorithm>
+#include <mutex>
+#include <cstring>
+#include <array>
+
+#include <pulse/pulseaudio.h>
+#include <pulse/thread-mainloop.h>
 
 #include "volume.hpp"
 #include "icon-select.hpp"
@@ -10,6 +16,7 @@
 #include "wf-shell-app.hpp"
 
 #define ICON(volume) icon_from_range(volume_icons, volume)
+#define MIC_ICON(level) icon_from_range(microphone_icons, level)
 
 namespace
 {
@@ -20,38 +27,308 @@ std::string path_basename_hint(const std::string& path)
 }
 }
 
+/**
+ * Pulse peak probe — records from a source (sink monitor or mic).
+ * On FreeBSD + Virtual OSS: default sink is usually "virtual_oss", so
+ * output levels come from "virtual_oss.monitor" (post-app, pre-OSS hardware).
+ * Input uses default source, typically "virtual_oss_rec".
+ */
+struct PeakProbe
+{
+    pa_threaded_mainloop *ml = nullptr;
+    pa_context *ctx = nullptr;
+    pa_stream *stream = nullptr;
+    std::string source_name;
+    std::mutex mu;
+    std::array<float, 8> peaks{};
+    int nch = 2;
+    bool ready = false;
+
+    ~PeakProbe()
+    {
+        stop();
+    }
+
+    void stop()
+    {
+        if (!ml)
+        {
+            return;
+        }
+
+        pa_threaded_mainloop_lock(ml);
+        if (stream)
+        {
+            pa_stream_disconnect(stream);
+            pa_stream_unref(stream);
+            stream = nullptr;
+        }
+
+        if (ctx)
+        {
+            pa_context_disconnect(ctx);
+            pa_context_unref(ctx);
+            ctx = nullptr;
+        }
+
+        pa_threaded_mainloop_unlock(ml);
+        pa_threaded_mainloop_stop(ml);
+        pa_threaded_mainloop_free(ml);
+        ml = nullptr;
+        ready = false;
+        std::lock_guard<std::mutex> lock(mu);
+        peaks.fill(0.f);
+    }
+
+    static void context_state_cb(pa_context *c, void *userdata)
+    {
+        auto *self = static_cast<PeakProbe*>(userdata);
+        switch (pa_context_get_state(c))
+        {
+            case PA_CONTEXT_READY:
+                self->ready = true;
+                pa_threaded_mainloop_signal(self->ml, 0);
+                break;
+            case PA_CONTEXT_FAILED:
+            case PA_CONTEXT_TERMINATED:
+                pa_threaded_mainloop_signal(self->ml, 0);
+                break;
+            default:
+                break;
+        }
+    }
+
+    static void stream_read_cb(pa_stream *s, size_t /*nbytes*/, void *userdata)
+    {
+        auto *self = static_cast<PeakProbe*>(userdata);
+        const void *data = nullptr;
+        size_t length = 0;
+        if (pa_stream_peek(s, &data, &length) < 0)
+        {
+            return;
+        }
+
+        if (data && (length >= sizeof(float)))
+        {
+            const float *f = static_cast<const float*>(data);
+            int samples = (int)(length / sizeof(float));
+            int ch = self->nch > 0 ? self->nch : 2;
+            std::lock_guard<std::mutex> lock(self->mu);
+            /* PEAK_DETECT: successive floats are channel peaks (or interleaved peaks). */
+            for (int c = 0; c < ch && c < 8; c++)
+            {
+                float p = 0.f;
+                if (samples >= ch)
+                {
+                    /* take max across frames for this channel */
+                    for (int i = c; i < samples; i += ch)
+                    {
+                        p = std::max(p, std::fabs(f[i]));
+                    }
+                } else if (c < samples)
+                {
+                    p = std::fabs(f[c]);
+                }
+
+                /* attack fast, decay slower so meters track music without flicker */
+                float &cur = self->peaks[c];
+                if (p > cur)
+                {
+                    cur = p;
+                } else
+                {
+                    cur = cur * 0.82f + p * 0.18f;
+                }
+
+                if (cur < 0.001f)
+                {
+                    cur = 0.f;
+                }
+            }
+        }
+
+        pa_stream_drop(s);
+    }
+
+    static void stream_state_cb(pa_stream *s, void *userdata)
+    {
+        auto *self = static_cast<PeakProbe*>(userdata);
+        switch (pa_stream_get_state(s))
+        {
+            case PA_STREAM_READY:
+            case PA_STREAM_FAILED:
+            case PA_STREAM_TERMINATED:
+                pa_threaded_mainloop_signal(self->ml, 0);
+                break;
+            default:
+                break;
+        }
+    }
+
+    bool start(const std::string& source)
+    {
+        stop();
+        if (source.empty())
+        {
+            return false;
+        }
+
+        source_name = source;
+        ml = pa_threaded_mainloop_new();
+        if (!ml)
+        {
+            return false;
+        }
+
+        pa_mainloop_api *api = pa_threaded_mainloop_get_api(ml);
+        ctx = pa_context_new(api, "wf-panel-level-meter");
+        if (!ctx)
+        {
+            pa_threaded_mainloop_free(ml);
+            ml = nullptr;
+            return false;
+        }
+
+        pa_context_set_state_callback(ctx, context_state_cb, this);
+        if (pa_context_connect(ctx, nullptr, PA_CONTEXT_NOFLAGS, nullptr) < 0)
+        {
+            stop();
+            return false;
+        }
+
+        pa_threaded_mainloop_lock(ml);
+        if (pa_threaded_mainloop_start(ml) < 0)
+        {
+            pa_threaded_mainloop_unlock(ml);
+            stop();
+            return false;
+        }
+
+        while (pa_context_get_state(ctx) != PA_CONTEXT_READY &&
+               pa_context_get_state(ctx) != PA_CONTEXT_FAILED &&
+               pa_context_get_state(ctx) != PA_CONTEXT_TERMINATED)
+        {
+            pa_threaded_mainloop_wait(ml);
+        }
+
+        if (pa_context_get_state(ctx) != PA_CONTEXT_READY)
+        {
+            pa_threaded_mainloop_unlock(ml);
+            stop();
+            return false;
+        }
+
+        pa_sample_spec ss;
+        ss.format   = PA_SAMPLE_FLOAT32LE;
+        ss.rate     = 25; /* peak rate; PEAK_DETECT compresses to peaks */
+        ss.channels = (uint8_t)std::clamp(nch, 1, 8);
+
+        pa_channel_map map;
+        pa_channel_map_init_auto(&map, ss.channels, PA_CHANNEL_MAP_DEFAULT);
+
+        stream = pa_stream_new(ctx, "wf-panel-peaks", &ss, &map);
+        if (!stream)
+        {
+            pa_threaded_mainloop_unlock(ml);
+            stop();
+            return false;
+        }
+
+        pa_stream_set_state_callback(stream, stream_state_cb, this);
+        pa_stream_set_read_callback(stream, stream_read_cb, this);
+
+        pa_buffer_attr attr{};
+        attr.fragsize  = (uint32_t)-1;
+        attr.maxlength = (uint32_t)-1;
+
+        int flags = PA_STREAM_PEAK_DETECT | PA_STREAM_ADJUST_LATENCY |
+            PA_STREAM_DONT_MOVE;
+        if (pa_stream_connect_record(stream, source_name.c_str(), &attr,
+                (pa_stream_flags_t)flags) < 0)
+        {
+            pa_threaded_mainloop_unlock(ml);
+            stop();
+            return false;
+        }
+
+        while (pa_stream_get_state(stream) != PA_STREAM_READY &&
+               pa_stream_get_state(stream) != PA_STREAM_FAILED &&
+               pa_stream_get_state(stream) != PA_STREAM_TERMINATED)
+        {
+            pa_threaded_mainloop_wait(ml);
+        }
+
+        bool ok = pa_stream_get_state(stream) == PA_STREAM_READY;
+        pa_threaded_mainloop_unlock(ml);
+        if (!ok)
+        {
+            stop();
+        }
+
+        return ok;
+    }
+
+    void get_levels(float *out, int max_n, int *n_out)
+    {
+        std::lock_guard<std::mutex> lock(mu);
+        int n = std::min(nch, max_n);
+        if (n_out)
+        {
+            *n_out = n;
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            out[i] = peaks[i];
+        }
+    }
+};
+
 void WayfireVolume::update_icon()
 {
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
         main_image.set_from_icon_name(ICON(0));
+        out_mute_icon.set_from_icon_name(ICON(0));
         return;
     }
 
-    main_image.set_from_icon_name(
-        ICON(volume_scale.get_target_value() / (double)max_norm));
+    double frac = max_norm > 0 ?
+        volume_scale.get_target_value() / (double)max_norm : 0.0;
+    main_image.set_from_icon_name(ICON(frac));
+    out_mute_icon.set_from_icon_name(ICON(frac));
 }
 
 void WayfireVolume::update_mic_badge()
 {
     if (!gvc_source)
     {
-        mic_badge.set_text("");
-        mic_badge.set_visible(false);
+        mic_image.set_visible(false);
+        mic_pct_badge.set_visible(false);
+        in_mute_icon.set_from_icon_name(MIC_ICON(0));
         return;
     }
 
-    mic_badge.set_visible(true);
-    if (gvc_mixer_stream_get_is_muted(gvc_source))
-    {
-        mic_badge.set_text("🎤 mute");
-        return;
-    }
+    mic_image.set_visible(true);
+    mic_pct_badge.set_visible(true);
 
+    bool muted = gvc_mixer_stream_get_is_muted(gvc_source);
     double frac = max_norm_src > 0 ?
         mic_scale.get_target_value() / max_norm_src : 0.0;
-    int pct = (int)std::lround(std::clamp(frac, 0.0, 1.0) * 100.0);
-    mic_badge.set_text("🎤 " + std::to_string(pct) + "%");
+    frac = std::clamp(frac, 0.0, 1.0);
+
+    if (muted)
+    {
+        mic_image.set_from_icon_name(MIC_ICON(0));
+        in_mute_icon.set_from_icon_name(MIC_ICON(0));
+        mic_pct_badge.set_text("mute");
+        return;
+    }
+
+    mic_image.set_from_icon_name(MIC_ICON(frac));
+    in_mute_icon.set_from_icon_name(MIC_ICON(frac));
+    int pct = (int)std::lround(frac * 100.0);
+    mic_pct_badge.set_text(std::to_string(pct) + "%");
 }
 
 void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
@@ -191,6 +468,10 @@ void WayfireVolume::on_default_sink_changed()
     volume_scale.set_increments(max_norm * scroll_sensitivity,
         max_norm * scroll_sensitivity * 2);
     set_volume(gvc_mixer_stream_get_volume(gvc_stream), VOLUME_FLAG_NO_ACTION);
+    if (popover_open)
+    {
+        start_level_probes();
+    }
 }
 
 void WayfireVolume::on_default_source_changed()
@@ -213,6 +494,10 @@ void WayfireVolume::on_default_source_changed()
     mic_scale.set_increments(max_norm_src * scroll_sensitivity,
         max_norm_src * scroll_sensitivity * 2);
     set_mic_volume(gvc_mixer_stream_get_volume(gvc_source), VOLUME_FLAG_NO_ACTION);
+    if (popover_open)
+    {
+        start_level_probes();
+    }
 }
 
 static void default_sink_changed(GvcMixerControl *, guint, gpointer user_data)
@@ -330,6 +615,11 @@ void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, i
         return;
     }
 
+    /* Real peaks from Pulse (Virtual OSS: virtual_oss.monitor / virtual_oss_rec). */
+    float peaks[8] = {};
+    int n_peaks = 0;
+    copy_peaks(is_output, peaks, 8, &n_peaks);
+
     int n = is_output ? std::clamp(out_channels.value(), 2, 8) : 2;
     if ((style == "spectrum") && is_output)
     {
@@ -338,6 +628,22 @@ void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, i
     {
         n = 12;
     }
+
+    /* Map peak channels onto display channels (repeat/expand as needed). */
+    auto peak_for = [&] (int ch) -> double
+    {
+        if (n_peaks <= 0)
+        {
+            /* No probe yet / silent — show flat zero (not fake waves). */
+            return 0.0;
+        }
+
+        int src = ch % n_peaks;
+        double p = std::clamp((double)peaks[src], 0.0, 1.0);
+        /* Soft boost so quiet content is still visible */
+        p = std::min(1.0, p * 1.35);
+        return p;
+    };
 
     double t = g_get_monotonic_time() / 1e6;
 
@@ -370,9 +676,12 @@ void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, i
         double bw  = std::max(2.0, (w - gap * (n + 1)) / n);
         for (int ch = 0; ch < n; ch++)
         {
-            double phase = ch * 0.7 + t * (2.0 + ch * 0.15);
-            double amp   = level * (0.35 + 0.55 * (0.5 + 0.5 * std::sin(phase)));
-            amp = std::clamp(amp, 0.05, 1.0);
+            double amp = peak_for(ch);
+            if (amp < 0.01)
+            {
+                continue;
+            }
+
             double r, g, b;
             level_color(amp, r, g, b);
             double bh = amp * (h - 4);
@@ -393,19 +702,16 @@ void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, i
     cr->stroke();
 
     int traces = n;
-    if (style == "ribbon")
-    {
-        traces = n;
-    } else if ((style == "wave") || (style == "scope"))
-    {
-        traces = std::min(n, is_output ? n : 2);
-    }
-
     for (int ch = 0; ch < traces; ch++)
     {
-        double phase = ch * 0.7 + t * (2.0 + ch * 0.15);
-        double amp   = level * (0.35 + 0.55 * (0.5 + 0.5 * std::sin(phase)));
-        amp = std::clamp(amp, 0.02, 1.0);
+        double amp = peak_for(ch);
+        if (amp < 0.01)
+        {
+            continue;
+        }
+
+        /* Shape is decorative; amplitude is real peak (not volume %). */
+        double phase = ch * 0.7 + t * (1.2 + amp * 2.0);
         double r, g, b;
         level_color(amp, r, g, b);
         double alpha = 0.35 + 0.4 * (1.0 - ch / (double)std::max(traces, 1));
@@ -483,6 +789,8 @@ void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, i
 
         cr->stroke();
     }
+
+    (void)level; /* volume slider level no longer drives fake amplitude */
 }
 
 bool WayfireVolume::on_meter_tick()
@@ -540,7 +848,7 @@ void WayfireVolume::refresh_voss_strip()
             std::to_string(st.sample_rate) + " Hz · " +
             std::to_string(st.bits) + "-bit · " +
             std::to_string(st.channels) + " ch");
-        voss_badge.set_text("● Virtual OSS");
+        voss_badge.set_text("Virtual OSS Detected");
         head_meta.set_text(path_basename_hint(st.play_path) + " · " +
             path_basename_hint(st.record_path));
     } catch (...)
@@ -719,14 +1027,108 @@ void WayfireVolume::on_advanced_clicked()
     }
 }
 
+void WayfireVolume::start_level_probes()
+{
+    stop_level_probes();
+
+    /* Output: monitor of default sink → for Virtual OSS this is virtual_oss.monitor */
+    std::string mon;
+    if (gvc_stream)
+    {
+        const char *sink = gvc_mixer_stream_get_name(gvc_stream);
+        if (sink && sink[0])
+        {
+            mon = std::string(sink) + ".monitor";
+        }
+    }
+
+    if (mon.empty())
+    {
+        mon = "virtual_oss.monitor";
+    }
+
+    auto *op = new PeakProbe();
+    op->nch = std::clamp(out_channels.value(), 2, 8);
+    if (!op->start(mon) && !op->start("virtual_oss.monitor"))
+    {
+        delete op;
+        op = nullptr;
+    }
+
+    out_probe = op;
+
+    /* Input: default source → typically virtual_oss_rec */
+    std::string src;
+    if (gvc_source)
+    {
+        const char *name = gvc_mixer_stream_get_name(gvc_source);
+        if (name && name[0])
+        {
+            src = name;
+        }
+    }
+
+    if (src.empty())
+    {
+        src = "virtual_oss_rec";
+    }
+
+    auto *ip = new PeakProbe();
+    ip->nch = 2;
+    if (!ip->start(src))
+    {
+        delete ip;
+        ip = nullptr;
+    }
+
+    in_probe = ip;
+}
+
+void WayfireVolume::stop_level_probes()
+{
+    if (out_probe)
+    {
+        delete static_cast<PeakProbe*>(out_probe);
+        out_probe = nullptr;
+    }
+
+    if (in_probe)
+    {
+        delete static_cast<PeakProbe*>(in_probe);
+        in_probe = nullptr;
+    }
+}
+
+void WayfireVolume::copy_peaks(bool is_output, float *out, int max_n, int *n_out)
+{
+    auto *p = static_cast<PeakProbe*>(is_output ? out_probe : in_probe);
+    if (!p)
+    {
+        if (n_out)
+        {
+            *n_out = 0;
+        }
+
+        for (int i = 0; i < max_n; i++)
+        {
+            out[i] = 0.f;
+        }
+
+        return;
+    }
+
+    p->get_levels(out, max_n, n_out);
+}
+
 void WayfireVolume::on_popover_shown()
 {
     popover_open = true;
     refresh_devices();
+    start_level_probes();
     if (!meter_tick)
     {
         meter_tick = Glib::signal_timeout().connect(
-            sigc::mem_fun(*this, &WayfireVolume::on_meter_tick), 50);
+            sigc::mem_fun(*this, &WayfireVolume::on_meter_tick), 40);
     }
 }
 
@@ -737,6 +1139,8 @@ void WayfireVolume::on_popover_hidden()
     {
         meter_tick.disconnect();
     }
+
+    stop_level_probes();
 }
 
 void WayfireVolume::build_popover_ui()
@@ -765,8 +1169,10 @@ void WayfireVolume::build_popover_ui()
     out_section.set_spacing(6);
     out_section.append(*out_title);
 
-    out_mute_btn.set_label("🔇");
+    out_mute_icon.set_from_icon_name("audio-volume-high-symbolic");
+    out_mute_btn.set_child(out_mute_icon);
     out_mute_btn.set_tooltip_text("Mute output");
+    out_mute_btn.set_has_frame(false);
     volume_scale.set_draw_value(false);
     volume_scale.set_hexpand(true);
     volume_scale.set_size_request(180, 0);
@@ -814,8 +1220,10 @@ void WayfireVolume::build_popover_ui()
     in_section.set_spacing(6);
     in_section.append(*in_title);
 
-    in_mute_btn.set_label("🎤");
+    in_mute_icon.set_from_icon_name("audio-input-microphone-symbolic");
+    in_mute_btn.set_child(in_mute_icon);
     in_mute_btn.set_tooltip_text("Mute microphone");
+    in_mute_btn.set_has_frame(false);
     mic_scale.set_draw_value(false);
     mic_scale.set_hexpand(true);
     mic_scale.set_size_request(180, 0);
@@ -979,10 +1387,13 @@ void WayfireVolume::init(Gtk::Box *container)
     }
 
     main_image.add_css_class("widget-icon");
-    mic_badge.add_css_class("dim-label");
-    mic_badge.set_margin_start(4);
+    mic_image.add_css_class("widget-icon");
+    mic_image.set_margin_start(4);
+    mic_pct_badge.add_css_class("dim-label");
+    mic_pct_badge.set_margin_start(2);
     icon_box.append(main_image);
-    icon_box.append(mic_badge);
+    icon_box.append(mic_image);
+    icon_box.append(mic_pct_badge);
 
     button = std::make_unique<WayfireMenuWidget>("panel", "volume");
     button->set_keyboard_interactive(false);
@@ -1111,6 +1522,7 @@ WayfireVolume::~WayfireVolume()
         meter_tick.disconnect();
     }
 
+    stop_level_probes();
     disconnect_gvc_stream_signals();
     disconnect_gvc_source_signals();
 

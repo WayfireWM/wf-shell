@@ -33,7 +33,8 @@
 class WayfireVolume : public WayfireWidget
 {
     Gtk::Image main_image;
-    Gtk::Label mic_badge;
+    Gtk::Image mic_image;       /* theme icon — not emoji */
+    Gtk::Label mic_pct_badge;   /* numeric only, e.g. "40%" */
     Gtk::Box icon_box{Gtk::Orientation::HORIZONTAL};
 
     /* Popover root */
@@ -43,6 +44,7 @@ class WayfireVolume : public WayfireWidget
     Gtk::Box out_section{Gtk::Orientation::VERTICAL};
     Gtk::Box out_row{Gtk::Orientation::HORIZONTAL};
     Gtk::Button out_mute_btn;
+    Gtk::Image out_mute_icon;
     WayfireAnimatedScale volume_scale;
     Gtk::Label out_pct;
     Gtk::Box out_meter_cap{Gtk::Orientation::HORIZONTAL};
@@ -56,6 +58,7 @@ class WayfireVolume : public WayfireWidget
     Gtk::Box in_section{Gtk::Orientation::VERTICAL};
     Gtk::Box in_row{Gtk::Orientation::HORIZONTAL};
     Gtk::Button in_mute_btn;
+    Gtk::Image in_mute_icon;
     WayfireAnimatedScale mic_scale;
     Gtk::Label mic_pct;
     Gtk::Box in_meter_cap{Gtk::Orientation::HORIZONTAL};
@@ -111,6 +114,14 @@ class WayfireVolume : public WayfireWidget
 
     std::vector<wf_audio::AudioDevice> play_devices;
     std::vector<wf_audio::AudioDevice> cap_devices;
+
+    /* Real levels from Pulse (sink monitor = Virtual OSS path when that is default).
+     * Opaque PeakProbe lives in volume.cpp (avoid incomplete unique_ptr in header). */
+    void *out_probe = nullptr; /* PeakProbe* */
+    void *in_probe  = nullptr;
+    void start_level_probes();
+    void stop_level_probes();
+    void copy_peaks(bool is_output, float *out, int max_n, int *n_out);
 
     void disconnect_gvc_stream_signals();
     void disconnect_gvc_source_signals();

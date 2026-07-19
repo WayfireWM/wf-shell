@@ -392,7 +392,7 @@
 
         <div class="foot">
           <button type="button" class="voss-badge on" id="vossBadge" title="Show / hide Virtual OSS management" aria-live="polite">
-            <span class="dot" aria-hidden="true"></span>Virtual OSS
+            <span class="dot" aria-hidden="true"></span>Virtual OSS Detected
           </button>
           <a id="advLink">Advanced…</a>
         </div>
@@ -677,7 +677,7 @@
           virtual_oss: voss,
           hw_default_unit: true,
           mix_channels: voss,
-          virtual_oss_label: 'Virtual OSS',
+          virtual_oss_label: 'Virtual OSS Detected',
         };
       } catch (e) {
         return {
@@ -697,7 +697,7 @@
           features: feat,
           virtualOssDetected: detected,
           running: detected,
-          badgeLabel: feat.virtual_oss_label || 'Virtual OSS',
+          badgeLabel: feat.virtual_oss_label || 'Virtual OSS Detected',
           usePhysicalDevices: detected && feat.physical_devices,
           controlDevice: state.controlDevice || DEFAULTS.controlDevice,
           playPath: '/dev/dsp' + state.playPcm,
@@ -711,7 +711,7 @@
       } catch (e) {
         return {
           features: stackFeatures(),
-          virtualOssDetected: false, running: false, badgeLabel: 'Virtual OSS',
+          virtualOssDetected: false, running: false, badgeLabel: 'Virtual OSS Detected',
           usePhysicalDevices: false, controlDevice: DEFAULTS.controlDevice,
           playPath: '', recordPath: '', playLabel: '', capLabel: '',
           sampleRate: DEFAULTS.sampleRate, bits: DEFAULTS.bits,
