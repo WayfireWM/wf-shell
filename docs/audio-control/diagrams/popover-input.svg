@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 400 360" width="100%" preserveAspectRatio="xMidYMid meet">
+  <foreignObject x="0" y="0" width="400" height="360">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:400px;height:360px;box-sizing:border-box;font-family:Sans,system-ui,sans-serif;background:#11111b;color:#cdd6f4;padding:12px;">
+      <div style="font-size:11px;color:#a6adc8;margin-bottom:8px;">Input — device picker</div>
+      <div style="background:#1e1e2e;border:1px solid #45475a;border-radius:10px;padding:14px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:600;color:#f9e2af;">Input</div>
+          <div style="font-size:11px;color:#a6e3a1;">● live</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:32px;height:32px;background:#f38ba8;color:#111;border-radius:6px;text-align:center;line-height:32px;">🎤</div>
+          <div style="flex:1;">
+            <div style="height:8px;background:#313244;border-radius:4px;overflow:hidden;"><div style="width:55%;height:100%;background:#f9e2af;"></div></div>
+            <div style="font-size:10px;color:#6c7086;margin-top:4px;">Gain 55% · not muted</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#6c7086;margin-bottom:4px;">Input levels</div>
+        <div style="display:flex;align-items:flex-end;gap:3px;height:36px;margin-bottom:14px;padding:6px;background:#181825;border-radius:6px;">
+          <div style="flex:1;height:20%;background:#45475a;border-radius:2px;"></div>
+          <div style="flex:1;height:35%;background:#a6e3a1;border-radius:2px;"></div>
+          <div style="flex:1;height:55%;background:#a6e3a1;border-radius:2px;"></div>
+          <div style="flex:1;height:80%;background:#f9e2af;border-radius:2px;"></div>
+          <div style="flex:1;height:95%;background:#f38ba8;border-radius:2px;"></div>
+          <div style="flex:1;height:70%;background:#f9e2af;border-radius:2px;"></div>
+          <div style="flex:1;height:45%;background:#a6e3a1;border-radius:2px;"></div>
+          <div style="flex:1;height:30%;background:#a6e3a1;border-radius:2px;"></div>
+        </div>
+        <div style="font-size:10px;color:#6c7086;margin-bottom:6px;">Device</div>
+        <div style="border:1px solid #313244;border-radius:8px;overflow:hidden;margin-bottom:12px;">
+          <div style="padding:8px 10px;background:#3d3420;">● Rear mic / line</div>
+          <div style="padding:8px 10px;color:#a6adc8;">○ Front headset jack</div>
+        </div>
+        <div style="font-size:10px;color:#6c7086;">Mute is independent of output. Meet, Discord, and Firefox follow the selected input device.</div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>

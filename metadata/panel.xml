@@ -375,6 +375,144 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<_short>Volume Scroll Sensitivity</_short>
 		<default>0.05</default>
 	</option>
+	<option name="volume_graph_style" type="string">
+		<_short>Output level graph style</_short>
+		<_long>Visual style for the output level meter only. Input has its own style (volume_graph_style_in). Saved in wf-shell.ini under [panel].</_long>
+		<default>wave-fill</default>
+		<desc>
+			<value>bars</value>
+			<_name>Bars (per channel)</_name>
+		</desc>
+		<desc>
+			<value>wave</value>
+			<_name>Wave (smooth)</_name>
+		</desc>
+		<desc>
+			<value>wave-fill</value>
+			<_name>Wave filled</_name>
+		</desc>
+		<desc>
+			<value>mirror</value>
+			<_name>Mirror wave</_name>
+		</desc>
+		<desc>
+			<value>scope</value>
+			<_name>Oscilloscope</_name>
+		</desc>
+		<desc>
+			<value>spectrum</value>
+			<_name>Spectrum (dense)</_name>
+		</desc>
+		<desc>
+			<value>dots</value>
+			<_name>Peak dots</_name>
+		</desc>
+		<desc>
+			<value>ribbon</value>
+			<_name>Ribbon multi-trace</_name>
+		</desc>
+	</option>
+	<option name="volume_graph_style_in" type="string">
+		<_short>Input level graph style</_short>
+		<_long>Visual style for the input/microphone level meter only. Independent of volume_graph_style (output).</_long>
+		<default>wave-fill</default>
+		<desc>
+			<value>bars</value>
+			<_name>Bars (per channel)</_name>
+		</desc>
+		<desc>
+			<value>wave</value>
+			<_name>Wave (smooth)</_name>
+		</desc>
+		<desc>
+			<value>wave-fill</value>
+			<_name>Wave filled</_name>
+		</desc>
+		<desc>
+			<value>mirror</value>
+			<_name>Mirror wave</_name>
+		</desc>
+		<desc>
+			<value>scope</value>
+			<_name>Oscilloscope</_name>
+		</desc>
+		<desc>
+			<value>spectrum</value>
+			<_name>Spectrum (dense)</_name>
+		</desc>
+		<desc>
+			<value>dots</value>
+			<_name>Peak dots</_name>
+		</desc>
+		<desc>
+			<value>ribbon</value>
+			<_name>Ribbon multi-trace</_name>
+		</desc>
+	</option>
+	<option name="volume_out_channels" type="int">
+		<_short>Output meter channels</_short>
+		<_long>Number of output level-meter channels (2 stereo, 6 for 5.1, 8 for HDMI 7.1).</_long>
+		<default>8</default>
+		<min>2</min>
+		<max>8</max>
+	</option>
+	<option name="volume_show_monitor_sources" type="bool">
+		<_short>Show monitor sources</_short>
+		<_long>Include Pulse *.monitor sources in the input device dropdown.</_long>
+		<default>false</default>
+	</option>
+	<option name="volume_play_device" type="string">
+		<_short>Play device path</_short>
+		<_long>Last selected play backend path (e.g. /dev/dsp1 for Virtual OSS). Empty = follow autodetection.</_long>
+		<default></default>
+	</option>
+	<option name="volume_capture_device" type="string">
+		<_short>Capture device path</_short>
+		<_long>Last selected capture backend path (e.g. /dev/dsp3). Empty = follow autodetection.</_long>
+		<default></default>
+	</option>
+	<option name="volume_mix_channels" type="int">
+		<_short>Mix channel count</_short>
+		<_long>Preferred Virtual OSS mix/open channel count (2 stereo, 6 for 5.1, 8 for 7.1). Applied only when the user confirms Apply mix (or equivalent).</_long>
+		<default>2</default>
+		<min>2</min>
+		<max>8</max>
+	</option>
+	<option name="volume_prefer_virtual_oss" type="bool">
+		<_short>Prefer Virtual OSS</_short>
+		<_long>When Virtual OSS is available, use it for play/capture routing (FreeBSD first-class). If false, use logical Pulse/PipeWire devices only even when Virtual OSS is present.</_long>
+		<default>true</default>
+	</option>
+	<option name="volume_auto_switch_headset" type="bool">
+		<_short>Auto-switch to headset</_short>
+		<_long>When a headset jack plug is detected (FreeBSD HDA pin sense / devd SND CONN), automatically route play to the headset device. Disable if you never want automatic headset switching.</_long>
+		<default>true</default>
+	</option>
+	<option name="volume_auto_switch_usb" type="bool">
+		<_short>Auto-switch to USB audio</_short>
+		<_long>When a USB sound device appears, automatically route play to it. Disable to keep the current speakers until you pick the USB device manually.</_long>
+		<default>true</default>
+	</option>
+	<option name="volume_auto_restore_previous" type="bool">
+		<_short>Restore previous device on unplug</_short>
+		<_long>When an auto-switched headset or USB device is unplugged, restore the previously selected play (and capture, if switched) device if it is still present. If false, stay on the last path or fall back quietly without restoring.</_long>
+		<default>true</default>
+	</option>
+	<option name="volume_auto_switch_capture" type="bool">
+		<_short>Auto-switch capture with headset</_short>
+		<_long>When auto-switching play to a headset that has a microphone path, also switch capture to that input. Disable to keep the previous microphone when only headphones are of interest.</_long>
+		<default>true</default>
+	</option>
+	<option name="volume_notify_device_change" type="bool">
+		<_short>Notify on device auto-switch</_short>
+		<_long>Show a short status notification when routing changes automatically (headset/USB plug or restore). Disable for silent switching.</_long>
+		<default>true</default>
+	</option>
+	<option name="volume_manual_sticky" type="bool">
+		<_short>Manual selection sticky</_short>
+		<_long>When true, choosing Output/Input in the popover blocks further auto-switch until the next physical plug event. When false, auto-switch may override a manual pick when a new device appears.</_long>
+		<default>true</default>
+	</option>
 	</group>
 	<group>
 	<_short>Audio mixer</_short>

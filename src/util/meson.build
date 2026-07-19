@@ -25,6 +25,11 @@ util = static_library(
         'power-controller.cpp',
         'power-controller-linux.cpp',
         'power-controller-bsd.cpp',
+        # Audio backend (Factory + Builder, OS-specific products)
+        'audio/audio-process.cpp',
+        'audio/audio-backend-builder.cpp',
+        'audio/audio-backend-freebsd.cpp',
+        'audio/audio-backend-linux.cpp',
     ],
     dependencies: [
         wf_protos,
@@ -40,3 +45,12 @@ util = static_library(
 
 util_includes = include_directories('.')
 libutil = declare_dependency(link_with: util, include_directories: util_includes)
+
+# CLI to exercise audio Factory/Builder without GTK
+wf_audio_info = executable(
+    'wf-audio-info',
+    'audio/audio-backend-cli.cpp',
+    dependencies: [libutil],
+    cpp_args: platform_cpp_args,
+    install: true,
+)

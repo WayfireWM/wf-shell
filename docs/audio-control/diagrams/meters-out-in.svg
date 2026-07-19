@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 400 280" width="100%" preserveAspectRatio="xMidYMid meet">
+  <foreignObject x="0" y="0" width="400" height="280">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:400px;height:280px;box-sizing:border-box;font-family:Sans,system-ui,sans-serif;background:#11111b;color:#cdd6f4;padding:12px;">
+      <div style="font-size:11px;color:#a6adc8;margin-bottom:8px;">Level meters — output multi-ch + input stereo</div>
+      <div style="background:#1e1e2e;border:1px solid #45475a;border-radius:10px;padding:12px;">
+        <div style="font-size:10px;color:#89b4fa;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Output · 8 channels (HDMI 7.1)</div>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:64px;padding:6px;background:#11111b;border-radius:6px;margin-bottom:6px;">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:70%;background:#a6e3a1;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">L</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:68%;background:#a6e3a1;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">R</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:45%;background:#a6e3a1;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">C</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:30%;background:#f9e2af;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">LFE</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:55%;background:#a6e3a1;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">RL</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:52%;background:#a6e3a1;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">RR</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:40%;background:#a6e3a1;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">SL</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:38%;background:#a6e3a1;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">SR</span></div>
+        </div>
+        <div style="font-size:9px;color:#6c7086;margin-bottom:12px;">Green = ok · yellow = hot · red = clip · labels = speaker map</div>
+        <div style="font-size:10px;color:#f9e2af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Input · 2 channels (mic stereo)</div>
+        <div style="display:flex;align-items:flex-end;gap:8px;height:48px;padding:6px;background:#11111b;border-radius:6px;margin-bottom:6px;max-width:120px;">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:55%;background:#f9e2af;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">L</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;"><div style="width:100%;height:48%;background:#a6e3a1;border-radius:1px;"></div><span style="font-size:8px;color:#6c7086;">R</span></div>
+        </div>
+        <div style="font-size:9px;color:#6c7086;">Input stays stereo; output expands to 2 / 5.1 / 7.1 to match HDMI sinks.</div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>

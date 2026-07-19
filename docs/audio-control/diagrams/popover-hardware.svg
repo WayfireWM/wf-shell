@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 440 440" width="100%" preserveAspectRatio="xMidYMid meet">
+  <foreignObject x="0" y="0" width="440" height="440">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:440px;height:440px;box-sizing:border-box;font-family:Sans,system-ui,sans-serif;background:#11111b;color:#cdd6f4;padding:12px;">
+      <div style="font-size:11px;color:#a6adc8;margin-bottom:8px;">Full-width device lists under Output / Input (no side labels)</div>
+      <div style="background:#1e1e2e;border:1px solid #45475a;border-radius:10px;padding:14px;font-size:12px;">
+        <div style="margin-bottom:12px;padding:8px;background:#181825;border-radius:6px;font-size:10px;color:#a6adc8;line-height:1.5;">
+          One dropdown per direction. No separate “apps / Pulse” row — routing is automatic.
+        </div>
+        <div style="font-size:10px;color:#89b4fa;margin-bottom:6px;">Output</div>
+        <div style="border:1px solid #313244;border-radius:8px;overflow:hidden;margin-bottom:14px;">
+          <div style="padding:8px 10px;border-bottom:1px solid #313244;color:#a6adc8;">○ HDMI (display 1)</div>
+          <div style="padding:8px 10px;background:#1e3a5f;border-bottom:1px solid #313244;">● HDMI · this monitor <span style="color:#a6e3a1;">ACTIVE</span></div>
+          <div style="padding:8px 10px;border-bottom:1px solid #313244;color:#a6adc8;">○ HDMI (display 2)</div>
+          <div style="padding:8px 10px;border-bottom:1px solid #313244;color:#a6adc8;">○ Rear speakers (analog)</div>
+          <div style="padding:8px 10px;color:#a6adc8;">○ Digital out (SPDIF)</div>
+        </div>
+        <div style="font-size:10px;color:#f9e2af;margin-bottom:6px;">Input</div>
+        <div style="border:1px solid #313244;border-radius:8px;overflow:hidden;margin-bottom:12px;">
+          <div style="padding:8px 10px;background:#3d3420;border-bottom:1px solid #313244;">● Rear mic / line <span style="color:#f9e2af;">ACTIVE</span></div>
+          <div style="padding:8px 10px;color:#a6adc8;">○ Front headset jack</div>
+        </div>
+        <div style="font-size:10px;color:#6c7086;line-height:1.4;">HDMI never appears under Input. Picking an output row selects the sound device; apps follow automatically.</div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>

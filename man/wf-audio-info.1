@@ -1,0 +1,68 @@
+.\" Copyright (c) revytechinc / wf-shell contributors
+.\" SPDX-License-Identifier: MIT
+.Dd July 19, 2026
+.Dt WF-AUDIO-INFO 1
+.Os
+.Sh NAME
+.Nm wf-audio-info
+.Nd dump modular audio backend autodetection and device lists
+.Sh SYNOPSIS
+.Nm
+.Sh DESCRIPTION
+.Nm
+exercises the
+.Nm wf-shell
+.Vt IAudioBackend
+Factory/Builder without starting the panel.
+It prints the platform tag, autodetected
+.Vt AudioStackFeatures ,
+Virtual OSS status
+.Pq first-class when present ,
+and playback/capture/logical device lists.
+.Pp
+Use it after install or when diagnosing routing
+.Pq HDMI vs rear, mic jack, missing Pulse, absent virtual_oss .
+Exit status is always 0 unless the process cannot start; missing
+audio modules are reported as empty lists / false flags, not as
+a crash.
+.Sh OUTPUT
+Typical sections:
+.Bl -bullet
+.It
+.Sy platform
+— freebsd, linux, or unknown.
+.It
+.Sy features (autodetect)
+— logical_io, physical_devices, virtual_oss, hw_default_unit, mix_channels.
+.It
+.Sy virtual_oss
+— available, running, control device; when running: play path, capture path, rate, bits, channels.
+.It
+.Sy playback devices / capture devices
+— physical candidates
+.Pq FreeBSD pcm* .
+.It
+.Sy logical outputs / inputs
+— Pulse sinks/sources when
+.Nm pactl
+works.
+.El
+.Sh ENVIRONMENT
+Uses PATH for
+.Nm pactl
+and
+.Nm virtual_oss_cmd
+unless the backend builder is given alternate binaries at compile time.
+Default control device is
+.Pa /dev/vdsp.ctl .
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr wf-shell-audio 7 ,
+.Xr virtual_oss 8 ,
+.Xr pactl 1
+.Sh HISTORY
+Part of the
+.Nm wf-shell
+audio backend smoke tooling
+.Pq Factory/Builder validation .

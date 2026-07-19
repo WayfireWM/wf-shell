@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 340 520" width="100%" preserveAspectRatio="xMidYMid meet">
+  <foreignObject x="0" y="0" width="340" height="520">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:340px;height:520px;box-sizing:border-box;font-family:Sans,system-ui,sans-serif;background:#11111b;color:#cdd6f4;padding:10px;">
+      <div style="font-size:11px;color:#a6adc8;margin-bottom:6px;">Virtual OSS manager + volume</div>
+      <div style="background:#1e1e2e;border:1px solid #45475a;border-radius:10px;overflow:hidden;font-size:12px;">
+        <div style="padding:10px 12px;border-bottom:1px solid #313244;">
+          <div style="display:flex;justify-content:space-between;font-weight:600;font-size:13px;"><span>Sound</span><span>🔊 🎤</span></div>
+          <div style="font-size:10px;color:#a6adc8;margin-top:3px;"><span style="color:#89b4fa;">HDMI · this monitor</span> · <span style="color:#f9e2af;">Rear mic / line</span></div>
+        </div>
+        <div style="padding:10px 12px;border-bottom:1px solid #313244;">
+          <div style="font-size:10px;color:#6c7086;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Output</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="width:26px;height:26px;background:#313244;border-radius:6px;text-align:center;line-height:26px;font-size:11px;">🔇</div>
+            <div style="flex:1;height:7px;background:#313244;border-radius:4px;"><div style="width:72%;height:100%;background:#89b4fa;border-radius:4px;"></div></div>
+            <div style="color:#a6e3a1;font-size:11px;">72%</div>
+          </div>
+          <div style="height:28px;background:#11111b;border-radius:4px;margin-bottom:8px;border:1px solid #313244;"></div>
+          <div style="background:#313244;border:1px solid #89b4fa;border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;"><span>HDMI · this monitor</span><span style="color:#a6adc8;">▾</span></div>
+        </div>
+        <div style="padding:10px 12px;background:#181825;border-bottom:1px solid #313244;">
+          <div style="font-size:10px;color:#f9e2af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Input</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="width:26px;height:26px;background:#313244;border-radius:6px;text-align:center;line-height:26px;font-size:11px;">🎤</div>
+            <div style="flex:1;height:7px;background:#313244;border-radius:4px;"><div style="width:40%;height:100%;background:#f9e2af;border-radius:4px;"></div></div>
+            <div style="color:#f9e2af;font-size:11px;">40%</div>
+          </div>
+          <div style="height:24px;background:#11111b;border-radius:4px;margin-bottom:8px;border:1px solid #313244;"></div>
+          <div style="background:#313244;border:1px solid #f9e2af;border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;"><span>Rear mic / line</span><span style="color:#a6adc8;">▾</span></div>
+        </div>
+        <div style="padding:10px 12px;background:#14141f;border-bottom:1px solid #313244;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#a6e3a1;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">
+            <span>Virtual OSS</span><span style="text-transform:none;letter-spacing:0;color:#a6adc8;">● running</span>
+          </div>
+          <div style="display:grid;grid-template-columns:64px 1fr;gap:4px 8px;font-size:11px;margin-bottom:8px;">
+            <div style="color:#6c7086;">Play</div><div>HDMI · this monitor · /dev/dsp1</div>
+            <div style="color:#6c7086;">Capture</div><div>Rear mic / line · /dev/dsp3</div>
+            <div style="color:#6c7086;">Format</div><div style="font-family:monospace;font-size:10px;color:#a6adc8;">48000 Hz · 16-bit · 2 ch mix</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;font-size:11px;">
+            <span style="color:#6c7086;">Mix ch</span>
+            <span style="background:#313244;border:1px solid #45475a;border-radius:4px;padding:3px 8px;">2 ▾</span>
+            <span style="border:1px solid #a6e3a1;color:#a6e3a1;border-radius:4px;padding:3px 8px;">Apply mix</span>
+            <span style="border:1px solid #45475a;border-radius:4px;padding:3px 8px;color:#cdd6f4;">Refresh</span>
+          </div>
+        </div>
+        <div style="padding:8px 12px;font-size:10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:#a6e3a1;display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#a6e3a1;display:inline-block;"></span>Virtual OSS</span>
+          <span style="color:#89b4fa;">Advanced…</span>
+        </div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>

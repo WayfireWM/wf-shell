@@ -140,6 +140,47 @@ menu_logout_command = wayland-logout
 # after scrolling on the volume icon
 volume_display_timeout = 2.5
 
+# Level meter graph styles (independent for output vs input).
+# bars | wave | wave-fill | mirror | scope | spectrum | dots | ribbon
+# Default: wave-fill for both
+volume_graph_style = wave-fill
+volume_graph_style_in = wave-fill
+
+# Output meter channel count: 2 (stereo), 6 (5.1), 8 (HDMI 7.1)
+volume_out_channels = 8
+
+# Include PulseAudio *.monitor sources in the input dropdown
+volume_show_monitor_sources = false
+
+# Last Virtual OSS / play-capture routing (FreeBSD). Empty = auto from daemon.
+# volume_play_device = /dev/dsp1
+# volume_capture_device = /dev/dsp3
+
+# Preferred mix channel count when applying Virtual OSS reopen (2 / 6 / 8)
+volume_mix_channels = 2
+
+# --- Behaviour (config only — not all exposed in the compact popover UI) ---
+# Prefer Virtual OSS for routing when available (FreeBSD). false = Pulse/logical only.
+volume_prefer_virtual_oss = true
+
+# Auto-route to headset on jack plug (devd SND/CONN). false = manual only.
+volume_auto_switch_headset = true
+
+# Auto-route when a USB sound device appears. false = manual only.
+volume_auto_switch_usb = true
+
+# On unplug of an auto-switched device, restore the previous play/capture path.
+volume_auto_restore_previous = true
+
+# When auto-switching to a headset with a mic, also switch capture.
+volume_auto_switch_capture = true
+
+# Toast/status when routing changes automatically.
+volume_notify_device_change = true
+
+# Manual Output/Input pick blocks auto-switch until the next physical plug event.
+volume_manual_sticky = true
+
 # Configuration for the mixer widget
 # This shows an almost full-featured mixer for the audio using Pipewire/Wireplumber
 # It allows for individual control of the volume of all apps, microphones and speakers,

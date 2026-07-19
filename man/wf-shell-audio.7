@@ -1,0 +1,449 @@
+.\" Copyright (c) revytechinc / wf-shell contributors
+.\" SPDX-License-Identifier: MIT
+.Dd July 19, 2026
+.Dt WF-SHELL-AUDIO 7
+.Os
+.Sh NAME
+.Nm wf-shell-audio
+.Nd panel sound popover, Virtual OSS management, and audio backend
+.Sh DESCRIPTION
+This page documents the
+.Nm wf-shell
+panel sound UI and the modular
+.Nm IAudioBackend
+stack used on
+.Fx
+.Pq with optional Linux support .
+The popover is intentionally sparse: controls only.
+Operational detail, routing semantics, and failure modes live here
+.Pq and in related pages ,
+not as in-UI help text.
+.Sh FREEBSD MODEL
+On
+.Fx
+the preferred path is:
+.Bd -literal -offset indent
+applications → PulseAudio → virtual_oss (/dev/dsp) → OSS PCM
+.Ed
+.Pp
+.Sy Virtual OSS is first-class
+when autodetected
+.Pq control device present, e.g.\& /dev/vdsp.ctl .
+The UI then exposes play and capture routing plus a manage strip.
+When Virtual OSS is absent, the Virtual OSS strip and footer badge are
+hidden; the UI falls back to logical devices
+.Pq Pulse sinks/sources
+if available, or a quiet degraded state.
+.Pp
+Absence of a module is
+.Em not
+an error.
+The panel must not crash or throw if
+.Nm virtual_oss ,
+.Nm pactl ,
+or a given PCM is missing.
+.Sh AUTODETECTION
+The backend probes the live system via
+.Fn features
+and returns an
+.Vt AudioStackFeatures
+struct
+.Pq all flags default false :
+.Bl -tag -width "physical_devices"
+.It Va logical_io
+Pulse/PipeWire sinks and sources reachable
+.Pq typically via pactl .
+.It Va physical_devices
+OS hardware list
+.Pq Fx : /dev/sndstat pcm* .
+.It Va virtual_oss
+First-class
+.Fx
+module: control device present and preferred.
+.It Va hw_default_unit
+.Fx
+.Va hw.snd.default_unit
+supported.
+.It Va mix_channels
+Mix/open channel reconfiguration available when Virtual OSS is running.
+.It Va virtual_oss_label
+User-facing label
+.Pq default Dq Virtual OSS
+when
+.Va virtual_oss
+is true.
+.El
+.Pp
+Also see
+.Fn virtual_oss_status
+for a live snapshot: available, running, play_path, record_path,
+sample_rate, bits, channels, control_device.
+.Sh PANEL POPOVER
+.Ss Output
+.Bl -bullet
+.It
+Volume slider and mute for the default playback path
+.Pq GVC/Pulse default sink .
+.It
+Level meter with graph style and optional channel count
+.Pq display preference; see CONFIGURATION .
+.It
+Full-width device dropdown: when Virtual OSS is active, selects the
+.Em play
+backend device
+.Pq maps to set_playback_device / virtual_oss -P .
+.El
+.Ss Input
+.Bl -bullet
+.It
+Mic volume and mute for the default capture path.
+.It
+Stereo level meter while the popover is open.
+.It
+Full-width device dropdown: when Virtual OSS is active, selects the
+.Em capture
+backend
+.Pq set_capture_device / virtual_oss -R .
+Only record-capable PCMs appear
+.Pq e.g. rear/front analog; not HDMI play-only .
+.El
+.Ss Virtual OSS strip
+Shown only when
+.Va features.virtual_oss
+is true.
+Footer bottom-left shows a
+.Sy Virtual OSS
+badge that toggles the strip.
+.Pp
+The strip reports:
+.Bl -bullet
+.It
+Play path and friendly device name
+.It
+Capture path and friendly device name
+.It
+Format: sample rate, bit width, mix channel count
+.It
+Control device
+.Pq e.g. /dev/vdsp.ctl
+.It
+.Sy Mix ch
+selector and
+.Sy Apply mix
+.Pq reconfigure open mix format; may reopen the daemon / Pulse path
+.It
+.Sy Refresh
+re-queries
+.Fn virtual_oss_status
+.El
+.Ss Advanced
+Opens a full mixer
+.Pq e.g. pavucontrol
+for per-application streams.
+Out of scope for the compact popover.
+.Sh KEYBOARD AND POINTER
+.Bl -tag -width "middle-click"
+.It scroll on icon
+Output volume.
+.It Shift+scroll
+Input
+.Pq mic
+volume.
+.It middle-click
+Mute output.
+.It Esc
+Close popover.
+.El
+.Sh BACKEND API SUMMARY
+UI code talks only to
+.Vt IAudioBackend
+.Pq no OS ifdefs in the widget :
+.Bl -tag -width "set_default_logical_output"
+.It Fn platform_name
+.Dq freebsd ,
+.Dq linux ,
+or
+.Dq unknown .
+.It Fn features
+Autodetected module flags.
+.It Fn list_playback_devices / list_capture_devices
+Physical candidates.
+.It Fn list_logical_outputs / list_logical_inputs
+Pulse/PipeWire endpoints; monitors optional.
+.It Fn virtual_oss_status
+First-class FreeBSD snapshot; available=false is normal when missing.
+.It Fn set_playback_device / set_capture_device
+Route play/capture; returns
+.Vt OpResult
+.Pq never throws .
+.It Fn set_default_logical_output / set_default_logical_input
+Default sink/source.
+.It Fn set_hw_default_unit
+.Fx
+.Va hw.snd.default_unit ;
+no-op ok on Linux.
+.El
+.Pp
+Factory construction:
+.Bd -literal -offset indent
+auto b = wf_audio::AudioBackendFactory::create();
+auto b = wf_audio::AudioBackendFactory::builder()
+             .control_device("/dev/vdsp.ctl")
+             .prefer_virtual_oss(true)
+             .build();
+.Ed
+.Sh CONFIGURATION
+Shell settings live in
+.Pa ~/.config/wf-shell.ini
+section
+.Bq panel
+.Pq not wayfire.ini .
+Keys
+.Pq see metadata/panel.xml :
+.Bl -tag -width "volume_show_monitor_sources"
+.It Va volume_graph_style
+Meter style; default
+.Sy wave-fill .
+.It Va volume_out_channels
+Meter channel count preference 2/6/8.
+.It Va volume_mix_channels
+Preferred Virtual OSS mix channel count when apply is used.
+.It Va volume_show_monitor_sources
+Include Pulse
+.Pa *.monitor
+sources.
+.It Va volume_play_device
+Last play path
+.Pq e.g. /dev/dsp1 .
+.It Va volume_capture_device
+Last capture path
+.Pq e.g. /dev/dsp3 .
+.It Va volume_mix_channels
+Preferred mix channel count
+.Pq 2, 6, or 8
+when applying a Virtual OSS reopen.
+.It Va volume_prefer_virtual_oss
+If true and Virtual OSS is available, use it for routing.
+.It Va volume_auto_switch_headset
+Auto-route play to headset on jack plug
+.Pq FreeBSD HDA / devd .
+.It Va volume_auto_switch_usb
+Auto-route when a USB sound device appears.
+.It Va volume_auto_restore_previous
+On unplug of an auto-switched device, restore the previous path if present.
+.It Va volume_auto_switch_capture
+Also switch capture when auto-switching to a headset with a mic.
+.It Va volume_notify_device_change
+Show a short notification on automatic routing changes.
+.It Va volume_manual_sticky
+Manual Output/Input selection blocks auto-switch until the next plug event.
+.El
+.Pp
+These behaviour keys are
+.Sy configuration only
+.Pq Pa ~/.config/wf-shell.ini
+or the settings UI that edits the same options .
+They are
+.Em not
+all shown in the compact sound popover; that stays limited to volume, device
+lists, meters, and Virtual OSS status.
+.Pp
+Defaults favour convenience
+.Pq auto-switch and restore on .
+Set any of the
+.Va volume_auto_*
+keys to
+.Sy false
+to require fully manual routing.
+.Sh MIX CHANNELS VS METER CHANNELS
+.Bl -bullet
+.It
+.Em Mix channels
+are the open stream format for Virtual OSS
+.Pq -C/-c
+and what Pulse typically opens
+.Pq e.g. s16le 2ch .
+Changing them is an apply step, not only a paint preference.
+.It
+.Em Meter channels
+are how many level traces the UI draws
+.Pq 2/6/8 .
+They should preferably track the live mix when Virtual OSS is running,
+and clamp to device capability when switching outputs.
+.El
+.Sh DEVICE ELIGIBILITY
+From
+.Pa /dev/sndstat
+on
+.Fx :
+.Bl -column "pcm flags" "Play list" "Capture list"
+.It Sy pcm flags Ta Sy Play list Ta Sy Capture list
+.It (play) only Ta yes Ta no
+.It (play/rec) Ta yes Ta yes
+.It (rec) only Ta no Ta yes
+.It userspace dsp / dsp.loop Ta no Ta no
+.El
+.Sh HOTPLUG, HEADSET AUTO-SWITCH, AND RESTORE
+.Ss USB sound devices
+When a USB audio interface is plugged in, FreeBSD creates a new
+.Nm pcm
+unit and
+.Pa /dev/dspN .
+It appears on the next
+.Fn list_playback_devices
+or
+.Fn list_capture_devices
+call
+.Pq re-read of /dev/sndstat .
+When unplugged, it
+.Em disappears
+from those lists.
+.Fn set_playback_device
+returns
+.Vt OpResult
+with
+.Va ok
+false
+.Pq Dq device not present
+if the path is gone.
+.Fn virtual_oss_status
+exposes
+.Va play_path_ok
+and
+.Va record_path_ok
+so a dead Virtual OSS backend is visible even if the daemon still runs.
+.Ss Headset jack presence
+On many Realtek front panels the headset is a separate PCM
+.Pq e.g. Front Analog /dev/dsp4
+while the monitor may be HDMI
+.Pq e.g. /dev/dsp1 .
+The HDA driver can detect plug/unplug via pin sense and notifies userspace
+with
+.Nm devd
+events of the form:
+.Bd -literal -offset indent
+system=SND subsystem=CONN type=OUT cdev=dsp4
+.Ed
+.Pq see hdaa_presence_handler in the FreeBSD kernel .
+.Pp
+That is the preferred signal for automatic headset switching.
+If the pin is configured without presence detect, no event is emitted and
+auto-switch does nothing
+.Pq manual dropdown still works .
+.Ss Automatic switch and restore previous speakers
+When
+.Va volume_auto_switch_headset
+is enabled
+.Pq default true once implemented :
+.Bl -enum
+.It
+User is playing to speakers/HDMI
+.Pq e.g. /dev/dsp1 .
+.It
+Headset is plugged
+.Pq SND/CONN for the headset cdev .
+Remember the current play path on a small stack, then
+.Fn set_playback_device
+to the headset path.
+.It
+Headset is unplugged.
+If the current route was the auto-chosen headset, restore the previous path
+if it still exists; otherwise pick the next present play device.
+.El
+.Pp
+Manual selection in the Output dropdown overrides auto until the next plug
+event
+.Pq user choice is sticky .
+The same pattern applies to USB audio when
+.Va volume_auto_switch_usb
+is enabled.
+.Pp
+Restore never crashes the panel: missing previous path yields a soft
+fallback and a status toast only.
+.Ss Recommended UI handling
+.Bl -bullet
+.It
+Subscribe to
+.Nm devd
+.Pq or poll list_* as fallback
+for CONN and USB audio attach/detach.
+.It
+Refresh device lists when the popover opens.
+.It
+Keep volume usable on the logical default sink if hardware routing is
+temporarily invalid.
+.El
+.Sh LINUX AND OTHER HOSTS
+Linux backends are Pulse-primary.
+.Va virtual_oss
+is usually false; the manage strip stays hidden.
+.Fn set_playback_device
+and
+.Fn set_capture_device
+map to default sink/source when no Virtual OSS path exists.
+Unknown platforms use a null backend: empty lists, false features,
+failed sets with a clear
+.Vt OpResult.message .
+.Sh FILES
+.Bl -tag -width "~/.config/wf-shell.ini"
+.It Pa ~/.config/wf-shell.ini
+Panel and volume options.
+.It Pa /dev/vdsp.ctl
+Typical Virtual OSS control device
+.Pq configurable .
+.It Pa /dev/dsp
+Virtual OSS user device apps open via Pulse module-oss.
+.It Pa /etc/rc.conf
+.Va virtual_oss_*
+rc variables for daemon flags
+.Pq -P/-R/-C/-c, rate, bits .
+.It Pa metadata/panel.xml
+Option schema for the panel.
+.El
+.Sh DIAGNOSTICS
+.Bl -tag -width "wf-audio-info"
+.It Nm wf-audio-info
+Print platform, features, Virtual OSS status, and device lists.
+See
+.Xr wf-audio-info 1 .
+.It Nm wayfire-session
+Session control from byobu
+.Pq status, monitor, ensure, restart
+when validating the panel under a live Wayland seat.
+See
+.Pa ~/bin/wayfire-session
+and
+.Pa docs/audio-control/SESSION-CONTROL.md
+in the
+.Nm wf-shell
+tree.
+.It Nm virtual_oss_cmd Ar /dev/vdsp.ctl
+Low-level status
+.Pq play/capture paths, rate, bits, channels .
+.It Nm pactl Ar info / list short sinks / sources
+Pulse default and endpoints.
+.It Pa /dev/sndstat
+OSS PCM inventory.
+.It Nm grim
+Wayland screenshot used as a health probe and for UI crop asserts.
+.El
+.Sh SEE ALSO
+.Xr wf-audio-info 1 ,
+.Xr pactl 1 ,
+.Xr mixer 8 ,
+.Xr virtual_oss 8 ,
+.Xr virtual_oss_cmd 8
+.Sh HISTORY
+The modular
+.Nm IAudioBackend
+and
+.Fx Ns -centric
+Virtual OSS manager design were introduced for
+.Nm wf-shell
+panel volume enhancements
+.Pq revytechinc fork .
+.Sh AUTHORS
+.An revytechinc
+and
+.Nm wf-shell
+contributors.

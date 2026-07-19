@@ -1,0 +1,56 @@
+#!/bin/sh
+# Red/green test runner for audio control work.
+# Exit 0 only if all suites green.
+
+set -eu
+ROOT="$(CDPATH= cd -- "$(dirname "$0")/../../.." && pwd)"
+cd "$ROOT"
+
+red=0
+
+echo "######## Suite 1: defaults / config / mockup ########"
+PY=python3
+command -v python3 >/dev/null 2>&1 || PY=python3.12
+command -v "$PY" >/dev/null 2>&1 || PY=python3.11
+if ! command -v "$PY" >/dev/null 2>&1; then
+  echo "  RED    no python3 interpreter"
+  red=1
+elif "$PY" docs/audio-control/tests/test_defaults.py; then
+  echo
+else
+  red=1
+  echo
+fi
+
+echo "######## Suite 2: audio backend C++ ########"
+CXXFLAGS="-std=c++17 -Wall -Wno-unused-parameter -DWFS_PLATFORM_FREEBSD -I src/util"
+OUT="/tmp/test_audio_backend.$$"
+# shellcheck disable=SC2086
+if c++ $CXXFLAGS \
+    src/util/platform.cpp \
+    src/util/audio/audio-process.cpp \
+    src/util/audio/audio-backend-builder.cpp \
+    src/util/audio/audio-backend-freebsd.cpp \
+    src/util/audio/audio-backend-linux.cpp \
+    src/util/audio/tests/test_audio_backend.cpp \
+    -o "$OUT" 2>/tmp/test_audio_backend_build.err
+then
+  if "$OUT"; then
+    :
+  else
+    red=1
+  fi
+  rm -f "$OUT"
+else
+  echo "  RED    C++ test failed to compile"
+  sed 's/^/         /' /tmp/test_audio_backend_build.err | head -40
+  red=1
+fi
+
+echo
+if [ "$red" -eq 0 ]; then
+  echo "######## ALL GREEN ########"
+  exit 0
+fi
+echo "######## RED — fix failures above ########"
+exit 1

@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>wf-shell audio — compact dropdown mockup</title>
+  <style>
+    :root {
+      --bg: #11111b; --surface: #1e1e2e; --surface2: #313244; --border: #45475a;
+      --text: #cdd6f4; --muted: #a6adc8; --dim: #6c7086;
+      --blue: #89b4fa; --green: #a6e3a1; --yellow: #f9e2af; --red: #f38ba8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      font-family: system-ui, "Segoe UI", sans-serif;
+      background: radial-gradient(ellipse at 30% 0%, #1a1b2e 0%, var(--bg) 50%);
+      color: var(--text);
+    }
+    .desk { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 1.2rem; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 18px; line-height: 1.45; }
+    .panel {
+      display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; z-index: 5; position: relative;
+    }
+    .panel .grow { flex: 1; color: var(--dim); font-size: 12px; }
+    .icon-btn {
+      display: inline-flex; align-items: center; gap: 5px; border: 1px solid transparent;
+      background: transparent; color: var(--text); border-radius: 6px; padding: 3px 8px;
+      cursor: pointer; font: inherit; font-size: 12px;
+    }
+    .icon-btn:hover, .icon-btn.open { background: var(--surface2); border-color: var(--blue); }
+    .vol-pct { color: var(--green); font-size: 11px; }
+    .mic-pct { color: var(--yellow); font-size: 11px; border-left: 1px solid var(--border); padding-left: 6px; }
+    .stage {
+      margin-top: 20px; min-height: 480px; position: relative;
+      border: 1px dashed var(--border); border-radius: 12px; background: #0c0c14;
+      display: flex; align-items: flex-start; justify-content: flex-end; padding: 16px 20px;
+    }
+    .stage-hint {
+      position: absolute; left: 18px; top: 18px; color: var(--dim); font-size: 12px;
+      max-width: 300px; line-height: 1.5;
+    }
+    .stage-hint strong { color: var(--text); }
+    .stage-hint label { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px; }
+    .popover {
+      width: 320px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.55); display: none; animation: pop 0.15s ease-out;
+    }
+    .popover.visible { display: block; }
+    @keyframes pop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    .pop-head { padding: 10px 12px; border-bottom: 1px solid var(--surface2); }
+    .pop-head h2 { margin: 0; font-size: 13px; display: flex; justify-content: space-between; }
+    .pop-head .meta { font-size: 10px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
+    .section { padding: 8px 12px; border-bottom: 1px solid var(--surface2); }
+    .section.in { background: #181825; }
+    .section-title {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--dim); margin-bottom: 6px;
+    }
+    .section-title.in { color: var(--yellow); }
+    .row { display: flex; align-items: center; gap: 8px; }
+    .slider {
+      flex: 1; -webkit-appearance: none; appearance: none; height: 7px;
+      border-radius: 4px; background: var(--surface2); outline: none;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
+      background: var(--blue); cursor: pointer;
+    }
+    .slider.mic::-webkit-slider-thumb { background: var(--yellow); }
+    .mute {
+      width: 30px; height: 30px; border: 0; border-radius: 6px;
+      background: var(--surface2); color: var(--text); cursor: pointer; font-size: 12px;
+    }
+    .mute.on { background: var(--red); color: #111; }
+    .pct { font-size: 11px; min-width: 2.5em; text-align: right; color: var(--green); }
+    .pct.mic { color: var(--yellow); }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .field select.dd {
+      width: 100%;
+    }
+    select.dd {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a6adc8' d='M3 4.5L6 8l3-3.5'/%3E%3C/svg%3E") no-repeat right 8px center;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 28px 7px 10px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+    select.dd:hover { border-color: var(--blue); }
+    select.dd:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(137,180,250,0.2); }
+    select.dd.mic { border-color: #5c5340; }
+    select.dd.mic:hover, select.dd.mic:focus { border-color: var(--yellow); }
+    select.dd option { background: var(--surface); color: var(--text); }
+    .meter-block { margin-top: 8px; }
+    .meter-caption {
+      font-size: 9px; color: var(--dim);
+      margin-bottom: 4px;
+      display: flex; justify-content: space-between; align-items: center; gap: 6px;
+    }
+    .meter-caption .cap-left {
+      text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0;
+    }
+    .meter-caption .cap-right {
+      display: flex; align-items: center; gap: 4px; min-width: 0;
+    }
+    /* Inline dropdown sitting where "wave-fill" text was */
+    select.graph-dd {
+      appearance: none;
+      -webkit-appearance: none;
+      max-width: 118px;
+      background: var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2389b4fa' d='M3 4.5L6 8l3-3.5'/%3E%3C/svg%3E") no-repeat right 5px center;
+      color: var(--blue);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 18px 2px 6px;
+      font: inherit;
+      font-size: 10px;
+      text-transform: none;
+      letter-spacing: 0;
+      cursor: pointer;
+      outline: none;
+    }
+    select.graph-dd:hover { border-color: var(--blue); }
+    select.graph-dd.ch-dd { max-width: 52px; color: var(--muted); }
+    select.graph-dd option { background: var(--surface); color: var(--text); }
+    .meter {
+      display: flex; align-items: flex-end; gap: 3px; height: 36px;
+      padding: 4px 6px 2px; background: #11111b; border-radius: 6px;
+      position: relative; overflow: hidden;
+    }
+    .meter.out { height: 56px; gap: 2px; }
+    .meter .ch {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;
+      height: 100%; justify-content: flex-end;
+    }
+    .meter .ch i {
+      display: block; width: 100%; border-radius: 1px 1px 0 0; background: var(--surface2);
+      transition: height 0.08s linear, background 0.08s; min-height: 2px;
+    }
+    .meter .ch span {
+      font-size: 7px; color: var(--dim); line-height: 1; letter-spacing: -0.02em;
+    }
+    .meter.out .ch span { color: #7f849c; }
+    .meter canvas {
+      display: block; width: 100%; height: 100%;
+      border-radius: 4px;
+    }
+    .meter.wave-mode { padding: 0; display: block; }
+    .meter.wave-mode.out { height: 64px; }
+    .meter.wave-mode { height: 44px; }
+    .hint-select {
+      margin-left: 6px; background: #313244; color: #cdd6f4;
+      border: 1px solid #45475a; border-radius: 4px; font-size: 12px; max-width: 160px;
+    }
+    .foot {
+      padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px; gap: 8px; flex-wrap: wrap;
+    }
+    .foot a { color: var(--blue); cursor: pointer; text-decoration: none; }
+    .voss-badge {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--green);
+      letter-spacing: 0.02em;
+      user-select: none;
+      cursor: pointer;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      font: inherit;
+    }
+    .voss-badge.on { display: inline-flex; }
+    .voss-badge:hover { color: #b4f0af; }
+    .voss-badge .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(166, 227, 161, 0.55);
+    }
+    /* Virtual OSS management strip — the point of this popover on FreeBSD */
+    .voss-panel {
+      display: none;
+      padding: 10px 12px;
+      border-top: 1px solid var(--surface2);
+      background: #14141f;
+    }
+    .voss-panel.on { display: block; }
+    .voss-panel .vp-title {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--green); margin-bottom: 8px;
+    }
+    .voss-panel .vp-title .live {
+      font-size: 10px; text-transform: none; letter-spacing: 0;
+      color: var(--muted);
+    }
+    .voss-panel .vp-grid {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 5px 8px;
+      align-items: center;
+      font-size: 11px;
+    }
+    .voss-panel .vp-grid .k { color: var(--dim); }
+    .voss-panel .vp-grid .v { color: var(--text); min-width: 0; }
+    .voss-panel .vp-grid .v.mono {
+      font-family: ui-monospace, monospace; font-size: 10px; color: var(--muted);
+    }
+    .voss-panel .vp-actions {
+      display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .voss-panel select.dd.inline {
+      width: auto; min-width: 72px; flex: 0 0 auto;
+      padding: 5px 26px 5px 8px; font-size: 11px;
+    }
+    .voss-panel .btn {
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text); border-radius: 6px; padding: 5px 10px;
+      font: inherit; font-size: 11px; cursor: pointer;
+    }
+    .voss-panel .btn:hover { border-color: var(--blue); color: var(--blue); }
+    .voss-panel .btn.primary { border-color: var(--green); color: var(--green); }
+    .voss-panel .btn.primary:hover { background: #1a2a1a; }
+    .toast {
+      position: fixed; bottom: 20px; right: 20px; background: var(--surface2);
+      border: 1px solid var(--blue); padding: 10px 14px; border-radius: 8px;
+      font-size: 12px; opacity: 0; transition: opacity 0.2s; z-index: 50; pointer-events: none;
+      max-width: 320px;
+    }
+    .toast.show { opacity: 1; }
+    .legend {
+      margin-top: 24px; display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;
+    }
+    .card {
+      background: var(--surface); border: 1px solid var(--surface2); border-radius: 8px;
+      padding: 12px; font-size: 12px; color: var(--muted); line-height: 1.45;
+    }
+    .card strong { color: var(--text); display: block; margin-bottom: 4px; }
+    kbd {
+      font-size: 10px; background: var(--surface2); padding: 1px 5px;
+      border-radius: 3px; border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="desk">
+    <h1>wf-shell sound — Virtual OSS manager</h1>
+    <p class="sub">
+      Interactive mockup. Details: <code>man wf-shell-audio</code> ·
+      scroll = out · Shift+scroll = mic · middle-click = mute out.
+    </p>
+
+    <div class="panel">
+      <span style="color:var(--blue)">☰</span>
+      <span class="grow">menu · launchers · window-list</span>
+      <button type="button" class="icon-btn" id="volBtn">
+        <span id="volIcon">🔊</span>
+        <span class="vol-pct" id="volPct">72%</span>
+        <span class="mic-pct" id="micBadge">🎤 40%</span>
+      </button>
+      <span style="font-size:12px;color:var(--muted)">net</span>
+      <span style="font-size:12px">14:02</span>
+    </div>
+
+    <div class="stage">
+      <div class="stage-hint">
+        <strong>Desktop</strong><br/>
+        FreeBSD path: apps → Pulse → Virtual OSS → PCM.<br/><br/>
+        <kbd>Esc</kbd> closes<br/>
+        <label><input type="checkbox" id="vossToggle" checked /> Virtual OSS running</label>
+        <label><input type="checkbox" id="showMonitors" /> show monitor sources</label>
+        <label><input type="checkbox" id="meterToggle" checked /> animate meters</label>
+      </div>
+
+      <div class="popover" id="popover" role="dialog" aria-label="Sound">
+        <div class="pop-head">
+          <h2><span>Sound</span><span>🔊 🎤</span></h2>
+          <div class="meta" id="headMeta"></div>
+        </div>
+
+        <!-- OUTPUT -->
+        <div class="section">
+          <div class="section-title">Output</div>
+          <div class="row">
+            <button type="button" class="mute" id="muteOut" title="Mute speakers">🔇</button>
+            <input type="range" class="slider" id="volSlider" min="0" max="100" value="72" />
+            <span class="pct" id="volPct2">72%</span>
+          </div>
+          <div class="meter-block">
+            <div class="meter-caption">
+              <span class="cap-left" id="outMeterCap">Output levels</span>
+              <span class="cap-right">
+                <select class="graph-dd ch-dd" id="selOutCh" title="Output channels" aria-label="Output channels">
+                  <option value="2">2 ch</option>
+                  <option value="6">6 ch</option>
+                  <option value="8" selected>8 ch</option>
+                </select>
+                <select class="graph-dd" id="selGraph" title="Graph type" aria-label="Graph type">
+                  <option value="bars">bars</option>
+                  <option value="wave">wave</option>
+                  <option value="wave-fill" selected>wave-fill</option>
+                  <option value="mirror">mirror</option>
+                  <option value="scope">scope</option>
+                  <option value="spectrum">spectrum</option>
+                  <option value="dots">dots</option>
+                  <option value="ribbon">ribbon</option>
+                </select>
+              </span>
+            </div>
+            <div class="meter out" id="meterOut" aria-label="Output multi-channel meter"></div>
+          </div>
+          <div class="field">
+            <select class="dd" id="selPlay" title="Output device" aria-label="Output device"></select>
+          </div>
+        </div>
+
+        <!-- INPUT -->
+        <div class="section in">
+          <div class="section-title in">Input</div>
+          <div class="row">
+            <button type="button" class="mute" id="muteIn" title="Mute mic">🎤</button>
+            <input type="range" class="slider mic" id="micSlider" min="0" max="100" value="40" />
+            <span class="pct mic" id="micPct">40%</span>
+          </div>
+          <div class="meter-block">
+            <div class="meter-caption">
+              <span class="cap-left">Input levels · stereo</span>
+              <span class="cap-right">
+                <select class="graph-dd" id="selGraphIn" title="Graph type" aria-label="Input graph type">
+                  <option value="bars">bars</option>
+                  <option value="wave">wave</option>
+                  <option value="wave-fill" selected>wave-fill</option>
+                  <option value="mirror">mirror</option>
+                  <option value="scope">scope</option>
+                  <option value="spectrum">spectrum</option>
+                  <option value="dots">dots</option>
+                  <option value="ribbon">ribbon</option>
+                </select>
+              </span>
+            </div>
+            <div class="meter" id="meterIn" aria-label="Input stereo meter"></div>
+          </div>
+          <div class="field">
+            <select class="dd mic" id="selCap" title="Input device" aria-label="Input device"></select>
+          </div>
+        </div>
+
+        <!-- Virtual OSS management (shown only when detected) -->
+        <div class="voss-panel on" id="vossPanel" aria-label="Virtual OSS management">
+          <div class="vp-title">
+            <span>Virtual OSS</span>
+            <span class="live" id="vossLive">● running</span>
+          </div>
+          <div class="vp-grid">
+            <span class="k">Play</span>
+            <span class="v" id="vossPlaySum">—</span>
+            <span class="k">Capture</span>
+            <span class="v" id="vossCapSum">—</span>
+            <span class="k">Format</span>
+            <span class="v mono" id="vossFmt">—</span>
+            <span class="k">Control</span>
+            <span class="v mono" id="vossCtl">/dev/vdsp.ctl</span>
+          </div>
+          <div class="vp-actions">
+            <label for="selMixCh" class="k" style="font-size:10px;color:var(--dim);">Mix ch</label>
+            <select class="dd inline" id="selMixCh" title="virtual_oss mix channels (-C/-c)" aria-label="Mix channels">
+              <option value="2">2</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+            </select>
+            <button type="button" class="btn primary" id="btnApplyMix" title="Apply mix channel count via backend">Apply mix</button>
+            <button type="button" class="btn" id="btnRefreshVoss" title="Refresh status">Refresh</button>
+          </div>
+        </div>
+
+        <div class="foot">
+          <button type="button" class="voss-badge on" id="vossBadge" title="Show / hide Virtual OSS management" aria-live="polite">
+            <span class="dot" aria-hidden="true"></span>Virtual OSS
+          </button>
+          <a id="advLink">Advanced…</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="card"><strong>FreeBSD-centric</strong>Virtual OSS is <strong>first-class</strong> when autodetected. Stage toggle simulates <code>features().virtual_oss</code>.</div>
+      <div class="card"><strong>Modular</strong>Pulse/logical I/O is a separate module. Linux without Virtual OSS → hide strip, use software devices — no crash.</div>
+      <div class="card"><strong>Autodetect</strong>Real widget: <code>features()</code> probes ctl device, sndstat, pactl. Missing = flag false / empty list.</div>
+      <div class="card"><strong>Never blow up</strong>All paths try/catch; <code>set_*</code> returns <code>OpResult</code>. Empty stack → quiet UI.</div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const PLAY = [
+      { id: 0, label: 'HDMI (display 1)' },
+      { id: 1, label: 'HDMI · this monitor' },
+      { id: 2, label: 'HDMI (display 2)' },
+      { id: 3, label: 'Rear speakers (analog)' },
+      { id: 5, label: 'Digital out (SPDIF)' },
+    ];
+    const CAP = [
+      { id: 3, label: 'Rear mic / line' },
+      { id: 4, label: 'Front headset jack' },
+    ];
+    const SINKS = [
+      { id: 'virtual_oss', label: 'Default system output' },
+      { id: 'null', label: 'Silent (dummy)' },
+    ];
+    const SOURCES = [
+      { id: 'virtual_oss_rec', label: 'Default system mic', mon: false },
+      { id: 'virtual_oss.monitor', label: 'What you hear (loopback)', mon: true },
+    ];
+
+    /* Hard-coded product defaults — always safe if storage is empty/corrupt.
+       Live host baseline: -P dsp1, -R dsp3, 48k, 16-bit, 2ch mix. */
+    const DEFAULTS = Object.freeze({
+      open: false,
+      vol: 72,
+      mutedOut: false,
+      mic: 40,
+      mutedIn: false,
+      sink: 'virtual_oss',
+      source: 'virtual_oss_rec',
+      playPcm: 1,
+      capPcm: 3,
+      voss: true,
+      vossPanelOpen: true,
+      showMonitors: false,
+      meterOn: true,
+      outChannels: 8,
+      mixChannels: 2,   /* virtual_oss -C/-c (stream open format) */
+      sampleRate: 48000,
+      bits: 16,
+      controlDevice: '/dev/vdsp.ctl',
+      graphStyleOut: 'wave-fill',  /* independent of input */
+      graphStyleIn: 'wave-fill',
+    });
+    const state = Object.assign({}, DEFAULTS);
+
+    const OUT_LABELS = {
+      2: ['L', 'R'],
+      6: ['L', 'R', 'C', 'LFE', 'RL', 'RR'],
+      8: ['L', 'R', 'C', 'LFE', 'RL', 'RR', 'SL', 'SR'],
+    };
+    const IN_LABELS = ['L', 'R'];
+    const GRAPH_STYLES = {
+      bars: 'Bars (per channel)',
+      wave: 'Wave (smooth)',
+      'wave-fill': 'Wave filled',
+      mirror: 'Mirror wave',
+      scope: 'Oscilloscope',
+      spectrum: 'Spectrum (dense)',
+      dots: 'Peak dots',
+      ribbon: 'Ribbon multi-trace',
+    };
+    const WAVE_COLORS = [
+      '#89b4fa', '#a6e3a1', '#f9e2af', '#fab387',
+      '#cba6f7', '#94e2d5', '#f38ba8', '#74c7ec',
+    ];
+
+    /* Persist mock settings → mirrors ~/.config/wf-shell.ini [panel] keys */
+    const STORAGE_KEY = 'wf-shell-audio-settings-v1';
+
+    function sanitizeState() {
+      try {
+        /* Prefer new keys; migrate old single graphStyle if present */
+        if (state.graphStyleOut == null && state.graphStyle != null) {
+          state.graphStyleOut = state.graphStyle;
+        }
+        if (state.graphStyleIn == null && state.graphStyle != null) {
+          state.graphStyleIn = state.graphStyle;
+        }
+        state.graphStyleOut = safeStyle(state.graphStyleOut);
+        state.graphStyleIn = safeStyle(state.graphStyleIn);
+        state.outChannels = safeOutCh(state.outChannels);
+        state.mixChannels = safeOutCh(state.mixChannels) || DEFAULTS.mixChannels;
+        if (state.mixChannels !== 2 && state.mixChannels !== 6 && state.mixChannels !== 8) {
+          state.mixChannels = DEFAULTS.mixChannels;
+        }
+        state.vol = clamp(state.vol, 0, 100);
+        state.mic = clamp(state.mic, 0, 100);
+        state.playPcm = Number.isFinite(+state.playPcm) ? +state.playPcm : DEFAULTS.playPcm;
+        state.capPcm = Number.isFinite(+state.capPcm) ? +state.capPcm : DEFAULTS.capPcm;
+        if (!PLAY.some((p) => p.id === state.playPcm)) state.playPcm = DEFAULTS.playPcm;
+        if (!CAP.some((p) => p.id === state.capPcm)) state.capPcm = DEFAULTS.capPcm;
+        if (!SINKS.some((s) => s.id === state.sink)) state.sink = DEFAULTS.sink;
+        if (!SOURCES.some((s) => s.id === state.source)) state.source = DEFAULTS.source;
+        state.mutedOut = !!state.mutedOut;
+        state.mutedIn = !!state.mutedIn;
+        state.voss = state.voss !== false;
+        state.vossPanelOpen = state.vossPanelOpen !== false;
+        state.showMonitors = !!state.showMonitors;
+        state.meterOn = state.meterOn !== false;
+        state.open = !!state.open;
+        state.sampleRate = Number.isFinite(+state.sampleRate) ? +state.sampleRate : DEFAULTS.sampleRate;
+        state.bits = Number.isFinite(+state.bits) ? +state.bits : DEFAULTS.bits;
+        if (!state.controlDevice) state.controlDevice = DEFAULTS.controlDevice;
+      } catch (e) {
+        Object.assign(state, DEFAULTS);
+      }
+    }
+
+    function loadSettings() {
+      try {
+        if (typeof localStorage === 'undefined') return;
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw || typeof raw !== 'string') return;
+        let s;
+        try { s = JSON.parse(raw); } catch (e) { return; }
+        if (!s || typeof s !== 'object') return;
+        if (s.graphStyleOut != null) state.graphStyleOut = safeStyle(s.graphStyleOut);
+        else if (s.graphStyle != null) state.graphStyleOut = safeStyle(s.graphStyle);
+        if (s.graphStyleIn != null) state.graphStyleIn = safeStyle(s.graphStyleIn);
+        else if (s.graphStyle != null) state.graphStyleIn = safeStyle(s.graphStyle);
+        if (s.outChannels != null) state.outChannels = safeOutCh(s.outChannels);
+        if (s.mixChannels != null) state.mixChannels = +s.mixChannels;
+        if (typeof s.showMonitors === 'boolean') state.showMonitors = s.showMonitors;
+        if (s.playPcm != null && Number.isFinite(+s.playPcm)) state.playPcm = +s.playPcm;
+        if (s.capPcm != null && Number.isFinite(+s.capPcm)) state.capPcm = +s.capPcm;
+        if (s.vol != null) state.vol = clamp(s.vol, 0, 100);
+        if (s.mic != null) state.mic = clamp(s.mic, 0, 100);
+        if (typeof s.mutedOut === 'boolean') state.mutedOut = s.mutedOut;
+        if (typeof s.mutedIn === 'boolean') state.mutedIn = s.mutedIn;
+        if (typeof s.voss === 'boolean') state.voss = s.voss;
+        if (typeof s.vossPanelOpen === 'boolean') state.vossPanelOpen = s.vossPanelOpen;
+        if (typeof s.meterOn === 'boolean') state.meterOn = s.meterOn;
+        if (typeof s.sink === 'string' && s.sink) state.sink = s.sink;
+        if (typeof s.source === 'string' && s.source) state.source = s.source;
+      } catch (e) { /* keep DEFAULTS */ }
+      sanitizeState();
+    }
+
+    /** Persist every user choice (mirrors [panel] keys for the real widget). */
+    function saveSettings() {
+      try {
+        sanitizeState();
+        const payload = {
+          graphStyleOut: state.graphStyleOut || DEFAULTS.graphStyleOut,
+          graphStyleIn: state.graphStyleIn || DEFAULTS.graphStyleIn,
+          outChannels: state.outChannels || DEFAULTS.outChannels,
+          mixChannels: state.mixChannels || DEFAULTS.mixChannels,
+          showMonitors: !!state.showMonitors,
+          playPcm: state.playPcm,
+          capPcm: state.capPcm,
+          vol: state.vol,
+          mic: state.mic,
+          mutedOut: !!state.mutedOut,
+          mutedIn: !!state.mutedIn,
+          voss: state.voss !== false,
+          vossPanelOpen: state.vossPanelOpen !== false,
+          meterOn: state.meterOn !== false,
+          sink: state.sink || DEFAULTS.sink,
+          source: state.source || DEFAULTS.source,
+          ini: {
+            volume_graph_style: state.graphStyleOut || DEFAULTS.graphStyleOut,
+            volume_graph_style_in: state.graphStyleIn || DEFAULTS.graphStyleIn,
+            volume_out_channels: state.outChannels || DEFAULTS.outChannels,
+            volume_mix_channels: state.mixChannels || DEFAULTS.mixChannels,
+            volume_show_monitor_sources: !!state.showMonitors,
+            volume_play_device: '/dev/dsp' + state.playPcm,
+            volume_capture_device: '/dev/dsp' + state.capPcm,
+          },
+          savedAt: new Date().toISOString(),
+        };
+        try {
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+          }
+        } catch (e) { /* private mode / quota — silent */ }
+      } catch (e) { /* never throw */ }
+    }
+
+    let _saveTimer = null;
+    function saveNow() { try { saveSettings(); } catch (e) {} }
+    function saveSoon() {
+      try {
+        clearTimeout(_saveTimer);
+        _saveTimer = setTimeout(saveNow, 120);
+      } catch (e) {}
+    }
+
+    const $ = (id) => {
+      try { return document.getElementById(id); } catch (e) { return null; }
+    };
+    function on(id, evt, fn) {
+      const el = typeof id === 'string' ? $(id) : id;
+      if (!el || typeof el.addEventListener !== 'function') return;
+      el.addEventListener(evt, function (e) {
+        try { fn(e); } catch (err) { /* never surface */ }
+      });
+    }
+    function toast(msg) {
+      try {
+        const t = $('toast');
+        if (!t) return;
+        t.textContent = String(msg || '');
+        t.classList.add('show');
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => { try { t.classList.remove('show'); } catch (e) {} }, 1500);
+      } catch (e) {}
+    }
+    function clamp(n, lo, hi) {
+      n = Number(n);
+      if (!Number.isFinite(n)) return lo;
+      return Math.max(lo, Math.min(hi, n));
+    }
+    function safeStyle(s) {
+      return (s && GRAPH_STYLES[s]) ? s : DEFAULTS.graphStyleOut;
+    }
+    function safeOutCh(n) {
+      n = +n;
+      return (n === 2 || n === 6 || n === 8) ? n : DEFAULTS.outChannels;
+    }
+
+    function fillSelect(sel, items, value, valueKey = 'id', labelKey = 'label') {
+      if (!sel || !Array.isArray(items)) return;
+      try {
+        sel.innerHTML = items.map((it) =>
+          `<option value="${it[valueKey]}">${it[labelKey]}</option>`
+        ).join('');
+        const v = String(value);
+        const ok = items.some((it) => String(it[valueKey]) === v);
+        sel.value = ok ? v : String(items[0][valueKey]);
+      } catch (e) {}
+    }
+
+    function setText(id, text) {
+      const el = $(id);
+      if (el) el.textContent = text;
+    }
+    function setHtml(id, html) {
+      const el = $(id);
+      if (el) el.innerHTML = html;
+    }
+    function setVal(id, v) {
+      const el = $(id);
+      if (el) el.value = v;
+    }
+    function setChecked(id, v) {
+      const el = $(id);
+      if (el) el.checked = !!v;
+    }
+    function setDisplay(id, show) {
+      const el = $(id);
+      if (el) el.style.display = show ? '' : 'none';
+    }
+
+    /**
+     * Mirrors IAudioBackend::features() + virtual_oss_status() for the mock.
+     * FreeBSD-centric: Virtual OSS is first-class when autodetected.
+     * Missing modules → false/empty; never throw into the UI.
+     */
+    function stackFeatures() {
+      try {
+        const voss = state.voss === true;
+        return {
+          logical_io: true,
+          physical_devices: voss,
+          virtual_oss: voss,
+          hw_default_unit: true,
+          mix_channels: voss,
+          virtual_oss_label: 'Virtual OSS',
+        };
+      } catch (e) {
+        return {
+          logical_io: false, physical_devices: false, virtual_oss: false,
+          hw_default_unit: false, mix_channels: false, virtual_oss_label: '',
+        };
+      }
+    }
+
+    function routingStatus() {
+      try {
+        const feat = stackFeatures();
+        const detected = !!feat.virtual_oss;
+        const play = PLAY.find((p) => p.id === state.playPcm);
+        const cap = CAP.find((c) => c.id === state.capPcm);
+        return {
+          features: feat,
+          virtualOssDetected: detected,
+          running: detected,
+          badgeLabel: feat.virtual_oss_label || 'Virtual OSS',
+          usePhysicalDevices: detected && feat.physical_devices,
+          controlDevice: state.controlDevice || DEFAULTS.controlDevice,
+          playPath: '/dev/dsp' + state.playPcm,
+          recordPath: '/dev/dsp' + state.capPcm,
+          playLabel: play ? play.label : ('pcm' + state.playPcm),
+          capLabel: cap ? cap.label : ('pcm' + state.capPcm),
+          sampleRate: state.sampleRate || DEFAULTS.sampleRate,
+          bits: state.bits || DEFAULTS.bits,
+          mixChannels: state.mixChannels || DEFAULTS.mixChannels,
+        };
+      } catch (e) {
+        return {
+          features: stackFeatures(),
+          virtualOssDetected: false, running: false, badgeLabel: 'Virtual OSS',
+          usePhysicalDevices: false, controlDevice: DEFAULTS.controlDevice,
+          playPath: '', recordPath: '', playLabel: '', capLabel: '',
+          sampleRate: DEFAULTS.sampleRate, bits: DEFAULTS.bits,
+          mixChannels: DEFAULTS.mixChannels,
+        };
+      }
+    }
+
+    function updateVossUi() {
+      try {
+        const rs = routingStatus();
+        const badge = $('vossBadge');
+        const panel = $('vossPanel');
+        if (badge) {
+          badge.classList.toggle('on', !!rs.virtualOssDetected);
+          badge.setAttribute('aria-hidden', rs.virtualOssDetected ? 'false' : 'true');
+        }
+        if (panel) {
+          const show = !!rs.virtualOssDetected && state.vossPanelOpen !== false;
+          panel.classList.toggle('on', show);
+        }
+        if (!rs.virtualOssDetected) return;
+
+        setText('vossLive', rs.running ? '● running' : '○ not running');
+        setText('vossPlaySum', rs.playLabel + '  ·  ' + rs.playPath);
+        setText('vossCapSum', rs.capLabel + '  ·  ' + rs.recordPath);
+        setText('vossFmt',
+          rs.sampleRate + ' Hz · ' + rs.bits + '-bit · ' + rs.mixChannels + ' ch mix');
+        setText('vossCtl', rs.controlDevice);
+        setVal('selMixCh', String(rs.mixChannels));
+      } catch (e) {}
+    }
+
+    function refreshSelects() {
+      try {
+        const rs = routingStatus();
+        /* Virtual OSS running: dropdowns manage physical play/capture backends.
+           Absent: fall back to software/logical devices only. */
+        if (rs.usePhysicalDevices) {
+          fillSelect($('selPlay'), PLAY, state.playPcm);
+        } else {
+          fillSelect($('selPlay'), SINKS.map((s) => ({ id: s.id, label: s.label })), state.sink, 'id', 'label');
+        }
+        let mics = CAP.slice();
+        if (state.showMonitors) {
+          mics = mics.concat(SOURCES.filter((s) => s.mon).map((s) => ({ id: s.id, label: s.label })));
+        }
+        if (rs.usePhysicalDevices) {
+          fillSelect($('selCap'), mics, state.capPcm);
+        } else {
+          const srcs = SOURCES.filter((s) => state.showMonitors || !s.mon);
+          fillSelect($('selCap'), srcs, state.source);
+        }
+        setDisplay('selPlay', true);
+        setDisplay('selCap', true);
+        updateVossUi();
+      } catch (e) {}
+    }
+
+    function render() {
+      try {
+        sanitizeState();
+        const outMuted = state.mutedOut || state.vol === 0;
+        const inMuted = state.mutedIn || state.mic === 0;
+        setText('volPct', outMuted ? 'mute' : state.vol + '%');
+        setText('volPct2', outMuted ? 'mute' : state.vol + '%');
+        setText('micPct', inMuted ? 'mute' : state.mic + '%');
+        setText('micBadge', '🎤 ' + (inMuted ? 'mute' : state.mic + '%'));
+        setVal('volSlider', state.vol);
+        setVal('micSlider', state.mic);
+        setText('volIcon', outMuted ? '🔇' : state.vol < 35 ? '🔈' : state.vol < 70 ? '🔉' : '🔊');
+        const muteOut = $('muteOut');
+        const muteIn = $('muteIn');
+        if (muteOut) muteOut.classList.toggle('on', state.mutedOut);
+        if (muteIn) muteIn.classList.toggle('on', state.mutedIn);
+
+        const rs = routingStatus();
+        const playLab = (PLAY.find((p) => p.id === state.playPcm) || {}).label || ('pcm' + state.playPcm);
+        const capLab = (CAP.find((c) => c.id === state.capPcm) || {}).label || ('pcm' + state.capPcm);
+        setHtml('headMeta', rs.usePhysicalDevices
+          ? `<span style="color:var(--blue)">${playLab}</span> · <span style="color:var(--yellow)">${capLab}</span>`
+          : `Software audio only`);
+
+        const volBtn = $('volBtn');
+        const pop = $('popover');
+        if (volBtn) volBtn.classList.toggle('open', state.open);
+        if (pop) pop.classList.toggle('visible', state.open);
+
+        if (rs.usePhysicalDevices) {
+          setVal('selPlay', String(state.playPcm));
+          setVal('selCap', String(state.capPcm));
+        } else {
+          setVal('selPlay', state.sink);
+          setVal('selCap', state.source);
+        }
+        setVal('selGraph', state.graphStyleOut);
+        setVal('selGraphIn', state.graphStyleIn);
+        setVal('selOutCh', String(state.outChannels));
+        setChecked('showMonitors', state.showMonitors);
+        setChecked('vossToggle', state.voss);
+        setChecked('meterToggle', state.meterOn);
+        updateVossUi();
+      } catch (e) { /* never blow up UI */ }
+    }
+
+    function levelSample(base, idx, t, phaseScale) {
+      const wave = 0.3 + 0.7 * Math.abs(Math.sin(t / (120 + idx * 8) + idx * phaseScale));
+      const bias = 0.75 + 0.35 * Math.sin(idx * 1.7 + t / 400);
+      return Math.min(1, Math.max(0.05, base * wave * bias));
+    }
+
+    function colorForLevel(h) {
+      if (h > 0.88) return '#f38ba8';
+      if (h > 0.65) return '#f9e2af';
+      return '#a6e3a1';
+    }
+
+    function buildBars(el, labels, tall) {
+      if (!el) return;
+      try {
+        el.innerHTML = '';
+        el.classList.remove('wave-mode');
+        el.classList.toggle('out', !!tall);
+        (labels || []).forEach((lab) => {
+          const ch = document.createElement('div');
+          ch.className = 'ch';
+          const bar = document.createElement('i');
+          bar.style.height = '10%';
+          const tag = document.createElement('span');
+          tag.textContent = lab || '';
+          ch.appendChild(bar);
+          ch.appendChild(tag);
+          el.appendChild(ch);
+        });
+      } catch (e) {}
+    }
+
+    function buildCanvas(el, tall) {
+      if (!el) return null;
+      try {
+        el.innerHTML = '';
+        el.classList.add('wave-mode');
+        el.classList.toggle('out', !!tall);
+        const c = document.createElement('canvas');
+        c.width = tall ? 560 : 520;
+        c.height = tall ? 128 : 88;
+        el.appendChild(c);
+        return c;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function rebuildMeters() {
+      try {
+        sanitizeState();
+        const n = state.outChannels;
+        const labels = OUT_LABELS[n] || OUT_LABELS[8];
+        const styleOut = safeStyle(state.graphStyleOut);
+        const styleIn = safeStyle(state.graphStyleIn);
+        state.graphStyleOut = styleOut;
+        state.graphStyleIn = styleIn;
+        const outEl = $('meterOut');
+        const inEl = $('meterIn');
+
+        /* Output and input meters are independent (style may differ). */
+        const outBars = styleOut === 'bars' || styleOut === 'spectrum';
+        const inBars = styleIn === 'bars' || styleIn === 'spectrum';
+
+        if (outBars) {
+          const outLabs = styleOut === 'spectrum'
+            ? Array.from({ length: Math.max(16, n * 3) }, (_, i) => (i % 4 === 0 ? String(i) : ''))
+            : labels;
+          buildBars(outEl, outLabs, true);
+        } else {
+          buildCanvas(outEl, true);
+        }
+
+        if (inBars) {
+          const inLabs = styleIn === 'spectrum'
+            ? Array.from({ length: 12 }, (_, i) => (i % 3 === 0 ? String(i) : ''))
+            : IN_LABELS;
+          buildBars(inEl, inLabs, false);
+        } else {
+          buildCanvas(inEl, false);
+        }
+
+        setText('outMeterCap', 'Output levels');
+        setVal('selGraph', styleOut);
+        setVal('selGraphIn', styleIn);
+        setVal('selOutCh', String(n));
+      } catch (e) {}
+    }
+
+    function paintBars(el, baseLevel, muted, phaseScale) {
+      if (!el) return;
+      try {
+        const t = Date.now();
+        el.querySelectorAll('i').forEach((bar, idx) => {
+          if (!state.open || !state.meterOn || muted || baseLevel <= 0) {
+            bar.style.height = '8%';
+            bar.style.background = 'var(--surface2)';
+            return;
+          }
+          const h = levelSample(baseLevel, idx, t, phaseScale);
+          bar.style.height = (h * 100) + '%';
+          bar.style.background = colorForLevel(h);
+        });
+      } catch (e) {}
+    }
+
+    function paintWave(canvas, baseLevel, muted, nCh, phaseScale, style) {
+      if (!canvas || typeof canvas.getContext !== 'function') return;
+      let ctx;
+      try { ctx = canvas.getContext('2d'); } catch (e) { return; }
+      if (!ctx) return;
+      const W = canvas.width || 1;
+      const H = canvas.height || 1;
+      try { ctx.clearRect(0, 0, W, H); } catch (e) { return; }
+
+      try {
+      /* grid */
+      ctx.strokeStyle = 'rgba(69,71,90,0.5)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, H / 2);
+      ctx.lineTo(W, H / 2);
+      ctx.stroke();
+
+      if (!state.open || !state.meterOn || muted || baseLevel <= 0) {
+        ctx.strokeStyle = 'rgba(108,112,134,0.6)';
+        ctx.beginPath();
+        ctx.moveTo(0, H / 2);
+        ctx.lineTo(W, H / 2);
+        ctx.stroke();
+        return;
+      }
+
+      const t = Date.now() / 1000;
+      const traces = Math.max(1, Math.min(16, nCh | 0) || 1);
+      style = safeStyle(style);
+
+      for (let ch = 0; ch < traces; ch++) {
+        const amp = baseLevel * (0.55 + 0.45 * levelSample(1, ch, Date.now(), phaseScale));
+        const freq = 2.2 + ch * 0.35 + (ch % 3) * 0.15;
+        const phase = t * (3.5 + ch * 0.4) + ch * 1.1;
+        const color = WAVE_COLORS[ch % WAVE_COLORS.length];
+
+        ctx.lineWidth = style === 'scope' ? 1.25 : (style === 'ribbon' ? 1.5 : 2);
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+
+        if (style === 'wave-fill' || style === 'mirror') {
+          ctx.globalAlpha = 0.22;
+          ctx.beginPath();
+          for (let x = 0; x <= W; x++) {
+            const u = x / W;
+            const y = Math.sin(u * Math.PI * 2 * freq + phase) * amp * (H * 0.42);
+            const yy = style === 'mirror' ? H / 2 - y : H / 2 - y;
+            if (x === 0) ctx.moveTo(x, H / 2);
+            ctx.lineTo(x, yy);
+          }
+          if (style === 'mirror') {
+            for (let x = W; x >= 0; x--) {
+              const u = x / W;
+              const y = Math.sin(u * Math.PI * 2 * freq + phase) * amp * (H * 0.42);
+              ctx.lineTo(x, H / 2 + y);
+            }
+          } else {
+            ctx.lineTo(W, H / 2);
+            ctx.lineTo(0, H / 2);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+
+        ctx.beginPath();
+        for (let x = 0; x <= W; x++) {
+          const u = x / W;
+          /* compound wave for organic look */
+          const y =
+            Math.sin(u * Math.PI * 2 * freq + phase) * 0.7 +
+            Math.sin(u * Math.PI * 2 * freq * 2.3 + phase * 1.3) * 0.22 +
+            Math.sin(u * Math.PI * 5 + phase * 0.5) * 0.08;
+          const yy = H / 2 - y * amp * (H * 0.42);
+          if (x === 0) ctx.moveTo(x, yy);
+          else ctx.lineTo(x, yy);
+        }
+        ctx.stroke();
+
+        if (style === 'dots') {
+          ctx.globalAlpha = 0.9;
+          for (let x = 0; x <= W; x += 10) {
+            const u = x / W;
+            const y =
+              Math.sin(u * Math.PI * 2 * freq + phase) * 0.7 +
+              Math.sin(u * Math.PI * 2 * freq * 2.3 + phase * 1.3) * 0.22;
+            const yy = H / 2 - y * amp * (H * 0.42);
+            ctx.beginPath();
+            ctx.arc(x, yy, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        /* ribbon = multiple traces; wave/scope can still draw all ch faintly */
+        if (style === 'wave' || style === 'scope') {
+          /* all channels already drawn */
+        }
+      }
+      } catch (e) { /* canvas draw failures stay silent */ }
+    }
+
+    function tickMeter() {
+      try {
+        const styleOut = safeStyle(state.graphStyleOut);
+        const styleIn = safeStyle(state.graphStyleIn);
+        const nOut = safeOutCh(state.outChannels);
+        const outEl = $('meterOut');
+        const inEl = $('meterIn');
+
+        if (styleOut === 'bars' || styleOut === 'spectrum') {
+          paintBars(outEl, state.vol / 100, state.mutedOut, 0.55);
+        } else {
+          const cOut = outEl && outEl.querySelector ? outEl.querySelector('canvas') : null;
+          paintWave(cOut, state.vol / 100, state.mutedOut, nOut, 0.55, styleOut);
+        }
+
+        if (styleIn === 'bars' || styleIn === 'spectrum') {
+          paintBars(inEl, state.mic / 100, state.mutedIn, 0.9);
+        } else {
+          const cIn = inEl && inEl.querySelector ? inEl.querySelector('canvas') : null;
+          paintWave(cIn, state.mic / 100, state.mutedIn, 2, 0.9, styleIn);
+        }
+      } catch (e) {}
+    }
+
+    function applyAndSave(discrete) {
+      try {
+        sanitizeState();
+        render();
+        if (discrete) saveNow();
+        else saveSoon();
+      } catch (e) {}
+    }
+
+    function onGraphOrChannelsChanged() {
+      try {
+        sanitizeState();
+        rebuildMeters();
+        saveNow();
+        render();
+      } catch (e) {}
+    }
+
+    /* ---- boot: never throw ---- */
+    try {
+      loadSettings();
+      sanitizeState();
+      setChecked('vossToggle', state.voss);
+      setChecked('meterToggle', state.meterOn);
+      rebuildMeters();
+    } catch (e) {
+      Object.assign(state, DEFAULTS);
+    }
+
+    on('volBtn', 'click', (e) => {
+      e.stopPropagation();
+      state.open = !state.open;
+      render();
+    });
+    on('volBtn', 'auxclick', (e) => {
+      if (e.button === 1) {
+        e.preventDefault();
+        state.mutedOut = !state.mutedOut;
+        toast(state.mutedOut ? 'Output Device muted' : 'Output Device unmuted');
+        applyAndSave(true);
+      }
+    });
+    on('volBtn', 'wheel', (e) => {
+      e.preventDefault();
+      if (e.shiftKey) {
+        state.mic = clamp(state.mic - Math.sign(e.deltaY) * 5, 0, 100);
+        if (state.mic > 0) state.mutedIn = false;
+      } else {
+        state.vol = clamp(state.vol - Math.sign(e.deltaY) * 5, 0, 100);
+        if (state.vol > 0) state.mutedOut = false;
+      }
+      applyAndSave(false);
+    });
+
+    on('volSlider', 'input', (e) => {
+      state.vol = clamp(e.target.value, 0, 100);
+      if (state.vol > 0) state.mutedOut = false;
+      applyAndSave(false);
+    });
+    on('volSlider', 'change', () => saveNow());
+    on('micSlider', 'input', (e) => {
+      state.mic = clamp(e.target.value, 0, 100);
+      if (state.mic > 0) state.mutedIn = false;
+      applyAndSave(false);
+    });
+    on('micSlider', 'change', () => saveNow());
+
+    on('muteOut', 'click', () => {
+      state.mutedOut = !state.mutedOut;
+      applyAndSave(true);
+    });
+    on('muteIn', 'click', () => {
+      state.mutedIn = !state.mutedIn;
+      toast(state.mutedIn ? 'Mic muted' : 'Mic unmuted');
+      applyAndSave(true);
+    });
+
+    on('selPlay', 'change', (e) => {
+      const v = e.target.value;
+      const rs = routingStatus();
+      if (rs.usePhysicalDevices) {
+        state.playPcm = +v;
+        if (!PLAY.some((p) => p.id === state.playPcm)) state.playPcm = DEFAULTS.playPcm;
+        const lab = (PLAY.find((p) => p.id === state.playPcm) || {}).label || v;
+        /* Real widget: backend->set_playback_device("/dev/dspN") */
+        toast('Virtual OSS play → ' + lab + ' (' + '/dev/dsp' + state.playPcm + ')');
+      } else {
+        state.sink = v || DEFAULTS.sink;
+        const lab = (SINKS.find((s) => s.id === state.sink) || {}).label || state.sink;
+        toast('Output → ' + lab);
+      }
+      applyAndSave(true);
+    });
+    on('selCap', 'change', (e) => {
+      const v = e.target.value;
+      const rs = routingStatus();
+      if (rs.usePhysicalDevices && CAP.some((p) => String(p.id) === String(v))) {
+        state.capPcm = +v;
+        const lab = (CAP.find((p) => p.id === state.capPcm) || {}).label || v;
+        /* Real widget: backend->set_capture_device("/dev/dspN") */
+        toast('Virtual OSS capture → ' + lab + ' (' + '/dev/dsp' + state.capPcm + ')');
+      } else {
+        state.source = v || DEFAULTS.source;
+        const lab = (SOURCES.find((s) => s.id === state.source) || {}).label || state.source;
+        toast('Input → ' + lab);
+      }
+      applyAndSave(true);
+    });
+
+    on('vossToggle', 'change', (e) => {
+      state.voss = !!e.target.checked;
+      if (state.voss) state.vossPanelOpen = true;
+      refreshSelects();
+      toast(state.voss ? 'Virtual OSS running — manage play/capture below' : 'Virtual OSS not running');
+      applyAndSave(true);
+    });
+
+    on('vossBadge', 'click', () => {
+      if (!state.voss) return;
+      state.vossPanelOpen = !state.vossPanelOpen;
+      updateVossUi();
+      saveNow();
+    });
+
+    on('selMixCh', 'change', (e) => {
+      state.mixChannels = +e.target.value;
+      if (state.mixChannels !== 2 && state.mixChannels !== 6 && state.mixChannels !== 8) {
+        state.mixChannels = DEFAULTS.mixChannels;
+      }
+      /* Prefer meter to match mix when user changes mix */
+      state.outChannels = state.mixChannels;
+      setVal('selOutCh', String(state.outChannels));
+      saveSoon();
+    });
+
+    on('btnApplyMix', 'click', () => {
+      sanitizeState();
+      /* Real widget: reopen virtual_oss with -C/-c, or session-live reconfig if available */
+      toast('Apply mix → ' + state.mixChannels + ' ch (virtual_oss -C/-c + Pulse reopen)');
+      updateVossUi();
+      saveNow();
+    });
+
+    on('btnRefreshVoss', 'click', () => {
+      /* Real widget: re-query virtual_oss_status() from control device */
+      toast('Refreshed Virtual OSS status');
+      updateVossUi();
+    });
+    on('meterToggle', 'change', (e) => {
+      state.meterOn = !!e.target.checked;
+      applyAndSave(true);
+    });
+    on('showMonitors', 'change', (e) => {
+      state.showMonitors = !!e.target.checked;
+      refreshSelects();
+      applyAndSave(true);
+    });
+
+    on('selOutCh', 'change', (e) => {
+      state.outChannels = safeOutCh(e.target.value);
+      onGraphOrChannelsChanged();
+      toast('Output meter → ' + state.outChannels + ' channels');
+    });
+    on('selGraph', 'change', (e) => {
+      state.graphStyleOut = safeStyle(e.target && e.target.value);
+      setVal('selGraph', state.graphStyleOut);
+      onGraphOrChannelsChanged();
+      toast('Output graph → ' + (GRAPH_STYLES[state.graphStyleOut] || state.graphStyleOut));
+    });
+    on('selGraphIn', 'change', (e) => {
+      state.graphStyleIn = safeStyle(e.target && e.target.value);
+      setVal('selGraphIn', state.graphStyleIn);
+      onGraphOrChannelsChanged();
+      toast('Input graph → ' + (GRAPH_STYLES[state.graphStyleIn] || state.graphStyleIn));
+    });
+    on('advLink', 'click', () => toast('Would launch pavucontrol'));
+
+    document.addEventListener('keydown', (e) => {
+      try {
+        if (e.key === 'Escape' && state.open) { state.open = false; render(); }
+      } catch (err) {}
+    });
+    document.addEventListener('click', (e) => {
+      try {
+        if (!state.open) return;
+        const pop = $('popover');
+        const btn = $('volBtn');
+        if ((pop && pop.contains(e.target)) || (btn && btn.contains(e.target)) ||
+            (e.target && e.target.closest && e.target.closest('.stage-hint'))) return;
+        state.open = false;
+        render();
+        saveNow();
+      } catch (err) {}
+    });
+
+    window.addEventListener('beforeunload', () => { try { saveSettings(); } catch (e) {} });
+    document.addEventListener('visibilitychange', () => {
+      try {
+        if (document.visibilityState === 'hidden') saveSettings();
+      } catch (e) {}
+    });
+
+    try {
+      refreshSelects();
+      render();
+      saveNow();
+      setInterval(tickMeter, 80);
+    } catch (e) {
+      Object.assign(state, DEFAULTS);
+    }
+  </script>
+</body>
+</html>

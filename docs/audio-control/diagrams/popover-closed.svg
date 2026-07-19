@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 900 130" width="100%" preserveAspectRatio="xMidYMid meet">
+  <foreignObject x="0" y="0" width="900" height="130">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:900px;height:130px;box-sizing:border-box;font-family:Sans,system-ui,sans-serif;background:#11111b;color:#cdd6f4;padding:16px;">
+      <div style="font-size:11px;color:#a6adc8;margin-bottom:8px;">Panel idle — tooltip shows out + in</div>
+      <div style="display:flex;align-items:center;height:36px;background:#1e1e2e;border:1px solid #313244;border-radius:6px;padding:0 12px;gap:10px;">
+        <div style="font-size:12px;color:#89b4fa;">☰</div>
+        <div style="font-size:12px;opacity:0.5;flex:1;">Apps · windows</div>
+        <div style="display:flex;align-items:center;gap:6px;background:#313244;border-radius:4px;padding:4px 8px;border:1px solid #89b4fa;">
+          <span style="font-size:14px;">🔊</span>
+          <span style="font-size:11px;color:#a6e3a1;">72%</span>
+          <span style="font-size:10px;color:#f9e2af;border-left:1px solid #45475a;padding-left:6px;">🎤 40%</span>
+        </div>
+        <div style="font-size:11px;color:#cdd6f4;">14:02</div>
+      </div>
+      <div style="font-size:10px;color:#6c7086;margin-top:8px;">Tooltip: Out 72% · pcm1 HDMI  ·  In 40% · pcm3 Rear · click for full mixer</div>
+    </div>
+  </foreignObject>
+</svg>
