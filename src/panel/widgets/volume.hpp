@@ -45,6 +45,10 @@ class WayfireVolume : public WayfireWidget
     Gtk::Button out_mute_btn;
     WayfireAnimatedScale volume_scale;
     Gtk::Label out_pct;
+    Gtk::Box out_meter_cap{Gtk::Orientation::HORIZONTAL};
+    Gtk::Label out_meter_lbl;
+    Gtk::ComboBoxText out_ch_combo;
+    Gtk::ComboBoxText out_graph_combo;
     Gtk::DrawingArea out_meter;
     Gtk::ComboBoxText play_combo;
 
@@ -54,6 +58,9 @@ class WayfireVolume : public WayfireWidget
     Gtk::Button in_mute_btn;
     WayfireAnimatedScale mic_scale;
     Gtk::Label mic_pct;
+    Gtk::Box in_meter_cap{Gtk::Orientation::HORIZONTAL};
+    Gtk::Label in_meter_lbl;
+    Gtk::ComboBoxText in_graph_combo;
     Gtk::DrawingArea in_meter;
     Gtk::ComboBoxText cap_combo;
 
@@ -126,12 +133,18 @@ class WayfireVolume : public WayfireWidget
     void refresh_voss_strip();
     void on_play_device_changed();
     void on_cap_device_changed();
+    void on_graph_out_changed();
+    void on_graph_in_changed();
+    void on_out_channels_changed();
     void on_advanced_clicked();
     void on_popover_shown();
     void on_popover_hidden();
     bool on_meter_tick();
+    void fill_graph_combo(Gtk::ComboBoxText& combo, const std::string& active_id);
+    void fill_channel_combo();
+    std::string safe_graph_style(const std::string& s) const;
     void draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, int h,
-        double level, bool muted, bool is_output);
+        double level, bool muted, bool is_output, const std::string& style);
 
   public:
     void init(Gtk::Box *container) override;

@@ -235,38 +235,117 @@ void WayfireVolume::on_mic_value_changed()
     set_mic_volume(mic_scale.get_target_value());
 }
 
+std::string WayfireVolume::safe_graph_style(const std::string& s) const
+{
+    static const char *ok[] = {
+        "bars", "wave", "wave-fill", "mirror", "scope", "spectrum", "dots", "ribbon", nullptr
+    };
+    for (int i = 0; ok[i]; i++)
+    {
+        if (s == ok[i])
+        {
+            return s;
+        }
+    }
+
+    return "wave-fill";
+}
+
+void WayfireVolume::fill_graph_combo(Gtk::ComboBoxText& combo, const std::string& active_id)
+{
+    filling_combos = true;
+    combo.remove_all();
+    struct
+    {
+        const char *id;
+        const char *label;
+    } styles[] = {
+        {"bars", "bars"},
+        {"wave", "wave"},
+        {"wave-fill", "wave-fill"},
+        {"mirror", "mirror"},
+        {"scope", "scope"},
+        {"spectrum", "spectrum"},
+        {"dots", "dots"},
+        {"ribbon", "ribbon"},
+    };
+    std::string want = safe_graph_style(active_id);
+    int active = 2; /* wave-fill */
+    for (size_t i = 0; i < sizeof(styles) / sizeof(styles[0]); i++)
+    {
+        combo.append(styles[i].id, styles[i].label);
+        if (want == styles[i].id)
+        {
+            active = (int)i;
+        }
+    }
+
+    combo.set_active(active);
+    filling_combos = false;
+}
+
+void WayfireVolume::fill_channel_combo()
+{
+    filling_combos = true;
+    out_ch_combo.remove_all();
+    out_ch_combo.append("2", "2 ch");
+    out_ch_combo.append("6", "6 ch");
+    out_ch_combo.append("8", "8 ch");
+    int ch = out_channels.value();
+    if (ch == 2)
+    {
+        out_ch_combo.set_active(0);
+    } else if (ch == 6)
+    {
+        out_ch_combo.set_active(1);
+    } else
+    {
+        out_ch_combo.set_active(2);
+    }
+
+    filling_combos = false;
+}
+
 void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, int h,
-    double level, bool muted, bool is_output)
+    double level, bool muted, bool is_output, const std::string& style_in)
 {
     if ((w <= 0) || (h <= 0))
     {
         return;
     }
 
+    const std::string style = safe_graph_style(style_in);
+
     cr->set_source_rgb(0.07, 0.07, 0.08);
     cr->rectangle(0, 0, w, h);
     cr->fill();
 
-    cr->set_source_rgba(0.27, 0.28, 0.35, 0.5);
-    cr->set_line_width(1.0);
-    cr->move_to(0, h / 2.0);
-    cr->line_to(w, h / 2.0);
-    cr->stroke();
-
     if (muted || (level <= 0.001))
     {
+        cr->set_source_rgba(0.27, 0.28, 0.35, 0.5);
+        cr->set_line_width(1.0);
+        cr->move_to(0, h / 2.0);
+        cr->line_to(w, h / 2.0);
+        cr->stroke();
         return;
     }
 
-    /* Simple multi-trace wave-fill-ish meter (style preference stored for later) */
     int n = is_output ? std::clamp(out_channels.value(), 2, 8) : 2;
-    double t = g_get_monotonic_time() / 1e6;
-    for (int ch = 0; ch < n; ch++)
+    if ((style == "spectrum") && is_output)
     {
-        double phase = ch * 0.7 + t * (2.0 + ch * 0.15);
-        double amp   = level * (0.35 + 0.55 * (0.5 + 0.5 * std::sin(phase)));
-        amp = std::clamp(amp, 0.02, 1.0);
-        double r = 0.53, g = 0.89, b = 0.63; /* green-ish */
+        n = std::max(n * 3, 16);
+    } else if (style == "spectrum")
+    {
+        n = 12;
+    }
+
+    double t = g_get_monotonic_time() / 1e6;
+
+    auto level_color = [&] (double amp, double& r, double& g, double& b)
+    {
+        r = 0.53;
+        g = 0.89;
+        b = 0.63;
         if (amp > 0.88)
         {
             r = 0.95;
@@ -281,27 +360,128 @@ void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, i
         {
             r = 0.54;
             g = 0.71;
-            b = 0.98; /* blue for out low */
+            b = 0.98;
+        }
+    };
+
+    if ((style == "bars") || (style == "spectrum"))
+    {
+        double gap = 2.0;
+        double bw  = std::max(2.0, (w - gap * (n + 1)) / n);
+        for (int ch = 0; ch < n; ch++)
+        {
+            double phase = ch * 0.7 + t * (2.0 + ch * 0.15);
+            double amp   = level * (0.35 + 0.55 * (0.5 + 0.5 * std::sin(phase)));
+            amp = std::clamp(amp, 0.05, 1.0);
+            double r, g, b;
+            level_color(amp, r, g, b);
+            double bh = amp * (h - 4);
+            double x  = gap + ch * (bw + gap);
+            cr->set_source_rgb(r, g, b);
+            cr->rectangle(x, h - 2 - bh, bw, bh);
+            cr->fill();
         }
 
-        cr->set_source_rgba(r, g, b, 0.35 + 0.4 * (1.0 - ch / (double)n));
-        cr->move_to(0, h / 2.0);
+        return;
+    }
+
+    /* mid line for wave-like styles */
+    cr->set_source_rgba(0.27, 0.28, 0.35, 0.5);
+    cr->set_line_width(1.0);
+    cr->move_to(0, h / 2.0);
+    cr->line_to(w, h / 2.0);
+    cr->stroke();
+
+    int traces = n;
+    if (style == "ribbon")
+    {
+        traces = n;
+    } else if ((style == "wave") || (style == "scope"))
+    {
+        traces = std::min(n, is_output ? n : 2);
+    }
+
+    for (int ch = 0; ch < traces; ch++)
+    {
+        double phase = ch * 0.7 + t * (2.0 + ch * 0.15);
+        double amp   = level * (0.35 + 0.55 * (0.5 + 0.5 * std::sin(phase)));
+        amp = std::clamp(amp, 0.02, 1.0);
+        double r, g, b;
+        level_color(amp, r, g, b);
+        double alpha = 0.35 + 0.4 * (1.0 - ch / (double)std::max(traces, 1));
+
+        if (style == "dots")
+        {
+            cr->set_source_rgba(r, g, b, alpha);
+            for (int x = 0; x <= w; x += 6)
+            {
+                double u = x / (double)w;
+                double y = std::sin(u * 6.28 * (1.5 + ch * 0.2) + phase) * amp * (h * 0.4);
+                cr->arc(x, h / 2.0 - y, 2.0, 0, 2 * G_PI);
+                cr->fill();
+            }
+
+            continue;
+        }
+
+        if ((style == "wave-fill") || (style == "mirror") || (style == "ribbon"))
+        {
+            cr->set_source_rgba(r, g, b, alpha);
+            cr->move_to(0, h / 2.0);
+            for (int x = 0; x <= w; x += 2)
+            {
+                double u = x / (double)w;
+                double y = std::sin(u * 6.28 * (1.5 + ch * 0.2) + phase) * amp * (h * 0.4);
+                if (style == "mirror")
+                {
+                    y = std::abs(y);
+                }
+
+                cr->line_to(x, h / 2.0 - y);
+            }
+
+            if (style == "mirror")
+            {
+                for (int x = w; x >= 0; x -= 2)
+                {
+                    double u = x / (double)w;
+                    double y = std::abs(std::sin(u * 6.28 * (1.5 + ch * 0.2) + phase) * amp * (h * 0.4));
+                    cr->line_to(x, h / 2.0 + y);
+                }
+            } else
+            {
+                for (int x = w; x >= 0; x -= 2)
+                {
+                    double u = x / (double)w;
+                    double y = std::sin(u * 6.28 * (1.5 + ch * 0.2) + phase) * amp * (h * 0.4);
+                    cr->line_to(x, h / 2.0 + y * 0.85);
+                }
+            }
+
+            cr->close_path();
+            cr->fill();
+            continue;
+        }
+
+        /* wave / scope — stroke only */
+        cr->set_source_rgba(r, g, b, std::min(1.0, alpha + 0.3));
+        cr->set_line_width(style == "scope" ? 1.5 : 1.8);
+        bool first = true;
         for (int x = 0; x <= w; x += 2)
         {
             double u = x / (double)w;
             double y = std::sin(u * 6.28 * (1.5 + ch * 0.2) + phase) * amp * (h * 0.4);
-            cr->line_to(x, h / 2.0 - y);
+            if (first)
+            {
+                cr->move_to(x, h / 2.0 - y);
+                first = false;
+            } else
+            {
+                cr->line_to(x, h / 2.0 - y);
+            }
         }
 
-        for (int x = w; x >= 0; x -= 2)
-        {
-            double u = x / (double)w;
-            double y = std::sin(u * 6.28 * (1.5 + ch * 0.2) + phase) * amp * (h * 0.4);
-            cr->line_to(x, h / 2.0 + y * 0.85);
-        }
-
-        cr->close_path();
-        cr->fill();
+        cr->stroke();
     }
 }
 
@@ -597,13 +777,28 @@ void WayfireVolume::build_popover_ui()
     out_row.append(out_pct);
     out_section.append(out_row);
 
+    /* Meter caption: label + channel count + independent graph style */
+    out_meter_lbl.set_text("Output levels");
+    out_meter_lbl.set_halign(Gtk::Align::START);
+    out_meter_lbl.set_hexpand(true);
+    out_meter_lbl.add_css_class("dim-label");
+    out_ch_combo.set_tooltip_text("Output meter channels");
+    out_graph_combo.set_tooltip_text("Output graph style");
+    fill_channel_combo();
+    fill_graph_combo(out_graph_combo, graph_style_out.value());
+    out_meter_cap.set_spacing(4);
+    out_meter_cap.append(out_meter_lbl);
+    out_meter_cap.append(out_ch_combo);
+    out_meter_cap.append(out_graph_combo);
+    out_section.append(out_meter_cap);
+
     out_meter.set_content_width(300);
     out_meter.set_content_height(48);
     out_meter.set_draw_func([this] (const Cairo::RefPtr<Cairo::Context>& cr, int w, int h)
     {
         double level = max_norm > 0 ? volume_scale.get_target_value() / max_norm : 0.0;
         bool muted = gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream);
-        draw_meter(cr, w, h, level, muted, true);
+        draw_meter(cr, w, h, level, muted, true, graph_style_out.value());
     });
     out_section.append(out_meter);
     play_combo.set_hexpand(true);
@@ -631,13 +826,24 @@ void WayfireVolume::build_popover_ui()
     in_row.append(mic_pct);
     in_section.append(in_row);
 
+    in_meter_lbl.set_text("Input levels");
+    in_meter_lbl.set_halign(Gtk::Align::START);
+    in_meter_lbl.set_hexpand(true);
+    in_meter_lbl.add_css_class("dim-label");
+    in_graph_combo.set_tooltip_text("Input graph style (independent of output)");
+    fill_graph_combo(in_graph_combo, graph_style_in.value());
+    in_meter_cap.set_spacing(4);
+    in_meter_cap.append(in_meter_lbl);
+    in_meter_cap.append(in_graph_combo);
+    in_section.append(in_meter_cap);
+
     in_meter.set_content_width(300);
     in_meter.set_content_height(40);
     in_meter.set_draw_func([this] (const Cairo::RefPtr<Cairo::Context>& cr, int w, int h)
     {
         double level = max_norm_src > 0 ? mic_scale.get_target_value() / max_norm_src : 0.0;
         bool muted = gvc_source && gvc_mixer_stream_get_is_muted(gvc_source);
-        draw_meter(cr, w, h, level, muted, false);
+        draw_meter(cr, w, h, level, muted, false, graph_style_in.value());
     });
     in_section.append(in_meter);
     cap_combo.set_hexpand(true);
@@ -697,8 +903,67 @@ void WayfireVolume::build_popover_ui()
         sigc::mem_fun(*this, &WayfireVolume::on_play_device_changed)));
     signals.push_back(cap_combo.signal_changed().connect(
         sigc::mem_fun(*this, &WayfireVolume::on_cap_device_changed)));
+    signals.push_back(out_graph_combo.signal_changed().connect(
+        sigc::mem_fun(*this, &WayfireVolume::on_graph_out_changed)));
+    signals.push_back(in_graph_combo.signal_changed().connect(
+        sigc::mem_fun(*this, &WayfireVolume::on_graph_in_changed)));
+    signals.push_back(out_ch_combo.signal_changed().connect(
+        sigc::mem_fun(*this, &WayfireVolume::on_out_channels_changed)));
     signals.push_back(adv_btn.signal_clicked().connect(
         sigc::mem_fun(*this, &WayfireVolume::on_advanced_clicked)));
+}
+
+void WayfireVolume::on_graph_out_changed()
+{
+    if (filling_combos)
+    {
+        return;
+    }
+
+    auto id = safe_graph_style(out_graph_combo.get_active_id());
+    if (auto opt = WayfireShellApp::get().config.get_option("panel/volume_graph_style"))
+    {
+        opt->set_value_str(id);
+    }
+
+    out_meter.queue_draw();
+}
+
+void WayfireVolume::on_graph_in_changed()
+{
+    if (filling_combos)
+    {
+        return;
+    }
+
+    auto id = safe_graph_style(in_graph_combo.get_active_id());
+    if (auto opt = WayfireShellApp::get().config.get_option("panel/volume_graph_style_in"))
+    {
+        opt->set_value_str(id);
+    }
+
+    in_meter.queue_draw();
+}
+
+void WayfireVolume::on_out_channels_changed()
+{
+    if (filling_combos)
+    {
+        return;
+    }
+
+    auto id = out_ch_combo.get_active_id();
+    if (id.empty())
+    {
+        return;
+    }
+
+    if (auto opt = WayfireShellApp::get().config.get_option("panel/volume_out_channels"))
+    {
+        opt->set_value_str(id);
+    }
+
+    out_meter.queue_draw();
 }
 
 void WayfireVolume::init(Gtk::Box *container)
