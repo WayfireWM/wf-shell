@@ -383,6 +383,7 @@ void WayfireVolume::set_mic_volume(pa_volume_t volume, set_volume_flags_t flags)
 
 void WayfireVolume::on_volume_changed_external()
 {
+    /* Keyboard / external volume changes: update icon/slider only — never open popover. */
     if (!gvc_stream)
     {
         return;
@@ -391,14 +392,11 @@ void WayfireVolume::on_volume_changed_external()
     auto volume = gvc_mixer_stream_get_volume(gvc_stream);
     if (volume != (pa_volume_t)this->volume_scale.get_target_value())
     {
-        set_volume(volume, VOLUME_FLAG_SHOW_POPOVER);
-    }
-
-    Glib::signal_idle().connect([=] ()
+        set_volume(volume, VOLUME_FLAG_NO_ACTION);
+    } else
     {
-        button->popup_timed(timeout * 1000);
-        return G_SOURCE_REMOVE;
-    });
+        update_icon();
+    }
 }
 
 void WayfireVolume::on_mic_changed_external()
