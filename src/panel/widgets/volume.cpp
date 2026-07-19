@@ -572,7 +572,8 @@ void WayfireVolume::schedule_device_refresh()
 
 bool WayfireVolume::on_device_poll_tick()
 {
-    /* FreeBSD OSS USB devices may appear in sndstat before/without GVC events. */
+    /* FreeBSD OSS USB devices may appear in sndstat before/without GVC events.
+     * refresh_devices() is a no-op for combos unless the inventory changed. */
     if (popover_open)
     {
         refresh_devices();
@@ -892,11 +893,30 @@ bool WayfireVolume::on_meter_tick()
     return true;
 }
 
+namespace
+{
+std::string device_list_fingerprint(const std::vector<wf_audio::AudioDevice>& devs)
+{
+    std::string fp;
+    for (const auto& d : devs)
+    {
+        fp += d.path;
+        fp += '\x1f';
+        fp += d.description;
+        fp += '\x1f';
+        fp += d.path_ok ? '1' : '0';
+        fp += '\x1e';
+    }
+    return fp;
+}
+}
+
 void WayfireVolume::refresh_voss_strip()
 {
     if (!audio_backend)
     {
         voss_section.set_visible(false);
+        voss_strip_fp.clear();
         return;
     }
 
@@ -904,16 +924,14 @@ void WayfireVolume::refresh_voss_strip()
     {
         auto feat = audio_backend->features();
         bool show = feat.virtual_oss && prefer_virtual_oss.value();
-        voss_section.set_visible(show);
         if (!show)
         {
+            voss_section.set_visible(false);
+            voss_strip_fp.clear();
             return;
         }
 
         auto st = audio_backend->virtual_oss_status();
-        std::string live = st.running ? "● running" : "○ not running";
-        voss_title.set_text("Virtual OSS  " + live);
-
         std::string play = st.play_path.empty() ? "—" : st.play_path;
         if (!st.play_path_ok && !st.play_path.empty())
         {
@@ -926,15 +944,27 @@ void WayfireVolume::refresh_voss_strip()
             cap += " (missing)";
         }
 
-        voss_play_lbl.set_text("Play  " + play);
-        voss_cap_lbl.set_text("Capture  " + cap);
-        voss_fmt_lbl.set_text(
+        std::string live = st.running ? "● running" : "○ not running";
+        std::string fmt =
             std::to_string(st.sample_rate) + " Hz · " +
             std::to_string(st.bits) + "-bit · " +
-            std::to_string(st.channels) + " ch");
+            std::to_string(st.channels) + " ch";
+        std::string fp = live + "|" + play + "|" + cap + "|" + fmt;
+        if (fp == voss_strip_fp && voss_section.get_visible())
+        {
+            return; /* avoid label flicker */
+        }
+
+        voss_strip_fp = fp;
+        voss_section.set_visible(true);
+        voss_title.set_text("Virtual OSS  " + live);
+        voss_play_lbl.set_text("Play  " + play);
+        voss_cap_lbl.set_text("Capture  " + cap);
+        voss_fmt_lbl.set_text(fmt);
     } catch (...)
     {
         voss_section.set_visible(false);
+        voss_strip_fp.clear();
     }
 }
 
@@ -945,34 +975,29 @@ void WayfireVolume::refresh_devices()
         return;
     }
 
-    filling_combos = true;
     try
     {
         auto feat = audio_backend->features();
-        play_devices.clear();
-        cap_devices.clear();
-        play_combo.remove_all();
-        cap_combo.remove_all();
+        std::vector<wf_audio::AudioDevice> new_play;
+        std::vector<wf_audio::AudioDevice> new_cap;
 
         if (feat.virtual_oss && prefer_virtual_oss.value())
         {
-            play_devices = audio_backend->list_playback_devices();
-            cap_devices  = audio_backend->list_capture_devices();
+            new_play = audio_backend->list_playback_devices();
+            new_cap  = audio_backend->list_capture_devices();
         } else if (feat.logical_io)
         {
-            play_devices = audio_backend->list_logical_outputs();
-            cap_devices  = audio_backend->list_logical_inputs(false);
+            new_play = audio_backend->list_logical_outputs();
+            new_cap  = audio_backend->list_logical_inputs(false);
         } else
         {
-            play_devices = audio_backend->list_playback_devices();
-            cap_devices  = audio_backend->list_capture_devices();
+            new_play = audio_backend->list_playback_devices();
+            new_cap  = audio_backend->list_capture_devices();
         }
 
         auto st = audio_backend->virtual_oss_status();
         /*
          * Active selection: live Virtual OSS paths win over stale ini.
-         * (User may have switched mic; daemon is truth. Graph probes Pulse
-         * virtual_oss_rec which follows VOSS -R — dropdown must match that.)
          */
         std::string cur_play;
         std::string cur_cap;
@@ -1013,69 +1038,89 @@ void WayfireVolume::refresh_devices()
             }
         }
 
-        int play_active = -1;
-        for (size_t i = 0; i < play_devices.size(); i++)
+        const std::string play_fp = device_list_fingerprint(new_play);
+        const std::string cap_fp  = device_list_fingerprint(new_cap);
+        const bool play_list_changed = (play_fp != play_list_fp);
+        const bool cap_list_changed  = (cap_fp != cap_list_fp);
+        const bool play_sel_changed  = (cur_play != play_active_fp);
+        const bool cap_sel_changed   = (cur_cap != cap_active_fp);
+
+        /*
+         * Rebuilding ComboBoxText every poll closes/flickers an open popup.
+         * Only rebuild when inventory or active path actually changes.
+         */
+        if (play_list_changed || play_sel_changed || play_combo.get_model()->children().size() == 0)
         {
-            const auto& d = play_devices[i];
-            std::string label = d.description.empty() ? d.id : d.description;
-            if (!d.path_ok)
-            {
-                label += " (missing)";
-            }
+            filling_combos = true;
+            play_combo.remove_all();
+            play_devices = std::move(new_play);
+            play_list_fp = play_fp;
+            play_active_fp = cur_play;
 
-            play_combo.append(d.path, label);
-            if (!cur_play.empty() && (d.path == cur_play || d.id == cur_play ||
-                    cur_play.find(d.id) != std::string::npos))
+            int play_active = -1;
+            for (size_t i = 0; i < play_devices.size(); i++)
             {
-                play_active = (int)i;
-            }
-        }
-
-        int cap_active = -1;
-        for (size_t i = 0; i < cap_devices.size(); i++)
-        {
-            const auto& d = cap_devices[i];
-            std::string label = d.description.empty() ? d.id : d.description;
-            if (!d.path_ok)
-            {
-                label += " (missing)";
-            }
-
-            /* Prefer USB kind label clarity */
-            if (d.kind == "usb" ||
-                label.find("USB") != std::string::npos ||
-                label.find("Snowball") != std::string::npos ||
-                label.find("MICROPHONE") != std::string::npos)
-            {
-                if (label.find("USB") == std::string::npos && d.kind != "usb")
+                const auto& d = play_devices[i];
+                std::string label = d.description.empty() ? d.id : d.description;
+                if (!d.path_ok)
                 {
-                    /* leave label; kind may still be analog from description parse */
+                    label += " (missing)";
+                }
+
+                play_combo.append(d.path, label);
+                if (!cur_play.empty() && (d.path == cur_play || d.id == cur_play ||
+                        cur_play.find(d.id) != std::string::npos))
+                {
+                    play_active = (int)i;
                 }
             }
 
-            cap_combo.append(d.path, label);
-            if (!cur_cap.empty() && (d.path == cur_cap || d.id == cur_cap ||
-                    cur_cap.find(d.id) != std::string::npos))
+            if (!play_devices.empty())
             {
-                cap_active = (int)i;
+                play_combo.set_active(play_active >= 0 ? play_active : 0);
             }
+
+            filling_combos = false;
         }
 
-        if (!play_devices.empty())
+        if (cap_list_changed || cap_sel_changed || cap_combo.get_model()->children().size() == 0)
         {
-            play_combo.set_active(play_active >= 0 ? play_active : 0);
-        }
+            filling_combos = true;
+            cap_combo.remove_all();
+            cap_devices = std::move(new_cap);
+            cap_list_fp = cap_fp;
+            cap_active_fp = cur_cap;
 
-        if (!cap_devices.empty())
-        {
-            cap_combo.set_active(cap_active >= 0 ? cap_active : 0);
+            int cap_active = -1;
+            for (size_t i = 0; i < cap_devices.size(); i++)
+            {
+                const auto& d = cap_devices[i];
+                std::string label = d.description.empty() ? d.id : d.description;
+                if (!d.path_ok)
+                {
+                    label += " (missing)";
+                }
+
+                cap_combo.append(d.path, label);
+                if (!cur_cap.empty() && (d.path == cur_cap || d.id == cur_cap ||
+                        cur_cap.find(d.id) != std::string::npos))
+                {
+                    cap_active = (int)i;
+                }
+            }
+
+            if (!cap_devices.empty())
+            {
+                cap_combo.set_active(cap_active >= 0 ? cap_active : 0);
+            }
+
+            filling_combos = false;
         }
     } catch (...)
     {
-        /* keep empty combos */
+        filling_combos = false;
     }
 
-    filling_combos = false;
     refresh_voss_strip();
 }
 

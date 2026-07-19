@@ -121,6 +121,11 @@ class WayfireVolume : public WayfireWidget
 
     std::vector<wf_audio::AudioDevice> play_devices;
     std::vector<wf_audio::AudioDevice> cap_devices;
+    std::string play_list_fp; /* fingerprint — skip combo rebuild if unchanged */
+    std::string cap_list_fp;
+    std::string play_active_fp;
+    std::string cap_active_fp;
+    std::string voss_strip_fp;
 
     /* Real levels from Pulse (sink monitor = Virtual OSS path when that is default).
      * Opaque PeakProbe lives in volume.cpp (avoid incomplete unique_ptr in header). */
