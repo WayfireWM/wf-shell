@@ -810,7 +810,6 @@ void WayfireVolume::refresh_voss_strip()
     if (!audio_backend)
     {
         voss_section.set_visible(false);
-        voss_badge.set_visible(false);
         return;
     }
 
@@ -819,7 +818,6 @@ void WayfireVolume::refresh_voss_strip()
         auto feat = audio_backend->features();
         bool show = feat.virtual_oss && prefer_virtual_oss.value();
         voss_section.set_visible(show);
-        voss_badge.set_visible(show);
         if (!show)
         {
             head_meta.set_text("");
@@ -848,13 +846,11 @@ void WayfireVolume::refresh_voss_strip()
             std::to_string(st.sample_rate) + " Hz · " +
             std::to_string(st.bits) + "-bit · " +
             std::to_string(st.channels) + " ch");
-        voss_badge.set_text("Virtual OSS Detected");
         head_meta.set_text(path_basename_hint(st.play_path) + " · " +
             path_basename_hint(st.record_path));
     } catch (...)
     {
         voss_section.set_visible(false);
-        voss_badge.set_visible(false);
     }
 }
 
@@ -1273,13 +1269,11 @@ void WayfireVolume::build_popover_ui()
     voss_section.set_visible(false);
     popover_root.append(voss_section);
 
+    /* Footer: Advanced only — Virtual OSS status is already in the strip above. */
     foot.set_margin_top(6);
-    voss_badge.set_halign(Gtk::Align::START);
-    voss_badge.set_hexpand(true);
-    voss_badge.set_visible(false);
+    foot.set_halign(Gtk::Align::END);
     adv_btn.set_label("Advanced…");
     adv_btn.set_has_frame(false);
-    foot.append(voss_badge);
     foot.append(adv_btn);
     popover_root.append(foot);
 

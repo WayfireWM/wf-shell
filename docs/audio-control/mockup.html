@@ -391,9 +391,7 @@
         </div>
 
         <div class="foot">
-          <button type="button" class="voss-badge on" id="vossBadge" title="Show / hide Virtual OSS management" aria-live="polite">
-            <span class="dot" aria-hidden="true"></span>Virtual OSS Detected
-          </button>
+          <span></span>
           <a id="advLink">Advanced…</a>
         </div>
       </div>
@@ -723,14 +721,10 @@
     function updateVossUi() {
       try {
         const rs = routingStatus();
-        const badge = $('vossBadge');
         const panel = $('vossPanel');
-        if (badge) {
-          badge.classList.toggle('on', !!rs.virtualOssDetected);
-          badge.setAttribute('aria-hidden', rs.virtualOssDetected ? 'false' : 'true');
-        }
         if (panel) {
-          const show = !!rs.virtualOssDetected && state.vossPanelOpen !== false;
+          /* Strip only when detected — no redundant footer badge. */
+          const show = !!rs.virtualOssDetected;
           panel.classList.toggle('on', show);
         }
         if (!rs.virtualOssDetected) return;
@@ -1165,13 +1159,6 @@
       refreshSelects();
       toast(state.voss ? 'Virtual OSS running — manage play/capture below' : 'Virtual OSS not running');
       applyAndSave(true);
-    });
-
-    on('vossBadge', 'click', () => {
-      if (!state.voss) return;
-      state.vossPanelOpen = !state.vossPanelOpen;
-      updateVossUi();
-      saveNow();
     });
 
     on('selMixCh', 'change', (e) => {

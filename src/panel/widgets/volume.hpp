@@ -74,7 +74,6 @@ class WayfireVolume : public WayfireWidget
     Gtk::Label voss_cap_lbl;
     Gtk::Label voss_fmt_lbl;
     Gtk::Box foot{Gtk::Orientation::HORIZONTAL};
-    Gtk::Label voss_badge;
     Gtk::Button adv_btn;
 
     Gtk::Label head_meta;
