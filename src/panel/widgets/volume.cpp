@@ -19,10 +19,12 @@
 #define MIC_ICON(level) icon_from_range(microphone_icons, level)
 
 /**
- * Pulse peak probe — records from a source (sink monitor or mic).
- * On FreeBSD + Virtual OSS: default sink is usually "virtual_oss", so
- * output levels come from "virtual_oss.monitor" (post-app, pre-OSS hardware).
- * Input uses default source, typically "virtual_oss_rec".
+ * Pulse level probe — records from a source (sink monitor or mic) and
+ * computes per-channel peaks from real samples.
+ *
+ * FreeBSD + Virtual OSS: default sink "virtual_oss" → monitor source
+ * "virtual_oss.monitor"; default source "virtual_oss_rec".
+ * Stream is always 2ch float to match module-oss (not meter display ch count).
  */
 struct PeakProbe
 {
@@ -32,8 +34,8 @@ struct PeakProbe
     std::string source_name;
     std::mutex mu;
     std::array<float, 8> peaks{};
-    int nch = 2;
-    bool ready = false;
+    int nch = 2; /* stream channels (almost always 2 for virtual_oss) */
+    bool alive = false;
 
     ~PeakProbe()
     {
@@ -47,7 +49,9 @@ struct PeakProbe
             return;
         }
 
-        pa_threaded_mainloop_lock(ml);
+        /* Stop first so no callbacks run during teardown */
+        pa_threaded_mainloop_stop(ml);
+
         if (stream)
         {
             pa_stream_disconnect(stream);
@@ -62,11 +66,9 @@ struct PeakProbe
             ctx = nullptr;
         }
 
-        pa_threaded_mainloop_unlock(ml);
-        pa_threaded_mainloop_stop(ml);
         pa_threaded_mainloop_free(ml);
         ml = nullptr;
-        ready = false;
+        alive = false;
         std::lock_guard<std::mutex> lock(mu);
         peaks.fill(0.f);
     }
@@ -77,9 +79,6 @@ struct PeakProbe
         switch (pa_context_get_state(c))
         {
             case PA_CONTEXT_READY:
-                self->ready = true;
-                pa_threaded_mainloop_signal(self->ml, 0);
-                break;
             case PA_CONTEXT_FAILED:
             case PA_CONTEXT_TERMINATED:
                 pa_threaded_mainloop_signal(self->ml, 0);
@@ -94,51 +93,65 @@ struct PeakProbe
         auto *self = static_cast<PeakProbe*>(userdata);
         const void *data = nullptr;
         size_t length = 0;
-        if (pa_stream_peek(s, &data, &length) < 0)
-        {
-            return;
-        }
 
-        if (data && (length >= sizeof(float)))
+        while (pa_stream_readable_size(s) > 0)
         {
-            const float *f = static_cast<const float*>(data);
-            int samples = (int)(length / sizeof(float));
-            int ch = self->nch > 0 ? self->nch : 2;
-            std::lock_guard<std::mutex> lock(self->mu);
-            /* PEAK_DETECT: successive floats are channel peaks (or interleaved peaks). */
-            for (int c = 0; c < ch && c < 8; c++)
+            if (pa_stream_peek(s, &data, &length) < 0)
             {
-                float p = 0.f;
-                if (samples >= ch)
+                break;
+            }
+
+            /* hole / no data */
+            if (!data)
+            {
+                if (length > 0)
                 {
-                    /* take max across frames for this channel */
-                    for (int i = c; i < samples; i += ch)
+                    pa_stream_drop(s);
+                }
+
+                break;
+            }
+
+            if (length >= sizeof(float))
+            {
+                const float *f = static_cast<const float*>(data);
+                int samples = (int)(length / sizeof(float));
+                int ch = self->nch > 0 ? self->nch : 2;
+                if (ch > 8)
+                {
+                    ch = 8;
+                }
+
+                float frame_peak[8] = {};
+                for (int i = 0; i < samples; i++)
+                {
+                    int c = i % ch;
+                    frame_peak[c] = std::max(frame_peak[c], std::fabs(f[i]));
+                }
+
+                std::lock_guard<std::mutex> lock(self->mu);
+                for (int c = 0; c < ch; c++)
+                {
+                    float p = frame_peak[c];
+                    float &cur = self->peaks[c];
+                    /* fast attack, medium decay */
+                    if (p >= cur)
                     {
-                        p = std::max(p, std::fabs(f[i]));
+                        cur = p;
+                    } else
+                    {
+                        cur = cur * 0.88f + p * 0.12f;
                     }
-                } else if (c < samples)
-                {
-                    p = std::fabs(f[c]);
-                }
 
-                /* attack fast, decay slower so meters track music without flicker */
-                float &cur = self->peaks[c];
-                if (p > cur)
-                {
-                    cur = p;
-                } else
-                {
-                    cur = cur * 0.82f + p * 0.18f;
-                }
-
-                if (cur < 0.001f)
-                {
-                    cur = 0.f;
+                    if (cur < 0.0005f)
+                    {
+                        cur = 0.f;
+                    }
                 }
             }
-        }
 
-        pa_stream_drop(s);
+            pa_stream_drop(s);
+        }
     }
 
     static void stream_state_cb(pa_stream *s, void *userdata)
@@ -165,6 +178,9 @@ struct PeakProbe
         }
 
         source_name = source;
+        /* Capture stream always stereo — matches virtual_oss / module-oss */
+        nch = 2;
+
         ml = pa_threaded_mainloop_new();
         if (!ml)
         {
@@ -181,43 +197,53 @@ struct PeakProbe
         }
 
         pa_context_set_state_callback(ctx, context_state_cb, this);
-        if (pa_context_connect(ctx, nullptr, PA_CONTEXT_NOFLAGS, nullptr) < 0)
+
+        /* Start the thread first, then connect under lock (Pulse documented order). */
+        if (pa_threaded_mainloop_start(ml) < 0)
         {
-            stop();
+            pa_context_unref(ctx);
+            ctx = nullptr;
+            pa_threaded_mainloop_free(ml);
+            ml = nullptr;
             return false;
         }
 
         pa_threaded_mainloop_lock(ml);
-        if (pa_threaded_mainloop_start(ml) < 0)
+
+        if (pa_context_connect(ctx, nullptr, PA_CONTEXT_NOFLAGS, nullptr) < 0)
         {
             pa_threaded_mainloop_unlock(ml);
             stop();
             return false;
         }
 
-        while (pa_context_get_state(ctx) != PA_CONTEXT_READY &&
-               pa_context_get_state(ctx) != PA_CONTEXT_FAILED &&
-               pa_context_get_state(ctx) != PA_CONTEXT_TERMINATED)
+        while (true)
         {
+            pa_context_state_t st = pa_context_get_state(ctx);
+            if (st == PA_CONTEXT_READY)
+            {
+                break;
+            }
+
+            if (st == PA_CONTEXT_FAILED || st == PA_CONTEXT_TERMINATED)
+            {
+                pa_threaded_mainloop_unlock(ml);
+                stop();
+                return false;
+            }
+
             pa_threaded_mainloop_wait(ml);
-        }
-
-        if (pa_context_get_state(ctx) != PA_CONTEXT_READY)
-        {
-            pa_threaded_mainloop_unlock(ml);
-            stop();
-            return false;
         }
 
         pa_sample_spec ss;
         ss.format   = PA_SAMPLE_FLOAT32LE;
-        ss.rate     = 25; /* peak rate; PEAK_DETECT compresses to peaks */
-        ss.channels = (uint8_t)std::clamp(nch, 1, 8);
+        ss.rate     = 22050;
+        ss.channels = 2;
 
         pa_channel_map map;
-        pa_channel_map_init_auto(&map, ss.channels, PA_CHANNEL_MAP_DEFAULT);
+        pa_channel_map_init_stereo(&map);
 
-        stream = pa_stream_new(ctx, "wf-panel-peaks", &ss, &map);
+        stream = pa_stream_new(ctx, "wf-panel-levels", &ss, &map);
         if (!stream)
         {
             pa_threaded_mainloop_unlock(ml);
@@ -228,35 +254,55 @@ struct PeakProbe
         pa_stream_set_state_callback(stream, stream_state_cb, this);
         pa_stream_set_read_callback(stream, stream_read_cb, this);
 
+        /* Short fragments for responsive meters */
         pa_buffer_attr attr{};
-        attr.fragsize  = (uint32_t)-1;
+        attr.fragsize  = (uint32_t)(sizeof(float) * 2 * 256); /* ~256 frames stereo */
         attr.maxlength = (uint32_t)-1;
+        attr.tlength   = (uint32_t)-1;
+        attr.prebuf    = (uint32_t)-1;
+        attr.minreq    = (uint32_t)-1;
 
-        int flags = PA_STREAM_PEAK_DETECT | PA_STREAM_ADJUST_LATENCY |
-            PA_STREAM_DONT_MOVE;
-        if (pa_stream_connect_record(stream, source_name.c_str(), &attr,
-                (pa_stream_flags_t)flags) < 0)
+        /* No PEAK_DETECT — compute peaks ourselves from samples (reliable on OSS). */
+        pa_stream_flags_t flags = (pa_stream_flags_t)(
+            PA_STREAM_ADJUST_LATENCY |
+            PA_STREAM_DONT_INHIBIT_AUTO_SUSPEND |
+            PA_STREAM_START_UNMUTED);
+
+        if (pa_stream_connect_record(stream, source_name.c_str(), &attr, flags) < 0)
         {
             pa_threaded_mainloop_unlock(ml);
             stop();
             return false;
         }
 
-        while (pa_stream_get_state(stream) != PA_STREAM_READY &&
-               pa_stream_get_state(stream) != PA_STREAM_FAILED &&
-               pa_stream_get_state(stream) != PA_STREAM_TERMINATED)
+        while (true)
         {
+            pa_stream_state_t st = pa_stream_get_state(stream);
+            if (st == PA_STREAM_READY)
+            {
+                break;
+            }
+
+            if (st == PA_STREAM_FAILED || st == PA_STREAM_TERMINATED)
+            {
+                pa_threaded_mainloop_unlock(ml);
+                stop();
+                return false;
+            }
+
             pa_threaded_mainloop_wait(ml);
         }
 
-        bool ok = pa_stream_get_state(stream) == PA_STREAM_READY;
-        pa_threaded_mainloop_unlock(ml);
-        if (!ok)
+        /* Adopt negotiated channel count if server remapped */
+        const pa_sample_spec *nss = pa_stream_get_sample_spec(stream);
+        if (nss && nss->channels > 0)
         {
-            stop();
+            nch = std::min<int>(nss->channels, 8);
         }
 
-        return ok;
+        alive = true;
+        pa_threaded_mainloop_unlock(ml);
+        return true;
     }
 
     void get_levels(float *out, int max_n, int *n_out)
@@ -265,7 +311,7 @@ struct PeakProbe
         int n = std::min(nch, max_n);
         if (n_out)
         {
-            *n_out = n;
+            *n_out = alive ? n : 0;
         }
 
         for (int i = 0; i < n; i++)
@@ -596,7 +642,13 @@ void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, i
     cr->rectangle(0, 0, w, h);
     cr->fill();
 
-    if (muted || (level <= 0.001))
+    /* Real peaks from Pulse (Virtual OSS: virtual_oss.monitor / virtual_oss_rec).
+     * Do not gate on slider "level" — that is control volume, not signal. */
+    float peaks[8] = {};
+    int n_peaks = 0;
+    copy_peaks(is_output, peaks, 8, &n_peaks);
+
+    if (muted)
     {
         cr->set_source_rgba(0.27, 0.28, 0.35, 0.5);
         cr->set_line_width(1.0);
@@ -605,11 +657,6 @@ void WayfireVolume::draw_meter(const Cairo::RefPtr<Cairo::Context>& cr, int w, i
         cr->stroke();
         return;
     }
-
-    /* Real peaks from Pulse (Virtual OSS: virtual_oss.monitor / virtual_oss_rec). */
-    float peaks[8] = {};
-    int n_peaks = 0;
-    copy_peaks(is_output, peaks, 8, &n_peaks);
 
     int n = is_output ? std::clamp(out_channels.value(), 2, 8) : 2;
     if ((style == "spectrum") && is_output)
@@ -1032,9 +1079,15 @@ void WayfireVolume::start_level_probes()
     }
 
     auto *op = new PeakProbe();
-    op->nch = std::clamp(out_channels.value(), 2, 8);
-    if (!op->start(mon) && !op->start("virtual_oss.monitor"))
+    bool out_ok = op->start(mon);
+    if (!out_ok && mon != "virtual_oss.monitor")
     {
+        out_ok = op->start("virtual_oss.monitor");
+    }
+
+    if (!out_ok)
+    {
+        g_warning("wf-panel: output level probe failed for '%s'", mon.c_str());
         delete op;
         op = nullptr;
     }
@@ -1058,9 +1111,9 @@ void WayfireVolume::start_level_probes()
     }
 
     auto *ip = new PeakProbe();
-    ip->nch = 2;
     if (!ip->start(src))
     {
+        g_warning("wf-panel: input level probe failed for '%s'", src.c_str());
         delete ip;
         ip = nullptr;
     }
