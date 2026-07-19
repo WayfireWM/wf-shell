@@ -820,7 +820,6 @@ void WayfireVolume::refresh_voss_strip()
         voss_section.set_visible(show);
         if (!show)
         {
-            head_meta.set_text("");
             return;
         }
 
@@ -846,8 +845,6 @@ void WayfireVolume::refresh_voss_strip()
             std::to_string(st.sample_rate) + " Hz · " +
             std::to_string(st.bits) + "-bit · " +
             std::to_string(st.channels) + " ch");
-        head_meta.set_text(path_basename_hint(st.play_path) + " · " +
-            path_basename_hint(st.record_path));
     } catch (...)
     {
         voss_section.set_visible(false);
@@ -1150,11 +1147,7 @@ void WayfireVolume::build_popover_ui()
     title->set_markup("<b>Sound</b>");
     title->set_halign(Gtk::Align::START);
     title->set_hexpand(true);
-    head_meta.set_halign(Gtk::Align::END);
-    head_meta.add_css_class("dim-label");
-    head_meta.set_ellipsize(Pango::EllipsizeMode::END);
     head->append(*title);
-    head->append(head_meta);
     popover_root.append(*head);
     popover_root.append(*Gtk::make_managed<Gtk::Separator>());
 

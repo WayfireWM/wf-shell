@@ -76,8 +76,6 @@ class WayfireVolume : public WayfireWidget
     Gtk::Box foot{Gtk::Orientation::HORIZONTAL};
     Gtk::Button adv_btn;
 
-    Gtk::Label head_meta;
-
     std::unique_ptr<WayfireMenuWidget> button;
     std::unique_ptr<wf_audio::IAudioBackend> audio_backend;
 
