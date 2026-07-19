@@ -63,6 +63,83 @@ std::string kind_from_desc(const std::string& desc)
     return "analog";
 }
 
+/** Read a sysctl string value (empty on failure). */
+std::string sysctl_n(const std::string& name)
+{
+    std::string out;
+    int code = 0;
+    if (!run_capture({"sysctl", "-n", name}, out, code) || code != 0)
+    {
+        return {};
+    }
+    while (!out.empty() && (out.back() == '\n' || out.back() == '\r'))
+    {
+        out.pop_back();
+    }
+    return out;
+}
+
+/**
+ * Build a human-readable label that distinguishes identical HDMI devices.
+ * NVIDIA often exposes three identical "HDMI/DP 8ch" strings — include unit + nid.
+ */
+std::string friendly_description(int unit, const std::string& raw_desc, const std::string& kind)
+{
+    const std::string unit_s = "pcm" + std::to_string(unit);
+    std::string loc = sysctl_n("dev.pcm." + std::to_string(unit) + ".%location");
+    /* loc is typically "nid=5" */
+    std::string nid;
+    if (loc.rfind("nid=", 0) == 0)
+    {
+        nid = loc.substr(4);
+    } else if (!loc.empty())
+    {
+        nid = loc;
+    }
+
+    if (kind == "hdmi")
+    {
+        /* e.g. "HDMI · pcm1 · nid 5 (NVIDIA)" */
+        std::string brand;
+        std::string low = raw_desc;
+        for (char& c : low)
+        {
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+        if (low.find("nvidia") != std::string::npos)
+        {
+            brand = "NVIDIA";
+        } else if (low.find("amd") != std::string::npos || low.find("radeon") != std::string::npos)
+        {
+            brand = "AMD";
+        } else if (low.find("intel") != std::string::npos)
+        {
+            brand = "Intel";
+        }
+
+        std::string label = "HDMI · " + unit_s;
+        if (!nid.empty())
+        {
+            label += " · nid " + nid;
+        }
+        if (!brand.empty())
+        {
+            label += " (" + brand + ")";
+        } else if (!raw_desc.empty())
+        {
+            label += " · " + raw_desc;
+        }
+        return label;
+    }
+
+    /* Analog / USB / digital: keep chip name but always include unit for disambiguation */
+    if (!raw_desc.empty())
+    {
+        return raw_desc + " · " + unit_s;
+    }
+    return unit_s;
+}
+
 /**
  * Parse /dev/sndstat lines like:
  *   pcm1: <NVIDIA (0x00a0) (HDMI/DP 8ch)> (play) default
@@ -132,19 +209,20 @@ std::vector<AudioDevice> parse_sndstat()
         AudioDevice d;
         d.id          = id;
         d.path        = "/dev/dsp" + std::to_string(unit >= 0 ? unit : 0);
-        d.description = desc.empty() ? id : desc;
         d.capability  = parse_cap(paren);
         d.is_default  = line.find("default") != std::string::npos;
-        d.kind        = kind_from_desc(d.description);
+        d.kind        = kind_from_desc(desc.empty() ? id : desc);
+        d.description = (unit >= 0) ?
+            friendly_description(unit, desc, d.kind) :
+            (desc.empty() ? id : desc);
+        if (d.is_default)
+        {
+            d.description += " · default";
+        }
         d.present     = true;
         /* Hotplug: node may lag sndstat by a moment — still mark path_ok honestly. */
         d.path_ok     = (access(d.path.c_str(), F_OK) == 0);
         d.jack_connected = -1; /* jack sense not reliable via sndstat alone */
-        if (d.kind == "hdmi")
-        {
-            /* HDMI "plugged" ≠ analog jack; leave unknown unless we add DRM probe later. */
-            d.jack_connected = -1;
-        }
         if (unit >= 0)
         {
             devices.push_back(std::move(d));
