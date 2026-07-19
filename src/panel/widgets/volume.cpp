@@ -332,9 +332,9 @@ void WayfireVolume::update_icon()
 
     double frac = max_norm > 0 ?
         volume_scale.get_target_value() / (double)max_norm : 0.0;
-    frac = std::clamp(frac, 0.0, 1.0);
-    main_image.set_from_icon_name(ICON(frac));
-    out_mute_icon.set_from_icon_name(ICON(frac));
+    /* Icon map tops out at 1.0; overdrive still uses high icon */
+    main_image.set_from_icon_name(ICON(std::min(frac, 1.0)));
+    out_mute_icon.set_from_icon_name(ICON(std::min(frac, 1.0)));
 }
 
 void WayfireVolume::update_mic_badge()
@@ -362,6 +362,7 @@ void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
         gvc_mixer_stream_push_volume(gvc_stream);
     }
 
+    /* % relative to norm so 150% is meaningful when above 100% */
     double frac = max_norm > 0 ? volume / max_norm : 0.0;
     out_pct.set_text(std::to_string((int)std::lround(frac * 100)) + "%");
     update_icon();
@@ -484,7 +485,14 @@ void WayfireVolume::on_default_sink_changed()
         G_CALLBACK(notify_is_muted), this);
 
     max_norm = gvc_mixer_control_get_vol_max_norm(gvc_control);
-    volume_scale.set_range(0.0, max_norm);
+    max_amp  = gvc_mixer_control_get_vol_max_amplified(gvc_control);
+    if (max_amp < max_norm)
+    {
+        max_amp = max_norm;
+    }
+
+    /* Slider allows overdrive (>100%); labels use max_norm as 100%. */
+    volume_scale.set_range(0.0, max_amp);
     volume_scale.set_increments(max_norm * scroll_sensitivity,
         max_norm * scroll_sensitivity * 2);
     set_volume(gvc_mixer_stream_get_volume(gvc_stream), VOLUME_FLAG_NO_ACTION);
@@ -510,7 +518,13 @@ void WayfireVolume::on_default_source_changed()
         G_CALLBACK(notify_src_muted), this);
 
     max_norm_src = gvc_mixer_control_get_vol_max_norm(gvc_control);
-    mic_scale.set_range(0.0, max_norm_src);
+    max_amp_src  = gvc_mixer_control_get_vol_max_amplified(gvc_control);
+    if (max_amp_src < max_norm_src)
+    {
+        max_amp_src = max_norm_src;
+    }
+
+    mic_scale.set_range(0.0, max_amp_src);
     mic_scale.set_increments(max_norm_src * scroll_sensitivity,
         max_norm_src * scroll_sensitivity * 2);
     set_mic_volume(gvc_mixer_stream_get_volume(gvc_source), VOLUME_FLAG_NO_ACTION);
@@ -1428,19 +1442,21 @@ void WayfireVolume::init(Gtk::Box *container)
 
     auto apply_scroll = [this] (double dy, Gdk::ScrollUnit unit, bool shift_mic)
     {
-        double maxn = shift_mic ? max_norm_src : max_norm;
-        double cur  = shift_mic ? mic_scale.get_target_value() :
+        /* Step size from 100% norm; clamp to amplified max (>100% allowed). */
+        double step_base = shift_mic ? max_norm_src : max_norm;
+        double max_vol   = shift_mic ? max_amp_src : max_amp;
+        double cur       = shift_mic ? mic_scale.get_target_value() :
             volume_scale.get_target_value();
         int change = 0;
         if (unit == Gdk::ScrollUnit::WHEEL)
         {
-            change = dy * maxn * scroll_sensitivity;
+            change = dy * step_base * scroll_sensitivity;
         } else
         {
-            change = (dy / 100.0) * maxn * scroll_sensitivity;
+            change = (dy / 100.0) * step_base * scroll_sensitivity;
         }
 
-        double nv = std::clamp(cur - change, 0.0, maxn);
+        double nv = std::clamp(cur - change, 0.0, max_vol);
         if (shift_mic)
         {
             set_mic_volume(nv);

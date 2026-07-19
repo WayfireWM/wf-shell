@@ -92,8 +92,10 @@ class WayfireVolume : public WayfireWidget
     GvcMixerControl *gvc_control = nullptr;
     GvcMixerStream *gvc_stream   = nullptr; /* default sink */
     GvcMixerStream *gvc_source   = nullptr; /* default source */
-    gdouble max_norm = PA_VOLUME_NORM;
+    gdouble max_norm = PA_VOLUME_NORM;     /* 100% reference for % display */
+    gdouble max_amp  = PA_VOLUME_UI_MAX;   /* allow overdrive above 100% */
     gdouble max_norm_src = PA_VOLUME_NORM;
+    gdouble max_amp_src  = PA_VOLUME_UI_MAX;
 
     gulong notify_volume_signal = 0;
     gulong notify_is_muted_signal = 0;
