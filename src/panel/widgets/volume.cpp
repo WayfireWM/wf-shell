@@ -327,13 +327,16 @@ void WayfireVolume::update_icon()
     {
         main_image.set_from_icon_name(ICON(0));
         out_mute_icon.set_from_icon_name(ICON(0));
+        vol_pct_badge.set_text("mute");
         return;
     }
 
     double frac = max_norm > 0 ?
         volume_scale.get_target_value() / (double)max_norm : 0.0;
+    frac = std::clamp(frac, 0.0, 1.0);
     main_image.set_from_icon_name(ICON(frac));
     out_mute_icon.set_from_icon_name(ICON(frac));
+    vol_pct_badge.set_text(std::to_string((int)std::lround(frac * 100.0)) + "%");
 }
 
 void WayfireVolume::update_mic_badge()
@@ -1402,8 +1405,11 @@ void WayfireVolume::init(Gtk::Box *container)
     }
 
     main_image.add_css_class("widget-icon");
-    /* Panel: speaker icon only (no mic badge — mic is in Sound Settings). */
+    vol_pct_badge.add_css_class("dim-label");
+    vol_pct_badge.set_margin_start(4);
+    /* Panel: speaker + volume % only (mic is in Sound Settings). */
     icon_box.append(main_image);
+    icon_box.append(vol_pct_badge);
 
     button = std::make_unique<WayfireMenuWidget>("panel", "volume");
     button->set_keyboard_interactive(false);
