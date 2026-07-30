@@ -494,11 +494,13 @@ WayfireWindowList::~WayfireWindowList()
 
     if (this->manager)
     {
+        zwlr_foreign_toplevel_manager_v1_stop(this->manager);
         zwlr_foreign_toplevel_manager_v1_destroy(this->manager);
     }
 
     if (this->foreign_toplevel_list)
     {
+        ext_foreign_toplevel_list_v1_stop(this->foreign_toplevel_list);
         ext_foreign_toplevel_list_v1_destroy(this->foreign_toplevel_list);
     }
 
