@@ -950,7 +950,7 @@ void WayfireWorkspaceSwitcher::grid_on_event(wf::json_t data)
 WayfireWorkspaceSwitcher::WayfireWorkspaceSwitcher(WayfireOutput *output)
 {
     this->output_name = output->monitor->get_connector();
-    switcher_box.set_vexpand(false);
+    switcher_box.set_halign(Gtk::Align::CENTER);
     switcher_box.set_valign(Gtk::Align::CENTER);
 }
 

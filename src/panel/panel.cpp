@@ -106,26 +106,25 @@ class WayfirePanel::impl
             right_box.measure(orientation, -1, rmin, rnat, rminb, rnatb);
             center_box.measure(orientation, -1, mmin, mnat, mminb, mnatb);
 
+            center_box.set_halign(Gtk::Align::CENTER);
+            center_box.set_valign(Gtk::Align::CENTER);
+
             if (is_horizontal)
             {
                 content_box.set_size_request((std::max(lnat, rnat) * 2) + mnat, -1);
 
                 left_box.set_halign(Gtk::Align::END);
                 right_box.set_halign(Gtk::Align::START);
-                center_box.set_halign(Gtk::Align::CENTER);
                 left_box.set_valign(Gtk::Align::FILL);
                 right_box.set_valign(Gtk::Align::FILL);
-                center_box.set_valign(Gtk::Align::FILL);
             } else
             {
                 content_box.set_size_request(-1, (std::max(lnat, rnat) * 2) + mnat);
 
                 left_box.set_halign(Gtk::Align::FILL);
                 right_box.set_halign(Gtk::Align::FILL);
-                center_box.set_halign(Gtk::Align::FILL);
                 left_box.set_valign(Gtk::Align::END);
                 right_box.set_valign(Gtk::Align::START);
-                center_box.set_valign(Gtk::Align::CENTER);
             }
         } else
         {
