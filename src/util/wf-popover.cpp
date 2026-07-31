@@ -177,6 +177,10 @@ WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::stri
     popover.add_css_class(class_name + "-popover");
     menu.add_css_class(class_name + "-popover");
 
+    // default alignment to being centered, as that’s the most common
+    set_halign(Gtk::Align::CENTER);
+    set_valign(Gtk::Align::CENTER);
+
     /* Scroller around widget popover for small screens */
     popover.set_child(scroll);
     scroll.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
