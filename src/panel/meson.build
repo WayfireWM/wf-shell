@@ -1,6 +1,11 @@
 widget_sources = [
   'widgets/battery.cpp',
-  'widgets/menu.cpp',
+  'widgets/menu/menu.cpp',
+  'widgets/menu/layout.cpp',
+  'widgets/menu/logout.cpp',
+  'widgets/menu/category.cpp',
+  'widgets/menu/categorybutton.cpp',
+  'widgets/menu/item.cpp',
   'widgets/clock.cpp',
   'widgets/command-output.cpp',
   'widgets/language.cpp',
@@ -41,7 +46,9 @@ if ddcutil.found()
   widget_sources += 'widgets/brightness/ddcutil.cpp'
   deps += ddcutil
 else
-  message('Libddcutil not found, brightness widget will not support external monitors.')
+  message(
+    'Libddcutil not found, brightness widget will not support external monitors.',
+  )
 endif
 
 if libpulse.found()
@@ -75,7 +82,9 @@ endif
 if gbm.found() and drm.found()
   deps += [gbm, drm]
 else
-  message('Development packages for gbm and libdrm are required to enable live window preview tooltips in wf-panel.')
+  message(
+    'Development packages for gbm and libdrm are required to enable live window preview tooltips in wf-panel.',
+  )
 endif
 
 executable(
