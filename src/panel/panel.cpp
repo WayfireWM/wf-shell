@@ -18,7 +18,7 @@
 #include "widgets/battery.hpp"
 #include "widgets/command-output.hpp"
 #include "widgets/language.hpp"
-#include "widgets/menu.hpp"
+#include "widgets/menu/menu.hpp"
 #include "widgets/clock.hpp"
 #ifdef HAVE_WEATHER
     #include "widgets/weather.hpp"

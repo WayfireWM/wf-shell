@@ -21,7 +21,6 @@ class WayfireMenuWidget : public Gtk::Box
     Gtk::ScrolledWindow scroll;
     Gtk::Popover popover;
     Gtk::PopoverMenu menu;
-    Glib::RefPtr<Gtk::Window> fullscreen;
     bool use_menu = false, use_widget = false;
     bool interactive = false;
     WfOption<std::string> panel_position;
