@@ -1078,13 +1078,6 @@ void WayfireMenu::init(Gtk::Box *container)
     }));
     box.add_controller(click_gesture);
 
-    auto menu_fs_changed = [=]
-    {
-        button->set_fullscreen(menu_fullscreen.value());
-    };
-    menu_fullscreen.set_callback(menu_fs_changed);
-    menu_fs_changed();
-
     logout_image.set_icon_size(Gtk::IconSize::LARGE);
     logout_image.set_from_icon_name("system-shutdown");
     logout_button.add_css_class("flat");

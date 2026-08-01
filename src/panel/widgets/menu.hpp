@@ -202,7 +202,6 @@ class WayfireMenu : public WayfireWidget
     WfOption<int> menu_min_category_width{"panel/menu_min_category_width"};
     WfOption<int> menu_min_content_height{"panel/menu_min_content_height"};
     WfOption<bool> menu_show_categories{"panel/menu_show_categories"};
-    WfOption<bool> menu_fullscreen{"panel/menu_fullscreen"};
     void setup_popover_layout();
     void update_popover_layout();
     void update_size();

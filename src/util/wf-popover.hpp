@@ -103,5 +103,4 @@ class WayfireMenuWidget : public Gtk::Box
     /* Use a specific mouse button to open menu. Skip this if you're handling presses in-widget. If button < 0
      * then this callback is removed  */
     void open_on(int button);
-    void set_fullscreen(bool fs);
 };
