@@ -487,7 +487,7 @@ void WayfireMenu::init(Gtk::Box *container)
     menu_list.set_callback([=] () { update_popover_layout(); });
 
     button = std::make_unique<WayfireMenuWidget>("panel", "menu");
-    button->append(main_image);
+    button->set_child(main_image);
     button->set_keyboard_interactive(true);
     button->add_css_class("menu-button");
     button->open_on(1); /* Open menu on left click */
@@ -506,18 +506,6 @@ void WayfireMenu::init(Gtk::Box *container)
 
     container->append(box);
     box.append(*button);
-
-    auto click_gesture = Gtk::GestureClick::create();
-    click_gesture->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
-    signals.push_back(click_gesture->signal_pressed().connect([=] (int count, double x, double y)
-    {
-        click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
-    }));
-    signals.push_back(click_gesture->signal_released().connect([=] (int count, double x, double y)
-    {
-        toggle_menu();
-    }));
-    box.add_controller(click_gesture);
 
     logout_image.set_icon_size(Gtk::IconSize::LARGE);
     logout_image.set_from_icon_name("system-shutdown");

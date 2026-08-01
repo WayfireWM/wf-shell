@@ -173,7 +173,7 @@ void WayfireMixer::init(Gtk::Box *container)
     // sets up the "widget part"
 
     button = std::make_unique<WayfireMenuWidget>("panel", "mixer");
-    button->append(main_image);
+    button->set_child(main_image);
     button->show();
     button->open_on(-1); // the gestures callback will take care of opening and closing
     sinks_box.add_css_class("outputs");

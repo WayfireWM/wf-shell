@@ -157,7 +157,7 @@ void WayfireBatteryInfo::update_details()
     {
         label.set_text(percentage_string);
         overlay.remove_overlay(label);
-        box->append(label);
+        box->set_child(label);
     } else if (status_opt.value() == BATTERY_STATUS_FULL)
     {
         label.set_text(description);
@@ -167,7 +167,7 @@ void WayfireBatteryInfo::update_details()
             overlay.remove_overlay(label);
         }
 
-        box->append(label);
+        box->set_child(label);
     } else if (status_opt.value() == BATTERY_STATUS_OVERLAY)
     {
         label.set_text(percentage_string);
@@ -313,7 +313,7 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
 
     box = std::make_unique<WayfireMenuWidget>("panel", "battery");
 
-    box->append(overlay);
+    box->set_child(overlay);
     overlay.set_child(icon);
     icon.add_css_class("widget-icon");
 

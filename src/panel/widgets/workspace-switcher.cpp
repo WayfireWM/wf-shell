@@ -53,7 +53,7 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
         } else // "grid_popover"
         {
             button->set_popup_child(overlay);
-            button->append(mini_grid);
+            button->set_child(mini_grid);
             switcher_box.append(*button);
             button->open_on(1);
         }

@@ -21,7 +21,11 @@ WayfireAutohidingWindow *get_panel(Gtk::Widget *button)
 
 void WayfireMenuWidget::set_child(Gtk::Widget & widget)
 {
-    append(widget);
+    Gtk::Box::append(widget);
+    widget.set_valign(Gtk::Align::CENTER);
+    widget.set_halign(Gtk::Align::CENTER);
+    widget.set_hexpand(true);
+    widget.set_vexpand(true);
 }
 
 void WayfireMenuWidget::set_no_child()
@@ -178,8 +182,10 @@ WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::stri
     menu.add_css_class(class_name + "-popover");
 
     // default alignment to being centered, as that’s the most common
-    set_halign(Gtk::Align::CENTER);
-    set_valign(Gtk::Align::CENTER);
+    set_halign(Gtk::Align::FILL);
+    set_valign(Gtk::Align::FILL);
+    set_hexpand(true);
+    set_vexpand(true);
 
     /* Scroller around widget popover for small screens */
     popover.set_child(scroll);
