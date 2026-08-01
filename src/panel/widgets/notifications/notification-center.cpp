@@ -16,7 +16,7 @@ void WayfireNotificationCenter::init(Gtk::Box *container)
     button->get_children()[0]->add_css_class("flat");
 
     updateIcon();
-    button->append(icon);
+    button->set_child(icon);
     button->open_on(1);
     container->append(*button);
 

@@ -19,7 +19,7 @@ void WayfireNetworkInfo::init(Gtk::Box *container)
     button->add_css_class("network");
 
     container->append(*button);
-    button->append(button_content);
+    button->set_child(button_content);
 
     button->set_popup_child(control);
 

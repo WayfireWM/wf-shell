@@ -55,7 +55,7 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service) :
         "tray-button",
         "tray_button")
 {
-    append(icon);
+    set_child(icon);
     menu = std::make_shared<DbusMenuModel>();
 
     const auto & [name, path] = name_and_obj_path(service);

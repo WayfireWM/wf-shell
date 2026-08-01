@@ -46,6 +46,11 @@ class WayfireMenuWidget : public Gtk::Box
 
   public:
 
+    void append(Gtk::Widget& child)  = delete;
+    void prepend(Gtk::Widget& child) = delete;
+    void insert_child_after(Gtk::Widget& child, Gtk::Widget& sibling) = delete;
+
+    void add_button(Gtk::Widget&);
     void set_no_child();
     void set_menu_model(Glib::RefPtr<Gio::MenuModel> menu);
     void set_child(Gtk::Widget & widget);
