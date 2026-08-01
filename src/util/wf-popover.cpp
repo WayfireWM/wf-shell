@@ -67,14 +67,8 @@ void WayfireMenuWidget::popup(bool autohide)
         menu.popup();
     } else if (use_widget)
     {
-        if (fullscreen)
-        {
-            fullscreen->show();
-        } else
-        {
-            popover.set_autohide(autohide);
-            popover.popup();
-        }
+        popover.set_autohide(autohide);
+        popover.popup();
     } else
     {
         return;
@@ -128,10 +122,6 @@ void WayfireMenuWidget::popdown()
     remove_css_class("selected");
     menu.popdown();
     popover.popdown();
-    if (fullscreen)
-    {
-        fullscreen->hide();
-    }
 
     popdown_signal.emit();
     panel->unset_active_popover();
@@ -347,43 +337,6 @@ bool WayfireMenuWidget::is_popup_visible()
     }
 
     return false;
-}
-
-void WayfireMenuWidget::set_fullscreen(bool fs)
-{
-    auto panel = get_panel(this);
-    if (!panel)
-    {
-        return;
-    }
-
-    if (fs && (fullscreen == nullptr))
-    {
-        gtk_popover_set_child(popover.gobj(), nullptr);
-
-        /* Prepare fullscreen layer */
-        fullscreen = std::make_shared<Gtk::Window>();
-        fullscreen->add_css_class(class_name + "-fullscreen-popover");
-        fullscreen->add_css_class(class_name + "-popover");
-        fullscreen->add_css_class("fullscreen-popover");
-        gtk_layer_init_for_window(fullscreen->gobj());
-        gtk_layer_set_namespace(fullscreen->gobj(), "panelmenu");
-        gtk_layer_set_anchor(fullscreen->gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
-        gtk_layer_set_anchor(fullscreen->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
-        gtk_layer_set_anchor(fullscreen->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-        gtk_layer_set_anchor(fullscreen->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-        gtk_layer_set_layer(fullscreen->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
-        gtk_layer_set_keyboard_mode(fullscreen->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
-        gtk_layer_set_monitor(fullscreen->gobj(), panel->get_output()->monitor->gobj());
-
-        fullscreen->set_child(scroll);
-    } else if (!fs && fullscreen)
-    {
-        gtk_window_set_child(fullscreen->gobj(), nullptr);
-        popover.set_child(scroll);
-        fullscreen->close();
-        fullscreen = nullptr;
-    }
 }
 
 void WayfireMenuWidget::cancel_timer()
