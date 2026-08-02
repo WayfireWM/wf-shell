@@ -104,7 +104,7 @@ void WayfireMenu::populate_menu_categories()
     }
 }
 
-void WayfireMenu::populate_menu_items(std::string category)
+void WayfireMenu::populate_menu_items()
 {
     /* Ensure the flowbox is empty */
     for (auto child : flowbox.get_children())
@@ -113,7 +113,7 @@ void WayfireMenu::populate_menu_items(std::string category)
         delete child;
     }
 
-    for (auto app_info : category_list[category]->items)
+    for (auto app_info : category_list["All"]->items)
     {
         auto app = new WfMenuItem(this, app_info);
         flowbox.append(*app);
@@ -178,12 +178,12 @@ void WayfireMenu::on_search_changed()
         if (search_entry.get_text().length() == 0)
         {
             /* Text has been unset, show categories again */
-            populate_menu_items(category);
+            flowbox.invalidate_filter();
             category_scrolled_window.show();
         } else
         {
             /* User is filtering, hide categories, ignore chosen category */
-            populate_menu_items("All");
+            flowbox.invalidate_filter();
         }
     }
 
@@ -210,6 +210,17 @@ bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
 {
     auto button = dynamic_cast<WfMenuItem*>(child);
     assert(button);
+
+    if (this->category != "All")
+    {
+        const auto& target_items = category_list[this->category]->items;
+        auto it = std::find(target_items.begin(), target_items.end(), button->get_app_info());
+
+        if (it == target_items.end())
+        {
+            return false;
+        }
+    }
 
     auto text = search_entry.get_text();
     uint32_t match_score = this->fuzzy_filter ?
@@ -415,7 +426,7 @@ void WayfireMenu::refresh()
 
     load_menu_items_all();
     populate_menu_categories();
-    populate_menu_items("All");
+    populate_menu_items();
 }
 
 static void app_info_changed(GAppInfoMonitor *gappinfomonitor, gpointer user_data)
@@ -526,7 +537,7 @@ void WayfireMenu::init(Gtk::Box *container)
     setup_popover_layout();
     update_popover_layout();
     populate_menu_categories();
-    populate_menu_items("All");
+    populate_menu_items();
     app_info_monitor = g_app_info_monitor_get();
     app_info_monitor_changed_handler_id =
         g_signal_connect(app_info_monitor, "changed", G_CALLBACK(app_info_changed), this);
@@ -583,7 +594,7 @@ void WayfireMenu::hide_menu()
 void WayfireMenu::set_category(std::string in_category)
 {
     category = in_category;
-    populate_menu_items(in_category);
+    flowbox.invalidate_filter();
 }
 
 void WayfireMenu::select_first_flowbox_item()

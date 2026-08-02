@@ -87,7 +87,7 @@ class WayfireMenu : public WayfireWidget
   public:
     void arrow_key(Gtk::DirectionType dir);
     void init(Gtk::Box *container) override;
-    void populate_menu_items(std::string category);
+    void populate_menu_items();
     void populate_menu_categories();
     void toggle_menu();
     void hide_menu();
