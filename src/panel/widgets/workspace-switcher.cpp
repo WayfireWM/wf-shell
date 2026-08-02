@@ -33,7 +33,8 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
     ipc_client->subscribe(this, {"wset-workspace-changed"});
 
     workspace_switcher_target_size_opt.set_callback([=] () {set_size();});
-
+    overlay.set_hexpand(true);
+    overlay.set_vexpand(true);
     auto mode_cb = ([=] ()
     {
         clear_switcher_box();
@@ -102,15 +103,13 @@ void WayfireWorkspaceSwitcher::get_wsets()
     {
         if (data.serialize().find("error") != std::string::npos)
         {
-            std::cerr << data.serialize() << std::endl;
-            std::cerr << "Error getting wsets list for workspace-switcher widget!" << std::endl;
             return;
         }
 
         if (workspace_switcher_mode.value() == "row")
         {
             process_workspaces(data);
-        } else // "grid"/"grid_popover"
+        } else
         {
             grid_process_workspaces(data);
         }
@@ -480,8 +479,16 @@ void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data
 
             if (this->output_name == output_data["name"].as_string())
             {
-                this->output_width  = output_data["geometry"]["width"].as_int();
-                this->output_height = output_data["geometry"]["height"].as_int();
+                if (output_data["geometry"]["width"].is_int())
+                {
+                    this->output_width  = output_data["geometry"]["width"].as_int();
+                    this->output_height = output_data["geometry"]["height"].as_int();
+                } else
+                {
+                    this->output_width  = output_data["geometry"]["width"].as_double();
+                    this->output_height = output_data["geometry"]["height"].as_double();
+                }
+
                 for (auto w : windows)
                 {
                     if (w->active)
@@ -691,10 +698,21 @@ void WayfireWorkspaceSwitcher::grid_add_view(wf::json_t view_data)
     }
 
     v->output_id = view_data["output-id"].as_int();
-    auto x = view_data["geometry"]["x"].as_int();
-    auto y = view_data["geometry"]["y"].as_int();
-    auto w = view_data["geometry"]["width"].as_int();
-    auto h = view_data["geometry"]["height"].as_int();
+    double x, y, w, h;
+    if (view_data["geometry"]["x"].is_int())
+    {
+        x = view_data["geometry"]["x"].as_int();
+        y = view_data["geometry"]["y"].as_int();
+        w = view_data["geometry"]["width"].as_int();
+        h = view_data["geometry"]["height"].as_int();
+    } else
+    {
+        x = view_data["geometry"]["x"].as_double();
+        y = view_data["geometry"]["y"].as_double();
+        w = view_data["geometry"]["width"].as_double();
+        h = view_data["geometry"]["height"].as_double();
+    }
+
     for (auto widget : overlay.get_children())
     {
         WayfireWorkspaceWindow *window = (WayfireWorkspaceWindow*)widget;
@@ -979,7 +997,6 @@ WayfireWorkspaceSwitcher::WayfireWorkspaceSwitcher(WayfireOutput *output)
     switcher_box.set_valign(Gtk::Align::FILL);
     switcher_box.set_hexpand(true);
     switcher_box.set_vexpand(true);
-    switcher_box.set_size_request(panel_min_width, panel_min_height);
 }
 
 WayfireWorkspaceSwitcher::~WayfireWorkspaceSwitcher()
