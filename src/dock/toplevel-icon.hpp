@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <memory>
 #include <wlr-foreign-toplevel-management-unstable-v1-client-protocol.h>
 
