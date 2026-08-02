@@ -67,6 +67,9 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
     WfOption<double> workspace_switcher_target_size_opt{"panel/workspace_switcher_target_size"};
     double workspace_switcher_target_size;
     WfOption<bool> workspace_switcher_render_views{"panel/workspace_switcher_render_views"};
+
+    WfOption<int> panel_min_width{"panel/minimal_width"};
+    WfOption<int> panel_min_height{"panel/minimal_height"};
 };
 
 class WayfireWorkspaceBox : public Gtk::Overlay

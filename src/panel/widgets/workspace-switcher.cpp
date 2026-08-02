@@ -422,9 +422,20 @@ void WayfireWorkspaceSwitcher::process_workspaces(wf::json_t workspace_data)
 
             if (this->output_name == output_data["name"].as_string())
             {
-                auto output_id     = output_data["id"].as_int();
-                auto output_width  = output_data["geometry"]["width"].as_int();
-                auto output_height = output_data["geometry"]["height"].as_int();
+                auto output_id = output_data["id"].as_int();
+                double output_width;
+                double output_height;
+
+                if (output_data["geometry"]["width"].is_double())
+                {
+                    output_width  = output_data["geometry"]["width"].as_double();
+                    output_height = output_data["geometry"]["height"].as_double();
+                } else
+                {
+                    output_width  = output_data["geometry"]["width"].as_int();
+                    output_height = output_data["geometry"]["height"].as_int();
+                }
+
                 for (auto w : windows)
                 {
                     if (w->active)
@@ -484,6 +495,8 @@ void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data
                 button->set_popup_child(overlay);
                 overlay.set_child(switch_grid);
                 overlay.add_css_class("workspace");
+                overlay.set_hexpand(true);
+                overlay.set_vexpand(true);
                 overlay.signal_get_child_position().connect(sigc::mem_fun(*this,
                     &WayfireWorkspaceSwitcher::on_grid_get_child_position), false);
                 for (int j = 0; j < this->grid_height; j++)
@@ -592,10 +605,22 @@ void WayfireWorkspaceSwitcher::add_view(wf::json_t view_data)
     }
 
     v->output_id = view_data["output-id"].as_int();
-    auto x = view_data["geometry"]["x"].as_int();
-    auto y = view_data["geometry"]["y"].as_int();
-    auto w = view_data["geometry"]["width"].as_int();
-    auto h = view_data["geometry"]["height"].as_int();
+    double x, y, w, h;
+
+    if (view_data["geometry"]["x"].is_double())
+    {
+        x = view_data["geometry"]["x"].as_double();
+        y = view_data["geometry"]["y"].as_double();
+        w = view_data["geometry"]["width"].as_double();
+        h = view_data["geometry"]["height"].as_double();
+    } else
+    {
+        x = view_data["geometry"]["x"].as_int();
+        y = view_data["geometry"]["y"].as_int();
+        w = view_data["geometry"]["width"].as_int();
+        h = view_data["geometry"]["height"].as_int();
+    }
+
     for (auto widget : box.get_children())
     {
         WayfireWorkspaceBox *ws = (WayfireWorkspaceBox*)widget;
@@ -950,8 +975,11 @@ void WayfireWorkspaceSwitcher::grid_on_event(wf::json_t data)
 WayfireWorkspaceSwitcher::WayfireWorkspaceSwitcher(WayfireOutput *output)
 {
     this->output_name = output->monitor->get_connector();
-    switcher_box.set_halign(Gtk::Align::CENTER);
-    switcher_box.set_valign(Gtk::Align::CENTER);
+    switcher_box.set_halign(Gtk::Align::FILL);
+    switcher_box.set_valign(Gtk::Align::FILL);
+    switcher_box.set_hexpand(true);
+    switcher_box.set_vexpand(true);
+    switcher_box.set_size_request(panel_min_width, panel_min_height);
 }
 
 WayfireWorkspaceSwitcher::~WayfireWorkspaceSwitcher()
