@@ -84,7 +84,7 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
      */
     Gtk::Widget *get_widget_before(int x);
 
-    WfOption<bool> live_window_previews{"panel/live_window_previews"};
+    WfOption<bool> live_window_previews{"panel/window_list_live_window_previews"};
     void handle_new_wl_output(wl_output *output);
 
     zwp_linux_dmabuf_feedback_v1 *feedback = nullptr;

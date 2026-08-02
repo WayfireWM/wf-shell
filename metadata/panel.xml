@@ -659,7 +659,7 @@ Set to -1 to only run it by clicking the button.
 		<default>16</default>
 		<min>1</min>
 	</option>
-	<option name="live_window_previews" type="bool">
+	<option name="window_list_live_window_previews" type="bool">
 		<_short>Live Window Previews</_short>
 		<_long>Enable live window previews when hovering over application buttons in the window list instead of the title tooltip.</_long>
 		<default>false</default>
@@ -667,8 +667,8 @@ Set to -1 to only run it by clicking the button.
 	</group>
 	<group>
 	<_short>Workspace Switcher</_short>
-	<option name="workspace_switcher_mode" type="string">
-		<_short>Workspace switcher widget mode</_short>
+	<option name="workspace_switcher_layout" type="string">
+		<_short>Workspace switcher widget layout</_short>
 		<desc>
 			<value>row</value>
 			<_name>Current row</_name>

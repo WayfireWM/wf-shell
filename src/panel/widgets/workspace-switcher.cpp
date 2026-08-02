@@ -42,11 +42,11 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
             overlay.unparent();
         }
 
-        if (workspace_switcher_mode.value() == "row")
+        if (layout.value() == "row")
         {
             switcher_box.append(box);
             button->open_on(-1);
-        } else if (workspace_switcher_mode.value() == "grid")
+        } else if (layout.value() == "grid")
         {
             switcher_box.append(overlay);
             button->open_on(-1);
@@ -60,7 +60,7 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
 
         get_wsets();
     });
-    workspace_switcher_mode.set_callback(mode_cb);
+    layout.set_callback(mode_cb);
 
     workspace_switcher_render_views.set_callback([=] ()
     {
@@ -81,14 +81,14 @@ void WayfireWorkspaceSwitcher::set_size()
         val = (double)WfOption<int>{"panel/minimal_height"}.value();
     }
 
-    if (workspace_switcher_mode.value() == "row")
+    if (layout.value() == "row")
     {
         WfOption<std::string> panel_position{"panel/position"};
         if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
         {
             val = val / grid_width;
         }
-    } else if (workspace_switcher_mode.value() == "grid")
+    } else if (layout.value() == "grid")
     {
         val = val / grid_height;
     }
@@ -107,7 +107,7 @@ void WayfireWorkspaceSwitcher::get_wsets()
             return;
         }
 
-        if (workspace_switcher_mode.value() == "row")
+        if (layout.value() == "row")
         {
             process_workspaces(data);
         } else // "grid"/"grid_popover"
@@ -783,7 +783,7 @@ void WayfireWorkspaceSwitcher::grid_render_views(wf::json_t views_data)
 
 void WayfireWorkspaceSwitcher::on_event(wf::json_t data)
 {
-    if (workspace_switcher_mode.value() == "row")
+    if (layout.value() == "row")
     {
         switcher_on_event(data);
     } else // "grid"/"grid_popover"
