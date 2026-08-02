@@ -422,9 +422,17 @@ void WayfireWorkspaceSwitcher::process_workspaces(wf::json_t workspace_data)
 
             if (this->output_name == output_data["name"].as_string())
             {
-                auto output_id     = output_data["id"].as_int();
-                this->output_width = output_data["geometry"]["width"].as_int();
-                this->output_height = output_data["geometry"]["height"].as_int();
+                auto output_id = output_data["id"].as_int();
+                if (output_data["geometry"]["width"].is_int())
+                {
+                    this->output_width  = output_data["geometry"]["width"].as_int();
+                    this->output_height = output_data["geometry"]["height"].as_int();
+                } else
+                {
+                    this->output_width  = output_data["geometry"]["width"].as_double();
+                    this->output_height = output_data["geometry"]["height"].as_double();
+                }
+
                 for (auto w : windows)
                 {
                     if (w->active)
@@ -469,8 +477,16 @@ void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data
 
             if (this->output_name == output_data["name"].as_string())
             {
-                this->output_width  = output_data["geometry"]["width"].as_int();
-                this->output_height = output_data["geometry"]["height"].as_int();
+                if (output_data["geometry"]["width"].is_int())
+                {
+                    this->output_width  = output_data["geometry"]["width"].as_int();
+                    this->output_height = output_data["geometry"]["height"].as_int();
+                } else
+                {
+                    this->output_width  = output_data["geometry"]["width"].as_double();
+                    this->output_height = output_data["geometry"]["height"].as_double();
+                }
+
                 for (auto w : windows)
                 {
                     if (w->active)
@@ -592,10 +608,21 @@ void WayfireWorkspaceSwitcher::add_view(wf::json_t view_data)
     }
 
     v->output_id = view_data["output-id"].as_int();
-    auto x = view_data["geometry"]["x"].as_int();
-    auto y = view_data["geometry"]["y"].as_int();
-    auto w = view_data["geometry"]["width"].as_int();
-    auto h = view_data["geometry"]["height"].as_int();
+    double x, y, w, h;
+    if (view_data["geometry"]["x"].is_int())
+    {
+        x = view_data["geometry"]["x"].as_int();
+        y = view_data["geometry"]["y"].as_int();
+        w = view_data["geometry"]["width"].as_int();
+        h = view_data["geometry"]["height"].as_int();
+    } else
+    {
+        x = view_data["geometry"]["x"].as_double();
+        y = view_data["geometry"]["y"].as_double();
+        w = view_data["geometry"]["width"].as_double();
+        h = view_data["geometry"]["height"].as_double();
+    }
+
     for (auto widget : box.get_children())
     {
         WayfireWorkspaceBox *ws = (WayfireWorkspaceBox*)widget;
@@ -666,10 +693,21 @@ void WayfireWorkspaceSwitcher::grid_add_view(wf::json_t view_data)
     }
 
     v->output_id = view_data["output-id"].as_int();
-    auto x = view_data["geometry"]["x"].as_int();
-    auto y = view_data["geometry"]["y"].as_int();
-    auto w = view_data["geometry"]["width"].as_int();
-    auto h = view_data["geometry"]["height"].as_int();
+    double x, y, w, h;
+    if (view_data["geometry"]["x"].is_int())
+    {
+        x = view_data["geometry"]["x"].as_int();
+        y = view_data["geometry"]["y"].as_int();
+        w = view_data["geometry"]["width"].as_int();
+        h = view_data["geometry"]["height"].as_int();
+    } else
+    {
+        x = view_data["geometry"]["x"].as_double();
+        y = view_data["geometry"]["y"].as_double();
+        w = view_data["geometry"]["width"].as_double();
+        h = view_data["geometry"]["height"].as_double();
+    }
+
     for (auto widget : overlay.get_children())
     {
         WayfireWorkspaceWindow *window = (WayfireWorkspaceWindow*)widget;
