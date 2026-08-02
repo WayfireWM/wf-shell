@@ -308,7 +308,7 @@ void WayfireAutohidingWindow::reinit_ext_hotspots()
 
     std::cout << "Monitor reinit hotspots " << this->output->monitor->get_connector() << std::endl;
 
-    uint32_t adjacent_edge;
+    uint32_t adjacent_edge = 0; // silence warning
     auto position = check_position(this->position);
     if (position == WF_WINDOW_POSITION_TOP)
     {
@@ -415,7 +415,7 @@ void WayfireAutohidingWindow::setup_hotspot()
     }
 
     auto position = check_position(this->position);
-    uint32_t edge;
+    uint32_t edge = 0; // silence warnings
     if (position == WF_WINDOW_POSITION_TOP)
     {
         edge = ZWF_OUTPUT_V2_HOTSPOT_EDGE_TOP;
