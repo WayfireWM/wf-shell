@@ -199,15 +199,19 @@ WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::stri
         if (pos == "top")
         {
             popover.set_position(Gtk::PositionType::BOTTOM);
+            menu.set_position(Gtk::PositionType::BOTTOM);
         } else if (pos == "bottom")
         {
             popover.set_position(Gtk::PositionType::TOP);
+            menu.set_position(Gtk::PositionType::TOP);
         } else if (pos == "left")
         {
             popover.set_position(Gtk::PositionType::RIGHT);
+            menu.set_position(Gtk::PositionType::RIGHT);
         } else if (pos == "right")
         {
             popover.set_position(Gtk::PositionType::LEFT);
+            menu.set_position(Gtk::PositionType::LEFT);
         }
     };
 
