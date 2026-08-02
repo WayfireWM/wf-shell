@@ -25,6 +25,10 @@ class WfMenuItem : public Gtk::FlowBoxChild
     void set_search_value(uint32_t value);
     uint32_t get_search_value();
     void on_click();
+    AppInfo get_app_info() const
+    {
+        return app_info;
+    }
 
   private:
     WayfireMenu *menu;
