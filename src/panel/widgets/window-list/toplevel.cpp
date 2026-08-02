@@ -700,7 +700,10 @@ class WayfireToplevel::impl
 
     void set_app_id(std::string app_id)
     {
+        // for now, the widget pretty much doesn’t work for vertical panels,
+        // but when the widget is made to work vertically this will need to change
         WfOption<int> minimal_panel_height{"panel/minimal_height"};
+
         this->app_id = app_id;
         IconProvider::image_set_icon(image, app_id);
         this->view_id = this->window_list->get_view_id_from_full_app_id(app_id);
