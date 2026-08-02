@@ -71,7 +71,7 @@
 	</option>
 	<option name="prewake" type="double">
 		<_short>Early instant unlock</_short>
-		<_long>If the user moves mouse or presses a key within this many milliseconds of lock, instantly unlock</_long>
+		<_long>If the user moves mouse or presses a key within this many seconds of lock, instantly unlock</_long>
 		<default>1.0</default>
 		<min>0</min>
 		<max>9.0</max>
