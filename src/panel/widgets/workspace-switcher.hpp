@@ -63,7 +63,7 @@ class WayfireWorkspaceSwitcher : public WayfireWidget, public IIPCSubscriber
     std::pair<int, int> grid_get_workspace(WayfireWorkspaceWindow *w);
     int current_ws_x, current_ws_y;
     std::vector<WayfireWorkspaceWindow*> windows;
-    WfOption<std::string> workspace_switcher_mode{"panel/workspace_switcher_mode"};
+    WfOption<std::string> layout{"panel/workspace_switcher_layout"};
     WfOption<double> workspace_switcher_target_size_opt{"panel/workspace_switcher_target_size"};
     double workspace_switcher_target_size;
     WfOption<bool> workspace_switcher_render_views{"panel/workspace_switcher_render_views"};
