@@ -1,4 +1,5 @@
 #include <css-config.hpp>
+#include <cstdlib>
 #include <sstream>
 #include <iostream>
 #include <regex>
@@ -159,4 +160,32 @@ void CssFromConfigFont::set_from_string()
         provider->load_from_string(css);
         std::cout << "Font fallback " << css << std::endl;
     }
+}
+
+CssFromConfigEdge::CssFromConfigEdge(std::string config_opt, std::string height_opt, std::string width_opt) :
+    option_value{config_opt},
+    height_value{height_opt},
+    width_value(width_opt)
+{
+    provider = Gtk::CssProvider::create();
+
+    auto callback = [=] ()
+    {
+        std::stringstream ss;
+        auto position = option_value.value();
+        if ((position == "top") || (position == "bottom"))
+        {
+            ss << ".wf-panel .widget-icon {-gtk-icon-size:" << height_value.value() << "px;}";
+        } else
+        {
+            ss << ".wf-panel .widget-icon {-gtk-icon-size:" << width_value.value() << "px;}";
+        }
+
+        provider->load_from_string(ss.str());
+    };
+    option_value.set_callback(callback);
+    height_value.set_callback(callback);
+    width_value.set_callback(callback);
+    callback();
+    add_provider();
 }
