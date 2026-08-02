@@ -176,6 +176,19 @@ WayfireStreamChooserApp::WayfireStreamChooserApp() : Gtk::Application("org.wayfi
 
 void WayfireStreamChooserApp::activate()
 {
+    auto typing_gesture = Gtk::EventControllerKey::create();
+    typing_gesture->signal_key_pressed().connect([=] (guint keyval, guint keycode,
+                                                      Gdk::ModifierType state)
+    {
+        if (keyval == GDK_KEY_Escape)
+        {
+            exit(0);
+        }
+
+        return false;
+    }, false);
+    window.add_controller(typing_gesture);
+
     window.add_css_class("stream-chooser");
     window.set_size_request(300, 300);
     add_window(window);
