@@ -63,3 +63,12 @@ class CssFromConfigInt : public CssFromConfig
   public:
     CssFromConfigInt(std::string config_opt, std::string css_before, std::string css_after);
 };
+
+class CssFromConfigEdge : public CssFromConfig
+{
+    WfOption<std::string> option_value;
+    WfOption<int> height_value, width_value;
+
+  public:
+    CssFromConfigEdge(std::string config_opt, std::string height_opt, std::string width_opt);
+};
