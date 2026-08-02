@@ -10,7 +10,7 @@ fill_mode = stretch
 cycle_timeout = 150
 
 # In the case of directory, whether or not to randomize images
-randomize = 0
+randomize = false
 
 # Fade duration between images, in milliseconds. default 1000
 fade_duration = 1000
@@ -47,8 +47,8 @@ widgets_right = command-output tray notifications volume network battery clock
 # The minimal size of the panel. Note that some widgets might force panel bigger than this size.
 # All widgets also have individual settings for size
 # Changing this requires a panel restart
-minimal_height = 24
-minimal_width = 24
+minimal_height = 32
+minimal_width = 32
 
 # A path for an extra css file specific to panel. Default empty string
 # css_path = /path/to/custom/file.css
@@ -85,7 +85,7 @@ position = top
 # edge_margin = 0
 
 # Apply the margin to both the display edge and window edge
-# mirror_margin = false
+# mirror_margin = true
 
 # The distance to the edge of screen to place the cursor in to show the panel when it's hidden.
 # edge_hotspot_size = 20
@@ -310,7 +310,7 @@ mixer_icon_size = 0
 # brightness_scroll_sensitivity = 1.0
 
 # Invert the direction of scroll and swipes
-# brightness_scroll_invert = false
+# brightness_invert_scroll = false
 
 # When showing multiple controls for multiple displays, space them out by this many pixels.
 # brightness_spacing = 8
@@ -384,12 +384,12 @@ commands_output_max_chars = 10
 # window_list_icon_size = 16
 
 # Enable Live window preview tooltips. Requires copy-capture plugin and foreign toplevel.
-# live_window_preview = false
+# winsow_list_live_window_previews = false
 
 ### WORKSPACE SWITCHER ###
 
 # Switcher mode: one of "row" "grid" or "grid_popover"
-# workspace_switcher_mode = row
+# workspace_switcher_layout = row
 
 # Target size for workspace switcher widget in pixels
 # workspace_switcher_target_size = 0
@@ -408,7 +408,7 @@ autohide = true
 # autohide_show_delay = 300
 
 # Amount of time (in milliseconds) the cursor needs to be out of the zone before hiding.
-# autohide_hide_delay = 300
+# autohide_hide_delay = 500
 
 # vertical alignment on the desktop
 # the only possible values are "top", "bottom", "right" and "left"
