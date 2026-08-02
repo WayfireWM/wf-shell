@@ -311,10 +311,10 @@
 	</option>
 	<option name="network_always" type="bool">
 	    <_short>Always show</_short>
-	    <default>true</default>	
+	    <default>true</default>
 	</option>
 	<option name="network_font" type="string">
-		<_short>Clock Font</_short>
+		<_short>Network Font</_short>
 		<default>2em default</default>
 	</option>
 	<option name="network_icon_size" type="double">

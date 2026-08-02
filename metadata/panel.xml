@@ -492,7 +492,6 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	</option>
 	</group>
 	<group>
-	<group>
 	<_short>Brightness</_short>
 	<option name="brightness_popup_on_change" type="bool">
 		<_short>Popup on change</_short>
@@ -530,6 +529,7 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<min>0</min>
 	</option>
 	</group>
+	<group>
 	<_short>Notifications</_short>
 	<option name="notifications_autohide_timeout" type="double">
 		<_short>Notifications Display Timeout</_short>
