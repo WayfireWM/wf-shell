@@ -76,21 +76,34 @@ void WayfireWorkspaceSwitcher::init(Gtk::Box *container)
 void WayfireWorkspaceSwitcher::set_size()
 {
     double val = workspace_switcher_target_size_opt.value();
+    WfOption<std::string> panel_position{"panel/position"};
+
     if (val == 0.0)
     {
-        val = (double)WfOption<int>{"panel/minimal_height"}.value();
+        if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
+        {
+            val = (double)WfOption<int>{"panel/minimal_width"}.value();
+        } else
+        {
+            val = (double)WfOption<int>{"panel/minimal_height"}.value();
+        }
     }
 
     if (layout.value() == "row")
     {
-        WfOption<std::string> panel_position{"panel/position"};
         if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
         {
             val = val / grid_width;
         }
     } else if (layout.value() == "grid")
     {
-        val = val / grid_height;
+        if (panel_position.value() == PANEL_POSITION_TOP or panel_position.value() == PANEL_POSITION_BOTTOM)
+        {
+            val = val / grid_height;
+        } else
+        {
+            val = val / grid_width;
+        }
     }
 
     workspace_switcher_target_size = val;
