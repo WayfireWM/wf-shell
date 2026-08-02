@@ -1,20 +1,40 @@
 [background]
 # Full path to image or directory of images
-# image = /usr/share/wayfire/wallpaper.jpg
+# image = /usr/share/wf-shell/backgrounds/
+
 # How to fit the image to screens
 # One of: fill_and_crop, preserve_aspect, stretch
 fill_mode = stretch
+
 # In the case of directory, timeout between changing backgrounds, in seconds
 cycle_timeout = 150
+
 # In the case of directory, whether or not to randomize images
 randomize = 0
 
+# Fade duration between images, in milliseconds. default 1000
+fade_duration = 1000
 
 
 [panel]
 # widgets_* is a space-separated list of widgets to be displayed
 # at the corresponding part of the panel
-# Supported widgets are: launchers clock network battery window-list volume mixer menu notifications tray command-output
+# Supported widgets are:
+#   battery
+#   brightness
+#   clock
+#   command-output
+#   language
+#   launchers
+#   network
+#   notifications
+#   menu
+#   mixer
+#   tray
+#   volume
+#   window-list
+#   workspace-switcher
+#
 # Special widgets are "spacing" and "separator" widgets, they can be used to add padding everywhere on the panel
 # To use them, just append the amount of pixels you want as a padding
 # to the word "spacing" or "separator" and use it as a plugin
@@ -22,10 +42,22 @@ widgets_left = menu spacing4 language spacing4 launchers window-list
 widgets_center = none
 widgets_right = command-output tray notifications volume network battery clock
 
+# Note that if panel position is left or right then left is top and right is bottom.
+
 # The minimal size of the panel. Note that some widgets might force panel bigger than this size.
 # All widgets also have individual settings for size
 # Changing this requires a panel restart
 minimal_height = 24
+minimal_width = 24
+
+# A path for an extra css file specific to panel. Default empty string
+# css_path = /path/to/custom/file.css
+
+# Wether the pannel should extend all the way to the left and right; or top and bottom depending on orientation.
+# full_span = true
+
+# The default size of all icons, excluding those directly on the panel
+# default_icon_size = 48
 
 # automatically hide when pointer isn't over the panel
 autohide = false
@@ -33,20 +65,47 @@ autohide = false
 # time in milliseconds to wait before hiding
 autohide_duration = 300
 
+# Amount of time (in milliseconds) the cursor needs to be in the zone before showing.
+# autohide_show_delay = 300
+
+# Amount of time (in milliseconds) the cursor needs to be out of the zone before hiding.
+# autohide_hide_delay = 500
+
+# A comma separated list of output names on which to show panel instances. Set to * wildcard for all outputs.
+# outputs = *
+
 # layer can be top, bottom, overlay or background
 layer = top
 
 # where to position panel
-# Possible values are only "top" and "bottom"
+# Possible values are only "top", "bottom", "left" and "right"
 position = top
+
+# Space in pixels between panel and display edge
+# edge_margin = 0
+
+# Apply the margin to both the display edge and window edge
+# mirror_margin = false
+
+# The distance to the edge of screen to place the cursor in to show the panel when it's hidden.
+# edge_hotspot_size = 20
+
+# The distance to the edge of adjacent screens to place the cursor in to show the panel when it's hidden.
+# adjacent_edge_hotspot_size = 20
+
+# Show the popup over other windows, even if it and the panel would be hidden otherwise.
+# force_show_popup = true
+
+# When any panel menu is open, change between open menus with mouse motion
+# menus_change_motion = false
 
 # set the background color
 #background_color = rgba(10, 50, 100, 0.7) #cool blue; 70% opacity (30% transparent)
 #background_color = \#00FF0066  #bright green; 40% opacity (60% transparent)
 background_color = rgba(0, 0, 0, 0.6)  #black; 60% opacity
 
+### LAUNCHERS ###
 
-# Configuration for the launchers widget
 # can be a desktop file
 launcher_chrome = google-chrome.desktop
 launcher_firefox = firefox.desktop
@@ -60,44 +119,65 @@ launcher_icon_1 = /usr/share/icons/gnome/48x48/categories/preferences-system.png
 
 launcher_nau = org.gnome.Nautilus.desktop
 
-# spacing between widgets, can be negative
+# spacing between widgets
 launchers_spacing = 4
 
-# size of the launcher icon
-launchers_size = 42
+# size of the launcher icon. If zero uses the panel default
+launchers_size = 0
 
+### CLOCK ###
 
-# Configuration for the clock widget
 # clock format, uses the Glib Time formatting
 clock_format = %e %a %H:%M
 # clock font
 clock_font = DejaVu Sans:style=Book 12
 
+### WEARTHER ###
 
-# Configuration for the battery widget
-# How much info to display:
-# 0 -> only icon, 1 -> icon + percentage, 2 -> full info
-battery_status = 1
-battery_icon_size = 32
+# Font used for weather labels
+# weather_font = default
+
+
+### BATTERY ###
+
+# How much info to display. One of "icon", "percentage", "full" and "percentage_overlay"
+battery_status = percentage
+
+# size of battery icon. If zero uses the panel default
+battery_icon_size = 0
 
 # invert the colors of the icon, needs to be adjusted according to the size of the icons,
 # because some icon sizes are white, and others are black
-battery_icon_invert = 1
+battery_icon_invert = true
 
 # Font to use in the battery percentage indicator
 battery_font = default
 
 
-# Configuration for the network widget
-# Whether to display connection details, for ex. Wifi AP name
-network_status = 1
+### NETWORK ###
 
-network_status_font = DejaVu Sans:style=Book 10
-# network_icon_size = 30
+# Font used for this widget
+network_status_font = default
+
+# size of network icon on panel. If zero, use panel default.
+network_icon_size = 0
+
+# invert the colors of the network icon
 network_icon_invert_color = 1
 
 # whether to colour the wifi signal strength
 network_status_use_color = yes
+
+# Show only icon, no label
+# network_no_label = false
+
+# If right clicked, this command will be run. if 'default' it uses `gnome-control-center`
+# network_onclick_command = default
+
+### MENU ###
+
+# image file to use as the menu icon. Defaults to blank string, which uses the Wayfire icon
+# menu_icon = /usr/share/wayfire/icons/wayfire.png
 
 # Show a list of application categories in menu
 menu_show_categories = false
@@ -110,6 +190,12 @@ menu_list = false
 # whether to enable fuzzy search in the menu
 menu_fuzzy_search = 1
 
+# Category icon size. If zero falls back to default icon size
+# menu_category_icon_size = 48
+
+# Space between menu items
+menu_item_spacing = 8
+
 # Minimum width for category list. Shares height with content Below
 menu_min_category_width = 200
 
@@ -118,14 +204,30 @@ menu_min_category_width = 200
 menu_min_content_width = 500
 menu_min_content_height = 500
 
-# image file to use as the menu icon
-# menu_icon = /usr/share/wayfire/icons/wayfire.png
+# If not specified or blank, the following options below are shown in a grid.
+# If specified, this command is used instantly and the below options are ignored
+# menu_logout_command = 
 
-# command run when the logout button is clicked
-menu_logout_command = wayland-logout
+# Logout button command
+# logout_command = wayland-logout
+
+# Reboot button command
+# reboot_command = systemctl reboot
+
+# Shutdown button command
+# shutdown_command = systemctl poweroff
+
+# Suspend button command
+# suspend_command = systemctl suspend
+
+# Hibernate button command
+# hibernate_command = systemctl hibernate
+
+# Switch user button command
+# switchuser_command = dm-tool switch-to-greeter
 
 
-# Note on PulseAudio (volume widet) and Wireplumber/Pipewire (mixer widget)
+# Note on PulseAudio (volume widget) and Wireplumber/Pipewire (mixer widget)
 # PulseAudio and Pipewire are audio servers for the desktop.
 # PulseAudio is older and was generally the default of most distributions for years.
 # Pipewire, interacted with by Wireplumber, has rapidly become the default of most major distros
@@ -134,13 +236,22 @@ menu_logout_command = wayland-logout
 # the full mixer widget might not work out of the box on older systems,
 # while the volume widget is pretty much guaranteed to.
 
-# Configuration for the volume widget
+### VOLUME ###
+
 # It shows a simple slider to control the volume of the default output using PulseAudio
 # Number of seconds volume popover will display (when volume is changed)
 # after scrolling on the volume icon
 volume_display_timeout = 2.5
 
-# Configuration for the mixer widget
+# Size of volume widget on panel. If zero use default panel size
+volume_icon_size = 0
+
+# Multiplier for volume scroll wheel or swipes. The higher this is the more the volume changes from swipes/scrolls
+volume_scroll_sensitivity = 0.05
+
+
+### MIXER ###
+
 # This shows an almost full-featured mixer for the audio using Pipewire/Wireplumber
 # It allows for individual control of the volume of all apps, microphones and speakers,
 # as well as muting and choosing a default device.
@@ -181,29 +292,61 @@ mixer_left_click_action = show_mixer # uniquely, cannot be mute
 mixer_middle_click_action = mute_quick_target
 mixer_right_click_action = show_quick_target
 
-# Size of the icons
-mixer_icon_size = 32
+# Size of the icons. If zero, uses the default icon size
+mixer_icon_size = 0
 
-# Configuration for the tray widget
-# Amount of smooth scrolling needed to trigger one scroll wheel step
-tray_smooth_scrolling_threshold = 5
+### BRIGHTNESS ###
 
-# The icon size to use for tray icons
-tray_icon_size = 32
+# Popup whenever brightness is changed externally
+# brightness_popup_on_change = true
 
-# Enable showing of the tray menu when using middle-click, otherwise, right-click is used
-tray_menu_on_middle_click = false
+# Timeout before popup is hidden again, in seconds
+# brightness_popup_timeout = 2.5
 
+# Size of brightness slider
+# brightness_slider_length = 300
 
-# Configuration for the notifications widget
+# Scroll and swipe sensitivity. The higher this is the more a swipe or scroll changes the brightness level
+# brightness_scroll_sensitivity = 1.0
+
+# Invert the direction of scroll and swipes
+# brightness_scroll_invert = false
+
+# When showing multiple controls for multiple displays, space them out by this many pixels.
+# brightness_spacing = 8
+
+# Icon size on panel. if zero use panel default
+# brightness_icon_size = 0
+
+### NOTIFICATIONS ###
+
 notifications_autohide_timeout = 2.5
 
 # Show criticial notifications in do-not-disturb mode, which is triggered by middle-clicking the DND button.
 notifications_critical_in_dnd = true
-notifications_icon_size = 32
 
+# Icon size, if zero then use panel default
+notifications_icon_size = 0
 
-# Configuration for the command output widget, there may be multiple commands.
+### TRAY ###
+
+# Amount of smooth scrolling needed to trigger one scroll wheel step
+tray_smooth_scrolling_threshold = 5
+
+# The icon size to use for tray icons. If zero use panel default
+tray_icon_size = 0
+
+# Spacing between tray icons
+# tray_spacing = 5
+
+# Number of rows (in horizontal panels) or columns (in vertical panels) in tray widget
+# tray_rows_cols = 1
+
+# Enable showing of the tray menu when using middle-click, otherwise, right-click is used
+tray_menu_on_middle_click = false
+
+### COMMAND OUTPUT ###
+
 # The command output widget is used to display the output of a shell command, which can be periodically refreshed.
 # For example, showing the current CPU temperature by parsing `sensors` output (command may need adjustment for your particular sensor name!)
 
@@ -229,14 +372,260 @@ commands_output_max_chars = 10
 #command_output_icon_size_1 = 32
 #command_output_icon_position_1 = left # or right, top, bottom
 
+### WINDOW LIST ###
+
+# Closes window when its button is middle clicked
+# middle_click_close = false
+
+# Width in pixels for a window-list button
+# window_list_size = 192
+
+# Size of icon for window-list buttons.
+# window_list_icon_size = 16
+
+# Enable Live window preview tooltips. Requires copy-capture plugin and foreign toplevel.
+# live_window_preview = false
+
+### WORKSPACE SWITCHER ###
+
+# Switcher mode: one of "row" "grid" or "grid_popover"
+# workspace_switcher_mode = row
+
+# Target size for workspace switcher widget in pixels
+# workspace_switcher_target_size = 0
+
+# Render rectangles for each window
+# workspace_switcher_render_views = true
+
 [dock]
+# if dock should autohide. Default true
+autohide = true
+
 # time in milliseconds to wait before hiding
-autohide_duration = 300
+# autohide_duration = 300
+
+# Amount of time (in milliseconds) the cursor needs to be in the zone before showing.
+# autohide_show_delay = 300
+
+# Amount of time (in milliseconds) the cursor needs to be out of the zone before hiding.
+# autohide_hide_delay = 300
 
 # vertical alignment on the desktop
-# the only possible values are "top" and "bottom"
+# the only possible values are "top", "bottom", "right" and "left"
 position = bottom
 
 # For applications that aren't installed/configured properly, you can manually
 # set icons for given app_id's. Below is an example for IntelliJ IDEA
 icon_mapping_jetbrains-idea-ce = /<path to intellij>/idea.png
+
+# A path for an extra css file specific to dock. Default empty string
+# css_path = /path/to/custom/file.css
+
+# If greater than 0, the dock will have a maximum number of entries per line, after which a new line is created.
+max_per_line = 0
+
+# Wether the dock should extend all the way to the left and right; or top and bottom depending on orientation.
+# full_span = false
+
+# minimal_height = 100
+
+# minimal_width = 100
+
+# icon_height = 72
+
+# Space in pixels between the dock and the edge of display
+# edge_margin = 0
+
+# Apply the margin to both the edge of display and edge of windows
+# mirror_margin = false
+
+# The distance to the edge of adjacent screens to place the cursor in to show the dock when it's hidden.
+# adjacent_edge_hotspot_size = 20
+
+# Keep all window icons for up to 2 seconds to allow CSS animations.
+# show_close = true
+
+[locker]
+
+# All widgets have a "name"_position option.
+# It must be one of "top-left"   , "top-center"   , "top-right"
+#                   "center-left", "center-center", "center-right"
+#                   "bottom-left", "bottom-center", "bottom-right"
+
+# All widgets have a "name"_enable option
+# It is either 'true' or 'false', and may be disabled even if set to 'true'
+# Eg, if the fingerprint reader hardware is missing.
+
+# All widgets have a "name"_always option
+# It is either 'true' or 'false'. If true, it is never hidden when inactive
+
+# Use the same background image as the locally running wf-background
+# background_image = true
+
+# The color of the lockscreen (if the above is false, or wf-background is not running)
+# background-color = #0000
+
+# When no user input is detected, hide the unlock controls. 0.0 means never. Time is in seconds
+# hide_time = 5.0
+
+# Which animation to use for hiding.
+# 0 : none
+# 1 : fade
+# 2 : slide down
+# 3 : slide left
+# 4 : slide right
+# 5 : slide up
+# 6 : swing down
+# 7 : swing left
+# 8 : swing right
+# 9 : swing up
+#
+# hide_anim = 1
+
+# How long the animation runs for, in seconds
+# hide_anim_dur = 0.4
+
+# If the user moves mouse or presses a key within this many seconds of lock starting, instantly unlock.
+# This does not apply if the locker is started with `--now`
+# prewake = 1.0
+
+# Lock our user input after this many failed attempts.
+# lockout_attempts = 5
+
+# How long the user input it locked out for
+# lockout_timer = 10
+
+### PASSWORD ###
+
+password_enable = true
+password_position = center-center
+password_always = false
+
+### PIN ###
+
+pin_enable = false
+pin_position = bottom-center
+pin_always = false
+
+# The font to use for buttons of the pin-pad
+pin_pad_font = 2em default
+
+# The font to use for the asterisks for entered characters
+pin_reply_font = 2em default
+
+### FINGERPRINT ###
+
+fingerprint_enable = true
+fingerprint_position = bottom-center
+fingerprint_always = false
+
+# The font to use for the messages from fingerprint reader
+fingerprint_font = 2em default
+
+# Fingerprint icon size, relative to calculated font size for the locker
+fingerprint_icon_size = 10.0
+fingerprint_overlay_icon_size = 7.0
+
+### NETWORK ###
+
+network_enable = true
+network_position = top-right
+network_always = true
+
+# Font to use for the network status
+network_font = 2em default
+
+# Icon size to use for network widget, relative to locker font size
+network_icon_size = 1.0
+
+### CLOCK ###
+
+clock_enable = true
+clock_position = top-center
+clock_always = true
+
+# The contents of the clock, as a format string. Allows Pango markup
+clock_format = %H:%M%n<span font-size='xx-small'>%e %b %Y</span>
+
+# The font used
+clock_font = 3em default
+
+### WEATHER ###
+
+weather_enable = false
+weather_position = bottom-left
+weather_always = true
+
+weather_font = 4em default
+
+# Icon size relative to locker font size
+weather_icon_size = 5.0
+
+### USER ###
+
+user_enable = true
+user_position = center-center
+user_always = true
+
+user_font = 3em default
+# Icon size relative to locker font size
+user_icon_size = 10.0
+
+### MPRIS aka what's playing ###
+
+mpris_enable = true
+mpris_position = bottom-right
+mpris_always = false
+
+# The format of the message.
+#   %track  : Name of currently playing track
+#   %album  : Name of currently playing album
+#   %artist : Name of artist of currently playing track
+#   %n      : New line
+mpris_format = Now Playing:%n%track%n%album%n%artist
+
+
+# Show control buttons to skip and stop
+mpris_control = true
+
+# Icon size of album art, relative to locker font size
+mpris_icon_size = 5.0
+
+mpris_font = 1em default
+
+### BATTERY ###
+
+battery_enable = true
+battery_position = top-left
+battery_always = true
+
+# What information to show. one of : "icon" "percentage" or "full"
+battery_status = percentage
+
+# Font to use for battery percentage
+battery_percent_font = 3em default
+
+# Font to use for battery details
+battery_description_font = 0em default
+
+# Icon size for battery. Relative to locker font size
+battery_icon_size = 3.0
+
+### VOLUME ###
+
+volume_enable = true
+volume_position = top-right
+volume_always = false
+# Icon size, relative to locker font
+volume_icon_size = 2.0
+
+### INSTANT UNLOCK ###
+## Beware, use only for testing. This button unlocks without any authentication.
+
+instant_unlock_enable = false
+instant_unlock_position = bottom-center
+instant_unlock_always = false
+
+# Font used for the button
+instant_unlock_font = default
+

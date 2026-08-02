@@ -236,18 +236,6 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	</group>
 	<group>
 	<_short>Network</_short>
-	<option name="network_status" type="string">
-		<_short>Network Status</_short>
-		<default>connection</default>
-		<desc>
-			<value>none</value>
-			<_name>None</_name>
-		</desc>
-		<desc>
-			<value>connection</value>
-			<_name>Connection</_name>
-		</desc>
-	</option>
 	<option name="network_status_font" type="string">
 		<_short>Clock Font</_short>
 		<default>default</default>

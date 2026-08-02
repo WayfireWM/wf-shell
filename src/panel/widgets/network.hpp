@@ -22,7 +22,6 @@ class WayfireNetworkInfo : public WayfireWidget
     Gtk::Box button_content;
     Gtk::Image icon;
     Gtk::Label status;
-    WfOption<std::string> status_opt{"panel/network_status"};
     WfOption<bool> status_color_opt{"panel/network_status_use_color"};
     WfOption<std::string> status_font_opt{"panel/network_status_font"};
     WfOption<std::string> click_command_opt{"panel/network_onclick_command"};
