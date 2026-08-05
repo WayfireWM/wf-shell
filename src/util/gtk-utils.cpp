@@ -1,3 +1,4 @@
+#include "glibmm/markup.h"
 #include "glibmm/ustring.h"
 #include <gtk-utils.hpp>
 #include <glibmm.h>
@@ -179,4 +180,35 @@ void load_custom_icons(std::string section_name)
         custom_icons[app_id] = option->get_value_str();
     }
 }
+}
+
+/*
+ * Check if this string appears to be markup
+ *
+ * Does not check it is *valid* markup
+ */
+bool is_markup(std::string input)
+{
+    int count_left  = std::count(input.begin(), input.end(), '<');
+    int count_right = std::count(input.begin(), input.end(), '>');
+    int count_amp   = std::count(input.begin(), input.end(), '&');
+    int count_semi  = std::count(input.begin(), input.end(), ';');
+
+    if ((count_left == count_right) && (count_amp == count_semi))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+/* Escape string if it doesn't appear to be markup */
+std::string markup_escape(std::string input)
+{
+    if (is_markup(input))
+    {
+        return input;
+    }
+
+    return Glib::Markup::escape_text(input);
 }
