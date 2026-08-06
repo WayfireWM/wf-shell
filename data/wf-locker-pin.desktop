@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Exec=wf-locker-pin
-Icon=lock-symbolic
+Icon=system-lock-screen
 Terminal=false
 Name=Wf Shell Change PIN
 Categories=Utility;Settings;DesktopSettings;
