@@ -9,6 +9,7 @@ util = static_library(
         'css-config.cpp',
         'wf-ipc.cpp',
         'animated-scale.cpp',
+        'widget-utils/battery.cpp',
         'widget-utils/network/manager.cpp',
         'widget-utils/network/wifi.cpp',
         'widget-utils/network/wired.cpp',
