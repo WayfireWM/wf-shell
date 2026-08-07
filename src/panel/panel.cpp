@@ -14,7 +14,6 @@
 #include <css-config.hpp>
 #include "panel.hpp"
 
-#include "network/manager.hpp"
 #include "widgets/battery.hpp"
 #include "widgets/power-profiles.hpp"
 #include "widgets/command-output.hpp"
