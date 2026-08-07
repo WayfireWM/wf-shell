@@ -71,6 +71,12 @@ void WayfireBatteryInfo::on_properties_changed(
 
 void WayfireBatteryInfo::update_icon()
 {
+    if (!feat_bat)
+    {
+        icon.set_from_icon_name("ac-adapter-symbolic");
+        return;
+    }
+
     Glib::Variant<Glib::ustring> icon_name;
     display_device->get_cached_property(icon_name, ICON);
     icon.set_from_icon_name(icon_name.get());
@@ -112,6 +118,11 @@ static std::string uint_to_time(int64_t time)
 
 void WayfireBatteryInfo::update_details()
 {
+    if (!feat_bat)
+    {
+        return;
+    }
+
     Glib::Variant<guint32> type;
     display_device->get_cached_property(type, TYPE);
 
@@ -185,6 +196,7 @@ void WayfireBatteryInfo::update_state()
 
 bool WayfireBatteryInfo::setup_dbus_battery()
 {
+    return false;
     auto cancellable = Gio::Cancellable::create();
     connection = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM, cancellable);
     if (!connection)
@@ -253,11 +265,8 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
     overlay.set_child(icon);
     icon.add_css_class("widget-icon");
 
-    if (feat_bat)
-    {
-        status_opt.set_callback([=] () { update_details(); });
-        update_details();
-    }
+    status_opt.set_callback([=] () { update_details(); });
+    update_details();
 
     update_icon();
 
