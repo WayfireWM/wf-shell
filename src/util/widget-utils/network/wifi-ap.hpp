@@ -1,6 +1,6 @@
 #pragma once
-#include "network/network.hpp"
-#include "network/settings.hpp"
+#include "widget-utils/network/network.hpp"
+#include "widget-utils/network/settings.hpp"
 #include "sigc++/connection.h"
 #include <giomm.h>
 #include <memory>
