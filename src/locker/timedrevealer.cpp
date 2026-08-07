@@ -18,7 +18,7 @@ WayfireLockerTimedRevealer::WayfireLockerTimedRevealer(std::string always_option
     auto hide_callback = [this] ()
     {
         Gtk::RevealerTransitionType type = Gtk::RevealerTransitionType::NONE;
-        switch (hide_animation)
+        switch (hide_animation.value())
         {
           case 1:
             type = Gtk::RevealerTransitionType::CROSSFADE;
