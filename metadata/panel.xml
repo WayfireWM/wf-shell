@@ -235,6 +235,18 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	</option>
 	</group>
 	<group>
+	<_short>Power profiles</_short>
+	<option name="power_profiles_icon_size" type="int">
+		<_short>Battery Icon Size</_short>
+		<default>0</default>
+		<min>0</min>
+	</option>
+	<option name="power_profiles_font" type="string">
+		<_short>Battery Font</_short>
+		<default>default</default>
+	</option>
+	</group>
+	<group>
 	<_short>Network</_short>
 	<option name="network_status_font" type="string">
 		<_short>Clock Font</_short>
