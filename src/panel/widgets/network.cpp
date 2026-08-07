@@ -2,7 +2,6 @@
 #include "gtkmm/gesture.h"
 #include "gtkmm/gestureclick.h"
 #include "gtkmm/gesturelongpress.h"
-#include "network/network.hpp"
 #include "wf-popover.hpp"
 #include <glibmm/spawn.h>
 #include <cassert>
