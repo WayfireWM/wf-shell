@@ -1,56 +1,19 @@
 #pragma once
 
-#include <gtkmm/button.h>
-#include <gtkmm/image.h>
-#include <gtkmm/box.h>
-#include <gtkmm/label.h>
-#include <gtkmm/overlay.h>
-
-#include <giomm/dbusproxy.h>
-#include <giomm/dbusconnection.h>
-
 #include <sigc++/connection.h>
 
 #include "widget.hpp"
+#include "widget-utils/battery.hpp"
 
-using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
-using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
-
-static const std::string BATTERY_STATUS_ICON    = "icon"; // icon
-static const std::string BATTERY_STATUS_PERCENT = "percentage"; // icon + percentage
-static const std::string BATTERY_STATUS_FULL    = "full"; // icon + percentage + TimeToFull/TimeToEmpty
-static const std::string BATTERY_STATUS_OVERLAY = "percentage_overlay";
-
-class wayfire_config;
 class WayfireBatteryInfo : public WayfireWidget
 {
-    WfOption<std::string> status_opt{"panel/battery_status"};
-
-    sigc::connection disp_dev_sig;
-
-    Gtk::Label label;
-    Gtk::Box box;
-    Gtk::Overlay overlay;
-    Gtk::Image icon;
-
-    DBusConnection connection;
-    DBusProxy upower_proxy, display_device;
-
-    bool feat_bat;
-    bool setup_dbus_battery();
-
-    void update_icon();
-    void update_details();
-    void update_state();
+    ShellBattery battery;
 
     void update_layout();
     void handle_config_reload();
 
-    void on_properties_changed(
-        const Gio::DBus::Proxy::MapChangedProperties& properties,
-        const std::vector<Glib::ustring>& invalidated);
-
   public:
+    WayfireBatteryInfo() : battery("panel")
+    {}
     virtual void init(Gtk::Box *container);
-    virtual ~WayfireBatteryInfo();
 };
