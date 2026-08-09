@@ -42,7 +42,7 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     signals.push_back(right_click_g->signal_released().connect(
         [=] (int c, double x, double y)
     {
-        extra_actions_button.activate();
+        extra_actions_button.popup();
     }));
     signals.push_back(long_press_g->signal_pressed().connect(
         [=] (double x, double y)
