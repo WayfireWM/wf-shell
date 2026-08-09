@@ -7,6 +7,7 @@
 #include <iomanip>
 
 #include "locker-pin.hpp"
+#include "version.h"
 
 WayfirePinChangeApp::WayfirePinChangeApp() : Gtk::Application("org.wayfire.locker-pin",
         Gio::Application::Flags::NONE)
@@ -207,6 +208,15 @@ std::string WayfirePinChangeApp::sha512(const std::string input)
 /* Starting point */
 int main(int argc, char **argv)
 {
+    for (int count = 0; count < argc; count++)
+    {
+        if ((strcmp(argv[count], "--version") == 0) || (strcmp(argv[count], "-v") == 0))
+        {
+            std::cout << WF_SHELL_VERSION_STRING << std::endl;
+            return 0;
+        }
+    }
+
     auto app = new WayfirePinChangeApp();
     app->run();
     exit(0);

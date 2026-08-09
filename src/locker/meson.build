@@ -38,7 +38,8 @@ executable(
   widget_sources + [
     'locker.cpp',
     'lockscreen.cpp',
-    'timedrevealer.cpp'
+    'timedrevealer.cpp',
+    version_h
   ],
   dependencies: deps,
   install: true,

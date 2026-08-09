@@ -1,6 +1,6 @@
 executable(
   'wf-background',
-  'background.cpp',
+  ['background.cpp', version_h],
   dependencies: [
     gtkmm,
     gtklayershell,
@@ -10,5 +10,5 @@ executable(
     wfconfig,
     epoxy
   ],
-  install: true
+  install: true,
 )

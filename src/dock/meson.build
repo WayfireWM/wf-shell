@@ -4,7 +4,8 @@ executable(
     'dock.cpp',
     'dock-app.cpp',
     'toplevel.cpp',
-    'toplevel-icon.cpp'
+    'toplevel-icon.cpp',
+    version_h
   ],
   dependencies: [
     gtkmm,
@@ -14,5 +15,5 @@ executable(
     wf_protos,
     wfconfig
   ],
-  install: true
+  install: true,
 )
