@@ -139,7 +139,15 @@ bool image_set_icon(Gtk::Image & image, Glib::ustring path)
         {
             if (custom_icons.count(app_id) > 0)
             {
-                image.set_from_icon_name(custom_icons[app_id]);
+                std::string next_path = custom_icons[app_id];
+                if ((next_path.rfind("/", 0) == 0) || (next_path.rfind("~", 0) == 0))
+                {
+                    image.set(next_path);
+                } else
+                {
+                    image.set_from_icon_name(next_path);
+                }
+
                 return true;
             }
 
