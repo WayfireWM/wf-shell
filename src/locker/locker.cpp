@@ -38,6 +38,7 @@
 #include "wf-option-wrap.hpp"
 #include "wf-shell-app.hpp"
 #include "locker.hpp"
+#include "version.h"
 
 #define INOT_BUF_SIZE (1024 * sizeof(inotify_event))
 
@@ -446,7 +447,7 @@ void WayfireLockerApp::set_is_locked(bool locked)
 int main(int argc, char **argv)
 {
     bool nofork = false, now = false;
-    for (int count = 0; count < argc; count++)
+    for (int count = 1; count < argc; count++)
     {
         if (strcmp(argv[count], "--nofork") == 0)
         {
@@ -456,6 +457,12 @@ int main(int argc, char **argv)
         if (strcmp(argv[count], "--now") == 0)
         {
             now = true;
+        }
+
+        if ((strcmp(argv[count], "--version") == 0) || (strcmp(argv[count], "-v") == 0))
+        {
+            std::cout << WF_SHELL_VERSION_STRING << std::endl;
+            return 0;
         }
     }
 
