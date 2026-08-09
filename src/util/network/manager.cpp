@@ -89,6 +89,10 @@ NetworkManager::NetworkManager()
                     } else if (to.get() == "")
                     {
                         lost_nm();
+                    } else
+                    {
+                        lost_nm();
+                        connect_nm();
                     }
                 } else if (name.get() == MM_DBUS_NAME)
                 {
@@ -97,15 +101,21 @@ NetworkManager::NetworkManager()
                         mm_start.emit();
                     } else if (to.get() == "")
                     {
-                        for_each(all_devices.cbegin(), all_devices.cend(),
-                            [this] (std::map<std::string, std::shared_ptr<Network>>::const_reference it)
+                        auto it = all_devices.begin();
+                        while (it != all_devices.end())
                         {
-                            if (std::dynamic_pointer_cast<ModemNetwork>(it.second) != nullptr)
+                            if (std::dynamic_pointer_cast<ModemNetwork>(it->second) != nullptr)
                             {
-                                device_removed.emit(it.second);
-                                all_devices.erase(it.first);
+                                auto network_ptr = it->second;
+
+                                device_removed.emit(network_ptr);
+                                it = all_devices.erase(it);
+                            } else
+                            {
+                                ++it;
                             }
-                        });
+                        }
+
                         mm_stop.emit();
                     }
                 }
@@ -124,7 +134,7 @@ void NetworkManager::setting_added(std::string path)
     {
         auto proxy = Gio::DBus::Proxy::create_finish(result);
         all_settings.emplace(path,
-            new NetworkSettings(path, proxy));
+            std::make_shared<NetworkSettings>(path, proxy));
         auto setting = all_settings[path];
 
         if (setting->get_ssid() != "")
@@ -207,7 +217,7 @@ void NetworkManager::lost_nm()
 void NetworkManager::connect_nm()
 {
     std::cout << "NetworkManager Found" << std::endl;
-    all_devices.emplace("/", new NullNetwork());
+    all_devices.emplace("/", std::make_shared<NullNetwork>());
     connection = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SYSTEM);
     if (!connection)
     {
@@ -330,6 +340,12 @@ void NetworkManager::get_all_devices_cb(std::shared_ptr<Gio::AsyncResult> async)
 
 void NetworkManager::add_network(std::string path)
 {
+    if (all_devices.find(path) != all_devices.end())
+    {
+        std::cerr << "Already have a device for path, skipping" << std::endl;
+        return;
+    }
+
     Glib::RefPtr<Gio::DBus::Proxy> device_proxy = Gio::DBus::Proxy::create_sync(connection,
         NM_DBUS_NAME,
         path,
@@ -346,7 +362,7 @@ void NetworkManager::add_network(std::string path)
             [=] (Glib::RefPtr<Gio::AsyncResult> & result)
         {
             auto wifi_proxy = Gio::DBus::Proxy::create_finish(result);
-            all_devices.emplace(path, new WifiNetwork(path, device_proxy, wifi_proxy));
+            all_devices.emplace(path, std::make_shared<WifiNetwork>(path, device_proxy, wifi_proxy));
             device_added.emit(all_devices[path]);
         });
 
@@ -360,7 +376,7 @@ void NetworkManager::add_network(std::string path)
             [=] (Glib::RefPtr<Gio::AsyncResult> & result)
         {
             auto modem_proxy = Gio::DBus::Proxy::create_finish(result);
-            all_devices.emplace(path, new ModemNetwork(path, device_proxy, modem_proxy));
+            all_devices.emplace(path, std::make_shared<ModemNetwork>(path, device_proxy, modem_proxy));
             device_added.emit(all_devices[path]);
         });
 
@@ -373,13 +389,14 @@ void NetworkManager::add_network(std::string path)
             "org.freedesktop.NetworkManager.Device.Bluetooth", [=] (Glib::RefPtr<Gio::AsyncResult> & result)
         {
             auto bluetooth_proxy = Gio::DBus::Proxy::create_finish(result);
-            all_devices.emplace(path, new BluetoothNetwork(path, device_proxy, bluetooth_proxy));
+            all_devices.emplace(path, std::make_shared<BluetoothNetwork>(path, device_proxy,
+                bluetooth_proxy));
             device_added.emit(all_devices[path]);
         });
         return;
     } else if (connection_type == ETHERNET_TYPE)
     {
-        all_devices.emplace(path, new WiredNetwork(path, device_proxy));
+        all_devices.emplace(path, std::make_shared<WiredNetwork>(path, device_proxy));
         device_added.emit(all_devices[path]);
         return;
     } else if ((connection_type == LOOPBACK_TYPE) ||
