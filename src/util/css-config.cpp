@@ -23,6 +23,7 @@ CssFromConfigDouble::CssFromConfigDouble(std::string option_name, std::string be
     auto cb = [=]
     {
         std::stringstream ss;
+        ss.imbue(std::locale::classic());
         ss << before << std::to_string(option_value.value()) << after;
         std::cout << ss.str() << std::endl;
         provider->load_from_string(ss.str());
@@ -55,11 +56,13 @@ CssFromConfigInt::CssFromConfigInt(std::string option_name, std::string css_befo
         int value = option_value;
         // TODO When we go up to c++20 use std::format
         std::stringstream ss;
+        ss.imbue(std::locale::classic());
         ss << css_before << std::to_string(value) << css_after;
         provider->load_from_string(ss.str());
     });
     int value = option_value;
     std::stringstream ss;
+    ss.imbue(std::locale::classic());
     ss << css_before << std::to_string(value) << css_after;
     provider->load_from_string(ss.str());
 
@@ -80,6 +83,7 @@ CssFromConfigIconSize::CssFromConfigIconSize(std::string option_name,
         }
 
         std::stringstream ss;
+        ss.imbue(std::locale::classic());
         ss << ".wf-panel " << css_class << " {-gtk-icon-size:" << option_value.value() << "px;}";
         provider->load_from_string(ss.str());
     };
@@ -99,10 +103,12 @@ CssFromConfigString::CssFromConfigString(std::string option_name, std::string cs
     {
         // TODO When we go up to c++20 use std::format
         std::stringstream ss;
+        ss.imbue(std::locale::classic());
         ss << css_before << (std::string)option_value << css_after;
         provider->load_from_string(ss.str());
     });
     std::stringstream ss;
+    ss.imbue(std::locale::classic());
     ss << css_before << (std::string)option_value << css_after;
     provider->load_from_string(ss.str());
 
@@ -146,6 +152,7 @@ void CssFromConfigFont::set_from_string()
         }
 
         std::stringstream ss;
+        ss.imbue(std::locale::classic());
         ss << css_before << "font: " << size << unit << " " << before.str() << " " << after.str() << ";" <<
             css_after;
         auto css = ss.str();
@@ -155,6 +162,7 @@ void CssFromConfigFont::set_from_string()
     } else
     {
         std::stringstream ss;
+        ss.imbue(std::locale::classic());
         ss << css_before << "font: 1rem " << font_name << ";" << css_after;
         auto css = ss.str();
         provider->load_from_string(css);
@@ -172,6 +180,7 @@ CssFromConfigEdge::CssFromConfigEdge(std::string config_opt, std::string height_
     auto callback = [=] ()
     {
         std::stringstream ss;
+        ss.imbue(std::locale::classic());
         auto position = option_value.value();
         if ((position == "top") || (position == "bottom"))
         {
