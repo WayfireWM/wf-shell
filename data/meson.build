@@ -22,8 +22,8 @@ install_data(join_paths('icons', '256x256', 'wayfire.png'), install_dir: join_pa
 install_data(join_paths('icons', '512x512', 'wayfire.png'), install_dir: join_paths(get_option('prefix'), 'share', 'icons', 'hicolor', '512x512', 'apps'))
 install_data(join_paths('icons', 'scalable', 'wayfire.svg'), install_dir: join_paths(get_option('prefix'), 'share', 'icons', 'hicolor', 'scalable', 'apps'))
 
-install_data('wf-locker', install_dir:'/etc/pam.d/')
+install_data('wf-locker', install_dir: get_option('sysconfdir') / 'pam.d')
 
-install_data('xdpw/wayfire', install_dir: '/etc/xdg/xdg-desktop-portal-wlr/')
+install_data('xdpw/wayfire', install_dir: get_option('sysconfdir') / 'xdg/xdg-desktop-portal-wlr')
 
 subdir('css')
