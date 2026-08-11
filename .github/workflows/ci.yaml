@@ -2,10 +2,22 @@ name: CI
 
 on: [push, pull_request]
 jobs:
-  test_musl_gcc:
-    name: "Test with with GCC/musl/libstdc++/BFD on Alpine Linux"
+  test_musl:
+    name: "Test with ${{ matrix.compiler.name }}/musl/libstdc++/BFD on Alpine Linux"
     runs-on: ubuntu-latest
     container: alpine:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - name: GCC
+            packages: g++
+            cc: gcc
+            cxx: g++
+          - name: Clang
+            packages: g++ clang21
+            cc: clang-21
+            cxx: clang++-21
     steps:
       - name: Add testing repository
         run: echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories # only needed for wayfire-dev
@@ -14,7 +26,7 @@ jobs:
         run: |
           apk --no-cache add \
             git \
-            g++ \
+            ${{ matrix.compiler.packages }} \
             binutils \
             pkgconf \
             meson \
@@ -44,6 +56,9 @@ jobs:
           path: wf-shell
 
       - name: Build
+        env:
+          CC: ${{ matrix.compiler.cc }}
+          CXX: ${{ matrix.compiler.cxx }}
         run: |
           cd wf-shell
           meson setup build --prefix=/usr
