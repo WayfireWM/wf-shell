@@ -1,16 +1,14 @@
 #include <glibmm.h>
 #include "clock.hpp"
 
+
 void WayfireClock::init(Gtk::Box *container)
 {
     button = std::make_unique<WayfireMenuWidget>("panel", "clock");
     button->add_css_class("clock");
     button->set_child(label);
     button->open_on(1);
-    label.set_justify(Gtk::Justification::CENTER);
     label.show();
-
-    update_label();
 
     calendar.show();
     button->set_popup_child(calendar);
@@ -18,9 +16,6 @@ void WayfireClock::init(Gtk::Box *container)
         sigc::mem_fun(*this, &WayfireClock::on_calendar_shown));
 
     container->append(*button);
-
-    timeout = Glib::signal_timeout().connect_seconds(
-        sigc::mem_fun(*this, &WayfireClock::update_label), 1);
 }
 
 void WayfireClock::on_calendar_shown()
@@ -32,29 +27,7 @@ void WayfireClock::on_calendar_shown()
     calendar.select_day(now);
 }
 
-bool WayfireClock::update_label()
-{
-    auto time = Glib::DateTime::create_now_local();
-    auto text = time.format(format.value());
-
-    /* Sometimes GLib::DateTime will add leading spaces. This results in
-     * unevenly balanced padding around the text, which looks quite bad.
-     *
-     * This could be circumvented with the modifiers the user passes to the
-     * format string, * but to remove the requirement that the user does
-     * something fancy, we just remove any leading spaces. */
-    size_t i = 0;
-    while (i < text.length() && text[i] == ' ')
-    {
-        i++;
-    }
-
-    label.set_text(text.substr(i));
-    return 1;
-}
-
 WayfireClock::~WayfireClock()
 {
     btn_sig.disconnect();
-    timeout.disconnect();
 }
