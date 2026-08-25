@@ -41,8 +41,8 @@ void WayfireLanguage::init(Gtk::Box *container)
     ipc_client->subscribe(this, {"keyboard-modifier-state-changed"});
     ipc_client->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (wf::json_t data)
     {
-        if (data.serialize().find(
-            "error") != std::string::npos)
+        if (data.has_member(
+            "error"))
         {
             std::cerr << "Error getting keyboard state for language widget. Is wayfire ipc-rules plugin enabled?" << std::endl;
             return;

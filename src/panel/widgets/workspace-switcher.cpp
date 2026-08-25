@@ -113,7 +113,7 @@ void WayfireWorkspaceSwitcher::get_wsets()
 {
     ipc_client->send("{\"method\":\"window-rules/list-wsets\"}", [=] (wf::json_t data)
     {
-        if (data.serialize().find("error") != std::string::npos)
+        if (data.has_member("error"))
         {
             std::cerr << data.serialize() << std::endl;
             std::cerr << "Error getting wsets list for workspace-switcher widget!" << std::endl;
@@ -228,7 +228,7 @@ void WayfireWorkspaceBox::on_switch_grid_clicked(int count, double x, double y)
     workspace_switch_request["data"] = workspace;
     this->switcher->ipc_client->send(workspace_switch_request.serialize(), [=] (wf::json_t data)
     {
-        if (data.serialize().find("error") != std::string::npos)
+        if (data.has_member("error"))
         {
             std::cerr << data.serialize() << std::endl;
             std::cerr << "Error switching workspaces. Is vswitch plugin enabled?" << std::endl;
@@ -260,7 +260,7 @@ void WayfireWorkspaceBox::on_workspace_clicked(int count, double x, double y)
     workspace_switch_request["data"] = workspace;
     this->switcher->ipc_client->send(workspace_switch_request.serialize(), [=] (wf::json_t data)
     {
-        if (data.serialize().find("error") != std::string::npos)
+        if (data.has_member("error"))
         {
             std::cerr << data.serialize() << std::endl;
             std::cerr << "Error switching workspaces. Is vswitch plugin enabled?" << std::endl;
@@ -334,7 +334,7 @@ bool WayfireWorkspaceBox::on_workspace_scrolled(double x, double y)
     workspace_switch_request["data"] = workspace;
     this->switcher->ipc_client->send(workspace_switch_request.serialize(), [=] (wf::json_t data)
     {
-        if (data.serialize().find("error") != std::string::npos)
+        if (data.has_member("error"))
         {
             std::cerr << data.serialize() << std::endl;
             std::cerr << "Error switching workspaces. Is vswitch plugin enabled?" << std::endl;
@@ -398,7 +398,7 @@ void WayfireWorkspaceSwitcher::render_workspace(wf::json_t workspace, int j, int
     {
         ipc_client->send("{\"method\":\"window-rules/list-views\"}", [=] (wf::json_t data)
         {
-            if (data.serialize().find("error") != std::string::npos)
+            if (data.has_member("error"))
             {
                 std::cerr << data.serialize() << std::endl;
                 std::cerr << "Error getting views list for workspace-switcher widget!" << std::endl;
@@ -426,7 +426,7 @@ void WayfireWorkspaceSwitcher::process_workspaces(wf::json_t workspace_data)
         output_info_request["data"] = output_id;
         ipc_client->send(output_info_request.serialize(), [=] (wf::json_t output_data)
         {
-            if (output_data.serialize().find("error") != std::string::npos)
+            if (output_data.has_member("error"))
             {
                 std::cerr << output_data.serialize() << std::endl;
                 std::cerr << "Error getting output information!" << std::endl;
@@ -481,7 +481,7 @@ void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data
         output_info_request["data"] = output_id;
         ipc_client->send(output_info_request.serialize(), [=] (wf::json_t output_data)
         {
-            if (output_data.serialize().find("error") != std::string::npos)
+            if (output_data.has_member("error"))
             {
                 std::cerr << output_data.serialize() << std::endl;
                 std::cerr << "Error getting output information!" << std::endl;
@@ -570,7 +570,7 @@ void WayfireWorkspaceSwitcher::grid_process_workspaces(wf::json_t workspace_data
                         {
                             ipc_client->send("{\"method\":\"window-rules/list-views\"}", [=] (wf::json_t data)
                             {
-                                if (data.serialize().find("error") != std::string::npos)
+                                if (data.has_member("error"))
                                 {
                                     std::cerr << data.serialize() << std::endl;
                                     std::cerr << "Error getting views list for workspace-switcher widget!" <<
