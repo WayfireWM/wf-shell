@@ -5,7 +5,7 @@
 
 class WayfireWeather : public WayfireWidget
 {
-    ShellWeather weather;
+    ShellWeather weather{"panel"};
 
   public:
     void init(Gtk::Box *container) override;

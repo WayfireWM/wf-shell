@@ -1,7 +1,7 @@
 #include "clock.hpp"
 
 ShellClock::ShellClock(const std::string& section) :
-    format_opt(section)
+    format_opt(section + "/clock_format")
 {
     set_justify(Gtk::Justification::CENTER);
     update_time();

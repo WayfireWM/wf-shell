@@ -13,7 +13,7 @@
 class ShellWeather : public Gtk::Box
 {
   public:
-    ShellWeather();
+    ShellWeather(const std::string& section);
     ~ShellWeather() override;
 
     void set_visibility_callback(std::function<void(bool)> callback);

@@ -1,29 +1,25 @@
 #pragma once
 
-#include <unordered_map>
-
-#include "plugin.hpp"
-#include "timedrevealer.hpp"
-#include "lockergrid.hpp"
+#include "multi-output-timed-plugin.hpp"
 #include "widget-utils/clock.hpp"
 
-class WayfireLockerClockPluginWidget : public WayfireLockerTimedRevealer
+class WayfireLockerClockPluginWidget : public WayfireLockerTimedWidget<ShellClock>
 {
   public:
-    ShellClock label{"locker/clock_format"};
-    WayfireLockerClockPluginWidget();
+    WayfireLockerClockPluginWidget() :
+        WayfireLockerTimedWidget("locker/clock_always", "clock")
+    {}
 };
 
-class WayfireLockerClockPlugin : public WayfireLockerPlugin
+class WayfireLockerClockPlugin :
+    public WayfireLockerMultiOutputPlugin<WayfireLockerClockPluginWidget>
 {
+  protected:
+    std::shared_ptr<WayfireLockerClockPluginWidget> create_widget() override
+    {
+        return std::make_shared<WayfireLockerClockPluginWidget>();
+    }
+
   public:
     WayfireLockerClockPlugin();
-    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void init() override
-    {}
-    void deinit() override
-    {}
-
-    std::unordered_map<std::string, std::shared_ptr<WayfireLockerClockPluginWidget>> widgets;
 };

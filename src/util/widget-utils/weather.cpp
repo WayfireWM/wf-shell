@@ -9,7 +9,7 @@
 #include "weather.hpp"
 
 
-ShellWeather::ShellWeather()
+ShellWeather::ShellWeather(const std::string& section)
 {
     set_orientation(Gtk::Orientation::HORIZONTAL);
 

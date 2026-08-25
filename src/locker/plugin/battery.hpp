@@ -1,33 +1,28 @@
 #pragma once
 
-#include "plugin.hpp"
-#include "lockergrid.hpp"
-#include "timedrevealer.hpp"
+#include "multi-output-timed-plugin.hpp"
 #include "widget-utils/battery.hpp"
 
-class WayfireLockerBatteryPluginWidget : public WayfireLockerTimedRevealer
+class WayfireLockerBatteryPluginWidget : public WayfireLockerTimedWidget<ShellBattery>
 {
   public:
-    ShellBattery battery;
-    WayfireLockerBatteryPluginWidget();
+    WayfireLockerBatteryPluginWidget() :
+        WayfireLockerTimedWidget("locker/battery_always")
+    {}
 };
 
-class WayfireLockerBatteryPlugin : public WayfireLockerPlugin
+class WayfireLockerBatteryPlugin :
+    public WayfireLockerMultiOutputPlugin<WayfireLockerBatteryPluginWidget>
 {
   private:
     sigc::connection signal;
 
+  protected:
+    std::shared_ptr<WayfireLockerBatteryPluginWidget> create_widget() override
+    {
+        return std::make_shared<WayfireLockerBatteryPluginWidget>();
+    }
+
   public:
     WayfireLockerBatteryPlugin();
-    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void init() override
-    {}
-    void deinit() override
-    {}
-    void hide();
-    void show();
-    bool show_state = true;
-
-    std::map<std::string, std::shared_ptr<WayfireLockerBatteryPluginWidget>> widgets;
 };

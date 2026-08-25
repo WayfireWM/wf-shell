@@ -8,7 +8,7 @@
 
 class WayfireClock : public WayfireWidget
 {
-    ShellClock label{"panel/clock_format"};
+    ShellClock label{"panel"};
     Gtk::Calendar calendar;
     std::unique_ptr<WayfireMenuWidget> button;
 

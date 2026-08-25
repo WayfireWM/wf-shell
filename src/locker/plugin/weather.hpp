@@ -1,33 +1,25 @@
 #pragma once
-#include <unordered_map>
 
-#include "plugin.hpp"
-#include "timedrevealer.hpp"
-#include "lockergrid.hpp"
-
+#include "multi-output-timed-plugin.hpp"
 #include "widget-utils/weather.hpp"
 
-class WayfireLockerWeatherPluginWidget : public WayfireLockerTimedRevealer
+class WayfireLockerWeatherPluginWidget : public WayfireLockerTimedWidget<ShellWeather>
 {
   public:
-    ShellWeather weather;
-    WayfireLockerWeatherPluginWidget();
+    WayfireLockerWeatherPluginWidget() :
+        WayfireLockerTimedWidget("locker/weather_always", "weather")
+    {}
 };
 
-class WayfireLockerWeatherPlugin : public WayfireLockerPlugin
+class WayfireLockerWeatherPlugin :
+    public WayfireLockerMultiOutputPlugin<WayfireLockerWeatherPluginWidget>
 {
+  protected:
+    std::shared_ptr<WayfireLockerWeatherPluginWidget> create_widget() override
+    {
+        return std::make_shared<WayfireLockerWeatherPluginWidget>();
+    }
+
   public:
     WayfireLockerWeatherPlugin();
-    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void init() override
-    {}
-    void deinit() override
-    {}
-
-    void hide();
-    void show();
-
-    std::unordered_map<std::string, std::shared_ptr<WayfireLockerWeatherPluginWidget>> weather_widgets;
-    bool shown = true;
 };
