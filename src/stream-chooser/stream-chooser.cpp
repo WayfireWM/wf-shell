@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <xf86drm.h>
-#include <gtk4-layer-shell/gtk4-layer-shell.h>
+#include <gtk4-layer-shell.h>
 #include <gdk/wayland/gdkwayland.h>
 #include "ext-foreign-toplevel-list-v1-client-protocol.h"
 #include "ext-image-capture-source-v1-client-protocol.h"
