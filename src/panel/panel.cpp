@@ -240,7 +240,17 @@ class WayfirePanel::impl
         if (name == "volume")
         {
 #ifdef HAVE_PULSE
-            return Widget(new WayfireVolume());
+            return Widget(new WayfireVolume(StreamRole::Sink));
+#else
+            std::cerr << "Built without pulse support, volume widget "
+                         " is not available." << std::endl;
+#endif
+        }
+
+        if (name == "microphone")
+        {
+#ifdef HAVE_PULSE
+            return Widget(new WayfireVolume(StreamRole::Source));
 #else
             std::cerr << "Built without pulse support, volume widget "
                          " is not available." << std::endl;

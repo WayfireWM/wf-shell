@@ -32,6 +32,7 @@ fade_duration = 1000
 #   mixer
 #   tray
 #   volume
+#   volume
 #   window-list
 #   workspace-switcher
 #
@@ -227,18 +228,22 @@ menu_min_content_height = 500
 # switchuser_command = dm-tool switch-to-greeter
 
 
-# Note on PulseAudio (volume widget) and Wireplumber/Pipewire (mixer widget)
+# Note on PulseAudio (volume/microphone widget) and Wireplumber/Pipewire (mixer widget)
+# TLDR : if you don’t know which one you’re running, the full mixer widget
+# might not work out of the box on older systems, while the volume widget is
+# pretty much guaranteed to.
 # PulseAudio and Pipewire are audio servers for the desktop.
 # PulseAudio is older and was generally the default of most distributions for years.
 # Pipewire, interacted with by Wireplumber, has rapidly become the default of most major distros
 # since 2020, and has compatibility with PulseAudio with Pipewire-Pulse, usually setup by default.
-# What this ammounts to is that, if you don’t know which one you’re running,
-# the full mixer widget might not work out of the box on older systems,
-# while the volume widget is pretty much guaranteed to.
 
 ### VOLUME ###
 
-# It shows a simple slider to control the volume of the default output using PulseAudio
+# It shows a simple slider and mute button to control the volume of the default
+# output using PulseAudio
+# The `microphone` widget behaves identically to `volume`, but controls the
+# default input, and uses the same configuration values as `volume`.
+
 # Number of seconds volume popover will display (when volume is changed)
 # after scrolling on the volume icon
 volume_display_timeout = 2.5
@@ -248,7 +253,6 @@ volume_icon_size = 0
 
 # Multiplier for volume scroll wheel or swipes. The higher this is the more the volume changes from swipes/scrolls
 volume_scroll_sensitivity = 0.05
-
 
 ### MIXER ###
 

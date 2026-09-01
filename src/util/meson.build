@@ -22,6 +22,26 @@ sources = [
     'icon-select.cpp'
 ]
 
+deps = [
+    wf_protos,
+    gtklayershell,
+    wayland_client,
+    gtkmm,
+    wfconfig,
+    libinotify,
+    json,
+]
+
+if libpulse.found()
+    sources += [
+        'widget-utils/pulseaudio/control.cpp',
+        'widget-utils/pulseaudio/gvc-proxy.cpp',
+    ]
+    deps += [libpulse, libgvc]
+else
+  message('Pulseaudio not found, volume widget will not be available.')
+endif
+
 if get_option('weather') == true
     sources += [
         'widget-utils/weather.cpp',
@@ -31,15 +51,7 @@ endif
 util = static_library(
     'util',
     sources,
-    dependencies: [
-        wf_protos,
-        gtklayershell,
-        wayland_client,
-        gtkmm,
-        wfconfig,
-        libinotify,
-        json,
-    ],
+    dependencies: deps
 )
 
 util_includes = include_directories('.')
