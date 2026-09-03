@@ -1,26 +1,36 @@
+sources = [
+    'gtk-utils.cpp',
+    'icon-select.cpp',
+    'wf-shell-app.cpp',
+    'wf-autohide-window.cpp',
+    'wf-popover.cpp',
+    'css-config.cpp',
+    'wf-ipc.cpp',
+    'animated-scale.cpp',
+    'widget-utils/battery.cpp',
+    'widget-utils/clock.cpp',
+    'widget-utils/network/manager.cpp',
+    'widget-utils/network/wifi.cpp',
+    'widget-utils/network/wired.cpp',
+    'widget-utils/network/network-widget.cpp',
+    'widget-utils/network/wifi-ap.cpp',
+    'widget-utils/network/network.cpp',
+    'widget-utils/network/modem.cpp',
+    'widget-utils/network/settings.cpp',
+    'widget-utils/network/connection.cpp',
+    'background-gl.cpp',
+    'icon-select.cpp'
+]
+
+if get_option('weather') == true
+    sources += [
+        'widget-utils/weather.cpp',
+    ]
+endif
+
 util = static_library(
     'util',
-    [
-        'gtk-utils.cpp',
-        'icon-select.cpp',
-        'wf-shell-app.cpp',
-        'wf-autohide-window.cpp',
-        'wf-popover.cpp',
-        'css-config.cpp',
-        'wf-ipc.cpp',
-        'animated-scale.cpp',
-        'network/manager.cpp',
-        'network/wifi.cpp',
-        'network/wired.cpp',
-        'network/network-widget.cpp',
-        'network/wifi-ap.cpp',
-        'network/network.cpp',
-        'network/modem.cpp',
-        'network/settings.cpp',
-        'network/connection.cpp',
-        'background-gl.cpp',
-        'icon-select.cpp'
-    ],
+    sources,
     dependencies: [
         wf_protos,
         gtklayershell,

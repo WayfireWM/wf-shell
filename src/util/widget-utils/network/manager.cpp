@@ -10,7 +10,7 @@
 #include "connection.hpp"
 #include "gtkmm/enums.h"
 #include "network.hpp"
-#include "network/settings.hpp"
+#include "widget-utils/network/settings.hpp"
 #include "sigc++/functors/mem_fun.h"
 #include "vpn.hpp"
 #include "wifi.hpp"
