@@ -1,6 +1,5 @@
 #include <gdkmm/monitor.h>
 #include <memory>
-#include <pulse/proplist.h>
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
 
