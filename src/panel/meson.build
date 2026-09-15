@@ -1,5 +1,6 @@
 widget_sources = [
   'widgets/battery.cpp',
+  'widgets/power-profiles.cpp',
   'widgets/menu/menu.cpp',
   'widgets/menu/layout.cpp',
   'widgets/menu/logout.cpp',
