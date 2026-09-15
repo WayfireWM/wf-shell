@@ -14,8 +14,8 @@
 #include <css-config.hpp>
 #include "panel.hpp"
 
-#include "network/manager.hpp"
 #include "widgets/battery.hpp"
+#include "widgets/power-profiles.hpp"
 #include "widgets/command-output.hpp"
 #include "widgets/language.hpp"
 #include "widgets/menu/menu.hpp"
@@ -232,10 +232,25 @@ class WayfirePanel::impl
             return Widget(new WayfireBatteryInfo());
         }
 
+        if (name == "power-profiles")
+        {
+            return Widget(new WayfirePowerProfiles());
+        }
+
         if (name == "volume")
         {
 #ifdef HAVE_PULSE
-            return Widget(new WayfireVolume());
+            return Widget(new WayfireVolume(StreamRole::Sink));
+#else
+            std::cerr << "Built without pulse support, volume widget "
+                         " is not available." << std::endl;
+#endif
+        }
+
+        if (name == "microphone")
+        {
+#ifdef HAVE_PULSE
+            return Widget(new WayfireVolume(StreamRole::Source));
 #else
             std::cerr << "Built without pulse support, volume widget "
                          " is not available." << std::endl;
@@ -606,6 +621,7 @@ void WayfirePanelApp::on_activate()
         {"panel/menu_category_icon_size", ".app-category .default-icon"},
         {"panel/launchers_size", ".launcher.widget-icon"},
         {"panel/battery_icon_size", ".battery image.widget-icon"},
+        {"panel/power_profiles_icon_size", ".power-profiles image.widget-icon"},
         {"panel/network_icon_size", ".network .widget-icon"},
         {"panel/volume_icon_size", ".volume .widget-icon"},
         {"panel/mixer_icon_size", ".mixer .widget-icon"},
@@ -628,6 +644,7 @@ void WayfirePanelApp::on_activate()
     new CssFromConfigBool("panel/network_icon_invert_color", ".network-icon{filter:invert(100%);}", "");
 
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
+    new CssFromConfigFont("panel/power_profiles_font", ".power_profiles {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");
     new CssFromConfigFont("panel/weather_font", ".weather {", "}");
 }

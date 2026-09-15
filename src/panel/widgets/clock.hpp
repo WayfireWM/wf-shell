@@ -1,23 +1,21 @@
 #pragma once
 
+#include <gtkmm/calendar.h>
+
 #include "../widget.hpp"
 #include "wf-popover.hpp"
-#include <gtkmm/calendar.h>
-#include <gtkmm/label.h>
+#include "widget-utils/clock.hpp"
 
 class WayfireClock : public WayfireWidget
 {
-    Gtk::Label label;
+    ShellClock label{"panel/clock_format"};
     Gtk::Calendar calendar;
     std::unique_ptr<WayfireMenuWidget> button;
 
-    sigc::connection timeout, btn_sig;
-    WfOption<std::string> format{"panel/clock_format"};
-
+    sigc::connection btn_sig;
     void on_calendar_shown();
 
   public:
     void init(Gtk::Box *container) override;
-    bool update_label();
     ~WayfireClock();
 };

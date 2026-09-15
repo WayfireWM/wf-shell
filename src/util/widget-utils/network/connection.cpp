@@ -1,7 +1,7 @@
 #include <cassert>
 #include <memory>
 #include "connection.hpp"
-#include "network/manager.hpp"
+#include "widget-utils/network/manager.hpp"
 
 Connection::Connection() :
     Network("/", nullptr), connection_proxy(nullptr), devices({})
