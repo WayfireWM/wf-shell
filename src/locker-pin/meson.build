@@ -5,7 +5,7 @@ deps = [
 
 executable(
   'wf-locker-pin',
-  ['locker-pin.cpp'],
+  ['locker-pin.cpp', version_h],
   dependencies: deps,
   install: true,
 )

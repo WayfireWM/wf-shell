@@ -19,7 +19,7 @@ util = static_library(
         'network/settings.cpp',
         'network/connection.cpp',
         'background-gl.cpp',
-        'icon-select.cpp'
+        'icon-select.cpp',
     ],
     dependencies: [
         wf_protos,
@@ -30,6 +30,20 @@ util = static_library(
         libinotify,
         json,
     ],
+)
+
+git_command = [
+    'sh',
+    '-c', 'printf "@0@ version @1@-%s (%s) branch %s gtk @2@" "$(git rev-parse --short HEAD)" "$(git log -1 --format=%as)" "$(git rev-parse --abbrev-ref HEAD)"'.format(meson.project_name(), meson.project_version(), gtkmm.version()),
+]
+
+fallback_string = '@0@ version @1@-unknown-commit (unknown-date) branch unknown-branch gtk @2@'.format(meson.project_name(), meson.project_version(), gtkmm.version())
+
+version_h = vcs_tag(
+    input: 'version.h.in',
+    output: 'version.h',
+    command: git_command,
+    fallback: fallback_string,
 )
 
 util_includes = include_directories('.')

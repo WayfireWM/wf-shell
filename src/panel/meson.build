@@ -89,7 +89,7 @@ endif
 
 executable(
   'wf-panel',
-  ['panel.cpp'] + widget_sources,
+  ['panel.cpp', version_h] + widget_sources,
   dependencies: deps,
   install: true,
 )
