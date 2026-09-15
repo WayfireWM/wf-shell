@@ -34,9 +34,6 @@ class WayfireStreamChooserApp : public Gtk::Application
   public:
     Gtk::Notebook notebook;
     Gtk::FlowBox window_list, screen_list;
-    bool has_foreign_toplevel_list = false;
-    bool has_image_copy_capture    = false;
-    bool has_image_capture_source  = false;
     std::string drm_device_name;
     int drm_fd = -1;
     gbm_device *gbm_device_ptr = nullptr;
