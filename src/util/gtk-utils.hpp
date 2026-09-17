@@ -12,6 +12,9 @@ Glib::RefPtr<Gdk::Pixbuf> load_icon_pixbuf_safe(std::string icon_path, int size)
 /* Loads a CssProvider from the given path to the file, returns null if unsuccessful*/
 Glib::RefPtr<Gtk::CssProvider> load_css_from_path(std::string path);
 
+bool is_markup(std::string);
+std::string markup_escape(std::string);
+
 struct WfIconLoadOptions
 {
     int user_scale = -1;
