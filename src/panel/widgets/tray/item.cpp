@@ -186,9 +186,22 @@ void StatusNotifierItem::update_icon()
     const bool hide = get_item_property<Glib::ustring>("Status") == "Passive";
     const auto icon_name = get_item_property<Glib::ustring>(icon_type_name + "Name");
 
-    if (!IconProvider::image_set_icon(icon, icon_name))
+    bool icon_set = false;
+
+    if (prefer_symbolic_icons)
     {
-        const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
+        icon_set = IconProvider::image_set_icon(icon, icon_name + "-symbolic");
+    }
+
+    if (!icon_set)
+    {
+        icon_set = IconProvider::image_set_icon(icon, icon_name);
+    }
+
+    if (!icon_set)
+    {
+        const auto pixmap_data = extract_pixbuf(
+            get_item_property<IconData>(icon_type_name + "Pixmap"));
         if (pixmap_data)
         {
             icon.set(pixmap_data);

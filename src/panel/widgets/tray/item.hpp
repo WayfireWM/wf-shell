@@ -16,6 +16,7 @@ class StatusNotifierItem : public WayfireMenuWidget
     guint menu_handler_id;
 
     WfOption<bool> menu_on_middle_click{"panel/tray_menu_on_middle_click"};
+    WfOption<bool> prefer_symbolic_icons{"panel/prefer_symbolic_tray_icons"};
 
     Glib::ustring dbus_name, menu_path;
 
