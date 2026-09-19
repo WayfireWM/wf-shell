@@ -22,6 +22,15 @@ const std::map<double, std::vector<std::string>> volume_icons = {
     {std::numeric_limits<double>::max(), {"audio-volume-high-danger", "dialog-warning"}}
 };
 
+const std::map<double, std::vector<std::string>> volume_icons_symbolic = {
+    {std::numeric_limits<double>::min(), {"emblem-unreadable"}},
+    {0.0, {"audio-volume-muted-symbolic", "audio-volume-muted"}},
+    {0.33, {"audio-volume-low-symbolic", "audio-volume-low"}},
+    {0.66, {"audio-volume-medium-symbolic", "audio-volume-medium"}},
+    {1.0, {"audio-volume-high-symbolic", "audio-volume-high"}},
+    {std::numeric_limits<double>::max(), {"audio-volume-high-danger", "dialog-warning"}}
+};
+
 const std::map<double, std::vector<std::string>> mic_volume_icons = {
     {std::numeric_limits<double>::min(), {"emblem-unreadable"}},
     {0.0, {"microphone-sensitivity-muted", "audio-volume-muted"}},

@@ -9,6 +9,16 @@
 		<_short>CSS Path</_short>
 		<default></default>
 	</option>
+        <option name="prefer_symbolic_widget_icons" type="bool">
+	         <_short>Prefer Symbolic Widget Icons</_short>
+	         <_long>Prefer symbolic icons for panel widgets when available.</_long>
+	         <default>false</default>
+        </option>
+        <option name="prefer_symbolic_tray_icons" type="bool">
+	         <_short>Prefer Symbolic Tray Icons</_short>
+	         <_long>Prefer symbolic icons for system tray items when available.</_long>
+	         <default>false</default>
+        </option>
 	<option name="widgets_left" type="string">
 		<_short>Widgets Left</_short>
 		<default>menu spacing4 launchers window-list</default>

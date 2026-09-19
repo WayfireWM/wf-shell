@@ -17,6 +17,7 @@ class WayfireVolume : public WayfireWidget
 
     WfOption<double> timeout{"panel/volume_display_timeout"};
     WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
+    WfOption<bool> prefer_symbolic_icons{"panel/prefer_symbolic_widget_icons"};
 
     void on_volume_value_changed();
 

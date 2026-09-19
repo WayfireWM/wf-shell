@@ -5,17 +5,19 @@
 #include "icon-select.hpp"
 #include "wf-popover.hpp"
 
-#define ICON(volume) icon_from_range(volume_icons, volume)
-
 void WayfireVolume::update_icon()
 {
+    const auto& icons = prefer_symbolic_icons ?
+        volume_icons_symbolic : volume_icons;
+
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
-        main_image.set_from_icon_name(ICON(0)); // mute
+        main_image.set_from_icon_name(icon_from_range(icons, 0)); // mute
         return;
     }
 
-    main_image.set_from_icon_name(ICON(volume_scale.get_target_value() / (double)max_norm));
+    main_image.set_from_icon_name(
+        icon_from_range(icons, volume_scale.get_target_value() / (double)max_norm));
 }
 
 void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
