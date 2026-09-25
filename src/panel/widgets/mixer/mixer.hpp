@@ -66,6 +66,8 @@ class WayfireMixer : public WayfireWidget
 
     Gtk::Box master_box, sinks_box, sources_box, streams_box, captures_box;
 
+    void show_hide_boxes();
+
     std::map<WpPipewireObject*, std::unique_ptr<MixerControl>> objects_to_controls;
 
     /** Update the icon based on volume and muted state of the quick_target widget */

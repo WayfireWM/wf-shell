@@ -286,6 +286,33 @@ void WayfireMixer::init(Gtk::Box *container)
     WpCommon::get().add_widget(this);
 }
 
+void WayfireMixer::show_hide_boxes()
+{
+    std::vector<Gtk::Box*> boxes_order     = {&sinks_box, &sources_box, &streams_box, &captures_box};
+    std::vector<Gtk::Separator*> sep_order = {&out_in_wall, &in_streams_wall, &streams_cap_wall};
+    for (auto& box : boxes_order)
+    {
+        if (box->get_children().size() > 2) // label and separator, not the prettiest tbh
+        {
+            box->show();
+        } else
+        {
+            box->hide();
+        }
+    }
+
+    for (int i = 1; i < boxes_order.size(); i++)
+    {
+        if (boxes_order[i]->get_children().size() > 2)
+        {
+            sep_order[i - 1]->show();
+        } else
+        {
+            sep_order[i - 1]->hide();
+        }
+    }
+}
+
 void WayfireMixer::update_icon()
 {
     // depends on quick_target widget

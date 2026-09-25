@@ -153,6 +153,8 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireMixer *widg
     widget->objects_to_controls.insert({object, std::unique_ptr<MixerControl>(control)});
     which_box->append((Gtk::Widget&)*control);
 
+    widget->show_hide_boxes();
+
     // we added new controls, so maybe one of them is a default
     // also initialises the quick_target for when quick_target choice is a device
     if (recheck_default)
