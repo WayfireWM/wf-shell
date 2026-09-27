@@ -5,6 +5,8 @@
 #include <string>
 #include <limits>
 
+std::string preferred_icon(std::string name, bool prefer_symbolic);
+
 std::string icon_from_range(std::map<double, std::vector<std::string>> icons, double value);
 
 // the number in the first term is the maximal value at which this icon will be shown
