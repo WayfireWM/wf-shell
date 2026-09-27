@@ -1,5 +1,6 @@
 #include "item.hpp"
 #include "wf-popover.hpp"
+#include "icon-select.hpp"
 
 #include <gtk-utils.hpp>
 
@@ -184,11 +185,39 @@ void StatusNotifierItem::update_icon()
     const Glib::ustring icon_type_name =
         get_item_property<Glib::ustring>("Status") == "NeedsAttention" ? "AttentionIcon" : "Icon";
     const bool hide = get_item_property<Glib::ustring>("Status") == "Passive";
-    const auto icon_name = get_item_property<Glib::ustring>(icon_type_name + "Name");
+    const auto icon_name =
+        get_item_property<Glib::ustring>(icon_type_name + "Name");
 
-    if (!IconProvider::image_set_icon(icon, icon_name))
+    auto preferred_name =
+        preferred_icon(icon_name, prefer_symbolic_icons);
+
+    if (icon_name.empty() &&
+        prefer_symbolic_icons &&
+        (icon_type_name == "Icon"))
     {
-        const auto pixmap_data = extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
+        const auto id = get_item_property<Glib::ustring>("Id");
+        const auto id_preferred = preferred_icon(id, true);
+
+        if (id_preferred != id)
+        {
+            preferred_name = id_preferred;
+        }
+    }
+
+    bool icon_set = IconProvider::image_set_icon(icon, preferred_name);
+
+    if (!icon_set &&
+        !icon_name.empty() &&
+        (preferred_name != icon_name))
+    {
+        icon_set = IconProvider::image_set_icon(icon, icon_name);
+    }
+
+    if (!icon_set)
+    {
+        const auto pixmap_data =
+            extract_pixbuf(get_item_property<IconData>(icon_type_name + "Pixmap"));
+
         if (pixmap_data)
         {
             icon.set(pixmap_data);
