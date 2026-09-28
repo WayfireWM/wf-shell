@@ -20,6 +20,7 @@ class WfCommandOutputButtons : public WayfireWidget
         std::vector<sigc::connection> signals;
 
         Gtk::Box box;
+
         Gtk::Image icon;
         Gtk::Label main_label;
 
@@ -48,12 +49,16 @@ class WfCommandOutputButtons : public WayfireWidget
     };
 
     Gtk::Box box;
+    Gtk::ScrolledWindow scrolled_window;
     std::vector<std::unique_ptr<CommandOutput>> buttons;
 
     WfOption<wf::config::compound_list_t<std::string, std::string, int, std::string,
         int, std::string>> commands_list_opt{"panel/commands"};
 
+    void update_layout();
+
   public:
     void init(Gtk::Box *container) override;
     void update_buttons();
+    void handle_config_reload() override;
 };
