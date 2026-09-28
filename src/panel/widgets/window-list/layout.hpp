@@ -18,6 +18,6 @@ class WayfireWindowListLayout : public Gtk::LayoutManager
 
   public:
     WayfireWindowListLayout(WayfireWindowList *window_list);
-    int top_x = 0;
+    int top_position = 0;
     Gtk::Widget *top_widget = nullptr;
 };

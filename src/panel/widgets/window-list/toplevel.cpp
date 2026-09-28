@@ -519,9 +519,9 @@ class WayfireToplevel::impl
         this->ext_handle = handle;
     }
 
-    int grab_off_x;
+    int grab_offset;
     double grab_start_x, grab_start_y;
-    double grab_abs_start_x;
+    double grab_abs_start_position;
     bool drag_exceeds_threshold;
 
     bool drag_paused()
@@ -531,62 +531,94 @@ class WayfireToplevel::impl
 
     void on_drag_begin(double _x, double _y)
     {
-        // Set grab start, before transforming it to absolute position
         grab_start_x = _x;
         grab_start_y = _y;
 
         set_classes(state);
         window_list->set_top_widget(&button);
 
-        // Find the distance between pointer X and button origin
-        int x = window_list->get_absolute_position(_x, button);
-        grab_abs_start_x = x;
+        const double pointer_position =
+            window_list->is_vertical() ? _y : _x;
 
-        // Find button corner in window-relative coords
-        int loc_x = window_list->get_absolute_position(0, button);
-        grab_off_x = x - loc_x;
+        int position =
+            window_list->get_absolute_position(pointer_position, button);
+
+        grab_abs_start_position = position;
+
+        int widget_position =
+            window_list->get_absolute_position(0, button);
+
+        grab_offset = position - widget_position;
 
         drag_exceeds_threshold = false;
     }
 
     static constexpr int DRAG_THRESHOLD = 3;
-    void on_drag_update(double _x, double y)
+
+    void on_drag_update(double _x, double _y)
     {
-        int x = _x + grab_start_x;
-        x = window_list->get_absolute_position(x, button);
-        if (std::abs(x - grab_abs_start_x) > DRAG_THRESHOLD)
+        double relative_position;
+
+        if (window_list->is_vertical())
+        {
+            relative_position = _y + grab_start_y;
+        } else
+        {
+            relative_position = _x + grab_start_x;
+        }
+
+        int position =
+            window_list->get_absolute_position(relative_position, button);
+
+        if (std::abs(position - grab_abs_start_position) > DRAG_THRESHOLD)
         {
             drag_exceeds_threshold = true;
         }
 
-        auto hovered_button = window_list->get_widget_at(x);
-        Gtk::Widget *before = window_list->get_widget_before(x);
+        auto hovered_button = window_list->get_widget_at(position);
+        Gtk::Widget *before = window_list->get_widget_before(position);
 
         if (hovered_button)
         {
-            // Where are we in the button?
             auto allocation = hovered_button->get_allocation();
-            int half_width  = allocation.get_width() / 2;
-            int x_in_button = x - allocation.get_x();
-            if (x_in_button < half_width) // Left Half
+
+            int size;
+            int origin;
+
+            if (window_list->is_vertical())
+            {
+                size   = allocation.get_height();
+                origin = allocation.get_y();
+            } else
+            {
+                size   = allocation.get_width();
+                origin = allocation.get_x();
+            }
+
+            int half_size = size / 2;
+            int position_in_button = position - origin;
+
+            if (position_in_button < half_size)
             {
                 if (before == nullptr)
                 {
-                    gtk_box_reorder_child_after(window_list->gobj(), GTK_WIDGET(button.gobj()), nullptr);
+                    gtk_box_reorder_child_after(
+                        window_list->gobj(),
+                        GTK_WIDGET(button.gobj()),
+                        nullptr);
                 } else
                 {
                     window_list->reorder_child_after(button, *before);
                 }
-            } else if (x_in_button > half_width) // Right Half
+            } else if (position_in_button > half_size)
             {
                 window_list->reorder_child_after(button, *hovered_button);
             }
         }
 
-        /* Make sure the grabbed button always stays at the same relative position
-         * to the DnD position */
-        int target_x = x - grab_off_x;
-        window_list->set_top_x(target_x);
+        /* Keep the grabbed button at the same offset from the pointer. */
+        int target_position = position - grab_offset;
+        window_list->set_top_position(target_position);
     }
 
     void on_drag_end(double _x, double _y)
@@ -609,9 +641,13 @@ class WayfireToplevel::impl
         if (hide_text)
         {
             label.hide();
+            image.set_hexpand(true);
+            image.set_halign(Gtk::Align::CENTER);
         } else
         {
             label.show();
+            image.set_hexpand(false);
+            image.set_halign(Gtk::Align::FILL);
         }
     }
 
@@ -886,6 +922,11 @@ uint32_t WayfireToplevel::get_state()
 void WayfireToplevel::send_rectangle_hint()
 {
     return pimpl->send_rectangle_hint();
+}
+
+void WayfireToplevel::set_hide_text(bool hide_text)
+{
+    pimpl->set_hide_text(hide_text);
 }
 
 WayfireToplevel::~WayfireToplevel()

@@ -360,7 +360,12 @@ class WayfirePanel::impl
         {
             if (widget_name == "window-list")
             {
-                box.set_hexpand(true);
+                bool vertical =
+                    (panel_position.value() == PANEL_POSITION_LEFT) ||
+                    (panel_position.value() == PANEL_POSITION_RIGHT);
+
+                box.set_hexpand(!vertical);
+                box.set_vexpand(vertical);
             }
 
             auto widget = widget_from_name(widget_name);
