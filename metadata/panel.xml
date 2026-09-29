@@ -167,16 +167,24 @@
 			<option name="launchers" type="dynamic-list" type-hint="dict">
 				<_short>Launchers</_short>
 				<_long>Launchers</_long>
+				<entry prefix="launcher_" type="string" name="desktop">
+					<_short>Desktop file</_short>
+					<_long>Desktop file launcher</_long>
+					<default/>
+				</entry>
 				<entry prefix="launcher_cmd_" type="string" name="cmd">
 					<_short>Command</_short>
 					<_long>Command</_long>
 					<hint>file</hint>
+					<default/>
 				</entry>
-				<entry prefix="launcher_icon_" type="string" name="cmd">
+				<entry prefix="launcher_icon_" type="string" name="icon">
 					<_short>Icon</_short>
+					<default/>
 				</entry>
 				<entry prefix="launcher_label_" type="string" name="label">
 					<_short>Label</_short>
+					<default/>
 				</entry>
 			</option>
 		</group>
