@@ -8,6 +8,9 @@
 #include <gdk/gdkcairo.h>
 #include <cassert>
 #include <gtk-utils.hpp>
+#include <gio/gdesktopappinfo.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "wf-shell-app.hpp"
 
@@ -75,10 +78,41 @@ void WfLauncherButton::update_icon()
 
 void WfLauncherButton::launch()
 {
-    if (app_info)
+    if (!app_info)
     {
-        auto ctx = Gdk::Display::get_default()->get_app_launch_context();
-        app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
+        return;
+    }
+
+    auto ctx = Gdk::Display::get_default()->get_app_launch_context();
+
+    int devnull = open("/dev/null", O_RDWR);
+    if (devnull < 0)
+    {
+        return;
+    }
+
+    GError *error = nullptr;
+
+    g_desktop_app_info_launch_uris_as_manager_with_fds(
+        app_info->gobj(),
+        nullptr,
+        G_APP_LAUNCH_CONTEXT(ctx->gobj()),
+        G_SPAWN_DEFAULT,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        devnull, // stdin
+        devnull, // stdout
+        devnull, // stderr
+        &error);
+
+    close(devnull);
+
+    if (error)
+    {
+        g_warning("Failed to launch application: %s", error->message);
+        g_error_free(error);
     }
 }
 

@@ -1,5 +1,8 @@
 #include <gtkmm/gestureclick.h>
 #include <gtkmm/gesturelongpress.h>
+#include <gio/gdesktopappinfo.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "item.hpp"
 #include "menu.hpp"
@@ -152,7 +155,37 @@ WfMenuItem::~WfMenuItem()
 void WfMenuItem::on_click()
 {
     auto ctx = Gdk::Display::get_default()->get_app_launch_context();
-    app_info->launch(std::vector<Glib::RefPtr<Gio::File>>(), ctx);
+
+    int devnull = open("/dev/null", O_RDWR);
+    if (devnull < 0)
+    {
+        return;
+    }
+
+    GError *error = nullptr;
+
+    g_desktop_app_info_launch_uris_as_manager_with_fds(
+        app_info->gobj(),
+        nullptr,
+        G_APP_LAUNCH_CONTEXT(ctx->gobj()),
+        G_SPAWN_DEFAULT,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        devnull, // stdin
+        devnull, // stdout
+        devnull, // stderr
+        &error);
+
+    close(devnull);
+
+    if (error)
+    {
+        g_warning("Failed to launch application: %s", error->message);
+        g_error_free(error);
+    }
+
     menu->hide_menu();
 }
 

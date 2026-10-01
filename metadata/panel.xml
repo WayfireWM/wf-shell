@@ -167,17 +167,26 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	<option name="launchers" type="dynamic-list" type-hint="dict">
 		<_short>Launchers</_short>
 		<_long>Launchers</_long>
-		<entry prefix="launcher_cmd_" type="string" name="cmd">
-			<_short>Command</_short>
-			<_long>Command</_long>
-			<hint>file</hint>
-		</entry>
-		<entry prefix="launcher_icon_" type="string" name="cmd">
-			<_short>Icon</_short>
-		</entry>
-		<entry prefix="launcher_label_" type="string" name="label">
-			<_short>Label</_short>
-		</entry>
+
+	<entry prefix="launcher_" type="string" name="desktop">
+		<_short>Desktop file</_short>
+		<_long>Desktop file launcher</_long>
+		 <default></default>
+	</entry>
+	<entry prefix="launcher_cmd_" type="string" name="cmd">
+		<_short>Command</_short>
+		<_long>Command</_long>
+		<hint>file</hint>
+		<default></default>
+	</entry>
+	<entry prefix="launcher_icon_" type="string" name="icon">
+		<_short>Icon</_short>
+		<default></default>
+	</entry>
+	<entry prefix="launcher_label_" type="string" name="label">
+		<_short>Label</_short>
+		<default></default>
+	</entry>
 	</option>
 	</group>
 	<group>

@@ -847,7 +847,11 @@ class WayfireToplevel::impl
 
         if (window_list->output->wo == output)
         {
-            window_list->append(button);
+            if (!button.get_parent())
+            {
+                window_list->append(button);
+            }
+
             send_rectangle_hints();
         }
     }
