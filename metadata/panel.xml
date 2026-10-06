@@ -1,684 +1,684 @@
 <?xml version="1.0"?>
 <wf-shell>
 	<plugin name="panel">
-	<_short>Panel</_short>
-	<category>Shell</category>
-	<group>
-	<_short>General</_short>
-	<option name="css_path" type="string">
-		<_short>CSS Path</_short>
-		<default></default>
-	</option>
-	<option name="widgets_left" type="string">
-		<_short>Widgets Left</_short>
-		<default>menu spacing4 launchers window-list</default>
-	</option>
-	<option name="widgets_center" type="string">
-		<_short>Widgets Center</_short>
-		<default>none</default>
-	</option>
-	<option name="widgets_right" type="string">
-		<_short>Widgets Right</_short>
-		<default>volume network battery clock</default>
-	</option>
-	<option name="full_span" type="bool">
-		<_short>Anchor to edges</_short>
-		<_long>Wether the pannel should extend all the way to the left and right; or top and bottom depending on orientation.</_long>
-		<default>true</default>
-	</option>
-	<option name="center" type="bool">
-		<_short>Center panel contents</_short>
-		<_long>Ensure the panel’s contents are centered. Effectively:
-If full_span is on, it will put the left and right widgets next to the center ones.
-If full_span is off, both sides of the panel will take the same amount of space, so that the center widgets are at the middle of the screen. This will lead to unused space on the side that has the least space taken up by the widgets.</_long>
-		<default>false</default>
-	</option>
-	<option name="minimal_height" type="int">
-		<_short>Minimal height</_short>
-		<_long>Minimum height the panel takes.</_long>
-		<default>32</default>
-	</option>
-	<option name="minimal_width" type="int">
-		<_short>Minimal width</_short>
-		<_long>Minimum width the panel takes.</_long>
-		<default>32</default>
-	</option>
-	<option name="default_icon_size" type="int">
-		<_short>Default Icon Size</_short>
-		<_long>The default size of all icons, excluding those directly on the panel</_long>
-		<default>48</default>
-		<minimum>1</minimum>
-	</option>
-	<option name="autohide" type="bool">
-		<_short>Autohide</_short>
-		<default>false</default>
-	</option>
-	<option name="autohide_duration" type="int">
-		<_short>Autohide animation duration</_short>
-		<_long>Time (in milliseconds) the panel takes to expand and retract</_long>
-		<default>300</default>
-	</option>
-	<option name="autohide_show_delay" type="int">
-		<_short>Autohide show delay</_short>
-		<_long>Amount of time (in milliseconds) the cursor needs to be in the zone before showing.</_long>
-		<default>300</default>
-	</option>
-	<option name="autohide_hide_delay" type="int">
-		<_short>Autohide hide delay</_short>
-		<_long>Amount of time (in milliseconds) the cursor needs to be out of the zone before hiding.</_long>
-		<default>500</default>
-	</option>
-	<option name="outputs" type="string">
-		<_short>Outputs on which to show a panel instance</_short>
-		<_long>A comma separated list of output names on which to show panel instances. Set to * wildcard for all outputs.</_long>
-		<default>*</default>
-	</option>
-	<option name="position" type="string">
-		<_short>Panel Position</_short>
-		<default>top</default>
-		<desc>
-			<value>top</value>
-			<_name>Top</_name>
-		</desc>
-		<desc>
-			<value>bottom</value>
-			<_name>Bottom</_name>
-		</desc>
-		<desc>
-			<value>left</value>
-			<_name>Left</_name>
-		</desc>
-		<desc>
-			<value>right</value>
-			<_name>Right</_name>
-		</desc>
-	</option>
-	<option name="edge_margin" type="int">
-		<_short>Edge margin</_short>
-		<_long>Space between the panel the edge</_long>
-		<default>0</default>
-	</option>
-	<option name="mirror_margin" type="bool">
-		<_short>Mirror margin</_short>
-		<_long>Apply the margin to both the edge and the windows.</_long>
-		<default>true</default>
-	</option>
-	<option name="edge_hotspot_size" type="int">
-		<_short>Edge hotspot size</_short>
-		<_long>The distance to the edge of screen to place the cursor in to show the panel when it's hidden.</_long>
-		<default>20</default>
-	</option>
-	<option name="adjacent_edge_hotspot_size" type="int">
-		<_short>Ajacent edge hotspot size</_short>
-		<_long>The distance to the edge of adjacent screens to place the cursor in to show the panel when it's hidden.</_long>
-		<default>20</default>
-	</option>
-	<option name="layer" type="string">
-		<_short>Layer</_short>
-		<default>top</default>
-		<desc>
-			<value>top</value>
-			<_name>Top</_name>
-		</desc>
-		<desc>
-			<value>bottom</value>
-			<_name>Bottom</_name>
-		</desc>
-		<desc>
-			<value>overlay</value>
-			<_name>Overlay</_name>
-		</desc>
-		<desc>
-			<value>background</value>
-			<_name>Background</_name>
-		</desc>
-	</option>
-	<option name="force_show_popup" type="bool">
-		<_short>Force showing the popups</_short>
-		<_long>Show the popup over other windows, even if it and the panel would be hidden otherwise.</_long>
-		<default>true</default>
-	</option>
-	<option name="menus_change_motion" type="bool">
-		<_short>Change between open menu with mouse motion</_short>
-		<default>false</default>
-	</option>
-	<option name="background_color" type="string">
-		<_short>Background Color</_short>
-		<default>gtk_headerbar</default>
-	</option>
-	</group>
-	<group>
-	<_short>Launchers</_short>
-	<option name="launchers_spacing" type="int">
-		<_short>Launchers Spacing</_short>
-		<default>4</default>
-		<min>0</min>
-	</option>
-	<option name="launchers_size" type="int">
-		<_short>Launchers Icon Size</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	<option name="launchers_rows_cols" type="int">
-		<_short>Number of rows (in horizontal panels) or columns (in vertical panels) in Launchers widget</_short>
-		<default>1</default>
-		<min>1</min>
-	</option>
-	<option name="launchers" type="dynamic-list" type-hint="dict">
-		<_short>Launchers</_short>
-		<_long>Launchers</_long>
-		<entry prefix="launcher_cmd_" type="string" name="cmd">
-			<_short>Command</_short>
-			<_long>Command</_long>
-			<hint>file</hint>
-		</entry>
-		<entry prefix="launcher_icon_" type="string" name="cmd">
-			<_short>Icon</_short>
-		</entry>
-		<entry prefix="launcher_label_" type="string" name="label">
-			<_short>Label</_short>
-		</entry>
-	</option>
-	</group>
-	<group>
-	<_short>Clock</_short>
-	<option name="clock_format" type="string">
-		<_short>Clock Format</_short>
-		<default>%e %A %H:%M</default>
-	</option>
-	<option name="clock_font" type="string">
-		<_short>Clock Font</_short>
-		<default>default</default>
-	</option>
-	</group>
-	<group>
-	<_short>Weather</_short>
-	<option name="weather_font" type="string">
-		<_short>Weather Font</_short>
-		<default>default</default>
-	</option>
-	</group>
-	<group>
-	<_short>Battery</_short>
-	<option name="battery_status" type="string">
-		<_short>Battery Status</_short>
-		<default>percentage</default>
-		<desc>
-			<value>icon</value>
-			<_name>Icon</_name>
-		</desc>
-		<desc>
-			<value>percentage</value>
-			<_name>Icon with Percentage</_name>
-		</desc>
-		<desc>
-			<value>full</value>
-			<_name>Full Information</_name>
-		</desc>
-		<desc>
-			<value>percentage_overlay</value>
-			<_name>Percentage over Icon</_name>
-		</desc>
-	</option>
-	<option name="battery_icon_size" type="int">
-		<_short>Battery Icon Size</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	<option name="battery_icon_invert" type="bool">
-		<_short>Battery Icon Invert Color</_short>
-		<default>true</default>
-	</option>
-	<option name="battery_font" type="string">
-		<_short>Battery Font</_short>
-		<default>default</default>
-	</option>
-	</group>
-	<group>
-	<_short>Network</_short>
-	<option name="network_status_font" type="string">
-		<_short>Clock Font</_short>
-		<default>default</default>
-	</option>
-	<option name="network_icon_size" type="int">
-		<_short>Network Icon Size</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	<option name="network_icon_invert_color" type="bool">
-		<_short>Network Icon Invert Color</_short>
-		<default>false</default>
-	</option>
-	<option name="network_status_use_color" type="bool">
-		<_short>Network Status Use Color</_short>
-		<default>false</default>
-	</option>
-	<option name="network_onclick_command" type="string">
-		<_short>On Click Command</_short>
-		<default>default</default>
-	</option>
-	<option name="network_no_label" type="bool">
-		<_short>No text</_short>
-		<default>false</default>
-	</option>
-	</group>
-	<group>
-	<_short>Menu</_short>
-	<option name="menu_fuzzy_search" type="bool">
-		<_short>Use Fuzzy Search in Menu</_short>
-		<default>true</default>
-	</option>
-	<option name="menu_icon" type="string">
-		<_short>Menu Icon</_short>
-		<hint>file</hint>
-		<default></default>
-	</option>
-	<option name="menu_icon_size" type="int">
-		<_short>Menu Icon Size</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	<option name="menu_item_icon_size" type="int">
-		<_short>Menu item icon size</_short>
-		<default>48</default>
-		<min>0</min>
-	</option>
-	<option name="menu_category_icon_size" type="int">
-		<_short>Menu category icon size</_short>
-		<default>48</default>
-		<min>0</min>
-	</option>
-	<option name="menu_item_spacing" type="int">
-		<_short>Space between menu items</_short>
-		<default>8</default>
-		<min>0</min>
-	</option>
-	<option name="menu_min_category_width" type="int">
-		<_short>Menu Minimum Category Width</_short>
-		<default>200</default>
-		<min>50</min>
-		<max>400</max>
-	</option>
-	<option name="menu_min_content_width" type="int">
-		<_short>Menu Minimum Content Width</_short>
-		<default>500</default>
-		<min>100</min>
-		<max>5000</max>
-	</option>
-	<option name="menu_min_content_height" type="int">
-		<_short>Menu Minimum Content Height</_short>
-		<default>500</default>
-		<min>100</min>
-		<max>5000</max>
-	</option>
-	<option name="menu_list" type="bool">
-		<_short>Show Menu Applications as a List</_short>
-		<default>false</default>
-	</option>
-	<option name="menu_show_categories" type="bool">
-		<_short>Show Application Categories</_short>
-		<default>false</default>
-	</option>
-	<option name="menu_logout_command" type="string">
-		<_short>Menu Logout Command</_short>
-		<_long>If not specified, a default logout interface will be used.</_long>
-		<default></default>
-	</option>
-	<option name="logout_command" type="string">
-		<_short>Logout Button Command</_short>
-		<default>wayland-logout</default>
-	</option>
-	<option name="reboot_command" type="string">
-		<_short>Reboot Button Command</_short>
-		<default>systemctl reboot</default>
-	</option>
-	<option name="shutdown_command" type="string">
-		<_short>Shutdown Button Command</_short>
-		<default>systemctl poweroff</default>
-	</option>
-	<option name="suspend_command" type="string">
-		<_short>Suspend Button Command</_short>
-		<default>systemctl suspend</default>
-	</option>
-	<option name="hibernate_command" type="string">
-		<_short>Hibernate Button Command</_short>
-		<default>systemctl hibernate</default>
-	</option>
-	<option name="switchuser_command" type="string">
-		<_short>Switch User Button Command</_short>
-		<default>dm-tool switch-to-greeter</default>
-	</option>
-	</group>
-	<group>
-	<_short>Volume</_short>
-	<option name="volume_display_timeout" type="double">
-		<_short>Volume Display Timeout</_short>
-		<default>2.5</default>
-	</option>
-	<option name="volume_icon_size" type="int">
-		<_short>Volume Icon Size</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	<option name="volume_scroll_sensitivity" type="double">
-		<_short>Volume Scroll Sensitivity</_short>
-		<default>0.05</default>
-	</option>
-	</group>
-	<group>
-	<_short>Audio mixer</_short>
-	<option name="mixer_quick_target_choice" type="string">
-		<_short>Quick action target</_short>
-		<_long>Which audio control will be the target of the quick actions (scrolling and muting on the widget)</_long>
-		<default>default_sink</default>
-		<desc>
-			<value>default_sink</value>
-			<_name>Default sink</_name>
-		</desc>
-		<desc>
-			<value>default_source</value>
-			<_name>Default source</_name>
-		</desc>
-		<desc>
-			<value>last_change</value>
-			<_name>Last changed volume</_name>
-		</desc>
-	</option>
-	<option name="mixer_popup_on_change" type="bool">
-		<_short>Pop up on change</_short>
-		<_long>Whether to show a popup with the new values upon a change to the quick action target</_long>
-		<default>true</default>
-	</option>
-	<option name="mixer_popup_timeout" type="double">
-		<_short>Popup timeout</_short>
-		<default>2.5</default>
-		<min>0.1</min>
-	</option>
-	<option name="mixer_slider_length" type="int">
-		<_short>Slider length</_short>
-		<default>300</default>
-		<min>1</min>
-	</option>
-	<option name="mixer_scroll_sensitivity" type="double">
-		<_short>Scroll sensitivity</_short>
-		<default>1</default>
-		<min>0</min>
-	</option>
-	<option name="mixer_invert_scroll" type="bool">
-		<_short>Invert scroll</_short>
-		<_long>Inverts which scroll direction raises and lowers volume</_long>
-		<default>false</default>
-	</option>
-	<option name="mixer_icons_on_left" type="bool">
-		<_short>Icons on left</_short>
-		<_long>Displays the mute and set default icon on the left</_long>
-		<default>false</default>
-	</option>
-	<option name="mixer_layout" type="string">
-		<_short>Layout</_short>
-		<_long>Type of layout in which to arrange the mixer</_long>
-		<default>horizontal</default>
-		<desc>
-			<value>horizontal</value>
-			<_name>Horizontal</_name>
-		</desc>
-		<desc>
-			<value>vertical</value>
-			<_name>Vertical</_name>
-		</desc>
-	</option>
-	<option name="mixer_spacing" type="int">
-		<_short>Spacing between controls</_short>
-		<default>8</default>
-		<min>0</min>
-	</option>
-	<option name="mixer_left_click_action" type="string">
-		<_short>Left click action</_short>
-		<default>show_mixer</default>
-		<desc>
-			<value>show_mixer</value>
-			<_name>Show full mixer</_name>
-		</desc>
-		<desc>
-			<value>show_quick_target</value>
-			<_name>Show quick action target</_name>
-		</desc>
-		<desc>
-			<value>mute_quick_target</value>
-			<_name>Mute quick action target</_name>
-		</desc>
-	</option>
-	<option name="mixer_middle_click_action" type="string">
-		<_short>Middle click action</_short>
-		<default>mute_quick_target</default>
-		<desc>
-			<value>show_mixer</value>
-			<_name>Show full mixer</_name>
-		</desc>
-		<desc>
-			<value>show_quick_target</value>
-			<_name>Show quick action target</_name>
-		</desc>
-		<desc>
-			<value>mute_quick_target</value>
-			<_name>Mute quick action target</_name>
-		</desc>
-	</option>
-	<option name="mixer_right_click_action" type="string">
-		<_short>Right click action</_short>
-		<default>show_quick_target</default>
-		<desc>
-			<value>show_mixer</value>
-			<_name>Show full mixer</_name>
-		</desc>
-		<desc>
-			<value>show_quick_target</value>
-			<_name>Show quick action target</_name>
-		</desc>
-		<desc>
-			<value>mute_quick_target</value>
-			<_name>Mute quick action target</_name>
-		</desc>
-	</option>
-	<option name="mixer_icon_size" type="int">
-		<_short>Icon size</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	<option name="mixer_popup_icon_size" type="int">
-		<_short>Size of the icons in the popups</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	</group>
-	<group>
-	<_short>Brightness</_short>
-	<option name="brightness_popup_on_change" type="bool">
-		<_short>Popup on change</_short>
-		<default>true</default>
-	</option>
-	<option name="brightness_popup_timeout" type="double">
-		<_short>Popup timeout</_short>
-		<default>2.5</default>
-		<min>0</min>
-	</option>
-	<option name="brightness_slider_length" type="int">
-		<_short>Slider length</_short>
-		<default>300</default>
-		<min>1</min>
-	</option>
-	<option name="brightness_scroll_sensitivity" type="double">
-		<_short>Scroll sensitivity</_short>
-		<default>1</default>
-	</option>
-	<option name="brightness_invert_scroll" type="bool">
-		<_short>Invert scroll</_short>
-		<_long>
-			Inverts which scroll direction raises and lowers display brightness
-		</_long>
-		<default>false</default>
-	</option>
-	<option name="brightness_spacing" type="int">
-		<_short>Spacing between controls</_short>
-		<default>8</default>
-		<min>0</min>
-	</option>
-	<option name="brightness_icon_size" type="int">
-		<_short>Light icon size</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	</group>
-	<group>
-	<_short>Notifications</_short>
-	<option name="notifications_autohide_timeout" type="double">
-		<_short>Notifications Display Timeout</_short>
-		<_long>Set to negative value to disable.</_long>
-		<default>2.5</default>
-	</option>
-	<option name="notifications_critical_in_dnd" type="bool">
-		<_short>Always Show Critical notifications</_short>
-		<_long>Makes critical notifications to be shown even in DND mode.</_long>
-		<default>true</default>
-	</option>
-	<option name="notifications_icon_size" type="int">
-		<_short>Notifications Icon Size</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	</group>
-	<group>
-	<_short>Tray</_short>
-	<option name="tray_icon_size" type="int">
-		<_short>Default Icon Size</_short>
-		<default>0</default>
-		<min>0</min>
-	</option>
-	<option name="tray_spacing" type="int">
-		<_short>Space between tray icons</_short>
-		<default>5</default>
-		<min>0</min>
-	</option>
-	<option name="tray_rows_cols" type="int">
-		<_short>Number of rows (in horizontal panels) or columns (in vertical panels) in tray widget</_short>
-		<default>1</default>
-		<min>1</min>
-	</option>
-	<option name="tray_menu_on_middle_click" type="bool">
-		<_short>Middle Button Activates Menu</_short>
-		<_long>Mouse right button activates a tray item's secondary action instead of the item's menu.</_long>
-		<default>false</default>
-	</option>
-	</group>
-	<group>
-	<_short>Command Output</_short>
-	<option name="commands_output_max_chars" type="int">
-		<_short>Max Characters To Display</_short>
-		<_long>Max characters of command output to display.</_long>
-		<min>0</min>
-		<default>10</default>
-	</option>
-	<option name="commands" type="dynamic-list" type-hint="dict">
-		<short>Commands to run</short>
-		<entry prefix="command_output_" type="string" name="command">
-			<_short>Command</_short>
-			<_long>Command to run</_long>
-		</entry>
-		<entry prefix="command_output_tooltip_" type="string" name="tooltip_command">
-			<_short>Tooltip Command</_short>
-			<_long>The tooltip command is executed every time the tooltip is shown.</_long>
-			<default/>
-		</entry>
-		<entry prefix="command_output_period_" type="int" name="period">
-			<_short>Period</_short>
-			<_long>
-The command is launched cyclically with given period in seconds, updating the text displayed on the panel.
-Set to 0 to only run the command once on startup.
-Set to -1 to only run it by clicking the button.
-			</_long>
-			<default>0</default>
-			<min>-1</min>
-		</entry>
-		<entry prefix="command_output_icon_" type="string" name="icon">
-			<_short>Icon</_short>
-			<_long>Icon name to show. Leave empty to hide icon.</_long>
-			<default>text-x-script</default>
-		</entry>
-		<entry prefix="command_output_icon_size_" type="int" name="icon_size">
-			<_short>Icon Size</_short>
-			<default>0</default>
-			<min>0</min>
-		</entry>
-		<entry prefix="command_output_icon_position_" type="string" name="icon_position">
-			<_short>Icon Position</_short>
-			<desc>
-				<value>top</value>
-				<_name>Above Text</_name>
-			</desc>
-			<desc>
-				<value>bottom</value>
-				<_name>Below Text</_name>
-			</desc>
-			<desc>
-				<value>left</value>
-				<_name>Left</_name>
-			</desc>
-			<desc>
-				<value>right</value>
-				<_name>Right</_name>
-			</desc>
-			<default>left</default>
-		</entry>
-	</option>
-	</group>
-	<group>
-	<_short>Window List</_short>
-	<option name="middle_click_close" type="bool">
-		<_short>Middle Click Closes Windows</_short>
-		<default>false</default>
-	</option>
-	<option name="window_list_size" type="int">
-		<_short>Window List Size</_short>
-		<default>192</default>
-		<min>1</min>
-	</option>
-	<option name="window_list_icon_size" type="int">
-		<_short>Window List Icon Size</_short>
-		<default>16</default>
-		<min>1</min>
-	</option>
-	<option name="window_list_live_window_previews" type="bool">
-		<_short>Live Window Previews</_short>
-		<_long>Enable live window previews when hovering over application buttons in the window list instead of the title tooltip.</_long>
-		<default>false</default>
-	</option>
-	</group>
-	<group>
-	<_short>Workspace Switcher</_short>
-	<option name="workspace_switcher_layout" type="string">
-		<_short>Workspace switcher widget layout</_short>
-		<desc>
-			<value>row</value>
-			<_name>Current row</_name>
-		</desc>
-		<desc>
-			<value>grid</value>
-			<_name>Whole grid (small)</_name>
-		</desc>
-		<desc>
-			<value>grid_popover</value>
-			<_name>Whole grid (popover)</_name>
-		</desc>
-		<default>row</default>
-	</option>
-	<option name="workspace_switcher_target_size" type="double">
-		<_short>Target size for workspace switcher widget in pixels</_short>
-		<default>0</default>
-	</option>
-	<option name="workspace_switcher_render_views" type="bool">
-		<_short>Render rectangles for each window</_short>
-		<default>true</default>
-	</option>
-	</group>
+		<_short>Panel</_short>
+		<category>Shell</category>
+		<group>
+			<_short>General</_short>
+			<option name="css_path" type="string">
+				<_short>CSS Path</_short>
+				<default></default>
+			</option>
+			<option name="widgets_left" type="string">
+				<_short>Widgets Left</_short>
+				<default>menu spacing4 launchers window-list</default>
+			</option>
+			<option name="widgets_center" type="string">
+				<_short>Widgets Center</_short>
+				<default>none</default>
+			</option>
+			<option name="widgets_right" type="string">
+				<_short>Widgets Right</_short>
+				<default>volume network battery clock</default>
+			</option>
+			<option name="full_span" type="bool">
+				<_short>Anchor to edges</_short>
+				<_long>Wether the pannel should extend all the way to the left and right; or top and bottom depending on orientation.</_long>
+				<default>true</default>
+			</option>
+			<option name="center" type="bool">
+				<_short>Center panel contents</_short>
+				<_long>Ensure the panel’s contents are centered. Effectively:
+		If full_span is on, it will put the left and right widgets next to the center ones.
+		If full_span is off, both sides of the panel will take the same amount of space, so that the center widgets are at the middle of the screen. This will lead to unused space on the side that has the least space taken up by the widgets.</_long>
+				<default>false</default>
+			</option>
+			<option name="minimal_height" type="int">
+				<_short>Minimal height</_short>
+				<_long>Minimum height the panel takes.</_long>
+				<default>32</default>
+			</option>
+			<option name="minimal_width" type="int">
+				<_short>Minimal width</_short>
+				<_long>Minimum width the panel takes.</_long>
+				<default>32</default>
+			</option>
+			<option name="default_icon_size" type="int">
+				<_short>Default Icon Size</_short>
+				<_long>The default size of all icons, excluding those directly on the panel</_long>
+				<default>48</default>
+				<minimum>1</minimum>
+			</option>
+			<option name="autohide" type="bool">
+				<_short>Autohide</_short>
+				<default>false</default>
+			</option>
+			<option name="autohide_duration" type="int">
+				<_short>Autohide animation duration</_short>
+				<_long>Time (in milliseconds) the panel takes to expand and retract</_long>
+				<default>300</default>
+			</option>
+			<option name="autohide_show_delay" type="int">
+				<_short>Autohide show delay</_short>
+				<_long>Amount of time (in milliseconds) the cursor needs to be in the zone before showing.</_long>
+				<default>300</default>
+			</option>
+			<option name="autohide_hide_delay" type="int">
+				<_short>Autohide hide delay</_short>
+				<_long>Amount of time (in milliseconds) the cursor needs to be out of the zone before hiding.</_long>
+				<default>500</default>
+			</option>
+			<option name="outputs" type="string">
+				<_short>Outputs on which to show a panel instance</_short>
+				<_long>A comma separated list of output names on which to show panel instances. Set to * wildcard for all outputs.</_long>
+				<default>*</default>
+			</option>
+			<option name="position" type="string">
+				<_short>Panel Position</_short>
+				<default>top</default>
+				<desc>
+					<value>top</value>
+					<_name>Top</_name>
+				</desc>
+				<desc>
+					<value>bottom</value>
+					<_name>Bottom</_name>
+				</desc>
+				<desc>
+					<value>left</value>
+					<_name>Left</_name>
+				</desc>
+				<desc>
+					<value>right</value>
+					<_name>Right</_name>
+				</desc>
+			</option>
+			<option name="edge_margin" type="int">
+				<_short>Edge margin</_short>
+				<_long>Space between the panel the edge</_long>
+				<default>0</default>
+			</option>
+			<option name="mirror_margin" type="bool">
+				<_short>Mirror margin</_short>
+				<_long>Apply the margin to both the edge and the windows.</_long>
+				<default>true</default>
+			</option>
+			<option name="edge_hotspot_size" type="int">
+				<_short>Edge hotspot size</_short>
+				<_long>The distance to the edge of screen to place the cursor in to show the panel when it's hidden.</_long>
+				<default>20</default>
+			</option>
+			<option name="adjacent_edge_hotspot_size" type="int">
+				<_short>Ajacent edge hotspot size</_short>
+				<_long>The distance to the edge of adjacent screens to place the cursor in to show the panel when it's hidden.</_long>
+				<default>20</default>
+			</option>
+			<option name="layer" type="string">
+				<_short>Layer</_short>
+				<default>top</default>
+				<desc>
+					<value>top</value>
+					<_name>Top</_name>
+				</desc>
+				<desc>
+					<value>bottom</value>
+					<_name>Bottom</_name>
+				</desc>
+				<desc>
+					<value>overlay</value>
+					<_name>Overlay</_name>
+				</desc>
+				<desc>
+					<value>background</value>
+					<_name>Background</_name>
+				</desc>
+			</option>
+			<option name="force_show_popup" type="bool">
+				<_short>Force showing the popups</_short>
+				<_long>Show the popup over other windows, even if it and the panel would be hidden otherwise.</_long>
+				<default>true</default>
+			</option>
+			<option name="menus_change_motion" type="bool">
+				<_short>Change between open menu with mouse motion</_short>
+				<default>false</default>
+			</option>
+			<option name="background_color" type="string">
+				<_short>Background Color</_short>
+				<default>gtk_headerbar</default>
+			</option>
+		</group>
+		<group>
+			<_short>Launchers</_short>
+			<option name="launchers_spacing" type="int">
+				<_short>Launchers Spacing</_short>
+				<default>4</default>
+				<min>0</min>
+			</option>
+			<option name="launchers_size" type="int">
+				<_short>Launchers Icon Size</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+			<option name="launchers_rows_cols" type="int">
+				<_short>Number of rows (in horizontal panels) or columns (in vertical panels) in Launchers widget</_short>
+				<default>1</default>
+				<min>1</min>
+			</option>
+			<option name="launchers" type="dynamic-list" type-hint="dict">
+				<_short>Launchers</_short>
+				<_long>Launchers</_long>
+				<entry prefix="launcher_cmd_" type="string" name="cmd">
+					<_short>Command</_short>
+					<_long>Command</_long>
+					<hint>file</hint>
+				</entry>
+				<entry prefix="launcher_icon_" type="string" name="cmd">
+					<_short>Icon</_short>
+				</entry>
+				<entry prefix="launcher_label_" type="string" name="label">
+					<_short>Label</_short>
+				</entry>
+			</option>
+		</group>
+		<group>
+			<_short>Clock</_short>
+			<option name="clock_format" type="string">
+				<_short>Clock Format</_short>
+				<default>%e %A %H:%M</default>
+			</option>
+			<option name="clock_font" type="string">
+				<_short>Clock Font</_short>
+				<default>default</default>
+			</option>
+		</group>
+		<group>
+			<_short>Weather</_short>
+			<option name="weather_font" type="string">
+				<_short>Weather Font</_short>
+				<default>default</default>
+			</option>
+		</group>
+		<group>
+			<_short>Battery</_short>
+			<option name="battery_status" type="string">
+				<_short>Battery Status</_short>
+				<default>percentage</default>
+				<desc>
+					<value>icon</value>
+					<_name>Icon</_name>
+				</desc>
+				<desc>
+					<value>percentage</value>
+					<_name>Icon with Percentage</_name>
+				</desc>
+				<desc>
+					<value>full</value>
+					<_name>Full Information</_name>
+				</desc>
+				<desc>
+					<value>percentage_overlay</value>
+					<_name>Percentage over Icon</_name>
+				</desc>
+			</option>
+			<option name="battery_icon_size" type="int">
+				<_short>Battery Icon Size</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+			<option name="battery_icon_invert" type="bool">
+				<_short>Battery Icon Invert Color</_short>
+				<default>true</default>
+			</option>
+			<option name="battery_font" type="string">
+				<_short>Battery Font</_short>
+				<default>default</default>
+			</option>
+		</group>
+		<group>
+			<_short>Network</_short>
+			<option name="network_status_font" type="string">
+				<_short>Clock Font</_short>
+				<default>default</default>
+			</option>
+			<option name="network_icon_size" type="int">
+				<_short>Network Icon Size</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+			<option name="network_icon_invert_color" type="bool">
+				<_short>Network Icon Invert Color</_short>
+				<default>false</default>
+			</option>
+			<option name="network_status_use_color" type="bool">
+				<_short>Network Status Use Color</_short>
+				<default>false</default>
+			</option>
+			<option name="network_onclick_command" type="string">
+				<_short>On Click Command</_short>
+				<default>default</default>
+			</option>
+			<option name="network_no_label" type="bool">
+				<_short>No text</_short>
+				<default>false</default>
+			</option>
+		</group>
+		<group>
+			<_short>Menu</_short>
+			<option name="menu_fuzzy_search" type="bool">
+				<_short>Use Fuzzy Search in Menu</_short>
+				<default>true</default>
+			</option>
+			<option name="menu_icon" type="string">
+				<_short>Menu Icon</_short>
+				<hint>file</hint>
+				<default></default>
+			</option>
+			<option name="menu_icon_size" type="int">
+				<_short>Menu Icon Size</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+			<option name="menu_item_icon_size" type="int">
+				<_short>Menu item icon size</_short>
+				<default>48</default>
+				<min>0</min>
+			</option>
+			<option name="menu_category_icon_size" type="int">
+				<_short>Menu category icon size</_short>
+				<default>48</default>
+				<min>0</min>
+			</option>
+			<option name="menu_item_spacing" type="int">
+				<_short>Space between menu items</_short>
+				<default>8</default>
+				<min>0</min>
+			</option>
+			<option name="menu_min_category_width" type="int">
+				<_short>Menu Minimum Category Width</_short>
+				<default>200</default>
+				<min>50</min>
+				<max>400</max>
+			</option>
+			<option name="menu_min_content_width" type="int">
+				<_short>Menu Minimum Content Width</_short>
+				<default>500</default>
+				<min>100</min>
+				<max>5000</max>
+			</option>
+			<option name="menu_min_content_height" type="int">
+				<_short>Menu Minimum Content Height</_short>
+				<default>500</default>
+				<min>100</min>
+				<max>5000</max>
+			</option>
+			<option name="menu_list" type="bool">
+				<_short>Show Menu Applications as a List</_short>
+				<default>false</default>
+			</option>
+			<option name="menu_show_categories" type="bool">
+				<_short>Show Application Categories</_short>
+				<default>false</default>
+			</option>
+			<option name="menu_logout_command" type="string">
+				<_short>Menu Logout Command</_short>
+				<_long>If not specified, a default logout interface will be used.</_long>
+				<default></default>
+			</option>
+			<option name="logout_command" type="string">
+				<_short>Logout Button Command</_short>
+				<default>wayland-logout</default>
+			</option>
+			<option name="reboot_command" type="string">
+				<_short>Reboot Button Command</_short>
+				<default>systemctl reboot</default>
+			</option>
+			<option name="shutdown_command" type="string">
+				<_short>Shutdown Button Command</_short>
+				<default>systemctl poweroff</default>
+			</option>
+			<option name="suspend_command" type="string">
+				<_short>Suspend Button Command</_short>
+				<default>systemctl suspend</default>
+			</option>
+			<option name="hibernate_command" type="string">
+				<_short>Hibernate Button Command</_short>
+				<default>systemctl hibernate</default>
+			</option>
+			<option name="switchuser_command" type="string">
+				<_short>Switch User Button Command</_short>
+				<default>dm-tool switch-to-greeter</default>
+			</option>
+		</group>
+		<group>
+			<_short>Volume</_short>
+			<option name="volume_display_timeout" type="double">
+				<_short>Volume Display Timeout</_short>
+				<default>2.5</default>
+			</option>
+			<option name="volume_icon_size" type="int">
+				<_short>Volume Icon Size</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+			<option name="volume_scroll_sensitivity" type="double">
+				<_short>Volume Scroll Sensitivity</_short>
+				<default>0.05</default>
+			</option>
+		</group>
+		<group>
+			<_short>Audio mixer</_short>
+			<option name="mixer_quick_target_choice" type="string">
+				<_short>Quick action target</_short>
+				<_long>Which audio control will be the target of the quick actions (scrolling and muting on the widget)</_long>
+				<default>default_sink</default>
+				<desc>
+					<value>default_sink</value>
+					<_name>Default sink</_name>
+				</desc>
+				<desc>
+					<value>default_source</value>
+					<_name>Default source</_name>
+				</desc>
+				<desc>
+					<value>last_change</value>
+					<_name>Last changed volume</_name>
+				</desc>
+			</option>
+			<option name="mixer_popup_on_change" type="bool">
+				<_short>Pop up on change</_short>
+				<_long>Whether to show a popup with the new values upon a change to the quick action target</_long>
+				<default>true</default>
+			</option>
+			<option name="mixer_popup_timeout" type="double">
+				<_short>Popup timeout</_short>
+				<default>2.5</default>
+				<min>0.1</min>
+			</option>
+			<option name="mixer_slider_length" type="int">
+				<_short>Slider length</_short>
+				<default>300</default>
+				<min>1</min>
+			</option>
+			<option name="mixer_scroll_sensitivity" type="double">
+				<_short>Scroll sensitivity</_short>
+				<default>1</default>
+				<min>0</min>
+			</option>
+			<option name="mixer_invert_scroll" type="bool">
+				<_short>Invert scroll</_short>
+				<_long>Inverts which scroll direction raises and lowers volume</_long>
+				<default>false</default>
+			</option>
+			<option name="mixer_icons_on_left" type="bool">
+				<_short>Icons on left</_short>
+				<_long>Displays the mute and set default icon on the left</_long>
+				<default>false</default>
+			</option>
+			<option name="mixer_layout" type="string">
+				<_short>Layout</_short>
+				<_long>Type of layout in which to arrange the mixer</_long>
+				<default>horizontal</default>
+				<desc>
+					<value>horizontal</value>
+					<_name>Horizontal</_name>
+				</desc>
+				<desc>
+					<value>vertical</value>
+					<_name>Vertical</_name>
+				</desc>
+			</option>
+			<option name="mixer_spacing" type="int">
+				<_short>Spacing between controls</_short>
+				<default>8</default>
+				<min>0</min>
+			</option>
+			<option name="mixer_left_click_action" type="string">
+				<_short>Left click action</_short>
+				<default>show_mixer</default>
+				<desc>
+					<value>show_mixer</value>
+					<_name>Show full mixer</_name>
+				</desc>
+				<desc>
+					<value>show_quick_target</value>
+					<_name>Show quick action target</_name>
+				</desc>
+				<desc>
+					<value>mute_quick_target</value>
+					<_name>Mute quick action target</_name>
+				</desc>
+			</option>
+			<option name="mixer_middle_click_action" type="string">
+				<_short>Middle click action</_short>
+				<default>mute_quick_target</default>
+				<desc>
+					<value>show_mixer</value>
+					<_name>Show full mixer</_name>
+				</desc>
+				<desc>
+					<value>show_quick_target</value>
+					<_name>Show quick action target</_name>
+				</desc>
+				<desc>
+					<value>mute_quick_target</value>
+					<_name>Mute quick action target</_name>
+				</desc>
+			</option>
+			<option name="mixer_right_click_action" type="string">
+				<_short>Right click action</_short>
+				<default>show_quick_target</default>
+				<desc>
+					<value>show_mixer</value>
+					<_name>Show full mixer</_name>
+				</desc>
+				<desc>
+					<value>show_quick_target</value>
+					<_name>Show quick action target</_name>
+				</desc>
+				<desc>
+					<value>mute_quick_target</value>
+					<_name>Mute quick action target</_name>
+				</desc>
+			</option>
+			<option name="mixer_icon_size" type="int">
+				<_short>Icon size</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+			<option name="mixer_popup_icon_size" type="int">
+				<_short>Size of the icons in the popups</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+		</group>
+		<group>
+			<_short>Brightness</_short>
+			<option name="brightness_popup_on_change" type="bool">
+				<_short>Popup on change</_short>
+				<default>true</default>
+			</option>
+			<option name="brightness_popup_timeout" type="double">
+				<_short>Popup timeout</_short>
+				<default>2.5</default>
+				<min>0</min>
+			</option>
+			<option name="brightness_slider_length" type="int">
+				<_short>Slider length</_short>
+				<default>300</default>
+				<min>1</min>
+			</option>
+			<option name="brightness_scroll_sensitivity" type="double">
+				<_short>Scroll sensitivity</_short>
+				<default>1</default>
+			</option>
+			<option name="brightness_invert_scroll" type="bool">
+				<_short>Invert scroll</_short>
+				<_long>
+					Inverts which scroll direction raises and lowers display brightness
+				</_long>
+				<default>false</default>
+			</option>
+			<option name="brightness_spacing" type="int">
+				<_short>Spacing between controls</_short>
+				<default>8</default>
+				<min>0</min>
+			</option>
+			<option name="brightness_icon_size" type="int">
+				<_short>Light icon size</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+		</group>
+		<group>
+			<_short>Notifications</_short>
+			<option name="notifications_autohide_timeout" type="double">
+				<_short>Notifications Display Timeout</_short>
+				<_long>Set to negative value to disable.</_long>
+				<default>2.5</default>
+			</option>
+			<option name="notifications_critical_in_dnd" type="bool">
+				<_short>Always Show Critical notifications</_short>
+				<_long>Makes critical notifications to be shown even in DND mode.</_long>
+				<default>true</default>
+			</option>
+			<option name="notifications_icon_size" type="int">
+				<_short>Notifications Icon Size</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+		</group>
+		<group>
+			<_short>Tray</_short>
+			<option name="tray_icon_size" type="int">
+				<_short>Default Icon Size</_short>
+				<default>0</default>
+				<min>0</min>
+			</option>
+			<option name="tray_spacing" type="int">
+				<_short>Space between tray icons</_short>
+				<default>5</default>
+				<min>0</min>
+			</option>
+			<option name="tray_rows_cols" type="int">
+				<_short>Number of rows (in horizontal panels) or columns (in vertical panels) in tray widget</_short>
+				<default>1</default>
+				<min>1</min>
+			</option>
+			<option name="tray_menu_on_middle_click" type="bool">
+				<_short>Middle Button Activates Menu</_short>
+				<_long>Mouse right button activates a tray item's secondary action instead of the item's menu.</_long>
+				<default>false</default>
+			</option>
+		</group>
+		<group>
+			<_short>Command Output</_short>
+			<option name="commands_output_max_chars" type="int">
+				<_short>Max Characters To Display</_short>
+				<_long>Max characters of command output to display.</_long>
+				<min>0</min>
+				<default>10</default>
+			</option>
+			<option name="commands" type="dynamic-list" type-hint="dict">
+				<short>Commands to run</short>
+				<entry prefix="command_output_" type="string" name="command">
+					<_short>Command</_short>
+					<_long>Command to run</_long>
+				</entry>
+				<entry prefix="command_output_tooltip_" type="string" name="tooltip_command">
+					<_short>Tooltip Command</_short>
+					<_long>The tooltip command is executed every time the tooltip is shown.</_long>
+					<default/>
+				</entry>
+				<entry prefix="command_output_period_" type="int" name="period">
+					<_short>Period</_short>
+					<_long>
+		The command is launched cyclically with given period in seconds, updating the text displayed on the panel.
+		Set to 0 to only run the command once on startup.
+		Set to -1 to only run it by clicking the button.
+					</_long>
+					<default>0</default>
+					<min>-1</min>
+				</entry>
+				<entry prefix="command_output_icon_" type="string" name="icon">
+					<_short>Icon</_short>
+					<_long>Icon name to show. Leave empty to hide icon.</_long>
+					<default>text-x-script</default>
+				</entry>
+				<entry prefix="command_output_icon_size_" type="int" name="icon_size">
+					<_short>Icon Size</_short>
+					<default>0</default>
+					<min>0</min>
+				</entry>
+				<entry prefix="command_output_icon_position_" type="string" name="icon_position">
+					<_short>Icon Position</_short>
+					<desc>
+						<value>top</value>
+						<_name>Above Text</_name>
+					</desc>
+					<desc>
+						<value>bottom</value>
+						<_name>Below Text</_name>
+					</desc>
+					<desc>
+						<value>left</value>
+						<_name>Left</_name>
+					</desc>
+					<desc>
+						<value>right</value>
+						<_name>Right</_name>
+					</desc>
+					<default>left</default>
+				</entry>
+			</option>
+		</group>
+		<group>
+			<_short>Window List</_short>
+			<option name="middle_click_close" type="bool">
+				<_short>Middle Click Closes Windows</_short>
+				<default>false</default>
+			</option>
+			<option name="window_list_size" type="int">
+				<_short>Window List Size</_short>
+				<default>192</default>
+				<min>1</min>
+			</option>
+			<option name="window_list_icon_size" type="int">
+				<_short>Window List Icon Size</_short>
+				<default>16</default>
+				<min>1</min>
+			</option>
+			<option name="window_list_live_window_previews" type="bool">
+				<_short>Live Window Previews</_short>
+				<_long>Enable live window previews when hovering over application buttons in the window list instead of the title tooltip.</_long>
+				<default>false</default>
+			</option>
+		</group>
+		<group>
+			<_short>Workspace Switcher</_short>
+			<option name="workspace_switcher_layout" type="string">
+				<_short>Workspace switcher widget layout</_short>
+				<desc>
+					<value>row</value>
+					<_name>Current row</_name>
+				</desc>
+				<desc>
+					<value>grid</value>
+					<_name>Whole grid (small)</_name>
+				</desc>
+				<desc>
+					<value>grid_popover</value>
+					<_name>Whole grid (popover)</_name>
+				</desc>
+				<default>row</default>
+			</option>
+			<option name="workspace_switcher_target_size" type="double">
+				<_short>Target size for workspace switcher widget in pixels</_short>
+				<default>0</default>
+			</option>
+			<option name="workspace_switcher_render_views" type="bool">
+				<_short>Render rectangles for each window</_short>
+				<default>true</default>
+			</option>
+		</group>
 	</plugin>
 </wf-shell>
