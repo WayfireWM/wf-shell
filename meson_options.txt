@@ -1,30 +1,30 @@
 option(
-    'volume-widget',
-    type: 'feature',
-    value: 'auto',
-    description: 'Build pulseaudio volume widget',
+  'volume-widget',
+  type: 'feature',
+  value: 'auto',
+  description: 'Build pulseaudio volume widget',
 )
 option(
-    'wp-mixer-widget',
-    type: 'feature',
-    value: 'auto',
-    description: 'Build wireplumber mixer widget',
+  'wp-mixer-widget',
+  type: 'feature',
+  value: 'auto',
+  description: 'Build wireplumber mixer widget',
 )
 option(
-    'ddcutil',
-    type: 'feature',
-    value: 'auto',
-    description: 'Build external monitor support for brightness widget'
+  'ddcutil',
+  type: 'feature',
+  value: 'auto',
+  description: 'Build external monitor support for brightness widget'
 )
 option(
-    'wayland-logout',
-    type: 'boolean',
-    value: true,
-    description: 'Install wayland-logout',
+  'wayland-logout',
+  type: 'boolean',
+  value: true,
+  description: 'Install wayland-logout',
 )
 option(
-    'weather',
-    type: 'boolean',
-    value: false,
-    description: 'Install weather widgets and open-weather-fetch systemd service',
+  'weather',
+  type: 'boolean',
+  value: false,
+  description: 'Install weather widgets and open-weather-fetch systemd service',
 )

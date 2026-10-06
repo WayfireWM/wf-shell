@@ -1,14 +1,15 @@
 widget_sources = [
-    'plugin/clock.cpp',
-    'plugin/battery.cpp',
-    'plugin/password.cpp',
-    'plugin/instant.cpp',
-    'plugin/pin.cpp',
-    'plugin/fingerprint.cpp',
-    'plugin/mpris.cpp',
-    'plugin/user.cpp',
-    'plugin/network.cpp',
+  'plugin/clock.cpp',
+  'plugin/battery.cpp',
+  'plugin/password.cpp',
+  'plugin/instant.cpp',
+  'plugin/pin.cpp',
+  'plugin/fingerprint.cpp',
+  'plugin/mpris.cpp',
+  'plugin/user.cpp',
+  'plugin/network.cpp',
 ]
+
 deps = [
   gtklayershell,
   gtkmm,
@@ -29,14 +30,16 @@ if libpulse.found()
 endif
 
 if get_option('weather') == true
-  widget_sources += [
-    'plugin/weather.cpp',
-  ]
+  widget_sources += 'plugin/weather.cpp'
 endif
 
 executable(
   'wf-locker',
-  ['locker.cpp', 'lockscreen.cpp', 'timedrevealer.cpp'] + widget_sources,
+  widget_sources + [
+    'locker.cpp',
+    'lockscreen.cpp',
+    'timedrevealer.cpp'
+  ],
   dependencies: deps,
   install: true,
 )

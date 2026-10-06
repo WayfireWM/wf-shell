@@ -52,9 +52,7 @@ else
 endif
 
 if libpulse.found()
-  widget_sources += [
-    'widgets/volume.cpp',
-  ]
+  widget_sources += 'widgets/volume.cpp'
   deps += [libpulse, libgvc]
 else
   message('Pulseaudio not found, volume widget will not be available.')
@@ -72,9 +70,7 @@ else
 endif
 
 if get_option('weather') == true
-  widget_sources += [
-    'widgets/weather.cpp',
-  ]
+  widget_sources += 'widgets/weather.cpp'
 else
   message('Weather disabled, weather widgets and owf service not included.')
 endif
@@ -89,7 +85,7 @@ endif
 
 executable(
   'wf-panel',
-  ['panel.cpp'] + widget_sources,
+  widget_sources + 'panel.cpp',
   dependencies: deps,
   install: true,
 )

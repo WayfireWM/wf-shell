@@ -1,16 +1,16 @@
 project(
-	'wf-shell',
-	'c',
-	'cpp',
-	version: '0.11.1',
-	license: 'MIT',
-	meson_version: '>=0.51.0',
-	default_options: [
-		'cpp_std=c++17',
-		'c_std=c11',
-		'warning_level=2',
-		'werror=false',
-	],
+  'wf-shell',
+  'c',
+  'cpp',
+  version: '0.11.1',
+  license: 'MIT',
+  meson_version: '>=0.51.0',
+  default_options: [
+    'cpp_std=c++17',
+    'c_std=c11',
+    'warning_level=2',
+    'werror=false',
+  ],
 )
 
 wayfire = dependency('wayfire')
@@ -22,7 +22,7 @@ wfconfig = dependency('wf-config', version: '>=0.7.0') #TODO fallback submodule
 epoxy = dependency('epoxy')
 gtklayershell = dependency('gtk4-layer-shell-0', version: '>=1.3.0', required: false)
 if not gtklayershell.found()
-    gtklayershell = dependency('gtk4-layer-shell', fallback: ['gtk4-layer-shell'])
+  gtklayershell = dependency('gtk4-layer-shell', fallback: ['gtk4-layer-shell'])
 endif
 libpulse = dependency('libpulse', required: get_option('volume-widget'))
 libgvc = subproject('gvc', default_options: ['static=true'], required: get_option('volume-widget'))
@@ -37,37 +37,37 @@ gbm = dependency('gbm', required: false)
 drm = dependency('libdrm', required: false)
 
 if get_option('wayland-logout') == true
-	wayland_logout = subproject('wayland-logout')
+  wayland_logout = subproject('wayland-logout')
 endif
 
 if get_option('weather') == true
-	subproject('owf')
-	add_project_arguments('-DHAVE_WEATHER=1', language: 'cpp')
+  subproject('owf')
+  add_project_arguments('-DHAVE_WEATHER=1', language: 'cpp')
 endif
 
 if not gbm.found() or not drm.found()
-	message('Live window previews require gbm and libdrm dependencies')
+  message('Live window previews require gbm and libdrm dependencies')
 endif
 
 if libpulse.found()
-	libgvc = libgvc.get_variable('libgvc_dep')
-	add_project_arguments('-DHAVE_PULSE=1', language: 'cpp')
+  libgvc = libgvc.get_variable('libgvc_dep')
+  add_project_arguments('-DHAVE_PULSE=1', language: 'cpp')
 endif
 
 if wireplumber.found()
-	add_project_arguments('-DHAVE_WIREPLUMBER=1', language: 'cpp')
+  add_project_arguments('-DHAVE_WIREPLUMBER=1', language: 'cpp')
 endif
 
 if ddcutil.found()
-	add_project_arguments('-DHAVE_DDCUTIL=1', language: 'cpp')
+  add_project_arguments('-DHAVE_DDCUTIL=1', language: 'cpp')
 endif
 
 needs_libinotify = ['freebsd', 'dragonfly'].contains(host_machine.system())
 libinotify = dependency('libinotify', required: needs_libinotify)
 
 add_project_arguments(
-	['-Wno-pedantic', '-Wno-unused-parameter', '-Wno-parentheses'],
-	language: 'cpp',
+  ['-Wno-pedantic', '-Wno-unused-parameter', '-Wno-parentheses'],
+  language: 'cpp',
 )
 
 resource_dir = join_paths(get_option('prefix'), 'share', 'wf-shell')
