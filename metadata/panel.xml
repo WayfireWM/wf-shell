@@ -507,6 +507,19 @@ If full_span is off, both sides of the panel will take the same amount of space,
 		<default>300</default>
 		<min>1</min>
 	</option>
+	<option name="brightness_monitor_label" type="string">
+		<_short>Monitor naming</_short>
+		<_long>Type of name to use for the brightness controls of monitors</_long>
+		<default>model</default>
+		<desc>
+			<value>model</value>
+			<_name>Model name</_name>
+		</desc>
+		<desc>
+			<value>connector</value>
+			<_name>Connector</_name>
+		</desc>
+	</option>
 	<option name="brightness_scroll_sensitivity" type="double">
 		<_short>Scroll sensitivity</_short>
 		<default>1</default>

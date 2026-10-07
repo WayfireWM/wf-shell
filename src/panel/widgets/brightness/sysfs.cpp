@@ -50,7 +50,14 @@ class WfLightSysfsControl : public WfLightControl
         connector_name = connector_name.substr(0, connector_name.find("/"));
 
         scale.set_target_value(get_brightness());
-        label.set_text(get_name());
+
+        if (label_pref.value() == "connector")
+        {
+            label.set_text(connector_name);
+        } else // "model"
+        {
+            label.set_text(get_name());
+        }
     }
 
     std::string get_connector()
