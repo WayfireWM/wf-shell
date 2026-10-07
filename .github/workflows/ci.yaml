@@ -23,7 +23,7 @@ jobs:
             gtkmm4-dev \
             vala \
             gobject-introspection-dev \
-            ddcutil \
+            ddcutil-dev \
             pulseaudio-dev \
             pipewire-dev \
             wireplumber-dev \
