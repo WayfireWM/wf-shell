@@ -650,7 +650,9 @@ class WayfireToplevel::impl
         bool child_activated = false;
         for (auto c : get_children())
         {
-            if (window_list->toplevels[c]->get_state() & WF_TOPLEVEL_STATE_ACTIVATED)
+            auto it = window_list->toplevels.find(c);
+            if ((it != window_list->toplevels.end()) && it->second &&
+                (it->second->get_state() & WF_TOPLEVEL_STATE_ACTIVATED))
             {
                 child_activated = true;
                 break;
@@ -1000,11 +1002,22 @@ static void handle_toplevel_done(void *data, toplevel_t)
 static void remove_child_from_parent(WayfireToplevel::impl *impl, toplevel_t child)
 {
     auto parent = impl->get_parent();
-    auto& parent_toplevel = impl->window_list->toplevels[parent];
-    if (child && parent && parent_toplevel)
+    if (!child || !parent)
     {
-        auto& children = parent_toplevel->get_children();
-        children.erase(std::find(children.begin(), children.end(), child));
+        return;
+    }
+
+    auto it = impl->window_list->toplevels.find(parent);
+    if ((it == impl->window_list->toplevels.end()) || !it->second)
+    {
+        return;
+    }
+
+    auto& children = it->second->get_children();
+    auto child_it  = std::find(children.begin(), children.end(), child);
+    if (child_it != children.end())
+    {
+        children.erase(child_it);
     }
 }
 
@@ -1031,10 +1044,12 @@ static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t par
         return;
     }
 
-    if (impl->window_list->toplevels[parent])
+    remove_child_from_parent(impl, handle);
+
+    auto it = impl->window_list->toplevels.find(parent);
+    if ((it != impl->window_list->toplevels.end()) && it->second)
     {
-        auto& children = impl->window_list->toplevels[parent]->get_children();
-        children.push_back(handle);
+        it->second->get_children().push_back(handle);
     }
 
     impl->set_parent(parent);
