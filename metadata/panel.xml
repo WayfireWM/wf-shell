@@ -549,6 +549,11 @@ If full_span is off, both sides of the panel will take the same amount of space,
 	</group>
 	<group>
 	<_short>Tray</_short>
+	<option name="prefer_symbolic_tray_icons" type="bool">
+		<_short>Prefer Symbolic Tray Icons</_short>
+		<_long>Prefer symbolic icons for system tray items when available.</_long>
+		<default>false</default>
+	</option>
 	<option name="tray_icon_size" type="int">
 		<_short>Default Icon Size</_short>
 		<default>0</default>
