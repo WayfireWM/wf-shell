@@ -301,6 +301,54 @@ uint64_t WayfireWindowList::get_view_id_from_full_app_id(const std::string& app_
     }
 }
 
+bool WayfireWindowList::is_vertical() const
+{
+    return (panel_position.value() == PANEL_POSITION_LEFT) ||
+           (panel_position.value() == PANEL_POSITION_RIGHT);
+}
+
+void WayfireWindowList::update_layout()
+{
+    if (is_vertical())
+    {
+        scrolled_window.set_hexpand(false);
+        scrolled_window.set_vexpand(true);
+
+        scrolled_window.set_propagate_natural_width(false);
+        scrolled_window.set_propagate_natural_height(true);
+
+        scrolled_window.set_policy(
+            Gtk::PolicyType::NEVER,
+            Gtk::PolicyType::AUTOMATIC);
+    } else
+    {
+        scrolled_window.set_hexpand(true);
+        scrolled_window.set_vexpand(false);
+
+        scrolled_window.set_propagate_natural_width(true);
+        scrolled_window.set_propagate_natural_height(false);
+
+        scrolled_window.set_policy(
+            Gtk::PolicyType::AUTOMATIC,
+            Gtk::PolicyType::NEVER);
+    }
+
+    for (auto& t : toplevels)
+    {
+        if (t.second)
+        {
+            t.second->set_hide_text(is_vertical());
+        }
+    }
+
+    queue_allocate();
+}
+
+void WayfireWindowList::handle_config_reload()
+{
+    update_layout();
+}
+
 void WayfireWindowList::init(Gtk::Box *container)
 {
     auto gdk_display = gdk_display_get_default();
@@ -336,10 +384,8 @@ void WayfireWindowList::init(Gtk::Box *container)
 
     scrolled_window.add_css_class("window-list");
 
-    scrolled_window.set_hexpand(true);
     scrolled_window.set_child(*this);
-    scrolled_window.set_propagate_natural_width(true);
-    scrolled_window.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::NEVER);
+    update_layout();
     container->append(scrolled_window);
 }
 
@@ -349,54 +395,73 @@ void WayfireWindowList::set_top_widget(Gtk::Widget *top)
 
     if (layout->top_widget)
     {
-        /* Set original top_x to where the widget currently is, so that we don't
-         * mess with it before the real position is set */
-        this->layout->top_x = get_absolute_position(0, *top);
+        /* Start from the widget's current position so that it does not jump
+         * before the drag position is updated. */
+        this->layout->top_position = get_absolute_position(0, *top);
     }
 
-    set_top_x(layout->top_x);
+    set_top_position(layout->top_position);
 }
 
-void WayfireWindowList::set_top_x(int x)
+void WayfireWindowList::set_top_position(int position)
 {
-    /* Make sure that the widget doesn't go outside of the box */
     if (this->layout->top_widget)
     {
-        x = std::min(x, get_allocated_width() - layout->top_widget->get_allocated_width());
+        if (is_vertical())
+        {
+            position = std::min(position,
+                get_allocated_height() -
+                layout->top_widget->get_allocated_height());
+        } else
+        {
+            position = std::min(position,
+                get_allocated_width() -
+                layout->top_widget->get_allocated_width());
+        }
+
+        position = std::max(position, 0);
     }
 
-    if (this->layout->top_widget)
-    {
-        x = std::max(x, 0);
-    }
-
-    this->layout->top_x = x;
-
-    if (this->layout->top_widget)
-    {
-        // TODO Sensibly cause a reflow to force layout manager to move children
-    }
+    this->layout->top_position = position;
 
     queue_allocate();
     queue_draw();
 }
 
-int WayfireWindowList::get_absolute_position(int x, Gtk::Widget& ref)
+int WayfireWindowList::get_absolute_position(int position, Gtk::Widget& ref)
 {
     auto w = &ref;
     while (w && w != this)
     {
         auto allocation = w->get_allocation();
-        x += allocation.get_x();
-        w  = w->get_parent();
+
+        if (is_vertical())
+        {
+            position += allocation.get_y();
+        } else
+        {
+            position += allocation.get_x();
+        }
+
+        w = w->get_parent();
     }
 
-    return x;
+    return position;
 }
 
-Gtk::Widget*WayfireWindowList::get_widget_before(int x)
+Gtk::Widget*WayfireWindowList::get_widget_before(int position)
 {
-    Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
+    Gtk::Allocation given_point;
+
+    if (is_vertical())
+    {
+        given_point = Gtk::Allocation{
+            get_allocated_width() / 2, position, 1, 1};
+    } else
+    {
+        given_point = Gtk::Allocation{
+            position, get_allocated_height() / 2, 1, 1};
+    }
 
     /* Widgets are stored bottom to top, so we will return the bottom-most
      * widget at the given position */
@@ -420,9 +485,19 @@ Gtk::Widget*WayfireWindowList::get_widget_before(int x)
     return nullptr;
 }
 
-Gtk::Widget*WayfireWindowList::get_widget_at(int x)
+Gtk::Widget*WayfireWindowList::get_widget_at(int position)
 {
-    Gtk::Allocation given_point{x, get_allocated_height() / 2, 1, 1};
+    Gtk::Allocation given_point;
+
+    if (is_vertical())
+    {
+        given_point = Gtk::Allocation{
+            get_allocated_width() / 2, position, 1, 1};
+    } else
+    {
+        given_point = Gtk::Allocation{
+            position, get_allocated_height() / 2, 1, 1};
+    }
 
     /* Widgets are stored bottom to top, so we will return the bottom-most
      * widget at the given position */
@@ -451,6 +526,7 @@ void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1
 void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
     toplevels[toplevel] = std::make_unique<WayfireToplevel>(this, toplevel);
+    toplevels[toplevel]->set_hide_text(is_vertical());
 }
 
 void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *toplevel)

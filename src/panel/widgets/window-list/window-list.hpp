@@ -24,6 +24,7 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     wl_display *display;
     wl_registry *registry;
     WfOption<int> user_size{"panel/window_list_size"};
+    WfOption<std::string> panel_position{"panel/position"};
     std::shared_ptr<WayfireWindowListLayout> layout;
 
   public:
@@ -51,38 +52,42 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     wayfire_config *get_config();
 
     void init(Gtk::Box *container) override;
+    void handle_config_reload() override;
+    void update_layout();
+    bool is_vertical() const;
 
     /**
      * Set the widget which should always be rendered on top of the other child
      * widgets */
     void set_top_widget(Gtk::Widget *top = nullptr);
-    /** Set the absolute position of the top widget */
-    void set_top_x(int x);
+    /** Set the position of the top widget along the window-list axis */
+    void set_top_position(int position);
 
     /**
-     * @param x the x-axis position, relative to ref
-     * @param ref The widget that x is relative to. ref must be a child
+     * @param position the position along the window-list axis, relative to ref
+     * @param ref The widget that position is relative to. ref must be a child
      * widget of this box
-     * @return the position x, but relative to the box
+     * @return the position, relative to the window-list
      */
-    int get_absolute_position(int x, Gtk::Widget& ref);
+    int get_absolute_position(int position, Gtk::Widget& ref);
 
-    /** Find the direct child widget at the given box-relative coordinates,
-     * ignoring the top widget if possible, i.e if the top widget and some
-     * other widget are at the given coordinates, then the bottom widget will
-     * be returned
-     *
-     * @return The direct child widget or none if it doesn't exist
-     */
-    Gtk::Widget *get_widget_at(int x);
-    /** Find the direct child widget before the given box-relative coordinates,
-     * ignoring the top widget if possible, i.e if the top widget and some
-     * other widget are at the given coordinates, then the bottom widget will
-     * be returned
-     *
-     * @return The direct child widget or none if it doesn't exist
-     */
-    Gtk::Widget *get_widget_before(int x);
+/**
+ * Find the direct child widget at the given position along the window-list
+ * axis, ignoring the top widget if possible. If the top widget and another
+ * widget occupy the given position, the other widget will be returned.
+ *
+ * @return The direct child widget or nullptr if it doesn't exist
+ */
+    Gtk::Widget *get_widget_at(int position);
+
+/**
+ * Find the direct child widget before the given position along the window-list
+ * axis, ignoring the top widget if possible.
+ *
+ * @return The direct child widget or nullptr if it doesn't exist
+ */
+
+    Gtk::Widget *get_widget_before(int position);
 
     WfOption<bool> live_window_previews{"panel/window_list_live_window_previews"};
     void handle_new_wl_output(wl_output *output);
