@@ -22,8 +22,8 @@ class WfLightDdcaControl : public WfLightControl
 {
   private:
     DDCA_Display_Ref ref;
-    DDCA_Display_Info2 *info = nullptr;
-    std::string connector    = "...";
+    std::string connector;
+    std::string name;
     int max;
     double brightness_wish;
     bool wish_pending = false;
@@ -34,28 +34,11 @@ class WfLightDdcaControl : public WfLightControl
     }
 
   public:
-    WfLightDdcaControl(WayfireBrightness *parent, DDCA_Display_Ref _ref) : WfLightControl(parent)
+    WfLightDdcaControl(WayfireBrightness *parent, const DdcaSurveillor::DisplayData& data) :
+        WfLightControl(parent), ref(data.ref), connector(data.connector), name(data.name), max(data.max),
+        brightness_wish(data.brightness)
     {
-        ref = _ref;
-        DDCA_Status status;
-
-        // we want Info2 for the connector name
-        status = ddca_get_display_info2(ref, &info);
-        show_err("open display", status);
-
-        assert(info != nullptr);
-        // drm_card_connector is something like cardX-<connector-name>
-        connector = std::string(info->drm_card_connector);
-        connector = connector.substr(connector.find("-") + 1, connector.size());
-
-        DDCA_Display_Handle handle;
-        ddca_open_display2(info->dref, false, &handle);
-
-        DDCA_Non_Table_Vcp_Value value;
-        status = ddca_get_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, &value);
-        max    = value.mh << 8 | value.ml;
-        ddca_close_display(handle);
-        scale.set_target_value(get_brightness());
+        scale.set_target_value(brightness);
         update_parent_icon();
         label.set_text(get_name());
 
@@ -72,9 +55,7 @@ class WfLightDdcaControl : public WfLightControl
     }
 
     ~WfLightDdcaControl()
-    {
-        free(info);
-    }
+    {}
 
     std::string get_connector()
     {
@@ -83,13 +64,6 @@ class WfLightDdcaControl : public WfLightControl
 
     std::string get_name()
     {
-        auto name = std::string(info->model_name);
-
-        if (name == "")
-        {
-            name = "Unnamed " + connector + " display";
-        }
-
         return name;
     }
 
@@ -118,7 +92,7 @@ class WfLightDdcaControl : public WfLightControl
         double target = control->brightness_wish;
 
         DDCA_Display_Handle handle;
-        DDCA_Status status = ddca_open_display2(control->info->dref, false, &handle);
+        DDCA_Status status = ddca_open_display2(control->ref, false, &handle);
         show_err("open display", status);
 
         uint16_t value = (uint16_t)(control->get_max() * target);
@@ -142,7 +116,7 @@ class WfLightDdcaControl : public WfLightControl
     double get_brightness()
     {
         DDCA_Display_Handle handle;
-        DDCA_Status status = ddca_open_display2(info->dref, false, &handle);
+        DDCA_Status status = ddca_open_display2(ref, false, &handle);
         show_err("open display", status);
 
         DDCA_Non_Table_Vcp_Value value;
@@ -161,16 +135,27 @@ DdcaSurveillor::DdcaSurveillor()
     mon_ch_sig = WayfirePanelApp::get().signal_monitor_list_changed().connect([=] ()
     {
         std::cout << "Monitors changed" << std::endl;
-        rescan_mccs_monitors(0, 0, 0);
+        request_rescan();
     });
 
-    // waiting for idle means DdcaSurveillor will be initialised
-    Glib::signal_idle().connect_once([=] () { rescan_mccs_monitors(0, 0, 0); });
+    scan_done_sig = scan_done.connect([this] () { apply_scan_result(); });
+    scan_thread = std::thread(&DdcaSurveillor::scan_displays, this);
+    request_rescan();
 }
 
 DdcaSurveillor::~DdcaSurveillor()
 {
     mon_ch_sig.disconnect();
+    scan_done_sig.disconnect();
+    {
+        std::lock_guard<std::mutex> lock(scan_mutex);
+        stopping = true;
+    }
+    scan_condition.notify_one();
+    if (scan_thread.joinable())
+    {
+        scan_thread.join();
+    }
     clean_controls();
 }
 
@@ -182,30 +167,105 @@ void DdcaSurveillor::clean_controls()
     }
 }
 
-void DdcaSurveillor::rescan_mccs_monitors(const int pos, const int rem, const int add)
+void DdcaSurveillor::request_rescan()
 {
-    ddca_redetect_displays();
+    {
+        std::lock_guard<std::mutex> lock(scan_mutex);
+        scan_requested = true;
+    }
+    scan_condition.notify_one();
+}
+
+void DdcaSurveillor::scan_displays()
+{
+    std::unique_lock<std::mutex> lock(scan_mutex);
+    while (!stopping)
+    {
+        scan_condition.wait(lock, [this] () { return scan_requested || stopping; });
+        if (stopping)
+        {
+            return;
+        }
+
+        scan_requested = false;
+        lock.unlock();
+
+        std::vector<DisplayData> result;
+        ddca_redetect_displays();
+
+        DDCA_Display_Info_List *display_list = nullptr;
+        ddca_get_display_info_list2(false, &display_list);
+        if (display_list)
+        {
+            for (int i = 0; i < display_list->ct; i++)
+            {
+                auto& display = display_list->info[i];
+                DDCA_Display_Info2 *info = nullptr;
+                if (ddca_get_display_info2(display.dref, &info) != DDCRC_OK || !info)
+                {
+                    free(info);
+                    continue;
+                }
+
+                DDCA_Display_Handle handle;
+                DDCA_Non_Table_Vcp_Value value;
+                auto open_status = ddca_open_display2(display.dref, false, &handle);
+                auto value_status = open_status == DDCRC_OK ?
+                    ddca_get_non_table_vcp_value(handle, VCP_BRIGHTNESS_CODE, &value) : open_status;
+                if (value_status != DDCRC_OK)
+                {
+                    if (open_status == DDCRC_OK)
+                    {
+                        ddca_close_display(handle);
+                    }
+                    free(info);
+                    continue;
+                }
+
+                ddca_close_display(handle);
+                auto connector = std::string(info->drm_card_connector);
+                connector = connector.substr(connector.find("-") + 1);
+                auto name = std::string(info->model_name);
+                if (name.empty())
+                {
+                    name = "Unnamed " + connector + " display";
+                }
+                result.push_back({display.dref, connector, name, value.mh << 8 | value.ml,
+                    (value.sh << 8 | value.sl) / 100.0});
+                free(info);
+            }
+            ddca_free_display_info_list(display_list);
+        }
+
+        lock.lock();
+        scan_result = std::move(result);
+        lock.unlock();
+        scan_done.emit();
+        lock.lock();
+    }
+}
+
+void DdcaSurveillor::apply_scan_result()
+{
+    std::vector<DisplayData> result;
+    {
+        std::lock_guard<std::mutex> lock(scan_mutex);
+        result = std::move(scan_result);
+    }
+
     // remove monitor controls from the widgets
     instance->clean_controls();
-    auto display = Gdk::Display::get_default();
-
-    DDCA_Display_Info_List *display_list = NULL;
-    ddca_get_display_info_list2(false, &display_list);
-
-    for (int i = 0; i < display_list->ct; i++)
+    for (const auto& data : result)
     {
-        auto ref = display_list->info[i].dref;
-        instance->ref_to_controls[ref];
+        instance->ref_to_controls[data.ref];
 
         for (auto widget : instance->widgets)
         {
-            auto control = std::make_shared<WfLightDdcaControl>(widget, ref);
-            instance->ref_to_controls[ref].push_back(control);
+            auto control = std::make_shared<WfLightDdcaControl>(widget, data);
+            instance->ref_to_controls[data.ref].push_back(control);
             widget->add_control(control);
         }
     }
-
-    ddca_free_display_info_list(display_list);
 }
 
 void DdcaSurveillor::catch_up_widget(WayfireBrightness *widget)
