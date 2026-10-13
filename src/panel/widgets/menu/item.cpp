@@ -6,6 +6,7 @@
 WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app) :
     Gtk::FlowBoxChild(), menu(_menu), app_info(app)
 {
+    overlay.set_child(box);
     image.set((const Glib::RefPtr<const Gio::Icon>&)app->get_icon());
     image.add_css_class("default-icon");
     label.set_text(app->get_name());
@@ -16,8 +17,8 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     extra_actions_button.set_direction(Gtk::ArrowType::RIGHT);
     extra_actions_button.set_has_frame(false);
 
-    box.set_expand(false);
-    box.add_css_class("app-button");
+    box.set_expand(true);
+    overlay.add_css_class("app-button");
 
     auto left_click_g  = Gtk::GestureClick::create();
     auto right_click_g = Gtk::GestureClick::create();
@@ -52,59 +53,67 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
         left_click_g->set_state(Gtk::EventSequenceState::DENIED);
     }));
 
-    if (menu->menu_list)
+    /* Image and label in widget proper */
+    box.append(image);
+    box.append(label);
+
+    box.add_controller(left_click_g);
+    box.add_controller(right_click_g);
+    box.add_controller(long_press_g);
+    /* Alternatives in the corner */
+    overlay.add_overlay(extra_actions_button);
+
+    overlay.set_hexpand(true);
+    label.set_hexpand(true);
+    image.set_hexpand(false);
+    label.set_halign(Gtk::Align::FILL);
+    box.set_halign(Gtk::Align::FILL);
+    box.set_hexpand(true);
+    set_hexpand(true);
+
+    auto menu_list_callback = [=] ()
     {
-        label.set_hexpand(true);
-        label.set_halign(Gtk::Align::FILL);
-        label.set_halign(Gtk::Align::START);
-        label.set_xalign(0.0);
-        list_item.set_hexpand(true);
-        box.set_hexpand(true);
-        set_hexpand(true);
-        box.set_orientation(Gtk::Orientation::HORIZONTAL);
-        extra_actions_button.set_halign(Gtk::Align::END);
-        extra_actions_button.set_icon_name("arrow-right");
-        button.add_css_class("flat");
-
-        list_item.append(image);
-        list_item.append(label);
-        button.set_child(list_item);
-
-        list_item.add_controller(left_click_g);
-        list_item.add_controller(right_click_g);
-        list_item.add_controller(long_press_g);
-
-        box.append(button);
-        box.append(extra_actions_button);
-
-        set_child(box);
-    } else
-    {
-        label.set_max_width_chars(0);
-        box.set_orientation(Gtk::Orientation::VERTICAL);
-        box.append(image);
-        if (app->list_actions().size() == 0)
+        if (menu_list.value())
         {
-            button.set_child(box);
-            button.add_css_class("flat");
-            set_child(button);
+            label.set_xalign(0.0);
+            label.set_max_width_chars(100);
+            box.set_orientation(Gtk::Orientation::HORIZONTAL);
+            extra_actions_button.set_direction(Gtk::ArrowType::RIGHT);
+            extra_actions_button.set_icon_name("arrow-right");
+            extra_actions_button.set_halign(Gtk::Align::END);
+            extra_actions_button.set_valign(Gtk::Align::CENTER);
         } else
         {
-            extra_actions_button.set_child(box);
-            extra_actions_button.add_css_class("flat");
-            set_child(extra_actions_button);
+            label.set_xalign(0.5);
+            label.set_max_width_chars(0);
+            box.set_orientation(Gtk::Orientation::VERTICAL);
+            std::string position = panel_position.value();
+            if (position == "bottom")
+            {
+                extra_actions_button.set_direction(Gtk::ArrowType::UP);
+                extra_actions_button.set_icon_name("arrow-up");
+            } else
+            {
+                extra_actions_button.set_direction(Gtk::ArrowType::DOWN);
+                extra_actions_button.set_icon_name("arrow-down");
+            }
+
+            extra_actions_button.set_halign(Gtk::Align::END);
+            extra_actions_button.set_valign(Gtk::Align::END);
         }
+    };
 
-        box.add_controller(left_click_g);
-        box.add_controller(right_click_g);
-        box.add_controller(long_press_g);
-
-        box.append(label);
+    if (app->list_actions().size() == 0)
+    {
+        extra_actions_button.hide();
     }
+
+    menu_list_callback();
+    menu_list.set_callback(menu_list_callback);
+    panel_position.set_callback(menu_list_callback);
 
     m_menu  = Gio::Menu::create();
     actions = Gio::SimpleActionGroup::create();
-    extra_actions_button.hide();
 
     for (auto action : app->list_actions())
     {
@@ -124,8 +133,6 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
         }));
         m_menu->append_item(menu_item);
         actions->add_action(action_obj);
-
-        extra_actions_button.show();
     }
 
     extra_actions_button.set_menu_model(m_menu);
@@ -139,6 +146,7 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
         tooltip->set_text(app->get_name());
         return true;
     }, false));
+    set_child(overlay);
 }
 
 WfMenuItem::~WfMenuItem()

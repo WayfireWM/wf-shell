@@ -1,4 +1,5 @@
 #pragma once
+#include <gtkmm/overlay.h>
 #include <giomm/desktopappinfo.h>
 #include <giomm/menu.h>
 #include <giomm/simpleactiongroup.h>
@@ -8,6 +9,8 @@
 #include <gtkmm/flowboxchild.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
+
+#include "wf-option-wrap.hpp"
 
 class WayfireMenu;
 using AppInfo = Glib::RefPtr<Gio::DesktopAppInfo>;
@@ -31,14 +34,18 @@ class WfMenuItem : public Gtk::FlowBoxChild
     }
 
   private:
+    WfOption<bool> menu_list{"panel/menu_list"};
+    WfOption<std::string> panel_position{"panel/position"};
+
+
     WayfireMenu *menu;
-    Gtk::Box box, list_item;
+    Gtk::Box box;
     Gtk::Image image;
     Gtk::Label label;
     Glib::RefPtr<Gio::Menu> m_menu;
     Glib::RefPtr<Gio::SimpleActionGroup> actions;
-    Gtk::Button button;
     Gtk::MenuButton extra_actions_button;
+    Gtk::Overlay overlay;
     std::vector<sigc::connection> signals;
 
     bool has_actions = false;
