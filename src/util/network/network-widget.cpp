@@ -503,6 +503,12 @@ void NetworkControlWidget::remove_vpn(std::string path)
 
 void NetworkControlWidget::add_device(std::shared_ptr<Network> network)
 {
+    if (network == nullptr)
+    {
+        std::cerr << "Network widget got a nullptr." << std::endl;
+        return;
+    }
+
     /* GUI doesn't want our null-device */
     if (network->get_path() == "/")
     {
