@@ -298,10 +298,23 @@ std::string StatusNotifierItem::dbus_name_as_prefix()
         map[CHARS_IN[i]] = CHARS_OUT[i];
     }
 
+    // Well-known names (e.g. Electron's "org.freedesktop.StatusNotifierItem-2916-1") contain
+    // letters and '-', which map[] doesn't cover: map[c] would insert '\0' and the prefix
+    // would no longer match the inserted action group, so menu clicks did nothing.
     std::stringstream ss;
     for (int i = 0; i < (int)dbus_name.length(); i++)
     {
-        ss << map[dbus_name[i]];
+        const char c = dbus_name[i];
+        if (map.count(c))
+        {
+            ss << map[c];
+        } else if (((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')))
+        {
+            ss << c;
+        } else
+        {
+            ss << 'y';
+        }
     }
 
     return ss.str();
