@@ -362,8 +362,16 @@ void NetworkManager::add_network(std::string path)
             [=] (Glib::RefPtr<Gio::AsyncResult> & result)
         {
             auto wifi_proxy = Gio::DBus::Proxy::create_finish(result);
-            all_devices.emplace(path, std::make_shared<WifiNetwork>(path, device_proxy, wifi_proxy));
-            device_added.emit(all_devices[path]);
+            auto [iterator,
+                  inserted] =
+                all_devices.emplace(path, std::make_shared<WifiNetwork>(path, device_proxy, wifi_proxy));
+            if (inserted)
+            {
+                device_added.emit(all_devices[path]);
+            } else
+            {
+                std::cerr << "Did not manage to insert Wifi Device" << std::endl;
+            }
         });
 
         return;
