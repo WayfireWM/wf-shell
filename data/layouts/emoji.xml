@@ -1,0 +1,2158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkBox" id="keyboard_main">
+    <child>
+      <object class="GtkScrolledWindow">
+        <property name="vexpand">true</property>
+        <property name="hexpand">true</property>
+        <child>
+          <object class="GtkFlowBox">
+            <property name="valign">start</property>
+            <property name="max-children-per-line">10</property>
+            <property name="min-children-per-line">5</property>
+            <property name="selection-mode">none</property>
+            <property name="row-spacing">4</property>
+            <property name="column-spacing">4</property>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😀</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😁</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😂</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😃</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😄</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😅</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😆</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😇</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😈</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😉</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😊</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😋</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😌</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😍</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😎</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😏</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😐</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😑</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😒</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😓</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😔</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😕</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😖</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😗</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😘</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😙</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😚</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😛</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😜</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😝</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😞</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😟</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😠</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😡</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😢</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😣</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😤</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😥</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😦</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😧</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😨</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😩</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😪</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😫</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😬</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😭</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😮</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😯</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😰</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😱</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😲</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😳</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😴</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😵</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😶</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😷</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😸</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😹</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😺</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😻</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😼</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😽</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😾</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">😿</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🙀</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🙁</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🙂</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🙃</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🙄</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🙅</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🙆</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🙎</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌑</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌒</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌓</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌔</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌕</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌖</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌗</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌘</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌚</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌛</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌜</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌝</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌞</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🌬</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🎔</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🏻</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🏼</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🏽</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🏾</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🏿</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐭</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐮</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐯</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐰</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐱</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐲</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐴</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐵</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐶</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐷</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐸</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐹</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐺</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐻</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🐼</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💆</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💑</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💓</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💔</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💕</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💖</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💗</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💘</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💙</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💚</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💛</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💜</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💝</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💞</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💟</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💢</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💤</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💥</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💦</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💨</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💫</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">💯</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">📧</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔅</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔆</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔗</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔞</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔠</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔡</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔢</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔣</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔤</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🔰</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕅</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕉</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕐</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕑</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕒</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕓</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕔</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕕</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕖</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕗</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕘</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕙</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕚</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕛</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕜</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕝</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕞</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕟</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕠</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕡</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕢</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕣</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕤</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕥</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕦</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🕧</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🖤</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🗚</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🗛</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🚬</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🚭</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🚮</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🚯</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🚰</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🚱</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🚹</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🚺</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🚼</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🛉</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🛊</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤍</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤎</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤐</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤑</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤒</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤓</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤔</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤕</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤖</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤗</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤠</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤡</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤢</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤤</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤥</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤦</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤧</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤨</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤩</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤪</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤫</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤬</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤭</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤮</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🤯</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥰</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥱</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥲</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥳</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥴</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥵</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥶</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥸</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥹</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🥺</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🦁</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🦄</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🦊</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🦒</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🦓</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🦰</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🦱</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🦲</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🦳</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🧐</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">🧡</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">☙</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">☫</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">☮</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">☹</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">☺</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">☻</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♡</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♥</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♲</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♳</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♴</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♵</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♶</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♷</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♸</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♹</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♺</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♻</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♼</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♽</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">♿</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚀</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚁</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚂</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚃</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚄</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚅</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚛</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚭</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚮</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⚯</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⛢</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⛯</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⛻</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">⛼</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">❗</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">❣</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">❤</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">❥</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">❦</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                 <property name="label">❧</property>
+                 <property name="width-request">50</property>
+                 <property name="height-request">50</property>
+                 <style><class name="emoji"/></style>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
