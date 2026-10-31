@@ -78,7 +78,12 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
         list_item.append(label);
         button.set_child(list_item);
 
-        list_item.add_controller(left_click_g);
+        // GtkButton consumes the primary click itself (GTK 4.18), so a click gesture on its
+        // child never fires: launch from the button's own clicked signal instead.
+        signals.push_back(button.signal_clicked().connect([=] ()
+        {
+            on_click();
+        }));
         list_item.add_controller(right_click_g);
         list_item.add_controller(long_press_g);
 
