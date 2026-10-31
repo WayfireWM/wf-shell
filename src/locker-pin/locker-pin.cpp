@@ -208,7 +208,7 @@ std::string WayfirePinChangeApp::sha512(const std::string input)
 /* Starting point */
 int main(int argc, char **argv)
 {
-    for (int count = 0; count < argc; count++)
+    for (int count = 1; count < argc; count++)
     {
         if ((strcmp(argv[count], "--version") == 0) || (strcmp(argv[count], "-v") == 0))
         {
