@@ -282,27 +282,57 @@ std::string StatusNotifierItem::get_unique_name()
 }
 
 /*
- *  DBUS names are in the format of :1.61
- *  I have no idea what this means, I frankly don't care, but I need a way to generate an acceptable action
- * group name from this
- *  such that it always gets the same unique output for the same input
+ * Turn DBUS names into a partial action name, to correctly namespace different tray items
  */
-
-const std::string CHARS_IN  = ":0123456789.";
-const std::string CHARS_OUT = "zabcdefghijk";
 std::string StatusNotifierItem::dbus_name_as_prefix()
 {
-    std::unordered_map<char, char> map;
-    for (int i = 0; i < (int)CHARS_IN.length(); i++)
-    {
-        map[CHARS_IN[i]] = CHARS_OUT[i];
-    }
-
+    assert(!dbus_name.empty() &&
+        "StatusNotifierItem::dbus_name cannot be empty when generating action prefix");
     std::stringstream ss;
-    for (int i = 0; i < (int)dbus_name.length(); i++)
+    if (dbus_name[0] == ':')
     {
-        ss << map[dbus_name[i]];
+        const std::string CHARS_IN  = ":0123456789.";
+        const std::string CHARS_OUT = "zabcdefghijk";
+
+        std::unordered_map<char, char> map;
+        for (size_t i = 0; i < CHARS_IN.length(); i++)
+        {
+            map[CHARS_IN[i]] = CHARS_OUT[i];
+        }
+
+        for (char c : dbus_name)
+        {
+            if (map.count(c))
+            {
+                ss << map[c];
+            } else
+            {
+                ss << 'l';
+            }
+        }
+    } else
+    {
+        /* Cover well-known paths */
+        for (char c : dbus_name)
+        {
+            if (((c >= 'a') && (c <= 'z')) ||
+                ((c >= 'A') && (c <= 'Z')) ||
+                ((c >= '0') && (c <= '9')))
+            {
+                ss << c;
+            } else
+            {
+                ss << '-';
+            }
+        }
     }
 
-    return ss.str();
+    std::string prefix = ss.str();
+
+    if (!prefix.empty() && (std::isdigit(prefix[0]) || (prefix[0] == '-')))
+    {
+        prefix = "sni-" + prefix;
+    }
+
+    return prefix;
 }

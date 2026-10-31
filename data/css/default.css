@@ -26,6 +26,13 @@
     background-color: #8883;
 }
 
+.wf-panel .tray flowboxchild {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
 .wf-panel .window-button:hover {
     background-color: #8882;
 }
