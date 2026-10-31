@@ -13,41 +13,26 @@ WpCommon::WpCommon()
 {
     // creates the core, object interests and connects signals
 
-    std::cout << "Initialising wireplumber\n";
     wp_init(WP_INIT_PIPEWIRE);
     core = wp_core_new(NULL, NULL, NULL);
     object_manager = wp_object_manager_new();
 
+    std::vector<std::string> interests_names =
+    {"Audio/Sink", "Audio/Source", "Stream/Output/Audio", "Stream/Input/Audio"};
+
     // register interests in sinks, sources and streams
-    WpObjectInterest *sink_interest = wp_object_interest_new_type(WP_TYPE_NODE);
-    wp_object_interest_add_constraint(
-        sink_interest,
-        WP_CONSTRAINT_TYPE_PW_PROPERTY,
-        "media.class",
-        WP_CONSTRAINT_VERB_EQUALS,
-        g_variant_new_string("Audio/Sink"));
+    for (auto i : interests_names)
+    {
+        WpObjectInterest *interest = wp_object_interest_new_type(WP_TYPE_NODE);
+        wp_object_interest_add_constraint(
+            interest,
+            WP_CONSTRAINT_TYPE_PW_PROPERTY,
+            "media.class",
+            WP_CONSTRAINT_VERB_EQUALS,
+            g_variant_new_string(i.c_str()));
 
-    wp_object_manager_add_interest_full(object_manager, sink_interest);
-
-    WpObjectInterest *source_interest = wp_object_interest_new_type(WP_TYPE_NODE);
-    wp_object_interest_add_constraint(
-        source_interest,
-        WP_CONSTRAINT_TYPE_PW_PROPERTY,
-        "media.class",
-        WP_CONSTRAINT_VERB_EQUALS,
-        g_variant_new_string("Audio/Source"));
-
-    wp_object_manager_add_interest_full(object_manager, source_interest);
-
-    WpObjectInterest *stream_interest = wp_object_interest_new_type(WP_TYPE_NODE);
-    wp_object_interest_add_constraint(
-        stream_interest,
-        WP_CONSTRAINT_TYPE_PW_PROPERTY,
-        "media.class",
-        WP_CONSTRAINT_VERB_EQUALS,
-        g_variant_new_string("Stream/Output/Audio"));
-
-    wp_object_manager_add_interest_full(object_manager, stream_interest);
+        wp_object_manager_add_interest_full(object_manager, interest);
+    }
 
     // load plugins
     wp_core_load_component(
@@ -153,7 +138,11 @@ void WpCommon::add_object_to_widget(WpPipewireObject *object, WayfireMixer *widg
     } else if (type == "Stream/Output/Audio")
     {
         which_box = &(widget->streams_box);
-        control   = new MixerControl(object, (WayfireMixer*)widget);
+        control   = new MixerControl(object, widget);
+    } else if (type == "Stream/Input/Audio")
+    {
+        which_box = &(widget->captures_box);
+        control   = new MixerControl(object, widget, mic_volume_icons);
     } else
     {
         std::cout << "Could not match pipewire object media class, ignoring\n";
