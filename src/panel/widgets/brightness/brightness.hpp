@@ -1,9 +1,12 @@
 #include "wf-popover.hpp"
 #include <gtkmm.h>
+#include <glibmm/dispatcher.h>
 #include <memory>
 #include <sigc++/connection.h>
 #include <filesystem>
 #include <thread>
+#include <condition_variable>
+#include <mutex>
 
 #ifdef HAVE_DDCUTIL
 extern "C" {
@@ -107,15 +110,35 @@ class SysfsSurveillor : public LightManager
 #ifdef HAVE_DDCUTIL
 class DdcaSurveillor : public LightManager
 {
+  public:
+    struct DisplayData
+    {
+        DDCA_Display_Ref ref;
+        std::string connector;
+        std::string name;
+        int max;
+        double brightness;
+    };
+
   private:
     DdcaSurveillor();
     void catch_up_widget(WayfireBrightness *widget);
     void strip_widget(WayfireBrightness *widget);
-    static void rescan_mccs_monitors(const int pos, const int rem, const int add);
+    void request_rescan();
+    void scan_displays();
+    void apply_scan_result();
     void clean_controls();
 
     sigc::connection mon_ch_sig;
+    sigc::connection scan_done_sig;
+    Glib::Dispatcher scan_done;
     static inline std::unique_ptr<DdcaSurveillor> instance;
+    std::thread scan_thread;
+    std::mutex scan_mutex;
+    std::condition_variable scan_condition;
+    bool scan_requested = false;
+    bool stopping = false;
+    std::vector<DisplayData> scan_result;
 
   public:
     ~DdcaSurveillor();
