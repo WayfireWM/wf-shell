@@ -5,7 +5,7 @@
 		<category>Shell</category>
 		<option name="css_path" type="string">
 			<_short>CSS Path</_short>
-			<default></default>
+			<default/>
 		</option>
 		<option name="autohide" type="bool">
 			<_short>Autohide</_short>
@@ -89,7 +89,7 @@
 			<default>20</default>
 		</option>
 		<option name="show_close" type="bool">
-		    <_short>Show Close Animations</_short>
+			<_short>Show Close Animations</_short>
 			<_long>Keep all window icons for up to 2 seconds to allow CSS animations.</_long>
 			<default>true</default>
 		</option>

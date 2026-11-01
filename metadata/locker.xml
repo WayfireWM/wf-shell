@@ -100,8 +100,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -134,7 +134,7 @@
 				<default>center-center</default>
 			</option>
 			<option name="password_always" type="bool">
-			    <_short>Always show</_short>
+				<_short>Always show</_short>
 				<default>false</default>
 			</option>
 		</group>
@@ -151,8 +151,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -193,7 +193,7 @@
 				<default>2em default</default>
 			</option>
 			<option name="pin_always" type="bool">
-			    <_short>Always show</_short>
+				<_short>Always show</_short>
 				<default>false</default>
 			</option>
 		</group>
@@ -210,8 +210,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -260,7 +260,7 @@
 				<max>20</max>
 			</option>
 			<option name="fingerprint_always" type="bool">
-			    <_short>Always show</_short>
+				<_short>Always show</_short>
 				<default>false</default>
 			</option>
 		</group>
@@ -276,8 +276,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -310,8 +310,8 @@
 				<default>top-right</default>
 			</option>
 			<option name="network_always" type="bool">
-			    <_short>Always show</_short>
-			    <default>true</default>
+				<_short>Always show</_short>
+				<default>true</default>
 			</option>
 			<option name="network_font" type="string">
 				<_short>Network Font</_short>
@@ -340,8 +340,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -374,8 +374,8 @@
 				<default>top-center</default>
 			</option>
 			<option name="clock_always" type="bool">
-			    <_short>Always show</_short>
-			    <default>true</default>	
+				<_short>Always show</_short>
+				<default>true</default>
 			</option>
 			<option name="clock_font" type="string">
 				<_short>Clock Font</_short>
@@ -394,8 +394,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -438,7 +438,7 @@
 				<max>10</max>
 			</option>
 			<option name="weather_always" type="bool">
-			    <_short>Always show</_short>
+				<_short>Always show</_short>
 				<default>true</default>
 			</option>
 		</group>
@@ -454,8 +454,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -498,7 +498,7 @@
 				<max>20</max>
 			</option>
 			<option name="user_always" type="bool">
-			    <_short>Always show</_short>
+				<_short>Always show</_short>
 				<default>true</default>
 			</option>
 		</group>
@@ -529,8 +529,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -563,7 +563,7 @@
 				<default>bottom-right</default>
 			</option>
 			<option name="mpris_always" type="bool">
-			    <_short>Always show</_short>
+				<_short>Always show</_short>
 				<default>false</default>
 			</option>
 			<option name="mpris_icon_size" type="double">
@@ -605,8 +605,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -653,7 +653,7 @@
 				<max>10</max>
 			</option>
 			<option name="battery_always" type="bool">
-			    <_short>Always show</_short>
+				<_short>Always show</_short>
 				<default>true</default>
 			</option>
 		</group>
@@ -669,8 +669,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -703,7 +703,7 @@
 				<default>top-right</default>
 			</option>
 			<option name="volume_always" type="bool">
-			    <_short>Always show</_short>
+				<_short>Always show</_short>
 				<default>false</default>
 			</option>
 			<option name="volume_icon_size" type="double">
@@ -726,8 +726,8 @@
 					<_name>Top Left</_name>
 				</desc>
 				<desc>
-				    <value>top-center</value>
-			        <_name>Top</_name>
+					<value>top-center</value>
+					<_name>Top</_name>
 				</desc>
 				<desc>
 					<value>top-right</value>
@@ -764,7 +764,7 @@
 				<default>default</default>
 			</option>
 			<option name="instant_unlock_always" type="bool">
-			    <_short>Always show</_short>
+				<_short>Always show</_short>
 				<default>false</default>
 			</option>
 		</group>

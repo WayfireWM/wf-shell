@@ -7,7 +7,7 @@
 			<_short>General</_short>
 			<option name="css_path" type="string">
 				<_short>CSS Path</_short>
-				<default></default>
+				<default/>
 			</option>
 			<option name="widgets_left" type="string">
 				<_short>Widgets Left</_short>
@@ -28,7 +28,7 @@
 			</option>
 			<option name="center" type="bool">
 				<_short>Center panel contents</_short>
-				<_long>Ensure the panel’s contents are centered. Effectively:
+				<_long>Ensure the panel&#x2019;s contents are centered. Effectively:
 		If full_span is on, it will put the left and right widgets next to the center ones.
 		If full_span is off, both sides of the panel will take the same amount of space, so that the center widgets are at the middle of the screen. This will lead to unused space on the side that has the least space taken up by the widgets.</_long>
 				<default>false</default>
@@ -271,7 +271,7 @@
 			<option name="menu_icon" type="string">
 				<_short>Menu Icon</_short>
 				<hint>file</hint>
-				<default></default>
+				<default/>
 			</option>
 			<option name="menu_icon_size" type="int">
 				<_short>Menu Icon Size</_short>
@@ -322,7 +322,7 @@
 			<option name="menu_logout_command" type="string">
 				<_short>Menu Logout Command</_short>
 				<_long>If not specified, a default logout interface will be used.</_long>
-				<default></default>
+				<default/>
 			</option>
 			<option name="logout_command" type="string">
 				<_short>Logout Button Command</_short>
