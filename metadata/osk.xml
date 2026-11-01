@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<wf-osk>
+    <plugin name="osk">
+        <_short>Onscreen Keyboard</_short>
+        <category>Shell</category>
+        <option name="start_hidden" type="bool">
+            <_short>Start Hidden</_short>
+            <default>false</default>
+        </option>
+        <option name="activate_show" type="bool">
+            <_short>Show when an entry box is detected</_short>
+            <default>false</default>
+        </option>
+        <option name="deactivate_hide" type="bool">
+            <_short>Hide when leaving a detected entry box</_short>
+            <default>false</default>
+        </option>
+        <option name="position" type="string">
+            <_short>Position</_short>
+            <default>bottom</default>
+            <desc>
+                <value>top</value>
+                <_name>Top</_name>
+            </desc>
+            <desc>
+                <value>bottom</value>
+                <_name>Bottom</_name>
+            </desc>
+        </option>
+        <option name="exclusion" type="bool">
+            <_short>Exclusion zone</_short>
+            <_long>Resize windows to make space for the OSK, when active</_long>
+            <default>true</default>
+        </option>
+        <option name="minimal_height" type="int">
+            <_short>Minimal height</_short>
+            <default>100</default>
+        </option>
+        <option name="shape" type="string">
+            <_short>Keyboard shape</_short>
+            <default>ansi</default>
+            <desc>
+                <value>ansi</value>
+                <_name>US ANSI</_name>
+            </desc>
+            <desc>
+                <value>iso</value>
+                <_name>UK ISO</_name>
+            </desc>
+        </option>
+        <option name="suggestion_limit" type="int">
+            <_short>Suggestion Limit</_short>
+            <minimum>0</minimum>
+            <maximum>100</maximum>
+            <default>5</default>
+        </option>
+        <option name="suggest_engine" type="string">
+            <_short>Suggestion Engine</_short>
+            <default>enchant</default>
+            <desc>
+                <value>enchant</value>
+                <_name>Enchant</_name>
+            </desc>
+            <desc>
+                <value>llama</value>
+                <_name>Llama</_name>
+            </desc>
+        </option>
+        <option name="llama_file" type="string">
+            <_short>Llama Model</_short>
+            <_long>The full path for a GGUF TinyLLama model file</_long>
+            <default></default>
+        </option>
+        <option name="emoji_size" type="int">
+            <_short>Emoji size</_short>
+            <default>40</default>
+            <minimum>5</minimum>
+            <maximum>100</maximum>
+        </option>
+    </plugin>
+</wf-osk>
