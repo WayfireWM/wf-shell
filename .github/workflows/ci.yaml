@@ -99,3 +99,25 @@ jobs:
           wget https://raw.githubusercontent.com/WayfireWM/wayfire/master/uncrustify.ini
           git ls-files | grep "hpp$\|cpp$" | xargs ../uncrustify/build/uncrustify -c uncrustify.ini --no-backup --replace
           git diff --exit-code
+
+  lint-xml:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install xmlstarlet
+        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
+
+      - name: Check XML
+        run: |
+          find metadata -name "*.xml" -exec xmlstarlet val --well-formed {} +
+
+      - name: Check XML Format
+        run: |
+          while IFS= read -r file; do
+            echo "File : ${file}"
+            xmlstarlet fo --indent-tab "$file" > "${file}.tmp"
+            diff -u "$file" "${file}.tmp"
+          done < <(find metadata -name "*.xml*")
