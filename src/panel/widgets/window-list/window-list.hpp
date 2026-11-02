@@ -28,6 +28,9 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     std::shared_ptr<WayfireWindowListLayout> layout;
 
   public:
+
+    WfOption<bool> hide_label{"panel/window_list_no_text"};
+
     std::map<zwlr_foreign_toplevel_handle_v1*,
         std::unique_ptr<WayfireToplevel>> toplevels;
     std::map<ext_foreign_toplevel_handle_v1*,

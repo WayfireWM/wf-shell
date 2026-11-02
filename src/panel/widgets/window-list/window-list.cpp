@@ -337,7 +337,7 @@ void WayfireWindowList::update_layout()
     {
         if (t.second)
         {
-            t.second->set_hide_text(is_vertical());
+            t.second->set_hide_text(is_vertical() || hide_label.value());
         }
     }
 
@@ -526,7 +526,7 @@ void WayfireWindowList::handle_toplevel_manager(zwlr_foreign_toplevel_manager_v1
 void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
     toplevels[toplevel] = std::make_unique<WayfireToplevel>(this, toplevel);
-    toplevels[toplevel]->set_hide_text(is_vertical());
+    toplevels[toplevel]->set_hide_text(is_vertical() || hide_label.value());
 }
 
 void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *toplevel)
