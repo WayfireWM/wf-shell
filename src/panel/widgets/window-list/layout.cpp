@@ -24,6 +24,10 @@ void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget,
     {
         // Keep window buttons square on a vertical panel.
         per_child = width;
+    } else if (window_list->hide_label)
+    {
+        // Use square buttons for no label mode
+        per_child = height;
     } else
     {
         per_child = width / child_count;

@@ -384,7 +384,10 @@ commands_output_max_chars = 10
 # window_list_icon_size = 16
 
 # Enable Live window preview tooltips. Requires copy-capture plugin and foreign toplevel.
-# winsow_list_live_window_previews = false
+# window_list_live_window_previews = false
+
+# Hide Text from window list, showing only icon
+# window_list_no_text = false
 
 ### WORKSPACE SWITCHER ###
 

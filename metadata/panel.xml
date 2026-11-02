@@ -678,6 +678,11 @@
 				<_long>Enable live window previews when hovering over application buttons in the window list instead of the title tooltip.</_long>
 				<default>false</default>
 			</option>
+			<option name="window_list_no_text" type="bool">
+				<_short>Hide text</_short>
+				<_long>Show only icons for window list</_long>
+				<default>false</default>
+			</option>
 		</group>
 		<group>
 			<_short>Workspace Switcher</_short>

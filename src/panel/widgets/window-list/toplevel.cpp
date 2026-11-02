@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 
 #include "toplevel.hpp"
+#include "wf-option-wrap.hpp"
 #include "window-list.hpp"
 #include "gtk-utils.hpp"
 
