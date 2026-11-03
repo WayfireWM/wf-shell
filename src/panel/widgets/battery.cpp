@@ -278,6 +278,11 @@ bool WayfireBatteryInfo::setup_dbus_battery()
 
 void WayfireBatteryInfo::update_layout()
 {
+    if (!box)
+    {
+        return;
+    }
+
     WfOption<std::string> panel_position{"panel/position"};
 
     if (panel_position.value() == PANEL_POSITION_LEFT or panel_position.value() == PANEL_POSITION_RIGHT)
