@@ -26,6 +26,10 @@
     padding:1em;
 }
 
+.wf-panel .window-button label {
+    padding-right: 5px;
+}
+
 .wf-panel .window-button.activated {
     background-color: #8883;
 }
