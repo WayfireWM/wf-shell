@@ -41,8 +41,8 @@ class WayfireMixer : public WayfireWidget
     std::shared_ptr<Gtk::GestureClick> left_click_gesture, middle_click_gesture, right_click_gesture;
 
     // widgets for the mixer itself
-    Gtk::Label output_label, input_label, streams_label;
-    Gtk::Separator out_in_wall, in_streams_wall, out_sep, in_sep, streams_sep;
+    Gtk::Label output_label, input_label, streams_label, captures_label;
+    Gtk::Separator out_in_wall, in_streams_wall, streams_cap_wall, out_sep, in_sep, streams_sep, captures_sep;
 
     void reload_config();
 
@@ -64,8 +64,7 @@ class WayfireMixer : public WayfireWidget
     std::unique_ptr<MixerControl> quick_target;
     void set_quick_target_from(MixerControl *from);
 
-    Gtk::Box master_box, sinks_box, sources_box, streams_box;
-    // idea: add a category for stuff that listens to an audio source
+    Gtk::Box master_box, sinks_box, sources_box, streams_box, captures_box;
 
     std::map<WpPipewireObject*, std::unique_ptr<MixerControl>> objects_to_controls;
 
