@@ -19,6 +19,7 @@ void WayfireMixer::reload_config()
     set_spacing(sinks_box);
     set_spacing(sources_box);
     set_spacing(streams_box);
+    set_spacing(captures_box);
 
     if (layout.value() == "vertical")
     {
@@ -176,8 +177,10 @@ void WayfireMixer::init(Gtk::Box *container)
     sinks_box.add_css_class("outputs");
     sources_box.add_css_class("inputs");
     streams_box.add_css_class("streams");
+    captures_box.add_css_class("captures");
     out_in_wall.add_css_class("out-in");
     in_streams_wall.add_css_class("in-streams");
+    streams_cap_wall.add_css_class("streams-captures");
     main_image.add_css_class("widget-icon");
 
     button->set_popup_child(master_box);
@@ -232,6 +235,7 @@ void WayfireMixer::init(Gtk::Box *container)
     // column orientations
     out_in_wall.set_orientation(Gtk::Orientation::VERTICAL);
     in_streams_wall.set_orientation(Gtk::Orientation::VERTICAL);
+    streams_cap_wall.set_orientation(Gtk::Orientation::VERTICAL);
 
     // assemble master box (todo: only show boxes that have contents)
     master_box.append(sinks_box);
@@ -239,9 +243,14 @@ void WayfireMixer::init(Gtk::Box *container)
     master_box.append(sources_box);
     master_box.append(in_streams_wall);
     master_box.append(streams_box);
+    master_box.append(streams_cap_wall);
+    master_box.append(captures_box);
 
     // sinks
     output_label.set_text("Output devices");
+    output_label.set_tooltip_text("Output devices");
+    output_label.set_max_width_chars(0);
+    output_label.set_ellipsize(Pango::EllipsizeMode::END);
     sinks_box.append(output_label);
     out_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     sinks_box.append(out_sep);
@@ -249,6 +258,9 @@ void WayfireMixer::init(Gtk::Box *container)
 
     // sources
     input_label.set_text("Input devices");
+    input_label.set_tooltip_text("Input devices");
+    input_label.set_max_width_chars(0);
+    input_label.set_ellipsize(Pango::EllipsizeMode::END);
     sources_box.append(input_label);
     in_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     sources_box.append(in_sep);
@@ -256,10 +268,23 @@ void WayfireMixer::init(Gtk::Box *container)
 
     // streams
     streams_label.set_text("Audio streams");
+    streams_label.set_tooltip_text("Audio streams");
+    streams_label.set_max_width_chars(0);
+    streams_label.set_ellipsize(Pango::EllipsizeMode::END);
     streams_box.append(streams_label);
     streams_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
     streams_box.append(streams_sep);
     streams_box.set_orientation(Gtk::Orientation::VERTICAL);
+
+    // captures
+    captures_label.set_text("Audio captures");
+    captures_label.set_tooltip_text("Audio captures");
+    captures_box.append(captures_label);
+    captures_label.set_max_width_chars(0);
+    captures_label.set_ellipsize(Pango::EllipsizeMode::END);
+    captures_sep.set_orientation(Gtk::Orientation::HORIZONTAL);
+    captures_box.append(captures_sep);
+    captures_box.set_orientation(Gtk::Orientation::VERTICAL);
 
     // add to the actual container
     container->append(*button);
@@ -271,6 +296,33 @@ void WayfireMixer::init(Gtk::Box *container)
     // get() returns WpCommon and creates it if it wasn’t yet.
     // add_widget also catches up this widget to every audio channel registered before.
     WpCommon::get().add_widget(this);
+}
+
+void WayfireMixer::show_hide_boxes()
+{
+    std::vector<Gtk::Box*> boxes_order     = {&sinks_box, &sources_box, &streams_box, &captures_box};
+    std::vector<Gtk::Separator*> sep_order = {&out_in_wall, &in_streams_wall, &streams_cap_wall};
+    for (auto& box : boxes_order)
+    {
+        if (box->get_children().size() > 2) // label and separator, not the prettiest tbh
+        {
+            box->show();
+        } else
+        {
+            box->hide();
+        }
+    }
+
+    for (int i = 1; i < boxes_order.size(); i++)
+    {
+        if (boxes_order[i]->get_children().size() > 2)
+        {
+            sep_order[i - 1]->show();
+        } else
+        {
+            sep_order[i - 1]->hide();
+        }
+    }
 }
 
 void WayfireMixer::update_icon()
