@@ -1,7 +1,6 @@
 #pragma once
 #include <csignal>
 #include <memory>
-#include <gtkmm/cssprovider.h>
 #include <gtk4-session-lock.h>
 #include <wayland-client.h>
 
@@ -47,8 +46,6 @@ class WayfireLockerApp : public WayfireShellApp
     int inotify_bg_file;
     Glib::RefPtr<BackgroundImage> background_file;
 
-
-    std::vector<Glib::RefPtr<Gtk::CssProvider>> css_rules;
     sigc::connection lockout_signal, prewake_signal;
     std::vector<sigc::connection> windows_signals;
 
