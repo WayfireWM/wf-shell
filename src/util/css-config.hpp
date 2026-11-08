@@ -7,11 +7,19 @@
 
 class CssFromConfig
 {
-  public:
-    Glib::RefPtr<Gtk::CssProvider> provider;
+  protected:
+    std::string instance_id;
+    void update_css(const std::string& css_string);
 
-    void add_provider();
-    void remove_provider();
+  public:
+    CssFromConfig(std::string instance_id);
+    virtual ~CssFromConfig();
+
+  private:
+    static Glib::RefPtr<Gtk::CssProvider> main_provider;
+    static std::map<std::string, std::string> css_registry;
+
+    static void rebuild_stylesheet();
 };
 
 class CssFromConfigDouble : public CssFromConfig
@@ -71,4 +79,10 @@ class CssFromConfigEdge : public CssFromConfig
 
   public:
     CssFromConfigEdge(std::string config_opt, std::string height_opt, std::string width_opt);
+};
+
+class CssStatic : public CssFromConfig
+{
+  public:
+    CssStatic(std::string id, std::string rule);
 };

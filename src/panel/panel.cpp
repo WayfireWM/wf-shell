@@ -624,29 +624,30 @@ void WayfirePanelApp::on_activate()
             priv->panel_outputs->value() << std::endl;
     }
 
-    new CssFromConfigEdge("panel/position", "panel/minimal_height", "panel/minimal_width");
-
     const static std::vector<std::pair<std::string, std::string>> icon_sizes_args =
     {
-        {"panel/default_icon_size", ".default-icon"},
-        {"panel/menu_icon_size", ".menu-icon.widget-icon"},
-        {"panel/menu_item_icon_size", ".app-button .default-icon"},
-        {"panel/menu_category_icon_size", ".app-category .default-icon"},
-        {"panel/launchers_size", ".launcher.widget-icon"},
-        {"panel/battery_icon_size", ".battery image.widget-icon"},
-        {"panel/network_icon_size", ".network .widget-icon"},
-        {"panel/volume_icon_size", ".volume .widget-icon"},
-        {"panel/mixer_icon_size", ".mixer .widget-icon"},
-        {"panel/mixer_popup_icon_size", ".mute-toggle .default-icon, .default-button .default-icon"},
-        {"panel/notifications_icon_size", ".notification-center .widget-icon"},
-        {"panel/tray_icon_size", ".tray-button .widget-icon"},
-        {"panel/brightness_icon_size", ".brightness .widget-icon"},
-        {"panel/window_list_icon_size", ".toplevel-icon.widget-icon"},
+        {"panel/default_icon_size", ".wf-panel .default-icon"},
+        {"panel/menu_icon_size", ".wf-panel image.menu-icon.widget-icon"},
+        {"panel/menu_item_icon_size", ".wf-panel .app-button image.default-icon"},
+        {"panel/menu_category_icon_size", ".wf-panel .app-category image.default-icon"},
+        {"panel/launchers_size", ".wf-panel image.launcher.widget-icon"},
+        {"panel/battery_icon_size", ".wf-panel .battery image.widget-icon"},
+        {"panel/network_icon_size", ".wf-panel .network image.widget-icon"},
+        {"panel/volume_icon_size", ".wf-panel .volume image.widget-icon"},
+        {"panel/mixer_icon_size", ".wf-panel .mixer image.widget-icon"},
+        {"panel/mixer_popup_icon_size",
+            ".wf-panel .mute-toggle image.default-icon, .wf-panel .default-button image.default-icon"},
+        {"panel/notifications_icon_size", ".wf-panel .notification-center image.widget-icon"},
+        {"panel/tray_icon_size", ".wf-panel .tray-button image.widget-icon"},
+        {"panel/brightness_icon_size", ".wf-panel .brightness image.widget-icon"},
+        {"panel/window_list_icon_size", ".wf-panel image.toplevel-icon.widget-icon"},
     };
     for (auto pair : icon_sizes_args)
     {
         new CssFromConfigIconSize(pair.first, pair.second);
     }
+
+    new CssFromConfigEdge("panel/position", "panel/minimal_height", "panel/minimal_width");
 
     new CssFromConfigInt("panel/launchers_spacing", ".launcher{padding: 0px ", "px;}");
     new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
@@ -656,6 +657,8 @@ void WayfirePanelApp::on_activate()
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");
     new CssFromConfigFont("panel/weather_font", ".weather {", "}");
+
+    new CssStatic("logout background", "window.logout { background-color: rgba(0, 0, 0, 0.5); }");
 }
 
 std::shared_ptr<WayfireIPC> WayfirePanelApp::get_ipc_server_instance()

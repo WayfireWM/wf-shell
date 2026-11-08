@@ -3,7 +3,6 @@
 #include <memory>
 #include <wayland-client.h>
 #include <gtkmm/window.h>
-#include <gtkmm/cssprovider.h>
 
 #include "giomm/application.h"
 #include "css-config.hpp"

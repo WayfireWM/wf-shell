@@ -117,10 +117,6 @@ WayfireLogoutUI::WayfireLogoutUI()
     ui.set_child(box);
     ui.add_css_class("logout");
     auto display = ui.get_display();
-    auto css_provider = Gtk::CssProvider::create();
-    css_provider->load_from_data("window.logout { background-color: rgba(0, 0, 0, 0.5); }");
-    Gtk::StyleContext::add_provider_for_display(display,
-        css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
 
 WayfireLogoutUI::~WayfireLogoutUI()

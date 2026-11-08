@@ -5,129 +5,144 @@
 #include <regex>
 #include <string>
 
-void CssFromConfig::add_provider()
+Glib::RefPtr<Gtk::CssProvider> CssFromConfig::main_provider = nullptr;
+std::map<std::string, std::string> CssFromConfig::css_registry;
+
+CssFromConfig::CssFromConfig(std::string instance_id) : instance_id(instance_id)
+{}
+
+CssFromConfig::~CssFromConfig()
 {
-    Gtk::StyleContext::add_provider_for_display(
-        Gdk::Display::get_default(), provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    if (!instance_id.empty())
+    {
+        css_registry.erase(instance_id);
+        rebuild_stylesheet();
+    }
 }
 
-void CssFromConfig::remove_provider()
+void CssFromConfig::update_css(const std::string& css_string)
 {
-    Gtk::StyleContext::remove_provider_for_display(Gdk::Display::get_default(), provider);
+    if (!main_provider)
+    {
+        main_provider = Gtk::CssProvider::create();
+        Gtk::StyleContext::add_provider_for_display(
+            Gdk::Display::get_default(), main_provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
+
+    css_registry[instance_id] = css_string;
+    rebuild_stylesheet();
 }
 
-CssFromConfigDouble::CssFromConfigDouble(std::string option_name, std::string before, std::string after) :
+void CssFromConfig::rebuild_stylesheet()
+{
+    if (!main_provider)
+    {
+        return;
+    }
+
+    std::stringstream stream;
+    for (const auto& [id, css_slice] : css_registry)
+    {
+        stream << "/* " << id << " */\n" << css_slice << "\n";
+    }
+
+    main_provider->load_from_string(stream.str());
+}
+
+CssFromConfigDouble::CssFromConfigDouble(std::string option_name, std::string before,
+    std::string after) : CssFromConfig(option_name),
     option_value{option_name}
 {
-    provider = Gtk::CssProvider::create();
     auto cb = [=]
     {
         std::stringstream ss;
         ss.imbue(std::locale::classic());
         ss << before << std::to_string(option_value.value()) << after;
         std::cout << ss.str() << std::endl;
-        provider->load_from_string(ss.str());
+        update_css(ss.str());
     };
     option_value.set_callback(cb);
     cb();
-    add_provider();
 }
 
-CssFromConfigBool::CssFromConfigBool(std::string option_name, std::string css_true, std::string css_false) :
+CssFromConfigBool::CssFromConfigBool(std::string option_name, std::string css_true,
+    std::string css_false) : CssFromConfig(option_name),
     option_value{option_name}
 {
-    provider = Gtk::CssProvider::create();
     auto cb = [=]
     {
-        provider->load_from_string(option_value ? css_true : css_false);
+        update_css(option_value ? css_true : css_false);
     };
     option_value.set_callback(cb);
     cb();
-
-    add_provider();
 }
 
-CssFromConfigInt::CssFromConfigInt(std::string option_name, std::string css_before, std::string css_after) :
+CssFromConfigInt::CssFromConfigInt(std::string option_name, std::string css_before,
+    std::string css_after) : CssFromConfig(option_name),
     option_value{option_name}
 {
-    provider = Gtk::CssProvider::create();
-    option_value.set_callback([=]
+    auto cb = [=]
     {
         int value = option_value;
         // TODO When we go up to c++20 use std::format
         std::stringstream ss;
         ss.imbue(std::locale::classic());
         ss << css_before << std::to_string(value) << css_after;
-        provider->load_from_string(ss.str());
-    });
-    int value = option_value;
-    std::stringstream ss;
-    ss.imbue(std::locale::classic());
-    ss << css_before << std::to_string(value) << css_after;
-    provider->load_from_string(ss.str());
-
-    add_provider();
+        update_css(ss.str());
+    };
+    option_value.set_callback(cb);
+    cb();
 }
 
 CssFromConfigIconSize::CssFromConfigIconSize(std::string option_name,
-    std::string css_class) : option_value{option_name}
+    std::string css_class) : CssFromConfig(option_name), option_value{option_name}
 {
-    provider = Gtk::CssProvider::create();
-
     auto reload_css = [=] ()
     {
         if (option_value.value() == 0)
         {
-            provider->load_from_string("");
+            update_css("");
             return;
         }
 
         std::stringstream ss;
         ss.imbue(std::locale::classic());
-        ss << ".wf-panel " << css_class << " {-gtk-icon-size:" << option_value.value() << "px;}";
-        provider->load_from_string(ss.str());
+        ss << css_class << " {-gtk-icon-size:" << option_value.value() << "px;}";
+        std::cout << ss.str() << std::endl;
+        update_css(ss.str());
     };
-
     option_value.set_callback(reload_css);
-
     reload_css();
-    add_provider();
 }
 
 CssFromConfigString::CssFromConfigString(std::string option_name, std::string css_before,
-    std::string css_after) :
+    std::string css_after) : CssFromConfig(option_name),
     option_value{option_name}
 {
-    provider = Gtk::CssProvider::create();
-    option_value.set_callback([=] ()
+    auto cb = [=] ()
     {
         // TODO When we go up to c++20 use std::format
         std::stringstream ss;
         ss.imbue(std::locale::classic());
         ss << css_before << (std::string)option_value << css_after;
-        provider->load_from_string(ss.str());
-    });
-    std::stringstream ss;
-    ss.imbue(std::locale::classic());
-    ss << css_before << (std::string)option_value << css_after;
-    provider->load_from_string(ss.str());
-
-    add_provider();
+        update_css(ss.str());
+    };
+    option_value.set_callback(cb);
+    cb();
 }
 
-CssFromConfigFont::CssFromConfigFont(std::string option_name, std::string css_before, std::string css_after) :
+CssFromConfigFont::CssFromConfigFont(std::string option_name, std::string css_before,
+    std::string css_after) : CssFromConfig(option_name),
     option_value{option_name}
 {
     this->css_before = css_before;
     this->css_after  = css_after;
-    provider = Gtk::CssProvider::create();
-    option_value.set_callback([=] ()
+    auto cb = [=] ()
     {
         set_from_string();
-    });
-
-    set_from_string();
-    add_provider();
+    };
+    option_value.set_callback(cb);
+    cb();
 }
 
 void CssFromConfigFont::set_from_string()
@@ -156,7 +171,7 @@ void CssFromConfigFont::set_from_string()
         ss << css_before << "font: " << size << unit << " " << before.str() << " " << after.str() << ";" <<
             css_after;
         auto css = ss.str();
-        provider->load_from_string(css);
+        update_css(css);
 
         std::cout << "Font " << css << std::endl;
     } else
@@ -165,18 +180,18 @@ void CssFromConfigFont::set_from_string()
         ss.imbue(std::locale::classic());
         ss << css_before << "font: 1rem " << font_name << ";" << css_after;
         auto css = ss.str();
-        provider->load_from_string(css);
+        update_css(css);
         std::cout << "Font fallback " << css << std::endl;
     }
 }
 
-CssFromConfigEdge::CssFromConfigEdge(std::string config_opt, std::string height_opt, std::string width_opt) :
+CssFromConfigEdge::CssFromConfigEdge(std::string config_opt, std::string height_opt,
+    std::string width_opt) : CssFromConfig(config_opt),
     option_value{config_opt},
     height_value{height_opt},
     width_value(width_opt)
 {
-    provider = Gtk::CssProvider::create();
-
+    instance_id = config_opt;
     auto callback = [=] ()
     {
         std::stringstream ss;
@@ -190,11 +205,15 @@ CssFromConfigEdge::CssFromConfigEdge(std::string config_opt, std::string height_
             ss << ".wf-panel .widget-icon {-gtk-icon-size:" << width_value.value() << "px;}";
         }
 
-        provider->load_from_string(ss.str());
+        update_css(ss.str());
     };
     option_value.set_callback(callback);
     height_value.set_callback(callback);
     width_value.set_callback(callback);
     callback();
-    add_provider();
+}
+
+CssStatic::CssStatic(std::string id, std::string rule) : CssFromConfig(id)
+{
+    update_css(rule);
 }
