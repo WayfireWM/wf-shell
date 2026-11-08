@@ -8,6 +8,9 @@
 
 #include "wf-popover.hpp"
 
+#define PROFILES       "Profiles"
+#define ACTIVE_PROFILE "ActiveProfile"
+
 using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
 using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
 

@@ -6,9 +6,6 @@
 #define POWER_PROFILE_PATH "/org/freedesktop/UPower/PowerProfiles"
 #define POWER_PROFILE_NAME "org.freedesktop.UPower.PowerProfiles"
 
-#define PROFILES       "Profiles"
-#define ACTIVE_PROFILE "ActiveProfile"
-
 void ShellPowerTools::set_current_profile(Glib::ustring profile)
 {
     power_mode = profile;

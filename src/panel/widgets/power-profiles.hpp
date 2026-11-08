@@ -8,26 +8,16 @@
 
 #include "widget.hpp"
 #include "wf-popover.hpp"
-
-using DBusConnection = Glib::RefPtr<Gio::DBus::Connection>;
-using DBusProxy = Glib::RefPtr<Gio::DBus::Proxy>;
+#include "widget-utils/power-profiles.hpp"
 
 class WayfirePowerProfiles : public WayfireWidget
 {
+    ShellPowerTools power_tools;
     Gtk::Image icon;
-    std::unique_ptr<WayfireMenuWidget> box;
-    std::shared_ptr<Gio::Menu> profiles_menu;
-    std::shared_ptr<Gio::SimpleAction> state_action;
-
-    DBusConnection connection;
-    DBusProxy powerprofile_proxy;
-    std::string power_mode = "";
-
-    bool setup_dbus_power_modes();
+    std::unique_ptr<WayfireMenuWidget> panel_menu;
 
     void update_icon();
     void set_current_profile(Glib::ustring profile);
-    void setup_profiles(std::vector<std::map<Glib::ustring, Glib::VariantBase>> profiles);
 
     void on_properties_changed(
         const Gio::DBus::Proxy::MapChangedProperties& properties,
