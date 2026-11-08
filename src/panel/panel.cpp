@@ -624,6 +624,8 @@ void WayfirePanelApp::on_activate()
             priv->panel_outputs->value() << std::endl;
     }
 
+    new CssFromConfigEdge("panel/position", "panel/minimal_height", "panel/minimal_width");
+
     const static std::vector<std::pair<std::string, std::string>> icon_sizes_args =
     {
         {"panel/default_icon_size", ".default-icon"},
@@ -645,8 +647,6 @@ void WayfirePanelApp::on_activate()
     {
         new CssFromConfigIconSize(pair.first, pair.second);
     }
-
-    new CssFromConfigEdge("panel/position", "panel/minimal_height", "panel/minimal_width");
 
     new CssFromConfigInt("panel/launchers_spacing", ".launcher{padding: 0px ", "px;}");
     new CssFromConfigString("panel/background_color", ".wf-panel{background-color:", ";}");
