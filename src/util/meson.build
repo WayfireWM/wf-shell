@@ -8,6 +8,7 @@ sources = [
   'wf-ipc.cpp',
   'animated-scale.cpp',
   'widget-utils/battery.cpp',
+  'widget-utils/power-profiles.cpp',
   'widget-utils/clock.cpp',
   'widget-utils/network/manager.cpp',
   'widget-utils/network/wifi.cpp',

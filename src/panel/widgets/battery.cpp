@@ -22,6 +22,19 @@ void WayfireBatteryInfo::handle_config_reload()
 
 void WayfireBatteryInfo::init(Gtk::Box *container)
 {
-    container->append(battery);
+    panel_menu = std::make_unique<WayfireMenuWidget>("panel", "battery");
+
+    panel_menu->set_child(battery);
+
     update_layout();
+
+    if (do_power_modes)
+    {
+        panel_menu->open_on(1);
+        panel_menu->insert_action_group("actions", power_tools.actions);
+        panel_menu->set_spacing(5);
+        panel_menu->set_menu_model(power_tools.profiles_menu);
+    }
+
+    container->append(*panel_menu);
 }

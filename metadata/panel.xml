@@ -228,6 +228,11 @@
 					<_name>Percentage over Icon</_name>
 				</desc>
 			</option>
+			<option name="battery_power_modes" type="bool">
+				<_short>Power modes switching</_short>
+				<_long>If on, the clicking the battery will present the same menu for switching power profiles as the power-profiles widget.</_long>
+				<default>false</default>
+			</option>
 			<option name="battery_icon_size" type="int">
 				<_short>Battery Icon Size</_short>
 				<default>0</default>
