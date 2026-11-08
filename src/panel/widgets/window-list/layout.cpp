@@ -3,9 +3,6 @@
 #include "window-list.hpp"
 
 #include <algorithm>
-#include <cstdint>
-#include <iostream>
-#include <vector>
 
 namespace
 {
@@ -45,7 +42,6 @@ void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget,
     }
 
     const bool vertical = window_list->is_vertical();
-    std::vector<button_width_t> widths;
 
     // TODO Come back some day with rotated text labels as a vertical option
     bool no_labels = window_list->hide_label.value() || vertical;
