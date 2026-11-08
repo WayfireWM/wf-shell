@@ -5,6 +5,7 @@
 #include <gdk/gdkcairo.h>
 #include <iostream>
 #include <giomm/desktopappinfo.h>
+#include <memory>
 #include "wf-shell-app.hpp"
 
 Glib::RefPtr<Gdk::Pixbuf> load_icon_pixbuf_safe(std::string icon_path, int size)
@@ -111,6 +112,28 @@ Glib::RefPtr<Gio::Icon> get_from_desktop_app_info(std::string app_id)
                 {
                     return app_info->get_icon();
                 }
+            }
+        }
+    }
+
+    /* The window class may differ from the desktop file ID. */
+    for (const auto& info : Gio::AppInfo::get_all())
+    {
+        auto desktop =
+            std::dynamic_pointer_cast<Gio::DesktopAppInfo>(info);
+
+        if (!desktop)
+        {
+            continue;
+        }
+
+        const auto wm_class = desktop->get_startup_wm_class();
+        if (!wm_class.empty() && (wm_class == app_id))
+        {
+            auto icon = desktop->get_icon();
+            if (icon)
+            {
+                return icon;
             }
         }
     }

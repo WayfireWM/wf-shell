@@ -30,6 +30,7 @@ class WfLightControl : public Gtk::Box
     void update_parent_icon();
 
     WfOption<int> slider_length{"panel/brightness_slider_length"};
+    WfOption<std::string> label_pref{"panel/brightness_monitor_label"};
 
   public:
     WfLightControl(WayfireBrightness *parent);

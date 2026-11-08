@@ -258,8 +258,22 @@ void WayfireAutohidingWindow::update_position()
         return;
     }
 
+    const auto new_position = check_position(position);
+
+    const auto is_vertical_position = [] (const std::string& pos)
+    {
+        return (pos == WF_WINDOW_POSITION_LEFT) ||
+               (pos == WF_WINDOW_POSITION_RIGHT);
+    };
+
+    const bool new_vertical = is_vertical_position(new_position);
+
+    const bool orientation_changed =
+        !previous_position.empty() &&
+        (is_vertical_position(previous_position) != new_vertical);
+
     // need different measurements depending on position
-    if ((edge == GTK_LAYER_SHELL_EDGE_LEFT) || (edge == GTK_LAYER_SHELL_EDGE_RIGHT))
+    if (new_vertical)
     {
         get_allocated_height_or_width = &Gtk::Widget::get_allocated_width;
     } else
@@ -267,10 +281,37 @@ void WayfireAutohidingWindow::update_position()
         get_allocated_height_or_width = &Gtk::Widget::get_allocated_height;
     }
 
-    /* When the position changes, show an animation from the new edge. */
-    autohide_animation.animate(-(this->*get_allocated_height_or_width)(), 0);
-    start_draw_timer();
-    m_show_uncertain();
+    if (orientation_changed)
+    {
+        /*
+         * GTK still has the allocation from the previous orientation here.
+         * Animating the layer-shell margin while the window is being
+         * reallocated can make the panel disappear. Show it immediately
+         * when changing orientation instead.
+         */
+        autohide_animation.set(0, 0);
+
+        if (get_surface())
+        {
+            wl_surface_commit(get_wl_surface());
+        }
+
+        queue_draw();
+
+        if (should_autohide())
+        {
+            schedule_hide(autohide_hide_delay);
+        }
+    } else
+    {
+        /* When the position changes, show an animation from the new edge. */
+        autohide_animation.animate(
+            -(this->*get_allocated_height_or_width)(), 0);
+        start_draw_timer();
+        m_show_uncertain();
+    }
+
+    previous_position = new_position;
     setup_hotspot();
 }
 

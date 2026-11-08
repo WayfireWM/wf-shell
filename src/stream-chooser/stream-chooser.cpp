@@ -14,6 +14,7 @@
 #include "mainlayout.hpp"
 #include "outputwidget.hpp"
 #include "toplevelwidget.hpp"
+#include "version.h"
 
 /* Static callbacks for toplevel list object */
 static void handle_toplevel(void *data,
@@ -469,6 +470,15 @@ void WayfireStreamChooserApp::resize(int width, int height)
 /* Starting point */
 int main(int argc, char **argv)
 {
+    for (int count = 1; count < argc; count++)
+    {
+        if ((strcmp(argv[count], "--version") == 0) || (strcmp(argv[count], "-v") == 0))
+        {
+            std::cout << WF_SHELL_VERSION_STRING << std::endl;
+            return 0;
+        }
+    }
+
     WayfireStreamChooserApp::getInstance().run();
     exit(0);
 }

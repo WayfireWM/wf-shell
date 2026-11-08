@@ -57,7 +57,14 @@ class WfLightDdcaControl : public WfLightControl
         ddca_close_display(handle);
         scale.set_target_value(get_brightness());
         update_parent_icon();
-        label.set_text(get_name());
+
+        if (label_pref.value() == "connector")
+        {
+            label.set_text(connector);
+        } else // "model"
+        {
+            label.set_text(get_name());
+        }
 
         // MCCS doesn’t have anything to track changes to feature codes, so we
         // read the current value and adjust the visual when mapped. New thread

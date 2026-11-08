@@ -91,6 +91,7 @@ class WayfireAutohidingWindow : public Gtk::Window
 
     WfOption<std::string> position;
     WfOption<bool> full_span;
+    std::string previous_position;
     void update_position();
 
     WfOption<int> minimal_width;

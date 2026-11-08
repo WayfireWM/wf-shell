@@ -1,0 +1,2 @@
+#pragma once
+#define WF_SHELL_VERSION_STRING "@VCS_TAG@"

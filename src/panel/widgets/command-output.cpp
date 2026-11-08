@@ -92,6 +92,9 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
         icon_position ==
         "top" ? Gtk::Orientation::VERTICAL : Gtk::Orientation::HORIZONTAL);
 
+    box.set_halign(Gtk::Align::CENTER);
+    box.set_valign(Gtk::Align::CENTER);
+
     if ((icon_position == "right") || (icon_position == "bottom"))
     {
         box.append(main_label);
@@ -167,17 +170,78 @@ void WfCommandOutputButtons::CommandOutput::update_tooltip()
     label_set_from_command(tooltip_command, tooltip_label);
 }
 
+void WfCommandOutputButtons::update_layout()
+{
+    WfOption<std::string> panel_position{"panel/position"};
+
+    const bool vertical =
+        (panel_position.value() == PANEL_POSITION_LEFT) ||
+        (panel_position.value() == PANEL_POSITION_RIGHT);
+
+    box.set_orientation(
+        vertical ? Gtk::Orientation::VERTICAL :
+        Gtk::Orientation::HORIZONTAL);
+
+    for (auto& button : buttons)
+    {
+        button->main_label.set_justify(
+            vertical ? Gtk::Justification::CENTER :
+            Gtk::Justification::LEFT);
+
+        button->main_label.set_xalign(vertical ? 0.5 : 0.0);
+    }
+
+    if (vertical)
+    {
+        /*
+         * Do not let command output's natural text width determine the
+         * width of a vertical panel.
+         */
+        scrolled_window.set_propagate_natural_width(false);
+        scrolled_window.set_propagate_natural_height(true);
+        scrolled_window.set_hexpand(true);
+        scrolled_window.set_vexpand(false);
+    } else
+    {
+        scrolled_window.set_propagate_natural_width(true);
+        scrolled_window.set_propagate_natural_height(false);
+        scrolled_window.set_hexpand(false);
+        scrolled_window.set_vexpand(false);
+    }
+
+    scrolled_window.queue_resize();
+}
+
 void WfCommandOutputButtons::init(Gtk::Box *container)
 {
     box.add_css_class("command-output-box");
-    container->append(box);
+
+    scrolled_window.set_child(box);
+    scrolled_window.set_policy(
+        Gtk::PolicyType::NEVER,
+        Gtk::PolicyType::NEVER);
+
+    container->append(scrolled_window);
+
     update_buttons();
-    commands_list_opt.set_callback([=] { update_buttons(); });
+    update_layout();
+
+    commands_list_opt.set_callback([=]
+    {
+        update_buttons();
+        update_layout();
+    });
+}
+
+void WfCommandOutputButtons::handle_config_reload()
+{
+    update_layout();
 }
 
 void WfCommandOutputButtons::update_buttons()
 {
     const auto & opt_value = commands_list_opt.value();
+
     for (auto child : box.get_children())
     {
         box.remove(*child);
@@ -185,12 +249,14 @@ void WfCommandOutputButtons::update_buttons()
 
     buttons.clear();
     buttons.reserve(opt_value.size());
+
     for (const auto & command_info : opt_value)
     {
         buttons.push_back(std::apply([] (auto&&... args)
         {
             return std::make_unique<CommandOutput>(args...);
         }, command_info));
+
         box.append(*buttons.back());
     }
 }

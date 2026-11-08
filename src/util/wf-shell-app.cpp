@@ -9,6 +9,7 @@
 #include <wayfire/config/file.hpp>
 #include <wf-option-wrap.hpp>
 #include <gtk-utils.hpp>
+#include "version.h"
 
 #include <unistd.h>
 
@@ -370,7 +371,6 @@ WayfireShellApp::WayfireShellApp()
 
 void WayfireShellApp::init_app()
 {
-    std::cout << "setting up" << std::endl;
     app = Gtk::Application::create(
         this->get_application_name(), Gio::Application::Flags::NONE | this->get_extra_application_flags());
     app->signal_activate().connect(
@@ -402,6 +402,16 @@ WayfireShellApp& WayfireShellApp::get()
 
 void WayfireShellApp::run(int argc, char **argv)
 {
+    for (int i = 1; i < argc; ++i)
+    {
+        std::string arg = argv[i];
+        if ((arg == "-v") || (arg == "--version"))
+        {
+            std::cout << WF_SHELL_VERSION_STRING << std::endl;
+            return; // Terminate early
+        }
+    }
+
     app->run(argc, argv);
 }
 

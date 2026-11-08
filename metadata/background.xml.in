@@ -1,41 +1,41 @@
 <?xml version="1.0"?>
 <wf-shell>
 	<plugin name="background">
-	<_short>Background</_short>
-	<category>Shell</category>
-	<option name="image" type="string">
 		<_short>Background</_short>
-		<default>@wallpaper@</default>
-		<hint>file</hint>
-		<hint>directory</hint>
-	</option>
-	<option name="cycle_timeout" type="int">
-		<_short>Cycle Timeout</_short>
-		<default>150</default>
-	</option>
-	<option name="fade_duration" type="int">
-		<_short>Fade Duration</_short>
-		<default>1000</default>
-	</option>
-	<option name="randomize" type="bool">
-		<_short>Randomize</_short>
-		<default>true</default>
-	</option>
-	<option name="fill_mode" type="string">
-		<_short>Fill mode</_short>
-		<default>stretch</default>
-		<desc>
-			<value>fill_and_crop</value>
-			<_name>Fill and Crop</_name>
-		</desc>
-		<desc>
-			<value>preserve_aspect</value>
-			<_name>Preserve Aspect</_name>
-		</desc>
-		<desc>
-			<value>stretch</value>
-			<_name>Stretch</_name>
-		</desc>
-	</option>
+		<category>Shell</category>
+		<option name="image" type="string">
+			<_short>Background</_short>
+			<default>@wallpaper@</default>
+			<hint>file</hint>
+			<hint>directory</hint>
+		</option>
+		<option name="cycle_timeout" type="int">
+			<_short>Cycle Timeout</_short>
+			<default>150</default>
+		</option>
+		<option name="fade_duration" type="int">
+			<_short>Fade Duration</_short>
+			<default>1000</default>
+		</option>
+		<option name="randomize" type="bool">
+			<_short>Randomize</_short>
+			<default>true</default>
+		</option>
+		<option name="fill_mode" type="string">
+			<_short>Fill mode</_short>
+			<default>stretch</default>
+			<desc>
+				<value>fill_and_crop</value>
+				<_name>Fill and Crop</_name>
+			</desc>
+			<desc>
+				<value>preserve_aspect</value>
+				<_name>Preserve Aspect</_name>
+			</desc>
+			<desc>
+				<value>stretch</value>
+				<_name>Stretch</_name>
+			</desc>
+		</option>
 	</plugin>
 </wf-shell>
