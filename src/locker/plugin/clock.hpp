@@ -1,34 +1,25 @@
 #pragma once
-#include <gtkmm/label.h>
-#include <unordered_map>
 
-#include "plugin.hpp"
-#include "timedrevealer.hpp"
-#include "wf-option-wrap.hpp"
-#include "lockergrid.hpp"
+#include "multi-output-timed-plugin.hpp"
+#include "widget-utils/clock.hpp"
 
-class WayfireLockerClockPluginWidget : public WayfireLockerTimedRevealer
+class WayfireLockerClockPluginWidget : public WayfireLockerTimedWidget<ShellClock>
 {
   public:
-    Gtk::Label label;
-    WayfireLockerClockPluginWidget(std::string contents);
+    WayfireLockerClockPluginWidget() :
+        WayfireLockerTimedWidget("locker/clock_always", "clock")
+    {}
 };
 
-class WayfireLockerClockPlugin : public WayfireLockerPlugin
+class WayfireLockerClockPlugin :
+    public WayfireLockerMultiOutputPlugin<WayfireLockerClockPluginWidget>
 {
+  protected:
+    std::shared_ptr<WayfireLockerClockPluginWidget> create_widget() override
+    {
+        return std::make_shared<WayfireLockerClockPluginWidget>();
+    }
+
   public:
     WayfireLockerClockPlugin();
-    void add_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void remove_output(std::string id, std::shared_ptr<WayfireLockerGrid> grid) override;
-    void init() override;
-    void deinit() override;
-
-    WfOption<std::string> format{"locker/clock_format"};
-
-    sigc::connection timeout;
-    void update_labels(std::string text);
-    void update_time();
-
-    std::unordered_map<std::string, std::shared_ptr<WayfireLockerClockPluginWidget>> widgets;
-    std::string label_contents = "";
 };

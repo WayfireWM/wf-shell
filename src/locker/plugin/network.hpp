@@ -4,11 +4,9 @@
 #include <gtkmm/box.h>
 #include <memory>
 #include "lockergrid.hpp"
-#include "network/network.hpp"
+#include "widget-utils/network/network.hpp"
 #include "plugin.hpp"
-#include "../../util/network/manager.hpp"
-
-
+#include "widget-utils/network/manager.hpp"
 
 class WayfireLockerNetworkPluginWidget : public WayfireLockerTimedRevealer
 {

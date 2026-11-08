@@ -10,8 +10,8 @@
 
 #include "wf-popover.hpp"
 #include "../widget.hpp"
-#include "../../util/network/manager.hpp"
-#include "network/network-widget.hpp"
+#include "widget-utils/network/manager.hpp"
+#include "widget-utils/network/network-widget.hpp"
 
 class WayfireNetworkInfo : public WayfireWidget
 {
