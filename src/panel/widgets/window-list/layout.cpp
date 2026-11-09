@@ -69,19 +69,25 @@ void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget,
     int offset = 0;
     for (auto child : children)
     {
-        auto alloc = Gtk::Allocation();
+        auto alloc   = Gtk::Allocation();
+        int position = offset;
+        // If widget is being dragged, show its drag location
+        if (child == top_widget)
+        {
+            position = std::max(0, std::min(top_position, longside - per_child));
+        }
 
         if (vertical)
         {
             alloc.set_width(shortside);
             alloc.set_height(per_child);
             alloc.set_x(0);
-            alloc.set_y(offset);
+            alloc.set_y(position);
         } else
         {
             alloc.set_width(per_child);
             alloc.set_height(shortside);
-            alloc.set_x(offset);
+            alloc.set_x(position);
             alloc.set_y(0);
         }
 
