@@ -364,8 +364,9 @@ class WayfirePanel::impl
                     (panel_position.value() == PANEL_POSITION_LEFT) ||
                     (panel_position.value() == PANEL_POSITION_RIGHT);
 
-                box.set_hexpand(!vertical);
-                box.set_vexpand(vertical);
+                const bool in_center = (&box == &center_box);
+                box.set_hexpand(!vertical && !in_center);
+                box.set_vexpand(vertical && !in_center);
             }
 
             auto widget = widget_from_name(widget_name);
@@ -398,7 +399,8 @@ class WayfirePanel::impl
 
         left_box.set_hexpand(has_window_list(left_widgets_opt.value()));
         right_box.set_hexpand(has_window_list(right_widgets_opt.value()));
-        center_box.set_hexpand(has_window_list(center_widgets_opt.value()));
+        center_box.set_hexpand(false);
+        center_box.set_vexpand(false);
     }
 
     WfOption<std::string> left_widgets_opt{"panel/widgets_left"};

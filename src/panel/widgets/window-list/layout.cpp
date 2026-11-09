@@ -1,5 +1,30 @@
+#include "gtkmm/enums.h"
 #include "toplevel.hpp"
 #include "window-list.hpp"
+
+#include <algorithm>
+
+namespace
+{
+struct button_width_t
+{
+    int minimum;
+    int natural;
+};
+
+button_width_t measure_button(const Gtk::Widget& child, Gtk::Orientation orientation, int forsize,
+    int maximum_width)
+{
+    int minimum, natural, minimum_baseline, natural_baseline;
+    child.measure(orientation, forsize,
+        minimum, natural, minimum_baseline, natural_baseline);
+
+    // Keep the existing square minimum and respect the button's CSS minimum.
+    minimum = std::max(minimum, std::max(forsize, 1));
+    natural = std::max(minimum, std::min(natural, maximum_width));
+    return {minimum, natural};
+}
+}
 
 WayfireWindowListLayout::WayfireWindowListLayout(WayfireWindowList *window_list)
 {
@@ -10,80 +35,67 @@ void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget,
     int width, int height, int baseline)
 {
     Gtk::Widget& widget_not_const = const_cast<Gtk::Widget&>(widget);
-    int child_count = widget.get_children().size();
-    if (child_count <= 0)
+    auto children = widget_not_const.get_children();
+    if (children.empty())
     {
         return;
     }
 
     const bool vertical = window_list->is_vertical();
 
-    int per_child;
+    // TODO Come back some day with rotated text labels as a vertical option
+    bool no_labels = window_list->hide_label.value() || vertical;
 
-    if (vertical)
+    // width & height need to switch based on orientation
+    int longside  = vertical ? height : width;
+    int shortside = vertical ? width : height;
+
+    int per_child = 1;
+
+    if (no_labels)
     {
-        // Keep window buttons square on a vertical panel.
-        per_child = width;
-    } else if (window_list->hide_label)
-    {
-        // Use square buttons for no label mode
-        per_child = height;
+        per_child = shortside;
     } else
     {
-        per_child = width / child_count;
-
-        // user preference is ignored if too small
-        int preference = std::max(height, user_size.value());
-
-        // At minimum use ratio of 1:1, at max use user preference
-        per_child = std::max(per_child, height);
+        per_child = longside / children.size();
+        int preference = std::max(shortside, user_size.value());
+        // Can't be larger than user preference
         per_child = std::min(per_child, preference);
+        // Can't be smaller than square
+        per_child = std::max(per_child, shortside);
     }
 
-    int index  = 0;
-    auto alloc = Gtk::Allocation();
-
-    if (vertical)
+    // Allocate locations and sizes
+    int offset = 0;
+    for (auto child : children)
     {
-        alloc.set_width(width);
-        alloc.set_height(per_child);
-        alloc.set_x(0);
-    } else
-    {
-        alloc.set_height(height);
-        alloc.set_width(per_child);
-        alloc.set_y(0);
-    }
-
-    for (auto child : widget_not_const.get_children())
-    {
+        auto alloc   = Gtk::Allocation();
+        int position = offset;
+        // If widget is being dragged, show its drag location
         if (child == top_widget)
         {
-            if (vertical)
-            {
-                alloc.set_y(top_position);
-            } else
-            {
-                alloc.set_x(top_position);
-            }
-
-            child->size_allocate(alloc, -1);
-            index++;
-            continue;
+            position = std::max(0, std::min(top_position, longside - per_child));
         }
 
         if (vertical)
         {
-            alloc.set_y(per_child * index);
+            alloc.set_width(shortside);
+            alloc.set_height(per_child);
+            alloc.set_x(0);
+            alloc.set_y(position);
         } else
         {
-            alloc.set_x(per_child * index);
+            alloc.set_width(per_child);
+            alloc.set_height(shortside);
+            alloc.set_x(position);
+            alloc.set_y(0);
         }
 
         child->size_allocate(alloc, -1);
-        index++;
+        offset += per_child;
     }
 
+    // Update hints
     for (auto& t : window_list->toplevels)
     {
         if (t.second)
@@ -97,32 +109,45 @@ void WayfireWindowListLayout::measure_vfunc(const Gtk::Widget& widget,
     Gtk::Orientation orientation, int for_size, int& minimum, int& natural,
     int& minimum_baseline, int& natural_baseline) const
 {
-    int child_count = widget.get_children().size();
+    const bool vertical = window_list->is_vertical();
 
-    if (window_list->is_vertical())
+    // TODO Come back some day with rotated text labels as a vertical option
+    bool no_labels = window_list->hide_label || vertical;
+
+    // Easy mode, labels are always square, so just count
+    if (no_labels)
     {
-        if (orientation == Gtk::Orientation::VERTICAL)
+        if ((vertical && (orientation == Gtk::Orientation::VERTICAL)) ||
+            (!vertical && (orientation == Gtk::Orientation::HORIZONTAL)))
         {
+            // Measure long side, widget count * icon size
             int per_child = std::max(for_size, 1);
-
-            minimum = child_count * per_child;
+            minimum = widget.get_children().size() * per_child;
             natural = minimum;
         } else
         {
+            // No specific size required
             minimum = 1;
             natural = 1;
         }
     } else
     {
-        if (orientation == Gtk::Orientation::HORIZONTAL)
+        if ((vertical && (orientation == Gtk::Orientation::VERTICAL)) ||
+            (!vertical && (orientation == Gtk::Orientation::HORIZONTAL)))
         {
-            // Use max of user preference and ratio 1:1
-            int per_child = std::max(for_size, user_size.value());
-
-            minimum = child_count * for_size;
-            natural = per_child * child_count;
+            // When measuring the long side, count up what every widget wants
+            // This is only a suggestion that bubbles up
+            minimum = 0;
+            natural = 0;
+            for (auto child : widget.get_children())
+            {
+                auto measured = measure_button(*child, orientation, for_size, user_size.value());
+                minimum += measured.minimum;
+                natural += measured.natural;
+            }
         } else
         {
+            // When measuring the short side, don't suggest a size at all
             minimum = 1;
             natural = 1;
         }
@@ -135,10 +160,7 @@ void WayfireWindowListLayout::measure_vfunc(const Gtk::Widget& widget,
 Gtk::SizeRequestMode WayfireWindowListLayout::get_request_mode_vfunc(
     const Gtk::Widget& widget) const
 {
-    if (window_list->is_vertical())
-    {
-        return Gtk::SizeRequestMode::HEIGHT_FOR_WIDTH;
-    }
-
-    return Gtk::SizeRequestMode::WIDTH_FOR_HEIGHT;
+    return (window_list->is_vertical() ?
+        Gtk::SizeRequestMode::HEIGHT_FOR_WIDTH :
+        Gtk::SizeRequestMode::WIDTH_FOR_HEIGHT);
 }
