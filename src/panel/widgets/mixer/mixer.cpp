@@ -301,7 +301,7 @@ void WayfireMixer::show_hide_boxes()
         }
     }
 
-    for (int i = 1; i < boxes_order.size(); i++)
+    for (unsigned int i = 1; i < boxes_order.size(); i++)
     {
         if (boxes_order[i]->get_children().size() > 2)
         {
