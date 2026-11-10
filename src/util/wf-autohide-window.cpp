@@ -336,6 +336,7 @@ static void handle_hotspot_leave(void *data, zwf_hotspot_v2*)
 static zwf_hotspot_v2_listener hotspot_listener = {
     .enter = handle_hotspot_enter,
     .leave = handle_hotspot_leave,
+    .proximity_changed = NULL
 };
 
 void WayfireAutohidingWindow::reinit_ext_hotspots()
