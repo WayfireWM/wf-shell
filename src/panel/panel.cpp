@@ -96,18 +96,26 @@ class WayfirePanel::impl
         auto orientation = is_horizontal ? Gtk::Orientation::HORIZONTAL : Gtk::Orientation::VERTICAL;
         set_boxes_orientation(orientation);
 
+        if (is_horizontal)
+        {
+            left_box.set_valign(Gtk::Align::FILL);
+            right_box.set_valign(Gtk::Align::FILL);
+            center_box.set_valign(Gtk::Align::FILL);
+            center_box.set_halign(Gtk::Align::CENTER);
+        } else
+        {
+            left_box.set_halign(Gtk::Align::FILL);
+            right_box.set_halign(Gtk::Align::FILL);
+            center_box.set_halign(Gtk::Align::FILL);
+            center_box.set_valign(Gtk::Align::CENTER);
+        }
+
         if (center)
         {
-            left_box.set_expand(true);
-            right_box.set_expand(true);
-
             int lmin, lnat, lminb, lnatb, rmin, rnat, rminb, rnatb, mmin, mnat, mminb, mnatb;
             left_box.measure(orientation, -1, lmin, lnat, lminb, lnatb);
             right_box.measure(orientation, -1, rmin, rnat, rminb, rnatb);
             center_box.measure(orientation, -1, mmin, mnat, mminb, mnatb);
-
-            center_box.set_halign(Gtk::Align::CENTER);
-            center_box.set_valign(Gtk::Align::CENTER);
 
             if (is_horizontal)
             {
@@ -115,36 +123,25 @@ class WayfirePanel::impl
 
                 left_box.set_halign(Gtk::Align::END);
                 right_box.set_halign(Gtk::Align::START);
-                left_box.set_valign(Gtk::Align::FILL);
-                right_box.set_valign(Gtk::Align::FILL);
             } else
             {
                 content_box.set_size_request(-1, (std::max(lnat, rnat) * 2) + mnat);
 
-                left_box.set_halign(Gtk::Align::FILL);
-                right_box.set_halign(Gtk::Align::FILL);
                 left_box.set_valign(Gtk::Align::END);
                 right_box.set_valign(Gtk::Align::START);
             }
         } else
         {
-            left_box.set_expand(false);
-            right_box.set_expand(false);
-
             content_box.set_size_request(-1, -1);
 
             if (is_horizontal)
             {
                 left_box.set_halign(Gtk::Align::START);
                 right_box.set_halign(Gtk::Align::END);
-                left_box.set_valign(Gtk::Align::FILL);
-                right_box.set_valign(Gtk::Align::FILL);
             } else
             {
                 left_box.set_valign(Gtk::Align::START);
                 right_box.set_valign(Gtk::Align::END);
-                left_box.set_halign(Gtk::Align::FILL);
-                right_box.set_halign(Gtk::Align::FILL);
             }
         }
     }
@@ -174,9 +171,6 @@ class WayfirePanel::impl
         }
 
         content_box.set_end_widget(right_box);
-
-        content_box.set_hexpand(true);
-        content_box.set_vexpand(true);
 
         window->set_child(content_box);
     }
@@ -358,16 +352,6 @@ class WayfirePanel::impl
         auto widgets = tokenize(list);
         for (auto widget_name : widgets)
         {
-            if (widget_name == "window-list")
-            {
-                bool vertical =
-                    (panel_position.value() == PANEL_POSITION_LEFT) ||
-                    (panel_position.value() == PANEL_POSITION_RIGHT);
-
-                box.set_hexpand(!vertical);
-                box.set_vexpand(vertical);
-            }
-
             auto widget = widget_from_name(widget_name);
             if (!widget)
             {
@@ -379,26 +363,6 @@ class WayfirePanel::impl
 
             container.push_back(std::move(widget));
         }
-    }
-
-    void update_window_list_expand()
-    {
-        auto has_window_list = [this] (const std::string& list)
-        {
-            for (const auto& widget : tokenize(list))
-            {
-                if (widget == "window-list")
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        };
-
-        left_box.set_hexpand(has_window_list(left_widgets_opt.value()));
-        right_box.set_hexpand(has_window_list(right_widgets_opt.value()));
-        center_box.set_hexpand(has_window_list(center_widgets_opt.value()));
     }
 
     WfOption<std::string> left_widgets_opt{"panel/widgets_left"};
@@ -424,7 +388,6 @@ class WayfirePanel::impl
     void handle_config_reload()
     {
         update_orientation();
-        update_window_list_expand();
 
         for (auto& w : left_widgets)
         {
