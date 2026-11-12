@@ -358,16 +358,6 @@ class WayfirePanel::impl
         auto widgets = tokenize(list);
         for (auto widget_name : widgets)
         {
-            if (widget_name == "window-list")
-            {
-                bool vertical =
-                    (panel_position.value() == PANEL_POSITION_LEFT) ||
-                    (panel_position.value() == PANEL_POSITION_RIGHT);
-
-                box.set_hexpand(!vertical);
-                box.set_vexpand(vertical);
-            }
-
             auto widget = widget_from_name(widget_name);
             if (!widget)
             {
@@ -379,26 +369,6 @@ class WayfirePanel::impl
 
             container.push_back(std::move(widget));
         }
-    }
-
-    void update_window_list_expand()
-    {
-        auto has_window_list = [this] (const std::string& list)
-        {
-            for (const auto& widget : tokenize(list))
-            {
-                if (widget == "window-list")
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        };
-
-        left_box.set_hexpand(has_window_list(left_widgets_opt.value()));
-        right_box.set_hexpand(has_window_list(right_widgets_opt.value()));
-        center_box.set_hexpand(has_window_list(center_widgets_opt.value()));
     }
 
     WfOption<std::string> left_widgets_opt{"panel/widgets_left"};
@@ -424,7 +394,6 @@ class WayfirePanel::impl
     void handle_config_reload()
     {
         update_orientation();
-        update_window_list_expand();
 
         for (auto& w : left_widgets)
         {
