@@ -96,18 +96,26 @@ class WayfirePanel::impl
         auto orientation = is_horizontal ? Gtk::Orientation::HORIZONTAL : Gtk::Orientation::VERTICAL;
         set_boxes_orientation(orientation);
 
+        if (is_horizontal)
+        {
+            left_box.set_valign(Gtk::Align::FILL);
+            right_box.set_valign(Gtk::Align::FILL);
+            center_box.set_valign(Gtk::Align::FILL);
+            center_box.set_halign(Gtk::Align::CENTER);
+        } else
+        {
+            left_box.set_halign(Gtk::Align::FILL);
+            right_box.set_halign(Gtk::Align::FILL);
+            center_box.set_halign(Gtk::Align::FILL);
+            center_box.set_valign(Gtk::Align::CENTER);
+        }
+
         if (center)
         {
-            left_box.set_expand(true);
-            right_box.set_expand(true);
-
             int lmin, lnat, lminb, lnatb, rmin, rnat, rminb, rnatb, mmin, mnat, mminb, mnatb;
             left_box.measure(orientation, -1, lmin, lnat, lminb, lnatb);
             right_box.measure(orientation, -1, rmin, rnat, rminb, rnatb);
             center_box.measure(orientation, -1, mmin, mnat, mminb, mnatb);
-
-            center_box.set_halign(Gtk::Align::CENTER);
-            center_box.set_valign(Gtk::Align::CENTER);
 
             if (is_horizontal)
             {
@@ -115,36 +123,25 @@ class WayfirePanel::impl
 
                 left_box.set_halign(Gtk::Align::END);
                 right_box.set_halign(Gtk::Align::START);
-                left_box.set_valign(Gtk::Align::FILL);
-                right_box.set_valign(Gtk::Align::FILL);
             } else
             {
                 content_box.set_size_request(-1, (std::max(lnat, rnat) * 2) + mnat);
 
-                left_box.set_halign(Gtk::Align::FILL);
-                right_box.set_halign(Gtk::Align::FILL);
                 left_box.set_valign(Gtk::Align::END);
                 right_box.set_valign(Gtk::Align::START);
             }
         } else
         {
-            left_box.set_expand(false);
-            right_box.set_expand(false);
-
             content_box.set_size_request(-1, -1);
 
             if (is_horizontal)
             {
                 left_box.set_halign(Gtk::Align::START);
                 right_box.set_halign(Gtk::Align::END);
-                left_box.set_valign(Gtk::Align::FILL);
-                right_box.set_valign(Gtk::Align::FILL);
             } else
             {
                 left_box.set_valign(Gtk::Align::START);
                 right_box.set_valign(Gtk::Align::END);
-                left_box.set_halign(Gtk::Align::FILL);
-                right_box.set_halign(Gtk::Align::FILL);
             }
         }
     }
@@ -174,9 +171,6 @@ class WayfirePanel::impl
         }
 
         content_box.set_end_widget(right_box);
-
-        content_box.set_hexpand(true);
-        content_box.set_vexpand(true);
 
         window->set_child(content_box);
     }
