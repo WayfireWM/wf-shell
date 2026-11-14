@@ -35,6 +35,18 @@
 #define WIREGUARD_TYPE 29
 #define LOOPBACK_TYPE  32
 
+/*
+ * Look a device up without inserting: std::map::operator[] adds an empty entry for a missing key. A
+ * connection may list a device while add_network() is still creating its proxy; the empty entry then
+ * made the emplace() in the proxy callback a no-op and the empty pointer was emitted (issue #495).
+ */
+static std::shared_ptr<Network> find_device(
+    const std::map<std::string, std::shared_ptr<Network>>& devices, const std::string& path)
+{
+    auto it = devices.find(path);
+    return (it == devices.end()) ? nullptr : it->second;
+}
+
 NetworkManager::NetworkManager()
 {
     popup_window.set_child(popup_box);
@@ -524,7 +536,10 @@ std::shared_ptr<Connection> NetworkManager::get_connection(std::string path)
     {
         for (auto & it : paths.get())
         {
-            list.push_back(all_devices[it]);
+            if (auto device = find_device(all_devices, it))
+            {
+                list.push_back(device);
+            }
         }
     }
 
@@ -542,7 +557,7 @@ void NetworkManager::on_nm_signal(const Glib::ustring& sender, const Glib::ustri
     {
         auto val =
             Glib::VariantBase::cast_dynamic<Glib::Variant<std::string>>(container.get_child()).get();
-        auto network = all_devices[val];
+        auto network = find_device(all_devices, val);
         if (network)
         {
             device_removed.emit(network);
@@ -594,7 +609,7 @@ void NetworkManager::request_password(std::string device_path, std::string ap_pa
 {
     if (device_path.find("/Devices/") != std::string::npos)
     {
-        auto device = std::dynamic_pointer_cast<WifiNetwork>(all_devices[device_path]);
+        auto device = std::dynamic_pointer_cast<WifiNetwork>(find_device(all_devices, device_path));
         if (device)
         {
             popup_cache_device = device_path;
@@ -733,7 +748,7 @@ void NetworkManager::submit_password()
     }
 
     popup_entry.set_text("");
-    auto wifi = std::dynamic_pointer_cast<WifiNetwork>(all_devices[popup_cache_device]);
+    auto wifi = std::dynamic_pointer_cast<WifiNetwork>(find_device(all_devices, popup_cache_device));
     if (!wifi)
     {
         return;
