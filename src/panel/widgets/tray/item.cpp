@@ -1,4 +1,6 @@
 #include "item.hpp"
+#include "glibmm/objectbase.h"
+#include "gtkmm/accessible.h"
 #include "wf-popover.hpp"
 #include "icon-select.hpp"
 
@@ -52,6 +54,7 @@ static Glib::RefPtr<Gdk::Pixbuf> extract_pixbuf(IconData && pixbuf_data)
 }
 
 StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service) :
+    Glib::ObjectBase("tray-button"),
     WayfireMenuWidget("panel",
         "tray-button",
         "tray_button")
@@ -71,11 +74,13 @@ StatusNotifierItem::StatusNotifierItem(const Glib::ustring & service) :
                     const Glib::VariantContainerBase & params) { handle_signal(signal, params); }));
         init_widget();
     });
+    set_a11y_prop(*this, Gtk::Accessible::Property::LABEL, "System tray icon for unknown");
 }
 
 void StatusNotifierItem::init_widget()
 {
     update_icon();
+    update_tooltip();
     setup_tooltip();
     init_menu();
     icon.add_css_class("widget-icon");
@@ -118,28 +123,10 @@ void StatusNotifierItem::init_widget()
         const int tertiary_click  = menu_on_middle_click ? 3 : 2;
         if (butt == primary_click)
         {
-            if (get_item_property<bool>("ItemIsMenu", true))
-            {
-                if (has_menu)
-                {
-                    popup();
-                } else
-                {
-                    item_proxy->call("ContextMenu", ev_coords);
-                }
-            } else
-            {
-                item_proxy->call("Activate", ev_coords);
-            }
+            on_primary_activate();
         } else if (butt == secondary_click)
         {
-            if (has_menu)
-            {
-                popup();
-            } else
-            {
-                item_proxy->call("ContextMenu", ev_coords);
-            }
+            on_secondary_activate();
         } else if (butt == tertiary_click)
         {
             item_proxy->call("SecondaryActivate", ev_coords);
@@ -152,32 +139,80 @@ void StatusNotifierItem::init_widget()
     add_controller(click_gesture);
 }
 
+void StatusNotifierItem::on_primary_activate()
+{
+    const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({0, 0});
+
+    if (get_item_property<bool>("ItemIsMenu", true))
+    {
+        on_secondary_activate();
+    } else
+    {
+        item_proxy->call("Activate", ev_coords);
+        // TODO Close focus on panel
+    }
+}
+
+void StatusNotifierItem::on_secondary_activate()
+{
+    const auto ev_coords = Glib::Variant<std::tuple<int, int>>::create({0, 0});
+
+    if (has_menu)
+    {
+        popup();
+    } else
+    {
+        item_proxy->call("ContextMenu", ev_coords);
+    }
+}
+
 void StatusNotifierItem::setup_tooltip()
 {
-    set_has_tooltip();
     signals.push_back(signal_query_tooltip().connect([this] (int, int, bool,
                                                              const std::shared_ptr<Gtk::Tooltip> & tooltip)
     {
-        auto [tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
-            get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
-
-        auto tooltip_label_text = !tooltip_text.empty() && !tooltip_title.empty() ?
-            "<b>" + tooltip_title + "</b>: " + tooltip_text :
-            !tooltip_title.empty() ? tooltip_title :
-            !tooltip_text.empty() ? tooltip_text :
-            get_item_property<Glib::ustring>("Title");
-
-        const auto pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
-        bool icon_shown   = false;
-        if (pixbuf)
+        if (tooltip_pixbuf)
         {
-            tooltip->set_icon(pixbuf);
-            icon_shown = true;
+            tooltip->set_icon(tooltip_pixbuf);
         }
 
-        tooltip->set_markup(tooltip_label_text);
-        return icon_shown || !tooltip_label_text.empty();
+        if (!tooltip_markup.empty())
+        {
+            tooltip->set_markup(tooltip_markup);
+        }
+
+        return tooltip_pixbuf || !tooltip_markup.empty();
     }, true));
+}
+
+void StatusNotifierItem::update_tooltip()
+{
+    auto [tooltip_icon_name, tooltip_icon_data, tooltip_title, tooltip_text] =
+        get_item_property<std::tuple<Glib::ustring, IconData, Glib::ustring, Glib::ustring>>("ToolTip");
+    const auto title = get_item_property<Glib::ustring>("Title");
+
+    tooltip_markup = !tooltip_text.empty() && !tooltip_title.empty() ?
+        "<b>" + tooltip_title + "</b>: " + tooltip_text :
+        !tooltip_title.empty() ? tooltip_title :
+        !tooltip_text.empty() ? tooltip_text :
+        title;
+
+    tooltip_pixbuf = extract_pixbuf(std::move(tooltip_icon_data));
+
+    Glib::ustring a11y_name = !tooltip_text.empty() && !tooltip_title.empty() ?
+        tooltip_title + ": " + tooltip_text :
+        !tooltip_title.empty() ? tooltip_title :
+        !tooltip_text.empty() ? tooltip_text :
+        !title.empty() ? title :
+        get_item_property<Glib::ustring>("Id");
+
+    const Glib::ustring a11y_label = "System tray icon for " +
+        (a11y_name.empty() ? Glib::ustring("unknown") : a11y_name);
+
+    set_a11y_prop(*this, Gtk::Accessible::Property::LABEL, a11y_label);
+
+    set_has_tooltip(tooltip_pixbuf || !tooltip_markup.empty());
+    trigger_tooltip_query();
 }
 
 void StatusNotifierItem::update_icon()
@@ -266,9 +301,9 @@ void StatusNotifierItem::handle_signal(const Glib::ustring & signal,
     }
 
     const auto property = signal.substr(3);
-    if (property == "ToolTip")
+    if ((property == "ToolTip") || (property == "Title"))
     {
-        fetch_property(property);
+        fetch_property(property, [this] { update_tooltip(); });
     } else if ((property.size() >= 4) && (property.substr(property.size() - 4) == "Icon"))
     {
         fetch_property(property + "Name",
