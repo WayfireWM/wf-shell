@@ -1,9 +1,9 @@
 #include <cstddef>
 #include <cstdio>
-#include <memory>
 #include <gtk4-layer-shell.h>
 
 #include "wf-popover.hpp"
+#include "gtk-utils.hpp"
 #include "wf-autohide-window.hpp"
 
 /* Helper to get panel from button. NULL if not added to one */
@@ -35,6 +35,7 @@ void WayfireMenuWidget::set_no_child()
     menu.popdown();
     use_menu   = false;
     use_widget = false;
+    set_a11y_prop(*this, Gtk::Accessible::Property::HAS_POPUP, false);
 }
 
 void WayfireMenuWidget::set_menu_model(Glib::RefPtr<Gio::MenuModel> new_menu)
@@ -44,6 +45,7 @@ void WayfireMenuWidget::set_menu_model(Glib::RefPtr<Gio::MenuModel> new_menu)
     use_menu   = true;
     use_widget = false;
     menu.set_menu_model(new_menu);
+    set_a11y_prop(*this, Gtk::Accessible::Property::HAS_POPUP, true);
 }
 
 bool WayfireMenuWidget::is_manual_popup()
@@ -168,9 +170,18 @@ void WayfireMenuWidget::open_on(int button)
 }
 
 WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::string class_name,
-    const std::string option_name) :
-    panel_position{section + "/position"}, class_name(class_name)
+    const std::string option_name,
+    GtkAccessibleRole role) :
+    Glib::ObjectBase(class_name.c_str()),
+    WfAccessibleBoxInit(class_name, role),
+    panel_position
+    {
+        section + "/position"
+    },
+    class_name(class_name)
 {
+    set_focusable(true);
+    set_can_focus(true);
     /* WayfireMenuWidget gets class name directly */
     add_css_class(class_name);
     add_css_class("wf-menu");
@@ -261,11 +272,35 @@ WayfireMenuWidget::WayfireMenuWidget(const std::string& section, const std::stri
     {
         popdown();
     }));
+
+    auto key_controller = Gtk::EventControllerKey::create();
+    signals.push_back(key_controller->signal_key_pressed().connect(
+        [this] (guint keyval, guint, Gdk::ModifierType state) -> bool
+    {
+        if ((keyval == GDK_KEY_Return) || (keyval == GDK_KEY_KP_Enter) || (keyval == GDK_KEY_space))
+        {
+            on_primary_activate();
+            return true;
+        }
+
+        bool is_shift_f10 = (keyval == GDK_KEY_F10) &&
+            ((state & Gdk::ModifierType::SHIFT_MASK) == Gdk::ModifierType::SHIFT_MASK);
+
+        if ((keyval == GDK_KEY_Menu) || is_shift_f10)
+        {
+            on_secondary_activate();
+            return true;
+        }
+
+        return false;
+    }, false));
+    add_controller(key_controller);
 }
 
 /* Most cases use class and option named the same. But not all */
-WayfireMenuWidget::WayfireMenuWidget(const std::string& section, std::string name) :
-    WayfireMenuWidget(section, name, name)
+WayfireMenuWidget::WayfireMenuWidget(const std::string& section, std::string name,
+    GtkAccessibleRole role) :
+    WayfireMenuWidget(section, name, name, role)
 {}
 
 WayfireMenuWidget::~WayfireMenuWidget()
@@ -312,6 +347,7 @@ void WayfireMenuWidget::set_popup_child(Gtk::Widget & widget)
     use_menu   = false;
     use_widget = true;
     scroll.set_child(widget);
+    set_a11y_prop(*this, Gtk::Accessible::Property::HAS_POPUP, true);
 }
 
 Gtk::Widget*WayfireMenuWidget::get_popup_child()
@@ -371,4 +407,20 @@ void WayfireMenuWidget::set_timer(int millis)
 Gtk::ScrolledWindow& WayfireMenuWidget::get_scroll()
 {
     return scroll;
+}
+
+void WayfireMenuWidget::on_primary_activate()
+{
+    if (use_widget || use_menu)
+    {
+        popup();
+    }
+}
+
+void WayfireMenuWidget::on_secondary_activate()
+{
+    if (use_widget || use_menu)
+    {
+        popup();
+    }
 }
