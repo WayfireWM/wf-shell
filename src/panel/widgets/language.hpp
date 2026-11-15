@@ -4,6 +4,7 @@
 #include <gtkmm/button.h>
 #include <gtkmm/calendar.h>
 #include <gtkmm/label.h>
+#include <memory>
 #include <wayfire/nonstd/json.hpp>
 #include <string>
 #include <vector>
@@ -11,6 +12,7 @@
 
 #include "../widget.hpp"
 #include "wf-ipc.hpp"
+#include "wf-popover.hpp"
 
 struct Layout
 {
@@ -25,6 +27,7 @@ class WayfireLanguage : public WayfireWidget, public IIPCSubscriber
     std::shared_ptr<IPCClient> ipc_client;
     uint32_t current_layout;
     std::vector<Layout> available_layouts;
+    std::shared_ptr<WayfireMenuWidget> button;
 
   public:
     void init(Gtk::Box *container);
