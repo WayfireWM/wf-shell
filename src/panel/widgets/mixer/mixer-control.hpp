@@ -34,6 +34,7 @@ class MixerControl : public Gtk::Grid
     WpPipewireObject *object;
     Gtk::Label label;
     Gtk::ToggleButton button;
+    std::string name;
     void set_btn_status_no_callbk(bool state);
     void set_scale_target_value(double volume);
     double get_scale_target_value();
