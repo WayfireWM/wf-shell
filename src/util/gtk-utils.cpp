@@ -211,3 +211,37 @@ void load_custom_icons(std::string section_name)
     }
 }
 }
+
+void mark_a11y_decorative(Gtk::Widget& widget)
+{
+    Glib::Value<bool> hidden;
+    hidden.init(Glib::Value<bool>::value_type());
+    hidden.set(true);
+    widget.update_state(Gtk::Accessible::State::HIDDEN, hidden);
+}
+
+void set_a11y_prop(Gtk::Widget& widget, Gtk::Accessible::Property prop, const char *value)
+{
+    set_a11y_prop(widget, prop, Glib::ustring(value ? value : ""));
+}
+
+void set_a11y_prop(Gtk::Widget& widget, Gtk::Accessible::Property prop, const std::string& value)
+{
+    set_a11y_prop(widget, prop, Glib::ustring(value));
+}
+
+void set_a11y_prop(Gtk::Widget& widget, Gtk::Accessible::Property prop, const Glib::ustring& value)
+{
+    Glib::Value<Glib::ustring> val;
+    val.init(Glib::Value<Glib::ustring>::value_type());
+    val.set(value);
+    widget.update_property(prop, val);
+}
+
+void set_a11y_prop(Gtk::Widget& widget, Gtk::Accessible::Property prop, int value)
+{
+    Glib::Value<int> val;
+    val.init(Glib::Value<int>::value_type());
+    val.set(value);
+    widget.update_property(prop, val);
+}
