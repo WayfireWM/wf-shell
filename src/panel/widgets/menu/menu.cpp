@@ -8,6 +8,7 @@
 
 #include "menu.hpp"
 #include "gtk-utils.hpp"
+#include "gtkmm/accessible.h"
 #include "wf-autohide-window.hpp"
 #include "wf-popover.hpp"
 
@@ -204,6 +205,37 @@ void WayfireMenu::on_search_changed()
     }
 
     select_first_flowbox_item();
+    post_filter();
+}
+
+void WayfireMenu::post_filter()
+{
+    std::string report_text;
+    if (search_entry.get_text() == "")
+    {
+        report_text = "Type to filter applications";
+    } else if (this->count_matches == 0)
+    {
+        report_text = "No applications found.";
+    } else if (this->count_matches == 1)
+    {
+        auto child = flowbox.get_child_at_index(0);
+        if (child)
+        {
+            auto cast_child = dynamic_cast<WfMenuItem*>(child);
+            if (cast_child)
+            {
+                auto name = cast_child->get_app_info()->get_name();
+                report_text = "1 match found. " + name + ". Press Enter to launch.";
+            }
+        }
+    } else
+    {
+        report_text = std::to_string(this->count_matches) + " matches found.";
+    }
+
+    set_a11y_prop(search_entry, Gtk::Accessible::Property::LABEL, "Search applications");
+    set_a11y_prop(search_entry, Gtk::Accessible::Property::DESCRIPTION, report_text);
 }
 
 bool WayfireMenu::on_filter(Gtk::FlowBoxChild *child)
@@ -470,9 +502,18 @@ void WayfireMenu::init(Gtk::Box *container)
     main_image.add_css_class("widget-icon");
     main_image.add_css_class("menu-icon");
 
-    signals.push_back(output->toggle_menu_signal().connect(sigc::mem_fun(*this, &WayfireMenu::toggle_menu)));
+    main_image.set_focusable(true);
+    main_image.set_can_focus(true);
+    set_a11y_prop(main_image, Gtk::Accessible::Property::LABEL, "Applications Menu");
+    set_a11y_prop(search_entry, Gtk::Accessible::Property::LABEL, "Search applications");
+    set_a11y_prop(search_entry, Gtk::Accessible::Property::DESCRIPTION,
+        "Type to filter installed application launchers");
 
-    // configuration reloading callbacks
+    // TODO I think we will need a new shortcut key for a11y users.
+    // For now I am co-opting this one to prove a point
+    // signals.push_back(output->toggle_menu_signal().connect(sigc::mem_fun(*this,
+    // &WayfireMenu::toggle_menu)));
+
     menu_icon.set_callback([=] () { update_icon(); });
     flowbox_spacing.set_callback([=] ()
     {

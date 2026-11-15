@@ -53,6 +53,7 @@ class WayfireMenu : public WayfireWidget
 
     bool on_sort(Gtk::FlowBoxChild*, Gtk::FlowBoxChild*);
     bool on_filter(Gtk::FlowBoxChild *child);
+    void post_filter();
     void on_search_changed();
     void on_popover_shown();
 
