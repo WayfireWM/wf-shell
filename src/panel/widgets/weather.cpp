@@ -3,6 +3,7 @@
 #include <fstream>
 #include <glibmm.h>
 #include "weather.hpp"
+#include "gtk-utils.hpp"
 #include "wayfire/nonstd/json.hpp"
 
 void WayfireWeather::init(Gtk::Box *container)
@@ -12,7 +13,9 @@ void WayfireWeather::init(Gtk::Box *container)
     box.prepend(label);
     box.append(icon);
     container->append(box);
-
+    set_a11y_prop(box, Gtk::Accessible::Property::LABEL, "Weather.");
+    mark_a11y_decorative(label);
+    mark_a11y_decorative(icon);
     weather_data_path = std::string(getenv("HOME")) + "/.local/share/owf/data/data.json";
 
     inotify_fd = inotify_init();
@@ -78,6 +81,7 @@ void WayfireWeather::update_weather()
 
 void WayfireWeather::update_label(std::string temperature)
 {
+    set_a11y_prop(box, Gtk::Accessible::Property::DESCRIPTION, temperature);
     label.set_text(temperature);
 }
 
