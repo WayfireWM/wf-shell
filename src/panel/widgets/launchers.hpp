@@ -7,10 +7,30 @@
 #include <gtkmm/flowbox.h>
 #include <gtkmm/button.h>
 #include <wayfire/util/duration.hpp>
+#include <glibmm/extraclassinit.h>
+
+class WayfireLauncherButton : public Glib::ExtraClassInit, public Gtk::Image
+{
+  public:
+    WayfireLauncherButton() :
+        Glib::ObjectBase("launcher"),
+        Glib::ExtraClassInit(&WayfireLauncherButton::class_init_func),
+        Gtk::Image()
+    {}
+
+  private:
+    static void class_init_func(void *klass, void* /*data*/)
+    {
+        auto *widget_class = GTK_WIDGET_CLASS(klass);
+        gtk_widget_class_set_accessible_role(widget_class, GTK_ACCESSIBLE_ROLE_BUTTON);
+        gtk_widget_class_set_css_name(widget_class, "launcher");
+    }
+};
+
 
 struct WfLauncherButton
 {
-    Gtk::Image m_icon;
+    WayfireLauncherButton m_icon;
     sigc::connection btn_sig;
     Glib::RefPtr<Gio::DesktopAppInfo> app_info;
 
