@@ -10,6 +10,8 @@
 #include <sys/mman.h>
 
 #include "toplevel.hpp"
+#include "gtk/gtk.h"
+#include "gtkmm/accessible.h"
 #include "wf-option-wrap.hpp"
 #include "window-list.hpp"
 #include "gtk-utils.hpp"
@@ -336,6 +338,40 @@ TooltipMedia::~TooltipMedia()
     }
 }
 
+WfToplevelButton::WfToplevelButton() :
+    Glib::ObjectBase("WfWindowButton"),
+    Glib::ExtraClassInit(&WfToplevelButton::class_init_func),
+    Gtk::Box()
+{
+    set_focusable(true);
+    set_can_focus(true);
+}
+
+gboolean WfToplevelButton::button_focus(GtkWidget *widget, GtkDirectionType /*direction*/)
+{
+    if (gtk_widget_is_focus(widget))
+    {
+        return FALSE;
+    }
+
+    if (gtk_widget_get_focusable(widget) &&
+        gtk_widget_get_sensitive(widget) &&
+        gtk_widget_get_visible(widget))
+    {
+        return gtk_widget_grab_focus(widget);
+    }
+
+    return FALSE;
+}
+
+void WfToplevelButton::class_init_func(void *klass, void* /*data*/)
+{
+    auto *widget_class = GTK_WIDGET_CLASS(klass);
+    gtk_widget_class_set_accessible_role(widget_class, GTK_ACCESSIBLE_ROLE_BUTTON);
+    gtk_widget_class_set_css_name(widget_class, "toplevel");
+    widget_class->focus = &WfToplevelButton::button_focus;
+}
+
 class WayfireToplevel::impl
 {
     zwlr_foreign_toplevel_handle_v1 *handle, *parent;
@@ -352,7 +388,7 @@ class WayfireToplevel::impl
     Glib::RefPtr<Gio::Menu> menu;
     Glib::RefPtr<Gio::MenuItem> minimize, maximize, close;
     Glib::RefPtr<Gio::SimpleAction> minimize_action, maximize_action, close_action;
-    Gtk::Box button;
+    WfToplevelButton button;
     Gtk::Image image;
     Gtk::Label label;
     Glib::RefPtr<Gtk::GestureDrag> drag_gesture;
@@ -382,6 +418,11 @@ class WayfireToplevel::impl
         button.set_halign(Gtk::Align::FILL);
         button.set_hexpand(true);
         button.set_spacing(5);
+
+        set_a11y_prop(button, Gtk::Accessible::Property::LABEL, "Window control");
+
+        button.set_can_focus(true);
+        button.set_focusable(true);
 
         label.set_ellipsize(Pango::EllipsizeMode::END);
         label.set_hexpand(true);
@@ -788,7 +829,7 @@ class WayfireToplevel::impl
     void set_title(std::string title)
     {
         this->title = title;
-
+        set_a11y_prop(button, Gtk::Accessible::Property::DESCRIPTION, title);
         label.set_text(title);
     }
 

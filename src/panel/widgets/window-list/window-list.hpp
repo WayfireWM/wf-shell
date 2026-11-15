@@ -19,6 +19,53 @@ struct WayfireListToplevel
 
 class WayfireToplevel;
 
+class WfWindowListScrollInit : public Glib::ExtraClassInit
+{
+  public:
+    WfWindowListScrollInit() :
+        Glib::ExtraClassInit(&WfWindowListScrollInit::class_init_func)
+    {}
+
+  private:
+    static gboolean focus_func(GtkWidget *widget, GtkDirectionType direction)
+    {
+        GtkWidget *viewport = gtk_scrolled_window_get_child(GTK_SCROLLED_WINDOW(widget));
+        if (!viewport)
+        {
+            return FALSE;
+        }
+
+        GtkWidget *window_list = gtk_viewport_get_child(GTK_VIEWPORT(viewport));
+        if (!window_list)
+        {
+            return FALSE;
+        }
+
+        return gtk_widget_child_focus(window_list, direction);
+    }
+
+    static void class_init_func(void *klass, void* /*data*/)
+    {
+        auto *widget_class = GTK_WIDGET_CLASS(klass);
+        widget_class->focus = &WfWindowListScrollInit::focus_func;
+    }
+};
+
+class WfWindowListScroll : public WfWindowListScrollInit, public Gtk::ScrolledWindow
+{
+  public:
+    WfWindowListScroll() :
+        Glib::ObjectBase("WfWindowListScroll"),
+        WfWindowListScrollInit(),
+        Gtk::ScrolledWindow()
+    {
+        set_focusable(false);
+        set_can_focus(true);
+    }
+};
+
+
+
 class WayfireWindowList : public Gtk::Box, public WayfireWidget
 {
     wl_display *display;
@@ -41,7 +88,7 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     ext_image_copy_capture_manager_v1 *copy_capture_manager = NULL;
     ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager = NULL;
     WayfireOutput *output;
-    Gtk::ScrolledWindow scrolled_window;
+    WfWindowListScroll scrolled_window;
 
     WayfireWindowList(WayfireOutput *output);
     virtual ~WayfireWindowList();

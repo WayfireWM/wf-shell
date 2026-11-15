@@ -14,6 +14,7 @@
 #include <linux-dmabuf-unstable-v1-client-protocol.h>
 #include <wayland-client-protocol.h>
 #include <wf-option-wrap.hpp>
+#include <glibmm/extraclassinit.h>
 #include "wf-shell-app.hpp"
 #include "panel.hpp"
 
@@ -53,6 +54,17 @@ class TooltipMedia : public Gtk::Picture
     void start_toplevel_source_session();
     void request_next_frame();
 };
+
+class WfToplevelButton : public Glib::ExtraClassInit, public Gtk::Box
+{
+  public:
+    WfToplevelButton();
+
+  private:
+    static gboolean button_focus(GtkWidget *widget, GtkDirectionType direction);
+    static void class_init_func(void *klass, void *data);
+};
+
 
 /* Represents a single opened toplevel window.
  * It displays the window icon on all outputs' docks that it is visible on */
