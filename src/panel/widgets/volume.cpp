@@ -2,6 +2,7 @@
 #include <glibmm.h>
 
 #include "volume.hpp"
+#include "gtk-utils.hpp"
 #include "icon-select.hpp"
 #include "wf-popover.hpp"
 
@@ -120,7 +121,7 @@ void WayfireVolume::init(Gtk::Box *container)
     main_image.add_css_class("widget-icon");
     button = std::make_unique<WayfireMenuWidget>("panel", "volume");
     button->set_keyboard_interactive(false);
-
+    set_a11y_prop(*button, Gtk::Accessible::Property::LABEL, "Volume.");
     auto middle_click_gesture = Gtk::GestureClick::create();
     auto long_press     = Gtk::GestureLongPress::create();
     auto scroll_gesture = Gtk::EventControllerScroll::create();
