@@ -33,6 +33,10 @@
 		If full_span is off, both sides of the panel will take the same amount of space, so that the center widgets are at the middle of the screen. This will lead to unused space on the side that has the least space taken up by the widgets.</_long>
 				<default>false</default>
 			</option>
+			<option name="keyboard_focus_color" type="string">
+				<_short>Keyboard focus indicator color</_short>
+				<default>rgba(100,100,255,0.4)</default>
+			</option>
 			<option name="minimal_height" type="int">
 				<_short>Minimal height</_short>
 				<_long>Minimum height the panel takes.</_long>
