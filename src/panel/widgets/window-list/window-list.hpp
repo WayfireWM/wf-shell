@@ -3,6 +3,7 @@
 #include <gtkmm.h>
 
 #include "../../widget.hpp"
+#include "gtkmm/scrolledwindow.h"
 #include "toplevel.hpp"
 #include "layout.hpp"
 
@@ -51,21 +52,6 @@ class WfWindowListScrollInit : public Glib::ExtraClassInit
     }
 };
 
-class WfWindowListScroll : public WfWindowListScrollInit, public Gtk::ScrolledWindow
-{
-  public:
-    WfWindowListScroll() :
-        Glib::ObjectBase("WfWindowListScroll"),
-        WfWindowListScrollInit(),
-        Gtk::ScrolledWindow()
-    {
-        set_focusable(false);
-        set_can_focus(true);
-    }
-};
-
-
-
 class WayfireWindowList : public Gtk::Box, public WayfireWidget
 {
     wl_display *display;
@@ -88,7 +74,7 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     ext_image_copy_capture_manager_v1 *copy_capture_manager = NULL;
     ext_foreign_toplevel_image_capture_source_manager_v1 *toplevel_capture_manager = NULL;
     WayfireOutput *output;
-    WfWindowListScroll scrolled_window;
+    Gtk::ScrolledWindow scrolled_window;
 
     WayfireWindowList(WayfireOutput *output);
     virtual ~WayfireWindowList();
