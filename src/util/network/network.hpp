@@ -46,6 +46,8 @@ class Network
         return get_icon_name() + "-symbolic";
     }
 
+    virtual std::string get_a11y_label();
+
     std::string get_path();
     void disconnect();
     void connect(std::string path_extra);

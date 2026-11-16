@@ -44,4 +44,9 @@ class BluetoothNetwork : public Network
     {
         return "Bluetooth";
     }
+
+    std::string get_a11y_label() override
+    {
+        return "Bluetooth Device";
+    }
 };
