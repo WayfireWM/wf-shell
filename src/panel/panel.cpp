@@ -702,6 +702,19 @@ void WayfirePanelApp::on_activate()
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");
     new CssFromConfigFont("panel/weather_font", ".weather {", "}");
+
+    new CssFromConfigString("panel/keyboard_focus_color", std::string(".wf-panel .wf-menu:focus-visible, ") +
+        ".wf-panel .window-button:focus-visible, " +
+        ".wf-panel .launcher:focus-visible, " +
+        ".wf-panel .command-output:focus-visible," +
+        ".network-control-center .device:focus-visible," +
+        ".network-control-center .vpn:focus-visible," +
+        ".network-control-center .access-point:focus-visible{" +
+        "    background-color: #8882;" +
+        "    outline: 2px solid ",
+        std::string(";") +
+        "    outline-offset: -2px;" +
+        "}");
 }
 
 std::shared_ptr<WayfireIPC> WayfirePanelApp::get_ipc_server_instance()
