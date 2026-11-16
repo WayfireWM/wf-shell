@@ -413,7 +413,8 @@ void NetworkManager::add_network(std::string path)
         device_added.emit(all_devices[path]);
         return;
     } else if ((connection_type == LOOPBACK_TYPE) ||
-               (connection_type == TUN_TYPE))
+               (connection_type == TUN_TYPE) ||
+               (connection_type == WIREGUARD_TYPE))
     {
         /* Known and ignored
          *  Loopback - nothing for user to do or know about this

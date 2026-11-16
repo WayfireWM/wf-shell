@@ -116,3 +116,8 @@ bool Network::is_active()
     device_proxy->get_cached_property(val, "ActiveConnection");
     return val.get() != "/";
 }
+
+std::string Network::get_a11y_label()
+{
+    return "Unknown device";
+}

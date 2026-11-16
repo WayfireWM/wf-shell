@@ -4,8 +4,11 @@
 #include <string>
 
 #include "bluetooth.hpp"
+#include "gtk-utils.hpp"
 #include "gtk/gtk.h"
+#include "gtkmm/boxlayout.h"
 #include "gtkmm/enums.h"
+#include "gtkmm/layoutmanager.h"
 #include "manager.hpp"
 #include "modem.hpp"
 #include "network.hpp"
@@ -15,11 +18,98 @@
 #include "wired.hpp"
 #include "network-widget.hpp"
 
+MenuItemBox::MenuItemBox() :
+    Gtk::Widget()
+{
+    set_focusable(true);
+    set_can_focus(true);
+
+    auto key_controller = Gtk::EventControllerKey::create();
+    menu_signals.push_back(key_controller->signal_key_pressed().connect(
+        sigc::mem_fun(*this, &MenuItemBox::on_key_pressed), false));
+    add_controller(key_controller);
+
+    auto click = Gtk::GestureClick::create();
+    menu_signals.push_back(click->signal_released().connect(
+        [this] (int, double, double)
+    {
+        signal_activate().emit();
+    }));
+    add_controller(click);
+    auto layout = Gtk::BoxLayout::create(Gtk::Orientation::HORIZONTAL);
+    set_layout_manager(layout);
+
+    signal_destroy().connect([this] ()
+    {
+        while (auto *child = get_first_child())
+        {
+            child->unparent();
+        }
+    });
+}
+
+MenuItemBox::~MenuItemBox()
+{
+    for (auto signal : menu_signals)
+    {
+        signal.disconnect();
+    }
+}
+
+bool MenuItemBox::on_key_pressed(guint keyval, guint /*keycode*/, Gdk::ModifierType /*state*/)
+{
+    switch (keyval)
+    {
+      case GDK_KEY_space:
+      case GDK_KEY_Return:
+      case GDK_KEY_KP_Enter:
+      case GDK_KEY_Menu:
+        m_signal_activate.emit();
+        return true;
+
+      default:
+        return false;
+    }
+}
+
+void MenuItemBox::append(Gtk::Widget& child)
+{
+    child.set_parent(*this);
+}
+
+void MenuItemBox::set_orientation(Gtk::Orientation orientation)
+{
+    if (auto box_layout = std::dynamic_pointer_cast<Gtk::BoxLayout>(get_layout_manager()))
+    {
+        box_layout->set_orientation(orientation);
+    }
+}
+
+sigc::signal<void()> MenuItemBox::signal_activate()
+{
+    return m_signal_activate;
+}
+
+bool MenuItemBox::on_focus(GtkDirectionType direction)
+{
+    if (has_focus())
+    {
+        return false;
+    }
+
+    if (get_focusable() && get_sensitive() && get_visible())
+    {
+        return grab_focus();
+    }
+
+    return false;
+}
 
 AccessPointWidget::AccessPointWidget(std::string path_in, std::shared_ptr<AccessPoint> ap_in) :
+    MenuItemBox(),
     ap(ap_in), path(path_in)
 {
-    add_css_class("access-point");
+    set_a11y_prop(*this, Gtk::Accessible::Property::LABEL, "Access Point.");
     append(overlay);
     append(label);
     append(band);
@@ -38,6 +128,7 @@ AccessPointWidget::AccessPointWidget(std::string path_in, std::shared_ptr<Access
         wifi.set_from_icon_name(ap->get_icon_name());
         security.set_from_icon_name(ap->get_security_icon_name());
         band.set_label(ap->get_band_name());
+        set_a11y_prop(*this, Gtk::Accessible::Property::LABEL, "Access Point. " + ap->get_a11y_label());
         auto classes = get_css_classes();
         for (auto css_class : classes)
         {
@@ -76,16 +167,17 @@ std::shared_ptr<AccessPoint> AccessPointWidget::get_ap()
 }
 
 VPNControlWidget::VPNControlWidget(std::shared_ptr<VpnConfig> config) :
+    MenuItemBox(),
     config(config)
 {
+    network_manager = NetworkManager::getInstance();
     add_css_class("vpn");
     append(image);
     append(label);
     label.set_label(config->name);
     image.set_from_icon_name("network-vpn-symbolic");
     image.add_css_class("default-icon");
-    signals.push_back(config->signal_state_changed().connect(
-        [this, config] (bool active)
+    auto update_contents = [this, config] (bool active)
     {
         if (active)
         {
@@ -95,8 +187,25 @@ VPNControlWidget::VPNControlWidget(std::shared_ptr<VpnConfig> config) :
             this->remove_css_class("active");
         }
 
+        set_a11y_prop(*this, Gtk::Accessible::Property::LABEL, config->get_a11y_label());
+
         label.set_label(config->name);
+    };
+
+    signals.push_back(config->signal_state_changed().connect(update_contents));
+
+    signals.push_back(signal_activate().connect([this, config] ()
+    {
+        if (config->get_active())
+        {
+            network_manager->deactivate_connection(config->get_connection_path());
+        } else
+        {
+            network_manager->activate_connection(config->path, "/", "/");
+        }
     }));
+
+    update_contents(config->get_active());
 }
 
 VPNControlWidget::~VPNControlWidget()
@@ -108,9 +217,9 @@ VPNControlWidget::~VPNControlWidget()
 }
 
 DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
+    MenuItemBox(),
     network(network)
 {
-    add_css_class("device");
     set_halign(Gtk::Align::FILL);
     set_orientation(Gtk::Orientation::VERTICAL);
     append(topbox);
@@ -120,11 +229,8 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
     revealer.set_child(revealer_box);
     revealer_box.set_orientation(Gtk::Orientation::VERTICAL);
     image.add_css_class("default-icon");
-    auto wifi   = std::dynamic_pointer_cast<WifiNetwork>(network);
-    auto mobile = std::dynamic_pointer_cast<ModemNetwork>(network);
-    auto wired  = std::dynamic_pointer_cast<WiredNetwork>(network);
-    auto bt     = std::dynamic_pointer_cast<BluetoothNetwork>(network);
-    if (wifi)
+
+    if (auto wifi = std::dynamic_pointer_cast<WifiNetwork>(network))
     {
         type = "wifi";
         for (auto & it : wifi->get_access_points())
@@ -149,31 +255,45 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
             sort_access_points();
         }));
 
-        auto wifi_cb =
-            [this, wifi] ()
+        auto wifi_cb = [this, wifi] ()
         {
+            /* Capture focus if its being used */
+            bool had_focus = has_focus() || (get_focus_child() != nullptr);
+
             if (wifi->get_current_access_point_path() == "/")
             {
                 sort_access_points();
                 revealer.set_reveal_child(true);
                 topbox.hide();
+                if (had_focus)
+                {
+                    if (auto *first_ap = revealer_box.get_first_child())
+                    {
+                        first_ap->grab_focus();
+                    }
+                }
             } else
             {
                 revealer.set_reveal_child(false);
                 topbox.show();
+                if (had_focus)
+                {
+                    grab_focus();
+                }
             }
         };
+
         signals.push_back(network->signal_network_altered().connect(wifi_cb));
         wifi_cb();
-    } else if (wired)
+    } else if (auto wired = std::dynamic_pointer_cast<WiredNetwork>(network))
     {
         type = "wired";
         revealer.hide();
-    } else if (bt)
+    } else if (auto bt = std::dynamic_pointer_cast<BluetoothNetwork>(network))
     {
         type = "bt";
         revealer.hide();
-    } else if (mobile)
+    } else if (auto mobile = std::dynamic_pointer_cast<ModemNetwork>(network))
     {
         type = "mobile";
         revealer.hide();
@@ -183,14 +303,21 @@ DeviceControlWidget::DeviceControlWidget(std::shared_ptr<Network> network) :
         revealer.hide();
     }
 
-    /* Click toggles connection on/off */
+    set_a11y_prop(*this, Gtk::Accessible::Property::LABEL, network->get_a11y_label());
+
     auto click = Gtk::GestureClick::create();
     signals.push_back(click->signal_released().connect(
-        [network] (int, double, double)
+        [this] (int, double, double)
+    {
+        signal_activate().emit();
+    }));
+    topbox.add_controller(click);
+
+    signals.push_back(signal_activate().connect(
+        [network] ()
     {
         network->toggle();
     }));
-    topbox.add_controller(click);
 
     /* Set label and image based on friendly info */
     auto network_change_cb = [this, network] ()
@@ -254,15 +381,12 @@ void DeviceControlWidget::add_access_point(std::shared_ptr<AccessPoint> ap)
     }
 
     auto widget = access_points[path];
-    auto click  = Gtk::GestureClick::create();
 
-    auto sig = click->signal_released().connect(
-        [this, path, widget] (int, double, double)
+    widget->signals.push_back(widget->signal_activate().connect(
+        [this, path, widget] ()
     {
         selected_access_point(path, widget);
-    });
-    widget->add_controller(click);
-    widget->signals.push_back(sig);
+    }));
     revealer_box.append(*access_points[path]);
 
     sort_access_points();
@@ -323,6 +447,11 @@ bool sort_compare(std::pair<std::string, std::shared_ptr<AccessPointWidget>> a,
 
 void DeviceControlWidget::sort_access_points()
 {
+    if (get_focus_child() != nullptr)
+    {
+        return;
+    }
+
     std::vector<std::pair<std::string, std::shared_ptr<AccessPointWidget>>> sorting;
     for (auto & it : access_points)
     {
@@ -470,20 +599,6 @@ void NetworkControlWidget::add_vpn(std::shared_ptr<VpnConfig> config)
 
     auto widget = std::make_shared<VPNControlWidget>(config);
     vpn_widgets.emplace(config->path, widget);
-
-    auto click = Gtk::GestureClick::create();
-    widget->signals.push_back(click->signal_released().connect(
-        [this, config] (int, double, double)
-    {
-        if (config->get_active())
-        {
-            network_manager->deactivate_connection(config->get_connection_path());
-        } else
-        {
-            network_manager->activate_connection(config->path, "/", "/");
-        }
-    }));
-    widget->add_controller(click);
 
     vpn_box.append(*widget);
 }

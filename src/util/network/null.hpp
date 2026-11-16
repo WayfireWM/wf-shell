@@ -1,5 +1,6 @@
 #pragma once
 #include "network.hpp"
+#include <string>
 
 class NullNetwork : public Network
 {
@@ -20,5 +21,10 @@ class NullNetwork : public Network
     std::vector<std::string> get_css_classes() override
     {
         return {"none"};
+    }
+
+    std::string get_a11y_label() override
+    {
+        return "Unknown Network Device";
     }
 };
