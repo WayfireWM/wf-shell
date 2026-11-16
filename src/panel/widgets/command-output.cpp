@@ -141,6 +141,8 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
         signals.push_back(signal_query_tooltip().connect(sigc::mem_fun(*this,
             &WfCommandOutputButtons::CommandOutput::query_tooltip), false));
     }
+
+    set_a11y_prop(*this, Gtk::Accessible::Property::LABEL, "Command Output.");
 }
 
 WfCommandOutputButtons::CommandOutput::~CommandOutput()

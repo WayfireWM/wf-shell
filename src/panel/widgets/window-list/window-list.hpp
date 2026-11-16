@@ -3,6 +3,7 @@
 #include <gtkmm.h>
 
 #include "../../widget.hpp"
+#include "gtkmm/scrolledwindow.h"
 #include "toplevel.hpp"
 #include "layout.hpp"
 
@@ -18,6 +19,38 @@ struct WayfireListToplevel
 };
 
 class WayfireToplevel;
+
+class WfWindowListScrollInit : public Glib::ExtraClassInit
+{
+  public:
+    WfWindowListScrollInit() :
+        Glib::ExtraClassInit(&WfWindowListScrollInit::class_init_func)
+    {}
+
+  private:
+    static gboolean focus_func(GtkWidget *widget, GtkDirectionType direction)
+    {
+        GtkWidget *viewport = gtk_scrolled_window_get_child(GTK_SCROLLED_WINDOW(widget));
+        if (!viewport)
+        {
+            return FALSE;
+        }
+
+        GtkWidget *window_list = gtk_viewport_get_child(GTK_VIEWPORT(viewport));
+        if (!window_list)
+        {
+            return FALSE;
+        }
+
+        return gtk_widget_child_focus(window_list, direction);
+    }
+
+    static void class_init_func(void *klass, void* /*data*/)
+    {
+        auto *widget_class = GTK_WIDGET_CLASS(klass);
+        widget_class->focus = &WfWindowListScrollInit::focus_func;
+    }
+};
 
 class WayfireWindowList : public Gtk::Box, public WayfireWidget
 {

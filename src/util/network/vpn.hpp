@@ -48,4 +48,9 @@ class VpnConfig
     VpnConfig(std::string path, std::shared_ptr<Gio::DBus::Proxy> vpn_proxy, std::string name) :
         vpn_proxy(vpn_proxy), name(name), path(path)
     {}
+
+    std::string get_a11y_label()
+    {
+        return "VPN. " + name + ". " + (is_active ? "Active" : "Not active");
+    }
 };

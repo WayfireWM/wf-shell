@@ -112,7 +112,7 @@ AccessPoint::~AccessPoint()
 
 std::string AccessPoint::get_security_icon_name()
 {
-    if (security_flags | NM_SOME_WPA_SECURITY)
+    if (security_flags & NM_SOME_WPA_SECURITY)
     {
         return "channel-secure-symbolic";
     }
@@ -178,7 +178,7 @@ std::vector<std::string> AccessPoint::get_css_classes()
         classlist.push_back("ap-" + ssid);
     }
 
-    if (security_flags | NM_SOME_WPA_SECURITY)
+    if (security_flags & NM_SOME_WPA_SECURITY)
     {
         classlist.push_back("secure");
     } else
@@ -197,6 +197,56 @@ std::vector<std::string> AccessPoint::get_css_classes()
 unsigned char AccessPoint::get_strength()
 {
     return strength;
+}
+
+std::string AccessPoint::get_a11y_label()
+{
+    std::string result = ssid.empty() ? "Unnamed" : ssid;
+
+    if ((freq > 800) && (freq < 1000))
+    {
+        result += ", 900 megahertz";
+    } else if ((freq > 2000) && (freq < 3000))
+    {
+        result += ", 2.4 gigahertz";
+    } else if ((freq >= 5000) && (freq < 6000))
+    {
+        result += ", 5 gigahertz";
+    } else if ((freq >= 6000) && (freq < 7000))
+    {
+        result += ", 6 gigahertz";
+    } else if ((freq >= 40000) && (freq < 50000))
+    {
+        result += ", 45 gigahertz";
+    } else if ((freq >= 57000) && (freq < 74000))
+    {
+        result += ", 60 gigahertz";
+    }
+
+    std::string sig = strength_string();
+    if (sig == "ok")
+    {
+        result += ", fair signal";
+    } else if (sig == "none")
+    {
+        result += ", no signal";
+    } else
+    {
+        result += ", " + sig + " signal";
+    }
+
+    if (security_flags & NM_SOME_WPA_SECURITY)
+    {} else
+    {
+        result += ", unsecured";
+    }
+
+    if (saved_password)
+    {
+        result += ", known connection";
+    }
+
+    return result;
 }
 
 void AccessPoint::set_has_saved_password(bool new_val)

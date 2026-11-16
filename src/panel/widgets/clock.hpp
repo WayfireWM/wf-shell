@@ -11,6 +11,7 @@ class WayfireClock : public WayfireWidget
     Gtk::Calendar calendar;
     std::unique_ptr<WayfireMenuWidget> button;
 
+    std::string last_a11y_text = "";
     sigc::connection timeout, btn_sig;
     WfOption<std::string> format{"panel/clock_format"};
 

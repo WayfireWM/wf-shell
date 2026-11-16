@@ -13,11 +13,14 @@
 #include <xkbcommon/xkbregistry.h>
 
 #include "language.hpp"
+#include "gtk-utils.hpp"
 #include "wf-ipc.hpp"
 #include "panel.hpp"
+#include "wf-popover.hpp"
 
 void WayfireLanguage::init(Gtk::Box *container)
 {
+    button     = std::make_unique<WayfireMenuWidget>("panel", "language");
     ipc_client = WayfirePanelApp::get().get_ipc_server_instance()->create_client();
 
     if (!ipc_client)
@@ -36,7 +39,7 @@ void WayfireLanguage::init(Gtk::Box *container)
     });
     label.add_controller(click_gesture);
 
-    container->append(label);
+    container->append(*button);
 
     ipc_client->subscribe(this, {"keyboard-modifier-state-changed"});
     ipc_client->send("{\"method\":\"wayfire/get-keyboard-state\"}", [=] (wf::json_t data)
@@ -51,6 +54,8 @@ void WayfireLanguage::init(Gtk::Box *container)
         set_available(data["possible-layouts"]);
         set_current(data["layout-index"]);
     });
+    button->set_child(label);
+    set_a11y_prop(label, Gtk::Accessible::Property::LABEL, "Language");
 }
 
 void WayfireLanguage::on_event(wf::json_t data)
@@ -79,6 +84,7 @@ bool WayfireLanguage::update_label()
     }
 
     label.set_label(available_layouts[current_layout].ID);
+    label.set_tooltip_text(available_layouts[current_layout].Name);
     return true;
 }
 

@@ -212,3 +212,8 @@ std::string ModemNetwork::get_friendly_name()
 {
     return "Mobile Data";
 }
+
+std::string ModemNetwork::get_a11y_label()
+{
+    return "Mobile Network Device";
+}

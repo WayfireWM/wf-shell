@@ -490,7 +490,53 @@ class WayfirePanel::impl
 };
 
 WayfirePanel::WayfirePanel(WayfireOutput *output) : pimpl(new impl(output))
-{}
+{
+    // TODO Use our own signal, rather than co-opt the menu-open
+    output->toggle_menu_signal().connect([this] ()
+    {
+        toggle_exclusive_focus();
+    });
+    auto key_controller = Gtk::EventControllerKey::create();
+    key_controller->set_propagation_phase(Gtk::PropagationPhase::BUBBLE);
+    key_controller->signal_key_pressed().connect(
+        [this] (guint keyval, guint, Gdk::ModifierType) -> bool
+    {
+        if (keyval == GDK_KEY_Escape)
+        {
+            unset_exclusive_focus();
+            return true;
+        }
+
+        return false;
+    }, false);
+
+    get_window().add_controller(key_controller); // Replace with your panel's window/root widget
+}
+
+void WayfirePanel::toggle_exclusive_focus()
+{
+    auto mode = gtk_layer_get_keyboard_mode(get_window().gobj());
+    if (mode == GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE)
+    {
+        unset_exclusive_focus();
+    } else
+    {
+        set_exclusive_focus();
+    }
+}
+
+void WayfirePanel::set_exclusive_focus()
+{
+    gtk_layer_set_keyboard_mode(get_window().gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+    // Set the first widget as focused
+    GtkWidget *container = GTK_WIDGET(get_window().gobj());
+    gtk_widget_child_focus(container, GTK_DIR_TAB_FORWARD);
+}
+
+void WayfirePanel::unset_exclusive_focus()
+{
+    gtk_layer_set_keyboard_mode(get_window().gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
+}
 
 wl_surface*WayfirePanel::get_wl_surface()
 {
@@ -656,6 +702,19 @@ void WayfirePanelApp::on_activate()
     new CssFromConfigFont("panel/battery_font", ".battery {", "}");
     new CssFromConfigFont("panel/clock_font", ".clock {", "}");
     new CssFromConfigFont("panel/weather_font", ".weather {", "}");
+
+    new CssFromConfigString("panel/keyboard_focus_color", std::string(".wf-panel .wf-menu:focus-visible, ") +
+        ".wf-panel .window-button:focus-visible, " +
+        ".wf-panel .launcher:focus-visible, " +
+        ".wf-panel .command-output:focus-visible," +
+        ".network-control-center .device:focus-visible," +
+        ".network-control-center .vpn:focus-visible," +
+        ".network-control-center .access-point:focus-visible{" +
+        "    background-color: #8882;" +
+        "    outline: 2px solid ",
+        std::string(";") +
+        "    outline-offset: -2px;" +
+        "}");
 }
 
 std::shared_ptr<WayfireIPC> WayfirePanelApp::get_ipc_server_instance()

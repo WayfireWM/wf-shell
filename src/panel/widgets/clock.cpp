@@ -1,5 +1,6 @@
 #include <glibmm.h>
 #include "clock.hpp"
+#include "gtk-utils.hpp"
 
 void WayfireClock::init(Gtk::Box *container)
 {
@@ -50,6 +51,14 @@ bool WayfireClock::update_label()
     }
 
     label.set_text(text.substr(i));
+    /* TODO Maybe allow user to customise the spoken form? */
+    auto a11y_text = time.format("%-I %M %p on %A, %B %-e, %Y");
+    if (a11y_text != last_a11y_text)
+    {
+        last_a11y_text = a11y_text;
+        set_a11y_prop(*button, Gtk::Accessible::Property::LABEL, a11y_text);
+    }
+
     return 1;
 }
 

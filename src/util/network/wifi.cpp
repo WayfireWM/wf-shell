@@ -189,3 +189,14 @@ WifiNetwork::~WifiNetwork()
         signal.disconnect();
     }
 }
+
+std::string WifiNetwork::get_a11y_label()
+{
+    auto ap = get_current_access_point();
+    if (ap)
+    {
+        return "WiFi, " + get_name() + ", connected to " + ap->get_a11y_label();
+    }
+
+    return "WiFi, disconnected";
+}

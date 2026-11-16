@@ -3,13 +3,34 @@
 #include <sigc++/connection.h>
 #include <gtkmm.h>
 
+#include "gtk/gtk.h"
 #include "gtkmm/overlay.h"
 #include "manager.hpp"
 #include "wifi-ap.hpp"
 #include "vpn.hpp"
+#include <glibmm/extraclassinit.h>
+#include <vector>
 
 
-class AccessPointWidget : public Gtk::Box
+class MenuItemBox : public Gtk::Widget
+{
+  public:
+    MenuItemBox();
+    ~MenuItemBox();
+    sigc::signal<void()> signal_activate();
+
+    void append(Gtk::Widget& child);
+    void set_orientation(Gtk::Orientation orientation);
+
+  protected:
+    std::vector<sigc::connection> menu_signals;
+    sigc::signal<void()> m_signal_activate;
+
+    virtual bool on_key_pressed(guint keyval, guint keycode, Gdk::ModifierType state);
+    virtual bool on_focus(GtkDirectionType direction);
+};
+
+class AccessPointWidget : public MenuItemBox
 {
   private:
     Gtk::Overlay overlay;
@@ -25,7 +46,7 @@ class AccessPointWidget : public Gtk::Box
     std::shared_ptr<AccessPoint> get_ap();
 };
 
-class DeviceControlWidget : public Gtk::Box
+class DeviceControlWidget : public MenuItemBox
 {
   private:
     std::map<std::string, std::shared_ptr<AccessPointWidget>> access_points;
@@ -46,12 +67,13 @@ class DeviceControlWidget : public Gtk::Box
     std::string type;
 };
 
-class VPNControlWidget : public Gtk::Box
+class VPNControlWidget : public MenuItemBox
 {
   private:
     std::shared_ptr<VpnConfig> config;
     Gtk::Image image;
     Gtk::Label label;
+    std::shared_ptr<NetworkManager> network_manager;
 
   public:
     std::vector<sigc::connection> signals;

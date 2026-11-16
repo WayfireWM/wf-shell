@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gtk/gtk.h"
 #include <glibmm.h>
 #include <giomm.h>
 #include <gtkmm.h>
@@ -8,6 +9,7 @@
 #include <sigc++/signal.h>
 #include <vector>
 #include <wf-option-wrap.hpp>
+#include <wf-accessibility.hpp>
 
 using type_signal_simple = sigc::signal<void (void)>;
 
@@ -15,7 +17,7 @@ using type_signal_simple = sigc::signal<void (void)>;
  * A button which shows a popup on click. It adjusts the popup position
  * automatically based on panel position (valid values are "top" and "bottom")
  */
-class WayfireMenuWidget : public Gtk::Box
+class WayfireMenuWidget : public WfAccessibleBoxInit, public Gtk::Box
 {
   private:
     Gtk::ScrolledWindow scroll;
@@ -63,10 +65,12 @@ class WayfireMenuWidget : public Gtk::Box
     void popdown();
 
     WayfireMenuWidget(const std::string& config_section,
-        const std::string name);
+        const std::string name,
+        GtkAccessibleRole role = GTK_ACCESSIBLE_ROLE_BUTTON);
     WayfireMenuWidget(const std::string& config_section,
         const std::string css_name,
-        const std::string option_name);
+        const std::string option_name,
+        GtkAccessibleRole role = GTK_ACCESSIBLE_ROLE_BUTTON);
     ~WayfireMenuWidget();
 
     /* Called when the popup is shown */
@@ -107,4 +111,7 @@ class WayfireMenuWidget : public Gtk::Box
     /* Use a specific mouse button to open menu. Skip this if you're handling presses in-widget. If button < 0
      * then this callback is removed  */
     void open_on(int button);
+
+    virtual void on_primary_activate();
+    virtual void on_secondary_activate();
 };
