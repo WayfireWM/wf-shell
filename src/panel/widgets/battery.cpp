@@ -369,7 +369,7 @@ void WayfireBatteryInfo::init(Gtk::Box *container)
 
     icon.property_scale_factor().signal_changed()
         .connect(sigc::mem_fun(*this, &WayfireBatteryInfo::update_icon));
-
+    set_a11y_prop(*box, Gtk::Accessible::Property::LABEL, "Battery.");
     update_layout();
 }
 

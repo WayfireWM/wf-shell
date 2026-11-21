@@ -119,3 +119,8 @@ void Connection::replace_devices(std::vector<std::shared_ptr<Network>> devices_i
 
     network_altered.emit();
 }
+
+std::string Connection::get_a11y_label()
+{
+    return "Unknown device";
+}

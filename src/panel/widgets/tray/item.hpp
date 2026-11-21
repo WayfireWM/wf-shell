@@ -28,6 +28,9 @@ class StatusNotifierItem : public WayfireMenuWidget
 
     Gtk::Image icon;
 
+    Glib::ustring tooltip_markup;
+    Glib::RefPtr<Gdk::Pixbuf> tooltip_pixbuf;
+
     gdouble distance_scrolled_x = 0;
     gdouble distance_scrolled_y = 0;
 
@@ -49,6 +52,7 @@ class StatusNotifierItem : public WayfireMenuWidget
     void handle_signal(const Glib::ustring & signal, const Glib::VariantContainerBase & params);
 
     void update_icon();
+    void update_tooltip();
     void setup_tooltip();
 
     void fetch_property(const Glib::ustring & property_name, const sigc::slot<void()> & callback = {});
@@ -59,4 +63,7 @@ class StatusNotifierItem : public WayfireMenuWidget
     void menu_update(DbusmenuClient *client);
     explicit StatusNotifierItem(const Glib::ustring & service);
     std::string get_unique_name();
+
+    void on_primary_activate() override;
+    void on_secondary_activate() override;
 };

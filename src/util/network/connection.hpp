@@ -9,7 +9,7 @@
 class Connection : public Network
 {
   public:
-    bool has_vpn;
+    bool has_vpn = false;
     std::vector<sigc::connection> signals;
     std::shared_ptr<Gio::DBus::Proxy> connection_proxy, vpn_proxy;
     std::vector<std::shared_ptr<Network>> devices;
@@ -24,6 +24,7 @@ class Connection : public Network
     std::string get_name();
     std::string get_icon_name();
     std::vector<std::string> get_css_classes();
+    virtual std::string get_a11y_label();
 
     void replace_devices(std::vector<std::shared_ptr<Network>> devices_in);
 };

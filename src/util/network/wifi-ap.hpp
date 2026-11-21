@@ -34,6 +34,7 @@ class AccessPoint
     std::string get_security_icon_name();
     std::string get_band_name();
     std::vector<std::string> get_css_classes();
+    std::string get_a11y_label();
     type_signal_access_point_altered signal_altered();
     unsigned char get_strength();
     bool has_saved_password();

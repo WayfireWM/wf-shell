@@ -383,8 +383,8 @@ void WayfireWindowList::init(Gtk::Box *container)
     }
 
     scrolled_window.add_css_class("window-list");
-
     scrolled_window.set_child(*this);
+    set_can_focus(true);
     update_layout();
     container->append(scrolled_window);
 }

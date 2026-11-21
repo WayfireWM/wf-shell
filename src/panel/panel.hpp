@@ -21,6 +21,9 @@ class WayfirePanel
     void handle_config_reload();
     void init_widgets();
     void set_panel_app(WayfirePanelApp *panel_app);
+    void toggle_exclusive_focus();
+    void set_exclusive_focus();
+    void unset_exclusive_focus();
     std::shared_ptr<WayfireIPC> get_ipc_server_instance();
 
   private:

@@ -64,6 +64,9 @@ bool WfLauncherButton::initialize(std::string name, std::string icon, std::strin
         launch();
     });
     m_icon.add_controller(click);
+    m_icon.set_can_focus(true);
+    m_icon.set_focusable(true);
+    set_a11y_prop(m_icon, Gtk::Accessible::Property::LABEL, "Launcher.");
 
     update_icon();
 
@@ -118,6 +121,7 @@ void WfLauncherButton::launch()
 
 WfLauncherButton::WfLauncherButton()
 {}
+
 WfLauncherButton::~WfLauncherButton()
 {
     btn_sig.disconnect();
@@ -235,6 +239,10 @@ void WayfireLaunchers::handle_config_reload()
     for (auto& l : launchers)
     {
         box.append(l->m_icon);
+        if (auto *flow_child = dynamic_cast<Gtk::FlowBoxChild*>(l->m_icon.get_parent()))
+        {
+            flow_child->set_focusable(false);
+        }
     }
 
     update_layout();

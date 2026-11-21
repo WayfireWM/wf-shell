@@ -1,5 +1,4 @@
-#ifndef ANIMATED_SCALE_HPP
-#define ANIMATED_SCALE_HPP
+#pragma once
 
 #include "wf-popover.hpp"
 #include <gtkmm/image.h>
@@ -14,6 +13,8 @@ class WayfireAnimatedScale : public Gtk::Scale
     wf::animation::simple_animation_t current_volume{wf::create_option(200)};
     sigc::connection value_changed;
     std::function<void()> user_changed_callback;
+    std::string previous_a11y = "";
+    void update_a11y();
 
   public:
     WayfireAnimatedScale();
@@ -27,6 +28,5 @@ class WayfireAnimatedScale : public Gtk::Scale
     void set_user_changed_callback(std::function<void()> callback);
     /** Callback to animate volume control */
     gboolean update_animation(Glib::RefPtr<Gdk::FrameClock> clock);
+    std::string get_percentage();
 };
-
-#endif // ANIMATED_SCALE_HPP

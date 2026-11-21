@@ -3,6 +3,7 @@
 #include <wp/proxy.h>
 
 #include "mixer.hpp"
+#include "gtk-utils.hpp"
 #include "mixer-control.hpp"
 #include "icon-select.hpp"
 
@@ -280,6 +281,8 @@ void WayfireMixer::init(Gtk::Box *container)
     // if there is no audio device nor application, the quick target will not be set
     // and the widget will apear empty. Calling this here to always have the OOR icon.
     update_icon();
+
+    set_a11y_prop(*button, Gtk::Accessible::Property::LABEL, "Volume Mixer.");
 
     // get() returns WpCommon and creates it if it wasn’t yet.
     // add_widget also catches up this widget to every audio channel registered before.

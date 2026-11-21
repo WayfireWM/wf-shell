@@ -20,6 +20,11 @@ void WayfireStatusNotifier::add_item(const Glib::ustring & service)
 
     items.emplace(service, service);
     icons_box.append(items.at(service));
+    // Make it not reachable by tab
+    if (auto *flow_child = dynamic_cast<Gtk::FlowBoxChild*>(items.at(service).get_parent()))
+    {
+        flow_child->set_focusable(false);
+    }
 }
 
 void WayfireStatusNotifier::remove_item(const Glib::ustring & service)

@@ -2,6 +2,7 @@
 #include <gtkmm.h>
 
 #include "mixer-control.hpp"
+#include "gtk-utils.hpp"
 
 MixerControl::MixerControl(WpPipewireObject *obj, WayfireMixer *parent_widget, const std::map<double,
     std::vector<std::string>> _icon_set)
@@ -55,7 +56,14 @@ void MixerControl::init()
         name = "Unnamed";
     }
 
-    label.set_text(Glib::ustring(name));
+    this->name = Glib::ustring(name);
+    set_a11y_prop(button, Gtk::Accessible::Property::LABEL, "Mute");
+
+    set_a11y_prop(button, Gtk::Accessible::Property::DESCRIPTION, name);
+    set_a11y_prop(scale, Gtk::Accessible::Property::LABEL, "Volume");
+    set_a11y_prop(scale, Gtk::Accessible::Property::DESCRIPTION, name);
+
+    label.set_text(this->name);
     // this causes the label’s *minimum* size to be 0, causing it to not request any space,
     // thus having the column’s width be dictated solely by the scale’s size request
     label.set_max_width_chars(0);
@@ -228,9 +236,12 @@ MixerControlDevice::~MixerControlDevice()
 
 void MixerControlDevice::init()
 {
+    MixerControl::init();
     add_css_class("mixer-control");
     default_btn.add_css_class("flat");
     default_btn.add_css_class("default-button");
+    set_a11y_prop(default_btn, Gtk::Accessible::Property::LABEL, "Default device");
+    set_a11y_prop(default_btn, Gtk::Accessible::Property::DESCRIPTION, name);
 
     is_def_icon.set_from_icon_name("emblem-default");
     default_btn.set_child(is_def_icon);
@@ -250,8 +261,6 @@ void MixerControlDevice::init()
 
         WpCommon::get().set_default(object);
     });
-
-    MixerControl::init();
 }
 
 void MixerControlDevice::set_def_status_no_callbk(bool state)
