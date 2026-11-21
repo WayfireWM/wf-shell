@@ -1,6 +1,9 @@
 #include <iostream>
 #include <glibmm.h>
 #include <gdk/wayland/gdkwayland.h>
+#include <giomm/desktopappinfo.h>
+#include "group.hpp"
+
 
 #include "window-list.hpp"
 
@@ -341,12 +344,21 @@ void WayfireWindowList::update_layout()
         }
     }
 
+    for (auto& g : groups)
+    {
+        if (g.second)
+        {
+            g.second->set_hide_text(is_vertical() || hide_label.value());
+        }
+    }
+
     queue_allocate();
 }
 
 void WayfireWindowList::handle_config_reload()
 {
     update_layout();
+    update_grouping();
 }
 
 void WayfireWindowList::init(Gtk::Box *container)
@@ -531,7 +543,19 @@ void WayfireWindowList::handle_new_toplevel(zwlr_foreign_toplevel_handle_v1 *top
 
 void WayfireWindowList::handle_toplevel_closed(zwlr_foreign_toplevel_handle_v1 *toplevel)
 {
+    auto it = toplevels.find(toplevel);
+    if ((it != toplevels.end()) && it->second)
+    {
+        std::string norm_id = get_normalized_app_id(it->second->get_app_id());
+        auto git = groups.find(norm_id);
+        if ((git != groups.end()) && git->second)
+        {
+            git->second->remove_toplevel(it->second.get());
+        }
+    }
+
     toplevels.erase(toplevel);
+    update_grouping();
 }
 
 WayfireWindowList::WayfireWindowList(WayfireOutput *output)
@@ -544,6 +568,218 @@ WayfireWindowList::WayfireWindowList(WayfireOutput *output)
     {
         this->queue_allocate();
     });
+    enable_grouping.set_callback([=]
+    {
+        this->update_grouping();
+    });
+}
+
+std::string WayfireWindowList::get_normalized_app_id(const std::string& app_id)
+{
+    std::string cleaned = app_id;
+    const std::string sub_str = " wf-ipc-";
+    size_t pos = cleaned.find(sub_str);
+    if (pos != std::string::npos)
+    {
+        cleaned = cleaned.substr(0, pos);
+    } else if (cleaned.rfind("wf-ipc-", 0) == 0)
+    {
+        return "";
+    }
+
+    std::istringstream stream(cleaned);
+    std::string first_token;
+    if (stream >> first_token)
+    {
+        return first_token;
+    }
+
+    return cleaned;
+}
+
+std::string WayfireWindowList::get_app_name(const std::string& normalized_app_id)
+{
+    if (normalized_app_id.empty())
+    {
+        return "Unknown";
+    }
+
+    std::string lower_id = normalized_app_id;
+    for (auto& c : lower_id)
+    {
+        c = std::tolower(static_cast<unsigned char>(c));
+    }
+
+    std::vector<std::string> prefixes = {"", "org.kde."};
+    std::vector<std::string> id_variations = {normalized_app_id, lower_id};
+    std::string suffix = ".desktop";
+
+    for (const auto& prefix : prefixes)
+    {
+        for (const auto& id : id_variations)
+        {
+            auto app_info = Gio::DesktopAppInfo::create(prefix + id + suffix);
+            if (app_info)
+            {
+                auto name = app_info->get_display_name();
+                if (name.empty())
+                {
+                    name = app_info->get_name();
+                }
+
+                if (!name.empty())
+                {
+                    return name;
+                }
+            }
+        }
+    }
+
+    for (const auto& info : Gio::AppInfo::get_all())
+    {
+        auto desktop = std::dynamic_pointer_cast<Gio::DesktopAppInfo>(info);
+        if (!desktop)
+        {
+            continue;
+        }
+
+        const auto wm_class = desktop->get_startup_wm_class();
+        if (!wm_class.empty() && (wm_class == normalized_app_id))
+        {
+            auto name = desktop->get_display_name();
+            if (name.empty())
+            {
+                name = desktop->get_name();
+            }
+
+            if (!name.empty())
+            {
+                return name;
+            }
+        }
+    }
+
+    return normalized_app_id;
+}
+
+bool WayfireWindowList::is_toplevel_grouped(WayfireToplevel *toplevel)
+{
+    if (!toplevel || !enable_grouping.value())
+    {
+        return false;
+    }
+
+    std::string norm_id = const_cast<WayfireWindowList*>(this)->get_normalized_app_id(toplevel->get_app_id());
+    return !norm_id.empty() && (groups.count(norm_id) > 0);
+}
+
+void WayfireWindowList::update_grouping()
+{
+    std::map<std::string, std::vector<WayfireToplevel*>> by_app;
+
+    if (enable_grouping.value())
+    {
+        for (auto& kv : toplevels)
+        {
+            auto *t = kv.second.get();
+            if (!t || !t->is_visible_on_output())
+            {
+                continue;
+            }
+
+            std::string norm_id = get_normalized_app_id(t->get_app_id());
+            if (!norm_id.empty())
+            {
+                by_app[norm_id].push_back(t);
+            }
+        }
+    }
+
+    /* Remove groups that no longer have >= 2 visible windows */
+    for (auto it = groups.begin(); it != groups.end();)
+    {
+        auto app_it = by_app.find(it->first);
+        if ((app_it == by_app.end()) || (app_it->second.size() < 2))
+        {
+            Gtk::Widget *prev_sibling = it->second->get_button().get_prev_sibling();
+            if (app_it != by_app.end())
+            {
+                for (auto *t : app_it->second)
+                {
+                    t->set_grouped(false, prev_sibling);
+                }
+            }
+
+            it = groups.erase(it);
+        } else
+        {
+            ++it;
+        }
+    }
+
+    /* Create or update groups */
+    for (auto& kv : by_app)
+    {
+        const auto& norm_id = kv.first;
+        auto& members = kv.second;
+
+        if (members.size() < 2)
+        {
+            continue;
+        }
+
+        if (groups.find(norm_id) == groups.end())
+        {
+            Gtk::Widget *anchor_prev = nullptr;
+            for (auto *t : members)
+            {
+                if (t->get_button().get_parent() == this)
+                {
+                    anchor_prev = t->get_button().get_prev_sibling();
+                    break;
+                }
+            }
+
+            auto group = std::make_unique<WayfireToplevelGroup>(this, norm_id);
+            if (anchor_prev && (anchor_prev->get_parent() == this))
+            {
+                insert_child_after(group->get_button(), *anchor_prev);
+            } else
+            {
+                append(group->get_button());
+            }
+
+            groups[norm_id] = std::move(group);
+        }
+
+        auto *group = groups[norm_id].get();
+        for (auto *t : members)
+        {
+            group->add_toplevel(t);
+            t->set_grouped(true);
+        }
+
+        group->sync();
+    }
+
+    /* Reinstate remaining toplevels */
+    for (auto& kv : toplevels)
+    {
+        auto *t = kv.second.get();
+        if (!t)
+        {
+            continue;
+        }
+
+        std::string norm_id = get_normalized_app_id(t->get_app_id());
+        bool in_group = enable_grouping.value() && !norm_id.empty() && (groups.count(norm_id) > 0);
+        if (!in_group)
+        {
+            t->set_grouped(false);
+        }
+    }
+
+    queue_allocate();
 }
 
 WayfireWindowList::~WayfireWindowList()
@@ -551,6 +787,7 @@ WayfireWindowList::~WayfireWindowList()
     /* Call the toplevels destructors first.
      * This fixes a crash when a dmabuf tooltip is present
      * when the window-list widget is unloaded. */
+    groups.clear();
     toplevels.clear();
 
     for (auto & list_toplevel : list_toplevels)

@@ -360,6 +360,8 @@ class WayfireToplevel::impl
     sigc::connection button_leave_signal;
 
     Glib::ustring app_id, title;
+    bool on_output = false;
+    bool grouped   = false;
 
     WfOption<bool> middle_click_close{"panel/middle_click_close"};
 
@@ -380,8 +382,12 @@ class WayfireToplevel::impl
         button.append(image);
         button.append(label);
         button.set_halign(Gtk::Align::FILL);
+        button.set_valign(Gtk::Align::FILL);
         button.set_hexpand(true);
-        button.set_spacing(5);
+
+        image.set_halign(Gtk::Align::CENTER);
+        image.set_valign(Gtk::Align::CENTER);
+        image.set_from_icon_name("window-restore-symbolic");
 
         label.set_ellipsize(Pango::EllipsizeMode::END);
         label.set_hexpand(true);
@@ -485,6 +491,59 @@ class WayfireToplevel::impl
 
         send_rectangle_hints();
         set_state(0); // will set the appropriate button style
+    }
+
+    void setup_popover_menu(Gtk::PopoverMenu& target_popover)
+    {
+        target_popover.insert_action_group("windowaction", actions);
+        target_popover.set_menu_model(menu);
+    }
+
+    void set_grouped(bool is_grouped, Gtk::Widget *insert_after = nullptr)
+    {
+        this->grouped = is_grouped;
+        if (is_grouped || !is_visible_on_output())
+        {
+            unset_tooltip_media();
+            if (button.get_parent() == window_list)
+            {
+                window_list->remove(button);
+            }
+        } else
+        {
+            if (!button.get_parent())
+            {
+                if (insert_after && (insert_after->get_parent() == window_list))
+                {
+                    window_list->insert_child_after(button, *insert_after);
+                } else
+                {
+                    window_list->append(button);
+                }
+            }
+
+            send_rectangle_hints();
+        }
+    }
+
+    bool is_visible_on_output() const
+    {
+        return on_output && !parent;
+    }
+
+    Gtk::Widget& get_button()
+    {
+        return button;
+    }
+
+    zwlr_foreign_toplevel_handle_v1 *get_handle()
+    {
+        return handle;
+    }
+
+    std::string get_title()
+    {
+        return this->title;
     }
 
     void set_tooltip_media()
@@ -641,14 +700,14 @@ class WayfireToplevel::impl
     {
         if (hide_text)
         {
+            button.add_css_class("no-text");
             label.hide();
             image.set_hexpand(true);
-            image.set_halign(Gtk::Align::CENTER);
         } else
         {
+            button.remove_css_class("no-text");
             label.show();
             image.set_hexpand(false);
-            image.set_halign(Gtk::Align::FILL);
         }
     }
 
@@ -753,6 +812,8 @@ class WayfireToplevel::impl
                 "[workarounds] and restart wf-panel or the applications " <<
                 "in the window list)" << std::endl;
         }
+
+        window_list->update_grouping();
     }
 
     std::string get_app_id()
@@ -764,25 +825,43 @@ class WayfireToplevel::impl
     {
         for (const auto& toplevel_button : window_list->toplevels)
         {
-            if (toplevel_button.second && toplevel_button.second->pimpl)
+            if (toplevel_button.second)
             {
-                toplevel_button.second->pimpl->send_rectangle_hint();
+                toplevel_button.second->send_rectangle_hint();
             }
+        }
+
+        for (const auto& group : window_list->groups)
+        {
+            if (group.second)
+            {
+                group.second->send_rectangle_hints();
+            }
+        }
+    }
+
+    void send_rectangle_hint_for_widget(Gtk::Widget& target)
+    {
+        auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
+        auto w     = target.get_width();
+        auto h     = target.get_height();
+        if (panel && (w > 0) && (h > 0))
+        {
+            double x, y;
+            target.translate_coordinates(panel->get_window(), 0, 0, x, y);
+            zwlr_foreign_toplevel_handle_v1_set_rectangle(handle, panel->get_wl_surface(),
+                x, y, w, h);
         }
     }
 
     void send_rectangle_hint()
     {
-        auto panel = WayfirePanelApp::get().panel_for_wl_output(window_list->output->wo);
-        auto w     = button.get_width();
-        auto h     = button.get_height();
-        if (panel && (w > 0) && (h > 0))
+        if (grouped)
         {
-            double x, y;
-            button.translate_coordinates(panel->get_window(), 0, 0, x, y);
-            zwlr_foreign_toplevel_handle_v1_set_rectangle(handle, panel->get_wl_surface(),
-                x, y, w, h);
+            return;
         }
+
+        send_rectangle_hint_for_widget(button);
     }
 
     void set_title(std::string title)
@@ -790,6 +869,7 @@ class WayfireToplevel::impl
         this->title = title;
 
         label.set_text(title);
+        window_list->update_grouping();
     }
 
     uint32_t get_state()
@@ -859,6 +939,7 @@ class WayfireToplevel::impl
     {
         this->state = state;
         set_classes(state);
+        window_list->update_grouping();
     }
 
     ~impl()
@@ -879,19 +960,10 @@ class WayfireToplevel::impl
 
     void handle_output_enter(wl_output *output)
     {
-        if (this->parent)
-        {
-            return;
-        }
-
         if (window_list->output->wo == output)
         {
-            if (!button.get_parent())
-            {
-                window_list->append(button);
-            }
-
-            send_rectangle_hints();
+            this->on_output = true;
+            window_list->update_grouping();
         }
     }
 
@@ -899,13 +971,8 @@ class WayfireToplevel::impl
     {
         if (window_list->output->wo == output)
         {
-            auto children = window_list->get_children();
-            if (std::count(children.begin(), children.end(), &button) == 1)
-            {
-                window_list->remove(button);
-            }
-
-            send_rectangle_hints();
+            this->on_output = false;
+            window_list->update_grouping();
         }
     }
 };
@@ -987,6 +1054,56 @@ void WayfireToplevel::set_ext_handle(ext_foreign_toplevel_handle_v1 *handle)
 std::string WayfireToplevel::get_app_id()
 {
     return pimpl->get_app_id();
+}
+
+void WayfireToplevel::send_rectangle_hint_for_widget(Gtk::Widget& target)
+{
+    pimpl->send_rectangle_hint_for_widget(target);
+}
+
+std::string WayfireToplevel::get_title()
+{
+    return pimpl->get_title();
+}
+
+zwlr_foreign_toplevel_handle_v1*WayfireToplevel::get_handle()
+{
+    return pimpl->get_handle();
+}
+
+zwlr_foreign_toplevel_handle_v1*WayfireToplevel::get_parent()
+{
+    return pimpl->get_parent();
+}
+
+bool WayfireToplevel::is_visible_on_output()
+{
+    return pimpl->is_visible_on_output();
+}
+
+void WayfireToplevel::set_grouped(bool grouped, Gtk::Widget *insert_after)
+{
+    pimpl->set_grouped(grouped, insert_after);
+}
+
+Gtk::Widget& WayfireToplevel::get_button()
+{
+    return pimpl->get_button();
+}
+
+void WayfireToplevel::activate_or_minimize()
+{
+    pimpl->on_clicked();
+}
+
+void WayfireToplevel::close_window()
+{
+    zwlr_foreign_toplevel_handle_v1_close(pimpl->get_handle());
+}
+
+void WayfireToplevel::setup_popover_menu(Gtk::PopoverMenu& target_popover)
+{
+    pimpl->setup_popover_menu(target_popover);
 }
 
 /* wl_array_for_each isn't supported in C++, so we have to manually
@@ -1080,13 +1197,9 @@ static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t par
     auto impl = static_cast<WayfireToplevel::impl*>(data);
     if (!parent)
     {
-        if (impl->get_parent())
-        {
-            impl->handle_output_enter(impl->window_list->output->wo);
-        }
-
         remove_child_from_parent(impl, handle);
         impl->set_parent(parent);
+        impl->window_list->update_grouping();
         return;
     }
 
@@ -1100,6 +1213,7 @@ static void handle_toplevel_parent(void *data, toplevel_t handle, toplevel_t par
 
     impl->set_parent(parent);
     impl->remove_button();
+    impl->window_list->update_grouping();
 }
 
 namespace

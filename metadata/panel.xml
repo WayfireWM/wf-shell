@@ -683,6 +683,10 @@
 				<_long>Show only icons for window list</_long>
 				<default>false</default>
 			</option>
+			<option name="window_list_grouping" type="bool">
+				<_short>Group windows</_short>
+				<default>true</default>
+			</option>
 		</group>
 		<group>
 			<_short>Workspace Switcher</_short>

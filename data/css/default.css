@@ -29,6 +29,20 @@
 .wf-panel .window-button.activated {
     background-color: #8883;
 }
+.wf-panel .window-button.window-group-button {
+    box-shadow: inset 0 -2px 0 #8886;
+}
+
+.wf-panel .window-button.window-group-button.activated {
+    background-color: #8883;
+    box-shadow: inset 0 -2px 0 #888a;
+}
+.wf-panel .window-button.no-text,
+.wf-panel .window-button.no-text image,
+.wf-panel .window-button.no-text:hover image {
+    padding-right:0px;
+    padding-left:0px;
+}
 
 .wf-panel .tray flowboxchild {
     background: transparent;

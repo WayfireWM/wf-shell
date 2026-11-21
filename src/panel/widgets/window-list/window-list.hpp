@@ -5,6 +5,7 @@
 #include "../../widget.hpp"
 #include "toplevel.hpp"
 #include "layout.hpp"
+#include "group.hpp"
 
 #ifdef HAVE_DMABUF
     #include <gbm.h>
@@ -30,11 +31,14 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
   public:
 
     WfOption<bool> hide_label{"panel/window_list_no_text"};
+    WfOption<bool> enable_grouping{"panel/window_list_grouping"};
 
     std::map<zwlr_foreign_toplevel_handle_v1*,
         std::unique_ptr<WayfireToplevel>> toplevels;
     std::map<ext_foreign_toplevel_handle_v1*,
         std::unique_ptr<WayfireListToplevel>> list_toplevels;
+    std::map<std::string,
+        std::unique_ptr<WayfireToplevelGroup>> groups;
 
     zwlr_foreign_toplevel_manager_v1 *manager = NULL;
     ext_foreign_toplevel_list_v1 *foreign_toplevel_list     = NULL;
@@ -98,6 +102,11 @@ class WayfireWindowList : public Gtk::Box, public WayfireWidget
     zwp_linux_dmabuf_feedback_v1 *feedback = nullptr;
     zwp_linux_dmabuf_v1 *dmabuf = nullptr;
     gbm_device *dmabuf_device   = nullptr;
+
+    bool is_toplevel_grouped(WayfireToplevel *toplevel);
+    std::string get_normalized_app_id(const std::string& app_id);
+    std::string get_app_name(const std::string& normalized_app_id);
+    void update_grouping();
 
   private:
     int get_default_button_width();
