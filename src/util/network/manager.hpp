@@ -173,7 +173,7 @@ class NetworkManager
     bool networking_global_enabled();
 
     std::shared_ptr<VpnConfig> get_vpn(std::string path);
-
+    std::shared_ptr<Network> find_device(const std::string& path);
     void wifi_global_set(bool value);
     void mobile_global_set(bool value);
     void networking_global_set(bool value);
