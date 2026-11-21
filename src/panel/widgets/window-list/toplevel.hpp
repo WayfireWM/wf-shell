@@ -63,7 +63,13 @@ class WayfireToplevel
 
     uint32_t get_state();
     std::string get_app_id();
+    std::string get_title();
+    zwlr_foreign_toplevel_handle_v1 *get_handle();
+    zwlr_foreign_toplevel_handle_v1 *get_parent();
+    bool is_visible_on_output();
+
     void send_rectangle_hint();
+    void send_rectangle_hint_for_widget(Gtk::Widget& target);
     std::vector<zwlr_foreign_toplevel_handle_v1*>& get_children();
     ~WayfireToplevel();
     void set_hide_text(bool hide_text);
@@ -71,6 +77,12 @@ class WayfireToplevel
     void unset_tooltip_media();
     void set_ext_handle(ext_foreign_toplevel_handle_v1 *handle);
     ext_foreign_toplevel_handle_v1 *get_ext_handle();
+
+    void set_grouped(bool grouped, Gtk::Widget *insert_after = nullptr);
+    Gtk::Widget& get_button();
+    void activate_or_minimize();
+    void close_window();
+    void setup_popover_menu(Gtk::PopoverMenu& target_popover);
 
     class impl;
 

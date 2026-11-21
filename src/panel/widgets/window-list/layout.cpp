@@ -1,3 +1,4 @@
+#include "group.hpp"
 #include "toplevel.hpp"
 #include "window-list.hpp"
 
@@ -89,6 +90,14 @@ void WayfireWindowListLayout::allocate_vfunc(const Gtk::Widget& widget,
         if (t.second)
         {
             t.second->send_rectangle_hint();
+        }
+    }
+
+    for (auto& g : window_list->groups)
+    {
+        if (g.second)
+        {
+            g.second->send_rectangle_hints();
         }
     }
 }
