@@ -46,6 +46,16 @@
 				<_name>Right</_name>
 			</desc>
 		</option>
+		<option name="icon_mapping" type="dynamic-list" type-hint="dict">
+			<_short>Icon Mapping</_short>
+			<_long>Manually set icons for given app_ids when applications aren't installed or configured properly.</_long>
+			<entry prefix="icon_mapping_" type="string" name="icon">
+				<_short>Icon Path</_short>
+				<_long>Path to the icon file for the app_id</_long>
+				<hint>file</hint>
+				<default/>
+			</entry>
+		</option>
 		<option name="max_per_line" type="int">
 			<_short>Max icons per line</_short>
 			<_long>If greater than 0, the dock will have a maximum number of entries per line, after which a new line is created.</_long>
