@@ -42,6 +42,9 @@ widgets_left = menu spacing4 language spacing4 launchers window-list
 widgets_center = none
 widgets_right = command-output tray notifications volume network battery clock
 
+# If widgets should all be center aligned
+center = false
+
 # Note that if panel position is left or right then left is top and right is bottom.
 
 # The minimal size of the panel. Note that some widgets might force panel bigger than this size.
@@ -113,9 +116,10 @@ launcher_terminal1 = terminator.desktop
 launcher_terminal2 = org.gnome.Terminal.desktop
 launcher_gedit = org.gnome.gedit.desktop
 
-# or a combination of bash command + icon
-launcher_cmd_1 = env XDG_CURRENT_DESKTOP=GNOME gnome-control-center
-launcher_icon_1 = /usr/share/icons/gnome/48x48/categories/preferences-system.png
+# or a combination of bash command + icon + name
+launcher_cmd_one = env XDG_CURRENT_DESKTOP=GNOME gnome-control-center
+launcher_icon_one = /usr/share/icons/gnome/48x48/categories/preferences-system.png
+launcher_label_one = Control Center
 
 launcher_nau = org.gnome.Nautilus.desktop
 
@@ -124,6 +128,9 @@ launchers_spacing = 4
 
 # size of the launcher icon. If zero uses the panel default
 launchers_size = 0
+
+# Number of lines of launchers, by default only one wide/tall
+launchers_rows_cols = 1
 
 ### CLOCK ###
 
@@ -179,6 +186,9 @@ network_status_use_color = yes
 # image file to use as the menu icon. Defaults to blank string, which uses the Wayfire icon
 # menu_icon = /usr/share/wayfire/icons/wayfire.png
 
+# If greater than zero, sets the size of the menu icon in logical pixels. Otherwise falls back to default panel size
+# menu_icon_size = 0
+
 # Show a list of application categories in menu
 menu_show_categories = false
 
@@ -190,11 +200,13 @@ menu_list = false
 # whether to enable fuzzy search in the menu
 menu_fuzzy_search = 1
 
-# Category icon size. If zero falls back to default icon size
+# Category and item icon size. If zero falls back to default icon size
 # menu_category_icon_size = 48
+# menu_item_icon_size = 48
 
 # Space between menu items
 menu_item_spacing = 8
+
 
 # Minimum width for category list. Shares height with content Below
 menu_min_category_width = 200
@@ -295,6 +307,12 @@ mixer_right_click_action = show_quick_target
 # Size of the icons. If zero, uses the default icon size
 mixer_icon_size = 0
 
+# Arrangement of mixer popover
+# mixer_layout = horizontal
+
+# Size of icons in the mixer popver. If 0 use default icon size
+# mixer_popup_icon_size = 0
+
 ### BRIGHTNESS ###
 
 # Popup whenever brightness is changed externally
@@ -318,6 +336,9 @@ mixer_icon_size = 0
 # Icon size on panel. if zero use panel default
 # brightness_icon_size = 0
 
+# Type of name to use for the brightness controls of monitors. either "model" or "connector"
+# brightness_monitor_label = model
+
 ### NOTIFICATIONS ###
 
 notifications_autohide_timeout = 2.5
@@ -330,9 +351,6 @@ notifications_icon_size = 0
 
 ### TRAY ###
 
-# Amount of smooth scrolling needed to trigger one scroll wheel step
-tray_smooth_scrolling_threshold = 5
-
 # The icon size to use for tray icons. If zero use panel default
 tray_icon_size = 0
 
@@ -344,6 +362,9 @@ tray_icon_size = 0
 
 # Enable showing of the tray menu when using middle-click, otherwise, right-click is used
 tray_menu_on_middle_click = false
+
+# Prefer a -symbolic variant over the directly chosen variant for tray icons
+# prefer_symbolic_tray_icons = false
 
 ### COMMAND OUTPUT ###
 
@@ -403,6 +424,9 @@ commands_output_max_chars = 10
 [dock]
 # if dock should autohide. Default true
 autohide = true
+
+# distance to an edge of a screen in which to reveal the dock
+# edge_hotspot_size = 20
 
 # time in milliseconds to wait before hiding
 # autohide_duration = 300
@@ -466,7 +490,7 @@ max_per_line = 0
 # background_image = true
 
 # The color of the lockscreen (if the above is false, or wf-background is not running)
-# background-color = #0000
+# background_color = #0000
 
 # When no user input is detected, hide the unlock controls. 0.0 means never. Time is in seconds
 # hide_time = 5.0

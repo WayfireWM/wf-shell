@@ -121,3 +121,10 @@ jobs:
             xmlstarlet fo --indent-tab "$file" > "${file}.tmp"
             diff -u "$file" "${file}.tmp"
           done < <(find metadata -name "*.xml*")
+
+  lint-ini:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for example config drift
+        run: python3 -u scripts/lint_config_docs.py
