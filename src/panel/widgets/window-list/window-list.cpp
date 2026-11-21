@@ -542,7 +542,7 @@ WayfireWindowList::WayfireWindowList(WayfireOutput *output)
     set_layout_manager(layout);
     user_size.set_callback([=]
     {
-        this->queue_allocate();
+        this->queue_resize();
     });
 }
 
