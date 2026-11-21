@@ -1,11 +1,11 @@
 background_dir = join_paths(get_option('prefix'), 'share', 'wf-shell', 'backgrounds')
 
-install_data(join_paths('backgrounds','calm-blue.png'), install_dir: background_dir)
-install_data(join_paths('backgrounds','circuits.png'), install_dir: background_dir)
-install_data(join_paths('backgrounds','secret-chest.png'), install_dir: background_dir)
-install_data(join_paths('backgrounds','simple.png'), install_dir: background_dir)
-install_data(join_paths('backgrounds','simple-2.png'), install_dir: background_dir)
-install_data(join_paths('backgrounds','snow.png'), install_dir: background_dir)
+install_data(join_paths('backgrounds','calm-blue.webp'), install_dir: background_dir)
+install_data(join_paths('backgrounds','circuits.webp'), install_dir: background_dir)
+install_data(join_paths('backgrounds','secret-chest.webp'), install_dir: background_dir)
+install_data(join_paths('backgrounds','simple.webp'), install_dir: background_dir)
+install_data(join_paths('backgrounds','simple-2.webp'), install_dir: background_dir)
+install_data(join_paths('backgrounds','snow.webp'), install_dir: background_dir)
 install_data(join_paths('backgrounds','wallpaper.jpg'), install_dir: background_dir)
 
 install_data('wayfire.png', install_dir: icon_dir)
