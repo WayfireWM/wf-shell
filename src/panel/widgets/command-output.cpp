@@ -146,6 +146,7 @@ WfCommandOutputButtons::CommandOutput::CommandOutput(const std::string & name,
 WfCommandOutputButtons::CommandOutput::~CommandOutput()
 {
     timeout_connection.disconnect();
+    command_sig.disconnect();
     for (auto signal : signals)
     {
         signal.disconnect();
