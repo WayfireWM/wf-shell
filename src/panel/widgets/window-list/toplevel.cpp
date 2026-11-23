@@ -1,5 +1,6 @@
 #include <iostream>
 #include <gtkmm.h>
+#include <algorithm>
 
 #include <gdkmm/seat.h>
 #include <gdk/wayland/gdkwayland.h>
@@ -115,8 +116,13 @@ static void frame_handle_ready(void *data,
 
     gbm_bo_unmap(tooltip_media->bo, map_data);
 
-    uint32_t w = 500;
-    uint32_t h = tooltip_media->height * (500.0f / tooltip_media->width);
+    const double scale = std::min({
+        1.0,
+        500.0 / tooltip_media->width,
+        350.0 / tooltip_media->height
+    });
+    uint32_t w = std::max(1u, static_cast<uint32_t>(tooltip_media->width * scale));
+    uint32_t h = std::max(1u, static_cast<uint32_t>(tooltip_media->height * scale));
 
     auto scaled_pixbuf = pixbuf->scale_simple(
         w, h, Gdk::InterpType::BILINEAR);
