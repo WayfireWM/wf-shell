@@ -249,6 +249,10 @@ volume_icon_size = 0
 # Multiplier for volume scroll wheel or swipes. The higher this is the more the volume changes from swipes/scrolls
 volume_scroll_sensitivity = 0.05
 
+# Command to execute when right-clicking the volume widget.
+# Leave empty to disable. Example: pavucontrol
+volume_right_click_command =
+
 
 ### MIXER ###
 
