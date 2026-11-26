@@ -1,5 +1,7 @@
 #include <gtkmm.h>
 #include <glibmm.h>
+#include <cmath>
+#include <string>
 
 #include "volume.hpp"
 #include "icon-select.hpp"
@@ -12,10 +14,15 @@ void WayfireVolume::update_icon()
     if (gvc_stream && gvc_mixer_stream_get_is_muted(gvc_stream))
     {
         main_image.set_from_icon_name(ICON(0)); // mute
+        volume_tooltip_label.set_text("Volume: Muted");
         return;
     }
 
-    main_image.set_from_icon_name(ICON(volume_scale.get_target_value() / (double)max_norm));
+    double volume = volume_scale.get_target_value() / (double)max_norm;
+
+    main_image.set_from_icon_name(ICON(volume));
+    volume_tooltip_label.set_text("Volume: " +
+        std::to_string(std::lround(volume * 100)) + "%");
 }
 
 void WayfireVolume::set_volume(pa_volume_t volume, set_volume_flags_t flags)
@@ -36,13 +43,16 @@ void WayfireVolume::on_volume_changed_external()
     if (volume != (pa_volume_t)this->volume_scale.get_target_value())
     {
         set_volume(volume, VOLUME_FLAG_SHOW_POPOVER);
-    }
 
-    Glib::signal_idle().connect([=] ()
-    {
-        button->popup_timed(timeout * 1000);
-        return G_SOURCE_REMOVE;
-    });
+        if (popup_on_change.value())
+        {
+            Glib::signal_idle().connect([=] ()
+            {
+                button->popup_timed(timeout * 1000);
+                return G_SOURCE_REMOVE;
+            });
+        }
+    }
 }
 
 static void notify_volume(GvcMixerControl *gvc_control,
@@ -121,6 +131,63 @@ void WayfireVolume::init(Gtk::Box *container)
     button = std::make_unique<WayfireMenuWidget>("panel", "volume");
     button->set_keyboard_interactive(false);
 
+    volume_tooltip.set_autohide(false);
+    volume_tooltip.set_has_arrow(false);
+    volume_tooltip.set_can_target(false);
+    auto panel_position_changed = [this] ()
+    {
+        auto pos = panel_position.value();
+        if (pos == "top")
+        {
+            volume_tooltip.set_position(Gtk::PositionType::BOTTOM);
+        } else if (pos == "bottom")
+        {
+            volume_tooltip.set_position(Gtk::PositionType::TOP);
+        } else if (pos == "left")
+        {
+            volume_tooltip.set_position(Gtk::PositionType::RIGHT);
+        } else if (pos == "right")
+        {
+            volume_tooltip.set_position(Gtk::PositionType::LEFT);
+        }
+    };
+
+    panel_position_changed();
+    panel_position.set_callback(panel_position_changed);
+    volume_tooltip.add_css_class("volume-tooltip");
+    volume_tooltip.set_child(volume_tooltip_label);
+    volume_tooltip.set_parent(*button);
+
+    auto tooltip_motion = Gtk::EventControllerMotion::create();
+
+    signals.push_back(tooltip_motion->signal_enter().connect([this] (double, double)
+    {
+        tooltip_delay.disconnect();
+        tooltip_delay = Glib::signal_timeout().connect([this] ()
+        {
+            if (!button->is_popup_visible())
+            {
+                volume_tooltip.popup();
+            }
+
+            return false;
+        }, 500);
+    }));
+
+    signals.push_back(tooltip_motion->signal_leave().connect([this] ()
+    {
+        tooltip_delay.disconnect();
+        volume_tooltip.popdown();
+    }));
+
+    button->add_controller(tooltip_motion);
+
+    signals.push_back(button->signal_popup().connect([this] ()
+    {
+        tooltip_delay.disconnect();
+        volume_tooltip.popdown();
+    }));
+
     auto middle_click_gesture = Gtk::GestureClick::create();
     auto long_press     = Gtk::GestureLongPress::create();
     auto scroll_gesture = Gtk::EventControllerScroll::create();
@@ -155,6 +222,14 @@ void WayfireVolume::init(Gtk::Box *container)
 
         set_volume(std::clamp(volume_scale.get_target_value() - change,
             0.0, max_norm));
+
+        tooltip_delay.disconnect();
+
+        if (!button->is_popup_visible() && !volume_tooltip.get_visible())
+        {
+            volume_tooltip.popup();
+        }
+
         return true;
     }, true));
     signals.push_back(scroll_gesture2->signal_scroll().connect([=] (double dx, double dy)
@@ -213,6 +288,15 @@ void WayfireVolume::init(Gtk::Box *container)
 
 WayfireVolume::~WayfireVolume()
 {
+    for (auto signal : signals)
+    {
+        signal.disconnect();
+    }
+
+    tooltip_delay.disconnect();
+    volume_tooltip.popdown();
+    volume_tooltip.unparent();
+
     disconnect_gvc_stream_signals();
 
     if (notify_default_sink_changed)

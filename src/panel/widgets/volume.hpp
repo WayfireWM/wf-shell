@@ -15,6 +15,13 @@ class WayfireVolume : public WayfireWidget
     WayfireAnimatedScale volume_scale;
     std::unique_ptr<WayfireMenuWidget> button;
 
+    Gtk::Popover volume_tooltip;
+    Gtk::Label volume_tooltip_label;
+    sigc::connection tooltip_delay;
+
+    WfOption<std::string> panel_position{"panel/position"};
+
+    WfOption<bool> popup_on_change{"panel/volume_popup_on_change"};
     WfOption<double> timeout{"panel/volume_display_timeout"};
     WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
 
