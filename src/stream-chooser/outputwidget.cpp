@@ -23,22 +23,24 @@ static void frame_handle_presentation_time(void*,
 {}
 
 static void frame_handle_ready(void *data,
-    struct ext_image_copy_capture_frame_v1*)
+    struct ext_image_copy_capture_frame_v1 *frame)
 {
     WayfireChooserOutput *output = (WayfireChooserOutput*)data;
+
     output->buffer_ready();
-    output->frame_in_flight = false;
+
+    ext_image_copy_capture_frame_v1_destroy(frame);
+    output->frame = nullptr;
 }
 
 static void frame_handle_failed(void *data,
-    struct ext_image_copy_capture_frame_v1 *handle,
+    struct ext_image_copy_capture_frame_v1 *frame,
     uint32_t reason)
 {
     WayfireChooserOutput *output = (WayfireChooserOutput*)data;
-    std::cerr << "Failed to copy frame because reason: " << reason << std::endl;
-    ext_image_copy_capture_frame_v1_destroy(handle);
+
+    ext_image_copy_capture_frame_v1_destroy(frame);
     output->frame = nullptr;
-    output->frame_in_flight = false;
 }
 
 static const struct ext_image_copy_capture_frame_v1_listener frame_listener = {
@@ -94,23 +96,6 @@ static const struct ext_image_copy_capture_session_v1_listener recording_session
     .stopped = session_handle_stopped,
 };
 
-static void dmabuf_created(void *data, struct zwp_linux_buffer_params_v1*,
-    struct wl_buffer *wl_buffer)
-{
-    auto output = (WayfireChooserOutput*)data;
-    output->buffer->buffer = wl_buffer;
-}
-
-static void dmabuf_failed(void*, struct zwp_linux_buffer_params_v1*)
-{
-    std::cerr << "Failed to create dmabuf" << std::endl;
-}
-
-static const struct zwp_linux_buffer_params_v1_listener params_listener = {
-    .created = dmabuf_created,
-    .failed  = dmabuf_failed,
-};
-
 static void frame_handle_linux_dmabuf(uint32_t width, uint32_t height, WayfireChooserOutput *output)
 {
     auto format = (output->current_buffer_format == WL_SHM_FORMAT_XRGB8888) ?
@@ -118,10 +103,22 @@ static void frame_handle_linux_dmabuf(uint32_t width, uint32_t height, WayfireCh
 
     auto buffer = output->buffer;
 
+    if (buffer->gbm_fd > 0)
+    {
+        close(buffer->gbm_fd);
+        buffer->gbm_fd = -1;
+    }
+
     if (buffer->bo)
     {
         gbm_bo_destroy(buffer->bo);
         buffer->bo = nullptr;
+    }
+
+    if (buffer->buffer)
+    {
+        wl_buffer_destroy(buffer->buffer);
+        buffer->buffer = nullptr;
     }
 
     if (buffer->params)
@@ -154,14 +151,14 @@ static void frame_handle_linux_dmabuf(uint32_t width, uint32_t height, WayfireCh
     buffer->params = zwp_linux_dmabuf_v1_create_params(WayfireStreamChooserApp::getInstance().dmabuf);
 
     uint64_t mod = gbm_bo_get_modifier(buffer->bo);
+    buffer->gbm_fd = gbm_bo_get_fd(buffer->bo);
     zwp_linux_buffer_params_v1_add(buffer->params,
-        gbm_bo_get_fd(buffer->bo), 0,
+        buffer->gbm_fd, 0,
         gbm_bo_get_offset(buffer->bo, 0),
         gbm_bo_get_stride(buffer->bo),
         mod >> 32, mod & 0xffffffff);
 
-    zwp_linux_buffer_params_v1_add_listener(buffer->params, &params_listener, output);
-    zwp_linux_buffer_params_v1_create(buffer->params, w, h, format, 0);
+    buffer->buffer = zwp_linux_buffer_params_v1_create_immed(buffer->params, w, h, format, 0);
 }
 
 void WayfireChooserOutput::start_output_source_ssession()
@@ -294,14 +291,19 @@ WayfireChooserOutput::~WayfireChooserOutput()
         ext_image_copy_capture_session_v1_destroy(recording_session);
     }
 
-    if (buffer->buffer)
+    if (buffer->gbm_fd > 0)
     {
-        wl_buffer_destroy(buffer->buffer);
+        close(buffer->gbm_fd);
     }
 
     if (buffer->bo)
     {
         gbm_bo_destroy(buffer->bo);
+    }
+
+    if (buffer->buffer)
+    {
+        wl_buffer_destroy(buffer->buffer);
     }
 
     if (buffer->params)
@@ -355,11 +357,6 @@ void WayfireChooserOutput::frame_request()
         return;
     }
 
-    if (frame_in_flight)
-    {
-        return;
-    }
-
     if (frame)
     {
         ext_image_copy_capture_frame_v1_destroy(frame);
@@ -373,7 +370,6 @@ void WayfireChooserOutput::frame_request()
     ext_image_copy_capture_frame_v1_attach_buffer(buffer->frame, buffer->buffer);
     ext_image_copy_capture_frame_v1_damage_buffer(buffer->frame, 0, 0, buffer->width, buffer->height);
     ext_image_copy_capture_frame_v1_capture(buffer->frame);
-    frame_in_flight = true;
 }
 
 void WayfireChooserOutput::buffer_ready()
@@ -399,10 +395,10 @@ void WayfireChooserOutput::buffer_ready()
     std::shared_ptr<Glib::Bytes> bytes = 0;
     size_t size = stride * buffer->height;
     bytes = Glib::Bytes::create((unsigned char*)data, size);
+    gbm_bo_unmap(buffer->bo, map_data);
 
     if (!bytes)
     {
-        gbm_bo_unmap(buffer->bo, map_data);
         return;
     }
 
@@ -416,6 +412,4 @@ void WayfireChooserOutput::buffer_ready()
     auto texture = builder->build();
 
     contents.set_paintable(texture);
-
-    gbm_bo_unmap(buffer->bo, map_data);
 }
