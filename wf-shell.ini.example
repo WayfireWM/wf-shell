@@ -238,11 +238,14 @@ menu_min_content_height = 500
 
 ### VOLUME ###
 
-# It shows a simple slider to control the volume of the default output using PulseAudio
-# Number of seconds volume popover will display (when volume is changed)
-# after scrolling on the volume icon
-volume_display_timeout = 2.5
+# Controls the volume of the default audio output.
 
+# Show the volume slider when the volume changes externally,
+# such as when using keyboard volume controls.
+volume_popup_on_change = true
+
+# Number of seconds the automatic volume slider remains visible.
+volume_display_timeout = 2.5
 # Size of volume widget on panel. If zero use default panel size
 volume_icon_size = 0
 

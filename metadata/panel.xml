@@ -359,6 +359,11 @@
 		</group>
 		<group>
 			<_short>Volume</_short>
+			<option name="volume_popup_on_change" type="bool">
+				<_short>Pop up on change</_short>
+				<_long>Whether to show the volume slider when the volume changes externally</_long>
+				<default>true</default>
+			</option>
 			<option name="volume_display_timeout" type="double">
 				<_short>Volume Display Timeout</_short>
 				<default>2.5</default>
