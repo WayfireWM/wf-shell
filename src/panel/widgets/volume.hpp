@@ -17,6 +17,7 @@ class WayfireVolume : public WayfireWidget
 
     WfOption<double> timeout{"panel/volume_display_timeout"};
     WfOption<double> scroll_sensitivity{"panel/volume_scroll_sensitivity"};
+    WfOption<std::string> right_click_command{"panel/volume_right_click_command"};
 
     void on_volume_value_changed();
 

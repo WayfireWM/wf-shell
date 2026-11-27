@@ -1,5 +1,6 @@
 #include <gtkmm.h>
 #include <glibmm.h>
+#include <glibmm/spawn.h>
 
 #include "volume.hpp"
 #include "icon-select.hpp"
@@ -122,6 +123,29 @@ void WayfireVolume::init(Gtk::Box *container)
     button->set_keyboard_interactive(false);
 
     auto middle_click_gesture = Gtk::GestureClick::create();
+    auto right_click_gesture  = Gtk::GestureClick::create();
+    right_click_gesture->set_button(3);
+
+    signals.push_back(right_click_gesture->signal_pressed().connect(
+        [=] (int, double, double)
+    {
+        right_click_gesture->set_state(Gtk::EventSequenceState::CLAIMED);
+    }));
+
+    signals.push_back(right_click_gesture->signal_released().connect(
+        [this] (int, double, double)
+    {
+        auto command = right_click_command.value();
+        if (!command.empty())
+        {
+            try {
+                Glib::spawn_command_line_async(command);
+            } catch (const Glib::Error& error)
+            {
+                g_warning("Volume right-click command failed: %s", error.what());
+            }
+        }
+    }));
     auto long_press     = Gtk::GestureLongPress::create();
     auto scroll_gesture = Gtk::EventControllerScroll::create();
     auto scroll_gesture2 = Gtk::EventControllerScroll::create();
@@ -201,6 +225,7 @@ void WayfireVolume::init(Gtk::Box *container)
     button->add_controller(scroll_gesture);
     button->add_controller(long_press);
     button->add_controller(middle_click_gesture);
+    button->add_controller(right_click_gesture);
     button->open_on(1);
 
     /* Setup layout */
