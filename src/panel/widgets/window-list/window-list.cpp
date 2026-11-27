@@ -190,7 +190,6 @@ static void dmabuf_feedback_main_device(void *data, struct zwp_linux_dmabuf_feed
     std::cout << "Live previews using drm device node: \"" << drm_device_name << "\"" << std::endl;
 
     drmFreeDevice(&dev);
-    close(drm_fd);
 }
 
 static void dmabuf_feedback_tranche_done(void*, struct zwp_linux_dmabuf_feedback_v1*)
@@ -596,6 +595,8 @@ WayfireWindowList::~WayfireWindowList()
 
     if (this->dmabuf_device)
     {
+        int drm_fd = gbm_device_get_fd(this->dmabuf_device);
         gbm_device_destroy(this->dmabuf_device);
+        close(drm_fd);
     }
 }
