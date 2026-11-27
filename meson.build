@@ -30,11 +30,14 @@ pipewire = dependency('libpipewire-0.3', required: get_option('wp-mixer-widget')
 wireplumber = dependency('wireplumber-0.5', required: get_option('wp-mixer-widget'))
 ddcutil = dependency('ddcutil', required: get_option('ddcutil'))
 dbusmenu_gtk = dependency('dbusmenu-glib-0.4')
+xkb = dependency('xkbcommon')
 xkbregistry = dependency('xkbregistry')
 json = subproject('wf-json').get_variable('wfjson')
 openssl = dependency('openssl')
 gbm = dependency('gbm', required: false)
 drm = dependency('libdrm', required: false)
+enchant = dependency('enchant-2', required: false)
+llama = dependency('llama', required: false)
 
 if get_option('wayland-logout') == true
   wayland_logout = subproject('wayland-logout')
@@ -62,6 +65,14 @@ if ddcutil.found()
   add_project_arguments('-DHAVE_DDCUTIL=1', language: 'cpp')
 endif
 
+if enchant.found()
+  add_project_arguments('-DHAVE_ENCHANT=1', language: 'cpp')
+endif
+
+if llama.found()
+  add_project_arguments('-DHAVE_LLAMA=1', language: 'cpp')
+endif
+
 needs_libinotify = ['freebsd', 'dragonfly'].contains(host_machine.system())
 libinotify = dependency('libinotify', required: needs_libinotify)
 
@@ -73,12 +84,14 @@ add_project_arguments(
 resource_dir = join_paths(get_option('prefix'), 'share', 'wf-shell')
 metadata_dir = join_paths(resource_dir, 'metadata')
 sysconf_dir = join_paths(get_option('prefix'), get_option('sysconfdir'))
+layout_dir = join_paths(get_option('prefix'), 'share', 'wf-osk', 'layouts')
 
 icon_dir = join_paths(get_option('prefix'), 'share', 'wf-shell', 'icons')
 add_project_arguments('-DICONDIR="' + icon_dir + '"', language: 'cpp')
 add_project_arguments('-DRESOURCEDIR="' + resource_dir + '"', language: 'cpp')
 add_project_arguments('-DMETADATA_DIR="' + metadata_dir + '"', language: 'cpp')
 add_project_arguments('-DSYSCONF_DIR="' + sysconf_dir + '"', language: 'cpp')
+add_project_arguments('-DLAYOUT_DIR="' + layout_dir + '"', language: 'cpp')
 
 subdir('metadata')
 subdir('proto')
