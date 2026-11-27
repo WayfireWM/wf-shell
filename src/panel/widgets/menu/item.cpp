@@ -91,8 +91,8 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
             box.set_orientation(Gtk::Orientation::HORIZONTAL);
             extra_actions_button.set_direction(Gtk::ArrowType::RIGHT);
             extra_actions_button.set_icon_name("arrow-right");
-            extra_actions_button.set_halign(Gtk::Align::END);
-            extra_actions_button.set_valign(Gtk::Align::CENTER);
+            extra_actions_button.set_halign(Gtk::Align::START);
+            extra_actions_button.set_valign(Gtk::Align::START);
         } else
         {
             label.set_xalign(0.5);
@@ -109,8 +109,8 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
                 extra_actions_button.set_icon_name("arrow-down");
             }
 
-            extra_actions_button.set_halign(Gtk::Align::END);
-            extra_actions_button.set_valign(Gtk::Align::END);
+            extra_actions_button.set_halign(Gtk::Align::START);
+            extra_actions_button.set_valign(Gtk::Align::START);
         }
     };
 
@@ -149,14 +149,7 @@ WfMenuItem::WfMenuItem(WayfireMenu *_menu, Glib::RefPtr<Gio::DesktopAppInfo> app
     extra_actions_button.set_menu_model(m_menu);
     extra_actions_button.insert_action_group("app", actions);
 
-    set_has_tooltip();
-    signals.push_back(signal_query_tooltip().connect([=] (int x, int y, bool key_mode,
-                                                          const std::shared_ptr<Gtk::Tooltip>& tooltip) ->
-        bool
-    {
-        tooltip->set_text(app->get_name());
-        return true;
-    }, false));
+    image.set_tooltip_text(app->get_name());
     set_child(overlay);
 }
 

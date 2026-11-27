@@ -26,6 +26,33 @@
     padding:1em;
 }
 
+/* Desktop actions indicator */
+.wf-panel .app-button-extras > button {
+    min-width: 14px;
+    min-height: 14px;
+    padding: 0;
+    border-radius: 8px;
+    background-color: #30343a;
+    background-image: none;
+    border: 1px solid #888;
+    box-shadow: none;
+}
+
+.wf-panel .app-button-extras > button:hover {
+    background-color: #626870;
+}
+
+.wf-panel .app-button-extras image {
+    -gtk-icon-size: 10px;
+}
+
+/* Fine-tune desktop actions indicator placement */
+.wf-panel .app-button-extras.top {
+    margin-top: -3px;
+    margin-left: 6px;
+    margin-right: 0;
+}
+
 .wf-panel .window-button.activated {
     background-color: #8883;
 }
