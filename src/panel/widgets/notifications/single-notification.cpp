@@ -116,11 +116,12 @@ WfSingleNotification::WfSingleNotification(const Notification & notification)
     text.set_wrap_mode(Pango::WrapMode::CHAR);
     if (notification.body.empty())
     {
-        text.set_markup(notification.summary);
+        text.set_markup(markup_escape(notification.summary));
     } else
     {
         // NOTE: that is not a really right way to implement FDN markup feature, but the easiest one.
-        text.set_markup("<b>" + notification.summary + "</b>" + "\n" + notification.body);
+        text.set_markup("<b>" + markup_escape(
+            notification.summary) + "</b>" + "\n" + markup_escape(notification.body));
     }
 
     content.append(text);
