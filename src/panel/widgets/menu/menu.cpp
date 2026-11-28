@@ -493,6 +493,11 @@ void WayfireMenu::init(Gtk::Box *container)
     button->open_on(1); /* Open menu on left click */
     signals.push_back(button->signal_popup().connect(
         sigc::mem_fun(*this, &WayfireMenu::on_popover_shown)));
+    signals.push_back(button->signal_popdown().connect([this] ()
+    {
+        auto adjustment = app_scrolled_window.get_vadjustment();
+        adjustment->set_value(adjustment->get_lower());
+    }));
 
     if (!update_icon())
     {
